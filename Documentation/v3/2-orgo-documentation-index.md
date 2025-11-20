@@ -1,6 +1,66 @@
-﻿# Orgo v3 – Doc 2/8
+﻿<!-- INDEX: Doc 2 – Foundations, Locked Variables & Operational Checklists -->
+Index
 
-**Foundations, Locked Variables & Operational Checklists** 
+Role of this document in the Orgo set
+
+Orgo mental model (orientation)
+1.1 Multi‑tenant backbone
+1.2 Signals → Cases & Tasks
+1.3 Label system (how routing works)
+1.4 Domain modules
+1.5 Profiles, Insights & guardrails
+1.6 What Orgo is (and is not)
+
+Global invariants & enums (locked)
+2.1 Environments (ENVIRONMENT)
+2.2 Multi‑tenancy & identity invariants
+2.3 Task lifecycle (TASK_STATUS)
+2.4 Case lifecycle (CASE_STATUS)
+2.5 Priority & severity (TASK_PRIORITY, TASK_SEVERITY)
+2.6 Visibility & privacy (VISIBILITY, COMMENT_VISIBILITY)
+2.7 Log categories & levels (LOG_CATEGORY, LOG_LEVEL)
+2.8 Notification channels & scope (NOTIFICATION_CHANNEL, NOTIFICATION_SCOPE)
+2.9 Canonical label string format
+2.10 Canonical Task field set (JSON contract)
+2.11 Canonical Case field skeleton
+
+Configuration system (YAML‑based, environment‑aware)
+3.1 Directory layout
+3.2 Common metadata & validation
+3.3 Database config
+3.4 Email config
+3.5 Logging config
+
+Core Services – contracts & checklists
+4.1 Workflow Engine
+4.2 Email Gateway
+4.3 Task Handler
+4.4 Notification Service
+4.5 Persistence & offline sync
+4.6 Logging & security hooks
+
+Domain Modules – position & invariants
+5.1 Directory & naming
+5.2 Domain config rules
+5.3 Handler hooks (behaviour)
+
+Organization profiles & behavioural tuning
+6.1 Profile schema (summary)
+6.2 Example profile mapping
+
+Insights & cyclic overview integration
+
+Guardrails – visibility, audit, compliance
+
+Testing & operational checklists
+
+Summary – what this document locks
+
+
+
+# Orgo v3 – Doc 2/8
+
+**Foundations, Locked Variables & Operational Checklists**
 
 ---
 
@@ -16,14 +76,23 @@ This document is the **foundation layer** for Orgo v3. It defines:
 
 It is implementation‑agnostic (TS/NestJS, Python, etc.) and sits under Docs:
 
-* **Doc 1 – Database Schema Reference (Custom Tables)** – physical schema and enums. 
-* **Doc 3 – Domain Modules (Orgo v3)** – domain adapters over the core Task/Case engine. 
-* **Doc 4 – Functional Code‑Name Inventory** – mapping from features to services/jobs/hooks. 
-* **Doc 5 – Core Services Specification** – detailed headless services (email, tasks, workflows, logging). 
+* **Doc 1 – Database Schema Reference (Custom Tables)** – physical schema and enums.
+* **Doc 3 – Domain Modules (Orgo v3)** – domain adapters over the core Task/Case engine.
+* **Doc 4 – Functional Code‑Name Inventory** – mapping from features to services/jobs/hooks.
+* **Doc 5 – Core Services Specification** – detailed headless services (email, tasks, workflows, logging).
 * **Doc 6 – Insights Module Config Parameters** and the **profiles YAML** – analytics & behavioural profiles.
-* **Doc 8 – Cyclic Overview & Universal Flow Rules** – label semantics, JSON contracts, cyclic reviews. 
+* **Doc 8 – Cyclic Overview & Universal Flow Rules** – label semantics, JSON contracts, cyclic reviews.
 
-If anything here conflicts with **Doc 1** (schema) or the actual DB migrations, **Doc 1 wins** and this doc must be updated. 
+If anything here conflicts with **Doc 1** (schema) or the actual DB migrations, **Doc 1 wins** and this doc must be updated.
+
+The intended conflict-resolution order across the Orgo v3 spec is:
+
+1. **Doc 1 – Database Schema Reference** (physical tables & enums).
+2. **Doc 2 – Foundations (this document)** (canonical enums, Task/Case JSON field sets, global invariants).
+3. **Doc 8 – Cyclic Overview & Universal Flow Rules** (label semantics, lifecycles, flow).
+4. Domain-specific and implementation docs (Docs 3–7, code inventories).
+
+Lower-numbered docs must not be overridden by higher-numbered ones.
 
 ---
 
@@ -34,14 +103,14 @@ This section explains how the rest of the spec hangs together. It is descriptive
 ### 1.1 Multi‑tenant backbone
 
 * Orgo is **multi‑tenant** – one deployment serves many organizations.
-* Every org is a row in `organizations`, identified by `organization_id` with timezone, locale, status, and a linked **organization profile**. 
+* Every org is a row in `organizations`, identified by `organization_id` with timezone, locale, status, and a linked **organization profile**.
 * Every record that “belongs to” an org (email, task, case, profile, notification, log, etc.) carries `organization_id` for isolation.
-* Two key identity concepts: 
+* Two key identity concepts:
 
   * **User accounts** (`user_accounts`) – who logs into Orgo.
   * **Person profiles** (`person_profiles`) – who things are *about* (students, players, employees, community members), regardless of login.
 
-Permissions are expressed in terms of **roles** and **permissions** attached to user accounts, with optional scoping by team/location. 
+Permissions are expressed in terms of **roles** and **permissions** attached to user accounts, with optional scoping by team/location.
 
 ### 1.2 Signals → Cases & Tasks
 
@@ -49,9 +118,9 @@ Orgo’s core job is to **ingest messy signals and turn them into structured wor
 
 * **Signals** come from:
 
-  * Email (`email_messages` + `email_threads`), including attachments and classifier metadata. 
+  * Email (`email_messages` + `email_threads`), including attachments and classifier metadata.
   * HTTP APIs / UIs (`TaskController.createTask`, domain endpoints).
-  * Offline imports & sync (`offline_nodes`, `sync_sessions`, `email_archive_import_batches`). 
+  * Offline imports & sync (`offline_nodes`, `sync_sessions`, `email_archive_import_batches`).
 
 * Signals pass through the **Email Gateway** and **Workflow Engine**, which decide:
 
@@ -59,7 +128,7 @@ Orgo’s core job is to **ingest messy signals and turn them into structured wor
   * Whether to **create a Task** (`tasks`),
   * Which **domain** (`type`), **category** (`request/incident/...`), and **role** should own it.
 
-The **Task** is the **canonical unit of work**, defined once in Doc 1 and reused everywhere; **Cases** are long‑lived containers that group Tasks, context and patterns. 
+The **Task** is the **canonical unit of work**, defined once in Doc 1 and reused everywhere; **Cases** are long‑lived containers that group Tasks, context and patterns.
 
 ### 1.3 Label system (how routing works)
 
@@ -92,7 +161,7 @@ Domain modules (Maintenance, HR, Education, etc.):
 * Are thin adapters over the global `Task`/`Case` model:
 
   * A config file `<domain>_module.yaml` (allowed categories, subtypes, email patterns, routing hints).
-  * A handler `<domain>_handler.py` with hooks such as `on_task_create`, `on_task_update`. 
+  * A handler `<domain>_handler.py` with hooks such as `on_task_create`, `on_task_update`.
 
 They plug into the **central Task handler + Workflow Engine**; all domain behaviour is expressed via config, metadata and hooks, not separate schemas.
 
@@ -143,7 +212,7 @@ metadata:
 ### 2.2 Multi‑tenancy & identity invariants
 
 * Every org has `organizations.id` → `organization_id` elsewhere.
-* Every org may have **one active profile** (`organization_profiles`). 
+* Every org may have **one active profile** (`organization_profiles`).
 * Every Task/Case/Email/Notification/Log:
 
   * Either belongs to exactly one org (`organization_id` NOT NULL),
@@ -152,11 +221,11 @@ metadata:
 User vs Person:
 
 * **User** (`user_accounts`) = login account in an org.
-* **Person** (`person_profiles`) = a human subject (student, employee, player, community member), optionally linked to a user. 
+* **Person** (`person_profiles`) = a human subject (student, employee, player, community member), optionally linked to a user.
 
 ### 2.3 Task lifecycle
 
-Canonical DB enum: `task_status_enum`. 
+Canonical DB enum: `task_status_enum`.
 
 ```text
 TASK_STATUS = {
@@ -187,7 +256,7 @@ Semantics:
 
 ### 2.4 Case lifecycle
 
-Canonical DB enum: `cases.status`. 
+Canonical DB enum: `cases.status`.
 
 ```text
 CASE_STATUS = {
@@ -215,11 +284,11 @@ TASK_SEVERITY = { "MINOR", "MODERATE", "MAJOR", "CRITICAL" }
 * **Priority** – how fast we want to act (SLA / scheduling).
 * **Severity** – how bad it is if we don’t (impact / risk).
 
-All Task and Case severity fields MUST use `TASK_SEVERITY` (DB: `task_severity_enum`). 
+All Task and Case severity fields MUST use `TASK_SEVERITY` (DB: `task_severity_enum`).
 
 ### 2.6 Visibility & privacy
 
-Canonical DB enum: `visibility_enum`. 
+Canonical DB enum: `visibility_enum`.
 
 ```text
 VISIBILITY = {
@@ -235,7 +304,21 @@ Examples:
 * Public safety broadcast → `PUBLIC`.
 * HR or clinical report → often `RESTRICTED` or `ANONYMISED` depending on profile and policies.
 
-Visibility interacts with exports and analytics per Doc 6 (e.g. only `PUBLIC`/`INTERNAL` rows can be raw‑exported by default). 
+Visibility interacts with exports and analytics per Doc 6 (e.g. only `PUBLIC`/`INTERNAL` rows can be raw-exported by default).
+
+#### 2.6.1 Comment-level visibility (Task comments)
+
+Task comments have their own per-comment visibility enum, stored in `task_comments.visibility`:
+
+```text
+COMMENT_VISIBILITY = {
+  "internal_only",      # visible only to internal staff on the case/task
+  "requester_visible",  # visible to the original requester plus internal staff
+  "org_wide"            # visible to all authorized users in the organization
+}
+```
+
+This is a **comment-level audience flag**, distinct from the global `VISIBILITY` enum used on Tasks and Cases. Implementations must not introduce additional values beyond these three without updating the schema and this document.
 
 ### 2.7 Log categories & levels
 
@@ -257,6 +340,8 @@ LOG_LEVEL = {
 }
 ```
 
+`WARNING` is the canonical log‑level value. Configuration loaders may accept `WARN` as a synonym and normalise it to `WARNING`, but `WARN` is not itself a first‑class enum value. Implementations must treat `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL` as the complete `LOG_LEVEL` set.
+
 Minimum fields per log entry:
 
 ```jsonc
@@ -277,7 +362,6 @@ Logging and audit tables (`activity_logs`, `security_events`, `system_metric_sna
 NOTIFICATION_CHANNEL = {
   "EMAIL",
   "SMS",
-  "PUSH",
   "IN_APP",
   "WEBHOOK"
 }
@@ -285,6 +369,7 @@ NOTIFICATION_CHANNEL = {
 
 * `EMAIL` is mandatory; others are optional per deployment.
 * DB `notifications.channel` stores lower‑case versions (`email`, `in_app`, `sms`, `webhook`).
+* `PUSH` is not a distinct channel in Orgo v3; mobile push, if implemented, is modelled via `IN_APP` plus client‑side delivery.
 
 Notification scope (metadata / workflow rules):
 
@@ -316,7 +401,7 @@ Broadcast bases:
 
 * `10`, `100`, `1000` → informational broadcasts (non‑actionable unless workflow rules explicitly say otherwise).
 
-Doc 8 carries the full label taxonomy and vertical/horizontal semantics; this document only locks the **string shape** and broadcast default behaviour. 
+Doc 8 carries the full label taxonomy and vertical/horizontal semantics; this document only locks the **string shape** and broadcast default behaviour.
 
 ### 2.10 Canonical Task field set (JSON contract)
 
@@ -387,7 +472,7 @@ For Cases, Doc 1 defines the physical schema (`cases`); this doc only fixes the 
   "description": "string",
 
   "status": "open",                           // CASE_STATUS
-  "severity": "MAJOR",                        // TASK_SEVERITY
+  "severity": "major",                        // TASK_SEVERITY (JSON lower-case; maps to DB enum MAJOR)
 
   "reactivity_time": "ISO-8601 duration or null",
 
@@ -402,6 +487,8 @@ For Cases, Doc 1 defines the physical schema (`cases`); this doc only fixes the 
   "updated_at": "ISO-8601 (UTC)"
 }
 ```
+
+JSON MAY use lower-case severity tokens (`"minor"`, `"moderate"`, `"major"`, `"critical"`); these must map 1:1 to the DB enum values `MINOR`, `MODERATE`, `MAJOR`, `CRITICAL`.
 
 ---
 
@@ -442,10 +529,12 @@ Every YAML config file:
 
 ```yaml
 metadata:
+  config_name: "service_or_module_name"       # e.g. "email_config", "database_connection"
   version: "3.0"
   environment: "<dev|staging|prod|offline>"
   last_updated: "YYYY-MM-DD"
   owner: "team-or-responsible-role"
+  organization_id: "default"                  # optional; "default" or specific org slug/id for org-scoped configs
 ```
 
 Validation (hard rules):
@@ -453,6 +542,8 @@ Validation (hard rules):
 * `metadata.environment` ∈ `ENVIRONMENT`.
 * `metadata.version` matches `^3\.[0-9]+$` for Orgo v3 configs.
 * `metadata.last_updated` is a valid `YYYY-MM-DD` date.
+* `metadata.config_name` is a non-empty string used as a stable identifier for this config.
+* If present, `metadata.organization_id` must either be `"default"` or a valid organization identifier known to the deployment.
 
 On failure:
 
@@ -513,7 +604,7 @@ Checklist:
 
 Responsibilities:
 
-* Poll mailboxes; ingest, parse, and normalise emails into `email_messages`. 
+* Poll mailboxes; ingest, parse, and normalise emails into `email_messages`.
 * Validate size, attachments, minimal fields.
 * Link emails to Tasks/Cases via workflow + domain rules.
 * Send outbound email as part of notifications.
@@ -531,7 +622,7 @@ Responsibilities:
 
 * Implement the canonical Task lifecycle using `TASK_STATUS`.
 * Enforce allowed state transitions and escalation rules.
-* Expose create/update/assign/escalate APIs used by domain modules and interfaces. 
+* Expose create/update/assign/escalate APIs used by domain modules and interfaces.
 
 Checklist:
 
@@ -545,7 +636,7 @@ Checklist:
 Responsibilities:
 
 * Route events (CREATED, ASSIGNED, ESCALATED, COMPLETED) into channel‑specific notifications.
-* Respect `NOTIFICATION_SCOPE` and Profiles (`notification_scope` in profile YAML). 
+* Respect `NOTIFICATION_SCOPE` and Profiles (`notification_scope` in profile YAML).
 
 Checklist:
 
@@ -560,7 +651,7 @@ Responsibilities:
 
 * Abstract DB connections (Postgres for online, SQLite for offline).
 * Provide safe CRUD helpers for Tasks, Cases, Emails, Logs, etc.
-* Coordinate offline sync (`offline_nodes`, `sync_sessions`, `sync_conflicts`). 
+* Coordinate offline sync (`offline_nodes`, `sync_sessions`, `sync_conflicts`).
 
 Checklist:
 
@@ -606,7 +697,7 @@ In `<domain>_module.yaml`:
 * `allowed_categories` is a subset of the global enum `{request, incident, update, report, distribution}`.
 * Domain subtypes live in `allowed_subtypes` and are stored under `Task.subtype` / `metadata["domain_subtype"]`.
 * `email_patterns` define how inbound emails are recognised as belonging to the domain.
-* Defaults for `visibility`, `category`, routing are allowed, but domain configs **must not** redefine global enums. 
+* Defaults for `visibility`, `category`, routing are allowed, but domain configs **must not** redefine global enums.
 
 ### 5.3 Handler hooks (behaviour)
 
@@ -616,7 +707,7 @@ Handlers implement, at minimum:
 * `on_task_created(ctx, task_id)` – fire notifications, side‑effects.
 * `on_task_update(ctx, payload)` – validate before updates.
 * `on_task_updated(ctx, task_id)` – follow‑up side‑effects.
-* `get_domain_fields(ctx, task_id)` – domain‑specific view of metadata. 
+* `get_domain_fields(ctx, task_id)` – domain‑specific view of metadata.
 
 Constraints:
 
@@ -638,7 +729,7 @@ Per profile:
 * `transparency_level` (full/balanced/restricted/private).
 * `escalation_granularity` (relaxed/moderate/detailed/aggressive).
 * `review_frequency` (real_time/daily/weekly/monthly/quarterly/yearly/ad_hoc).
-* `notification_scope` (individual/small_team/department/org_wide).
+* `notification_scope` (user/team/department/org_wide). Older configs may still use `individual` (→ `user`) and `small_team` (→ `team`); loaders may treat these as aliases, but the canonical tokens are `user`, `team`, `department`, `org_wide`.
 * `pattern_sensitivity`, `pattern_window_days`, `pattern_min_events`.
 * `severity_threshold` + `severity_policy` (immediate escalation per severity).
 * `logging_level` + `log_retention_days`.
@@ -650,7 +741,7 @@ Profiles are **templates**; Orgo ties them to orgs via `organization_profiles.pr
 
 ### 6.2 Example profile mapping
 
-Examples (keys from profiles YAML): `friend_group`, `hospital`, `advocacy_group`, `retail_chain`, `military_organization`, `environmental_group`, `artist_collective`. 
+Examples (keys from profiles YAML): `friend_group`, `hospital`, `advocacy_group`, `retail_chain`, `military_organization`, `environmental_group`, `artist_collective`.
 
 Core Services & Insights:
 
@@ -667,7 +758,7 @@ Insights and the cyclic overview transform the operational DB into **pattern sen
 ### 7.1 Analytics schema & ETL
 
 * Star schema in `insights.*` (dimensions: dates, organizations, tasks, cases, persons, groups; facts: tasks, cases, wellbeing check‑ins).
-* ETL jobs (Airflow DAGs) populate `fact_tasks`, `fact_cases`, `fact_wellbeing_checkins`, etc., under controlled retention windows and backup policies. 
+* ETL jobs (Airflow DAGs) populate `fact_tasks`, `fact_cases`, `fact_wellbeing_checkins`, etc., under controlled retention windows and backup policies.
 
 ### 7.2 Patterns as work
 
@@ -690,7 +781,7 @@ Guardrails apply across the stack:
 * Visibility enums (`VISIBILITY`) control who can see raw content and exports.
 * Logging/audit tables are canonical (`activity_logs`, `security_events`, `system_metric_snapshots`).
 * Security events track sensitive operations (failed logins, permission escalation, exports, config changes).
-* Exports in Insights enforce rows‑per‑export limits, PII masking, and allowed visibilities. 
+* Exports in Insights enforce rows‑per‑export limits, PII masking, and allowed visibilities.
 
 Invariants:
 
@@ -759,4 +850,4 @@ This document **locks** the following for Orgo v3:
 
 * **Guardrails** for visibility, logging, audit, and exports.
 
-All other docs in Orgo v3 (Docs 1, 3, 4, 5, 6, 8, etc.) must **reference and remain aligned to these definitions**, not redefine them.
+All other docs in Orgo v3 (Docs 1, 3, 4, 5, 6, 8, etc.) must **reference and remain aligned to these definitions**, not redefine them. 

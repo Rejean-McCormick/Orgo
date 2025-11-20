@@ -1,15 +1,44 @@
-﻿# Orgo v3 – Functional Code‑Name Inventory (Services & Hooks)
+﻿<!-- INDEX: Doc 4 – Functional Code‑Name Inventory (Services & Hooks) -->
+Index
 
-**Document 4 of 8 – Orgo v3 Blueprint** 
+Document role (mapping product features → code artifacts)
+
+Naming conventions (locked for Orgo v3)
+2.1 Backend (NestJS) naming
+2.2 Frontend (NextJS + RTK Query) naming
+2.3 Cross‑cutting constants (functional IDs)
+
+Main functional inventory table
+3.1 Backbone: Multi‑tenant org, users & persons
+3.2 Signals & ingestion (Email, API, offline)
+3.3 Cases, Tasks, Workflow & labels
+3.4 Configuration, profiles & global parameters
+3.5 Interfaces (API, web, live updates)
+3.6 Domain Modules (maintenance, HR, education, generic domain API)
+3.7 Insights, analytics & cyclic overview
+3.8 Infrastructure, monitoring & guardrails (health, metrics, alerts, security & compliance, validation)
+
+How to use these code names
+4.1 Backend services
+4.2 Frontend hooks
+4.3 Background jobs & queues
+4.4 Cross‑module references
+4.5 Governance for new features
+
+
+
+# Orgo v3 – Functional Code‑Name Inventory (Services & Hooks)
+
+**Document 4 of 8 – Orgo v3 Blueprint**
 
 This document is the mapping for the Orgo v3 TypeScript implementation (NestJS + Prisma + NextJS + RTK Query). It does not redefine schemas or enums; those are locked in:
 
 * **Doc 1 – Database Schema Reference** (all tables, including `tasks`, `cases`, labeling, offline & insights star‑schema). 
-* **Doc 2 – Foundations & Locked Variables** (canonical enums, canonical Task field set, log and visibility enums). 
-* **Doc 3 – Domain Modules** (thin adapters over the central Task/Case engine). 
+* **Doc 2 – Foundations, Locked Variables & Operational Checklists** (canonical enums, canonical Task field set, log and visibility enums, configuration and global checklists). 
+* **Doc 3 – Domain Modules (Orgo v3)** (thin adapters over the central Task/Case engine). 
 * **Doc 5 – Core Services Specification** (email gateway, task handler, workflow engine, notifier, logger, persistence). 
-* **Doc 6 – Insights Module Config** and the profiles YAML (environment‑specific analytics config and org profiles).
-* **Doc 8 – Cyclic Overview & Universal Flow Rules** (labeling system, Case/Task JSON contracts, cyclic reviews). 
+* **Doc 6 – Insights Module Config Parameters and the profiles YAML** (analytics & behavioural profiles). 
+* **Doc 8 – Cyclic Overview & Universal Flow Rules** (label semantics, JSON contracts, cyclic reviews). 
 
 ---
 
@@ -19,11 +48,13 @@ This document is the Rosetta stone between Orgo’s **conceptual features** and 
 
 * Multi‑tenant backbone (organizations, user accounts vs person profiles).
 * Signals in → Cases & Tasks out (email/API/offline → workflow → Case/Task).
-* Label system and routing (`<base>.<category><subcategory>.<horizontal_role>`). 
+* Label system and routing (`<base>.<category><subcategory>.<horizontal_role>`).
 * Domain modules as thin adapters over the global Task/Case engine.
 * Profiles (friend_group, hospital, advocacy_group, retail_chain, etc.) that tune reactivity, transparency, reviews, and automation.
 * Insights & cyclic overview (star schema, ETL/Airflow, pattern detection feeding back into new Cases/Tasks).
 * Guardrails (VISIBILITY, logging, audit, compliance exports).
+TypeScript examples assume Prisma as the ORM (`DatabaseService.getPrismaClient` etc.), but the functional inventory and the underlying schemas/enums remain ORM-neutral.
+
 
 It maps:
 
@@ -31,7 +62,7 @@ It maps:
   to
 * Backend services, background jobs, and frontend hooks in the Orgo v3 stack.
 
-All modules, services, jobs, and hooks in Orgo v3 must use the code names defined here. If implementation diverges, this document is the source of truth.
+All modules, services, jobs, and hooks in Orgo v3 must use the code names defined here. If implementation diverges, this document is the source of truth. 
 
 ---
 
@@ -80,6 +111,8 @@ All modules, services, jobs, and hooks in Orgo v3 must use the code names define
   * `apps/api/src/orgo/core/functional-ids.ts`
   * `apps/web/src/orgo/core/functional-ids.ts` (mirrored).
 
+
+
 ---
 
 ## 3. Main Functional Inventory Table
@@ -91,16 +124,20 @@ Format per row:
 * **Display Name → Code Name** – Human feature name mapped to explicit code identifier(s).
 * **Purpose / Behaviour** – 1–2 line description of what it does and how it fits the Orgo “nervous system”.
 
-Where both backend and frontend artifacts exist, they are listed together in the “Code Name” part.
+Where both backend and frontend artifacts exist, they are listed together in the “Code Name” part. 
+
+---
 
 ### 3.1 Backbone: Multi‑Tenant Org, Users & Persons
 
-| Module       | Sub‑module          | Display Name → Code Name                                                                                                                                                            | Purpose / Behaviour                                                                                                                                  |
-| ------------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Backbone** | Organizations       | Manage organizations (tenants) → `OrganizationService.createOrganization`, `OrganizationService.updateOrganization`, hooks `useOrganizationsQuery`, `useCreateOrganizationMutation` | Creates and updates `organizations` rows (slug, display name, timezone, default profile linkage, status) and enforces one active profile per org.    |
-| Backbone     | Persons             | Manage person profiles → `PersonProfileService.upsertPersonProfile`, hook `usePersonProfileQuery`                                                                                   | Manages `person_profiles` (people tasks/cases are about: students, players, employees, community members), whether or not they have login accounts.  |
-| Backbone     | Identity & RBAC     | Manage roles and permissions → `RoleService.createRole`, `PermissionService.assignPermission`, hook `useRolesQuery`                                                                 | Maintains `roles`, `permissions`, and `role_permissions`; powers RBAC decisions for tasks, cases, insights, and exports.                             |
-| Backbone     | User–Person linking | Link user accounts to person profiles → `IdentityLinkService.linkUserToPerson`, hook `useLinkUserPersonMutation`                                                                    | Connects `user_accounts` and `person_profiles` so tasks/cases can refer to the human subject separately from the Orgo login identity.                |
+| Module       | Sub‑module          | Display Name → Code Name                                                                                                                                                            | Purpose / Behaviour                                                                                                                                 |
+| ------------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backbone** | Organizations       | Manage organizations (tenants) → `OrganizationService.createOrganization`, `OrganizationService.updateOrganization`, hooks `useOrganizationsQuery`, `useCreateOrganizationMutation` | Creates and updates `organizations` rows (slug, display name, timezone, default profile linkage, status) and enforces one active profile per org.   |
+| Backbone     | Persons             | Manage person profiles → `PersonProfileService.upsertPersonProfile`, hook `usePersonProfileQuery`                                                                                   | Manages `person_profiles` (people tasks/cases are about: students, players, employees, community members), whether or not they have login accounts. |
+| Backbone     | Identity & RBAC     | Manage roles and permissions → `RoleService.createRole`, `PermissionService.assignPermission`, hook `useRolesQuery`                                                                 | Maintains `roles`, `permissions`, and `role_permissions`; powers RBAC decisions for tasks, cases, insights, and exports.                            |
+| Backbone     | User–Person linking | Link user accounts to person profiles → `IdentityLinkService.linkUserToPerson`, hook `useLinkUserPersonMutation`                                                                    | Connects `user_accounts` and `person_profiles` so tasks/cases can refer to the human subject separately from the Orgo login identity.               |
+
+
 
 ---
 
@@ -118,28 +155,32 @@ Where both backend and frontend artifacts exist, they are listed together in the
 | Core Services     | Offline & Sync   | Sync offline node → `SyncService.syncOfflineNode`, job `orgo.sync.run-node`                                                       | Reconciles SQLite‑backed offline nodes with central Postgres using `offline_nodes`, `sync_sessions`, and `sync_conflicts`.                             |
 | Core Services     | Offline & Sync   | Sync offline task cache → `SyncService.syncOfflineTasks`, job `orgo.db.sync-offline`                                              | Applies queued offline task changes into the online `tasks` table, then hydrates local caches with authoritative state.                                |
 
+
+
 ---
 
 ### 3.3 Cases, Tasks, Workflow & Labels
 
-| Module            | Sub‑module      | Display Name → Code Name                                                                                       | Purpose / Behaviour                                                                                                                                                                                                                                                                                                                                                                                 |
-| ----------------- | --------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Core Services** | Case Management | Create Case from signal → `CaseService.createCaseFromSignal`, hook `useCreateCaseMutation`                     | Creates a `cases` row from an incoming signal or pattern, assigning `source_type`, `label`, CASE_STATUS (`open`,`in_progress`,`resolved`,`archived`), severity, and reactivity fields according to org profile.                                                                                                                                                                                     |
-| Core Services     | Case Management | Fetch Case with linked Tasks → `CaseService.getCaseWithTasks`, hook `useCaseDetailsQuery`                      | Returns a Case plus its linked `tasks`, labels, and participants, used by generic Case UIs and domain‑specific case views (e.g. HR).                                                                                                                                                                                                                                                                |
-| Core Services     | Case Management | Run cyclic Case review → `CaseReviewService.runCyclicReview`, job `orgo.cases.cyclic-review`                   | Implements weekly/monthly/yearly Case review passes defined in Doc 8, creating audit/review Cases when thresholds are crossed instead of just emitting metrics.                                                                                                                                                                                                                                     |
-| Core Services     | Workflow Engine | Execute workflow → `WorkflowEngineService.executeWorkflow`, job `orgo.workflow.execute`                        | Executes workflow definitions over tasks/cases (routing, metadata updates, escalation), logging each action via the `WORKFLOW` log category.                                                                                                                                                                                                                                                        |
-| Core Services     | Workflow Engine | Validate workflow definition → `WorkflowEngineService.validateWorkflow`                                        | Ensures workflow rules only use canonical enums (TASK_STATUS, TASK_PRIORITY, TASK_SEVERITY, VISIBILITY) and valid actions.                                                                                                                                                                                                                                                                          |
-| Core Services     | Workflow Engine | Simulate workflow run → `WorkflowEngineService.simulate`, hook `useWorkflowSimulationMutation`                 | Runs a dry‑run of a workflow on sample data to preview created Tasks, routing, and escalations without persisting changes.                                                                                                                                                                                                                                                                          |
-| Core Services     | Workflow Engine | Evaluate escalation rules → `EscalationService.evaluateEscalations`, job `orgo.workflow.check-escalations`     | Periodically checks Tasks against `reactivity_deadline_at` and escalation policies, then drives status `ESCALATED` transitions and notifications.                                                                                                                                                                                                                                                   |
-| Core Services     | Task Management | Create Task from event → `TaskService.createTask`, hook `useCreateTaskMutation`                                | Creates a Task from a signal/workflow with canonical fields (`task_id`, `organization_id`, `case_id`, `type`, `category`, `subtype`, `label`, `title`, `description`, `status`, `priority`, `severity`, `visibility`, `assignee_role`, `assignee_user_id`, `due_at`, `reactivity_time`, `escalation_level`, `source`, `metadata`), initializing `status = PENDING` and deriving SLAs from profiles. |
-| Core Services     | Task Management | Update Task status → `TaskService.updateTaskStatus`, hook `useUpdateTaskStatusMutation`                        | Changes a Task’s status using the TASK_STATUS enum (`PENDING`,`IN_PROGRESS`,`ON_HOLD`,`COMPLETED`,`FAILED`,`ESCALATED`,`CANCELLED`), enforcing the canonical state machine and logging transitions as `task_events`.                                                                                                                                                                                |
-| Core Services     | Task Management | Escalate Task → `TaskService.escalateTask`, job `orgo.task.escalate`                                           | Increments `escalation_level`, sets `status = ESCALATED`, attaches escalation events, and triggers notifications to higher‑level roles defined in policies and profiles.                                                                                                                                                                                                                            |
-| Core Services     | Task Management | Add Task comment → `TaskService.addComment`, hook `useAddTaskCommentMutation`                                  | Appends structured comments in `task_comments`, respecting per‑comment visibility (`internal_only`,`requester_visible`,`org_wide`) and audit requirements.                                                                                                                                                                                                                                          |
-| Core Services     | Task Management | Fetch Task details → `TaskService.getTaskById`, hook `useTaskDetailsQuery`                                     | Returns a Task plus metadata, label, workflow history, escalation status, comments, and linked Case/Persons for detailed views.                                                                                                                                                                                                                                                                     |
-| Core Services     | Label & Routing | Resolve canonical label & routing → `LabelRoutingService.resolveLabel`, `RoutingRuleService.applyRoutingRules` | Given a signal or Task draft, computes the canonical label (`<base>.<category><subcategory>.<horizontal_role>`) and applies `routing_rules` to choose an owning role/queue.                                                                                                                                                                                                                         |
-| Core Services     | Label & Routing | Manage classification labels → `LabelService.createLabelDefinition`, hook `useLabelDefinitionsQuery`           | Manages `label_definitions`/`entity_labels` used for risk/topics tags and pattern detection, separate from the single canonical information label on Cases/Tasks.                                                                                                                                                                                                                                   |
-| Core Services     | Database Ops    | Connect to primary DB → `DatabaseService.getPrismaClient`                                                      | Central entry to Prisma backed by validated `database_connection` config (Postgres 15+, optional SQLite for offline dev).                                                                                                                                                                                                                                                                           |
-| Core Services     | Database Ops    | Run CRUD on entity → `RepositoryFactory.getRepository(entity).<op>`                                            | Generic repositories for create/read/update/delete over Orgo entities (Tasks, Cases, Persons, etc.), always using parameterized queries.                                                                                                                                                                                                                                                            |
+| Module            | Sub‑module      | Display Name → Code Name                                                                                       | Purpose / Behaviour                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------- | --------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Core Services** | Case Management | Create Case from signal → `CaseService.createCaseFromSignal`, hook `useCreateCaseMutation`                     | Creates a `cases` row from an incoming signal or pattern, assigning `source_type`, `label`, CASE_STATUS (`open`,`in_progress`,`resolved`,`archived`), severity, and reactivity fields according to org profile.                                                                                                                                                                                                                                                                                                                                                           |
+| Core Services     | Case Management | Fetch Case with linked Tasks → `CaseService.getCaseWithTasks`, hook `useCaseDetailsQuery`                      | Returns a Case plus its linked `tasks`, labels, and participants, used by generic Case UIs and domain‑specific case views (e.g. HR).                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Core Services     | Case Management | Run cyclic Case review → `CaseReviewService.runCyclicReview`, job `orgo.cases.cyclic-review`                   | Implements weekly/monthly/yearly Case review passes defined in Doc 8, creating audit/review Cases when thresholds are crossed instead of just emitting metrics.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Core Services     | Workflow Engine | Execute workflow → `WorkflowEngineService.executeWorkflow`, job `orgo.workflow.execute`                        | Executes workflow definitions over tasks/cases (routing, metadata updates, escalation), logging each action via the `WORKFLOW` log category.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Core Services     | Workflow Engine | Validate workflow definition → `WorkflowEngineService.validateWorkflow`                                        | Ensures workflow rules only use canonical enums (TASK_STATUS, TASK_PRIORITY, TASK_SEVERITY, VISIBILITY) and valid actions.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Core Services     | Workflow Engine | Simulate workflow run → `WorkflowEngineService.simulate`, hook `useWorkflowSimulationMutation`                 | Runs a dry‑run of a workflow on sample data to preview created Tasks, routing, and escalations without persisting changes.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Core Services     | Workflow Engine | Evaluate escalation rules → `EscalationService.evaluateEscalations`, job `orgo.workflow.check-escalations`     | Periodically checks Tasks against `reactivity_deadline_at` and escalation policies, then drives status `ESCALATED` transitions and notifications.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Core Services     | Task Management | Create Task from event → `TaskService.createTask`, hook `useCreateTaskMutation`                                | Creates a Task from a signal/workflow using the canonical Task field set (`task_id`, `organization_id`, `case_id`, `type`, `category`, `subtype`, `label`, `title`, `description`, `status`, `priority`, `severity`, `visibility`, `source`, `created_by_user_id`, `requester_person_id`, `owner_role_id`, `owner_user_id`, `assignee_role`, `due_at`, `reactivity_time`, `reactivity_deadline_at`, `escalation_level`, `closed_at`, `metadata`); initializes `status = PENDING` and computes `reactivity_deadline_at` from `reactivity_time` and the active org profile. |
+| Core Services     | Task Management | Update Task status → `TaskService.updateTaskStatus`, hook `useUpdateTaskStatusMutation`                        | Changes a Task’s status using the TASK_STATUS enum (`PENDING`,`IN_PROGRESS`,`ON_HOLD`,`COMPLETED`,`FAILED`,`ESCALATED`,`CANCELLED`), enforcing the canonical state machine and logging transitions as `task_events`.                                                                                                                                                                                                                                                                                                                                                      |
+| Core Services     | Task Management | Escalate Task → `TaskService.escalateTask`, job `orgo.task.escalate`                                           | Increments `escalation_level`, sets `status = ESCALATED`, attaches escalation events, and triggers notifications to higher‑level roles defined in policies and profiles.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Core Services     | Task Management | Add Task comment → `TaskService.addComment`, hook `useAddTaskCommentMutation`                                  | Appends structured comments in `task_comments`, respecting per‑comment visibility (`internal_only`,`requester_visible`,`org_wide`) and audit requirements.                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Core Services     | Task Management | Fetch Task details → `TaskService.getTaskById`, hook `useTaskDetailsQuery`                                     | Returns a Task plus metadata, label, workflow history, escalation status, comments, and linked Case/Persons for detailed views.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Core Services     | Label & Routing | Resolve canonical label & routing → `LabelRoutingService.resolveLabel`, `RoutingRuleService.applyRoutingRules` | Given a signal or Task draft, computes the canonical label (`<base>.<category><subcategory>.<horizontal_role>`) and applies `routing_rules` to choose an owning role/queue.                                                                                                                                                                                                                                                                                                                                                                                               |
+| Core Services     | Label & Routing | Manage classification labels → `LabelService.createLabelDefinition`, hook `useLabelDefinitionsQuery`           | Manages `label_definitions`/`entity_labels` used for risk/topics tags and pattern detection, separate from the single canonical information label on Cases/Tasks.                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Core Services     | Database Ops    | Connect to primary DB → `DatabaseService.getPrismaClient`                                                      | Central entry to Prisma backed by validated `database_connection` config (Postgres 15+, optional SQLite for offline dev).                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Core Services     | Database Ops    | Run CRUD on entity → `RepositoryFactory.getRepository(entity).<op>`                                            | Generic repositories for create/read/update/delete over Orgo entities (Tasks, Cases, Persons, etc.), always using parameterized queries.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+
+
 
 ---
 
@@ -154,6 +195,8 @@ Where both backend and frontend artifacts exist, they are listed together in the
 | Configuration & Profiles     | Config Store  | Update service configuration → `ConfigService.updateServiceConfig`, hook `useUpdateServiceConfigMutation` | Persists configuration changes (email, workflows, insights, notifications), validates them, and writes audit records.                                                             |
 | Configuration & Profiles     | Config Store  | Import configuration bundle → `ConfigService.importConfigBundle`, job `orgo.config.import-bundle`         | Imports YAML/JSON config bundles (including profiles and insights settings), validates against schema, and activates as a single atomic change set.                               |
 | Configuration & Profiles     | Feature Flags | Toggle feature flags → `FeatureFlagService.setFlag`, hook `useFeatureFlagsQuery`                          | Manages `feature_flags` to gradually roll out new modules (e.g. new insights dashboards, domain modules) per org.                                                                 |
+
+
 
 ---
 
@@ -173,6 +216,8 @@ Where both backend and frontend artifacts exist, they are listed together in the
 | Interfaces (API & Web)     | Notifications | Send in‑app notification → `NotificationService.sendInApp`, hook `useNotificationsFeedQuery`                                   | Delivers notifications into Orgo UI (banner/toast) alongside email/SMS channels.                        |
 | Interfaces (API & Web)     | Notifications | Subscribe to live Task updates → `TaskEventsGateway` (WebSocket), hook `useTaskEventStream`                                    | Streams Task events (status changes, comments, escalations) to the UI in near real‑time.                |
 
+
+
 ---
 
 ### 3.6 Domain Modules (Maintenance, HR, Education, …)
@@ -187,6 +232,8 @@ Where both backend and frontend artifacts exist, they are listed together in the
 | Domain Modules     | Education          | List classroom incidents → `EducationModuleService.listIncidents`, hook `useEducationIncidentsQuery`                       | Returns Tasks scoped to education domain, enriched with group/person context for dashboards and reviews.                           |
 | Domain Modules     | Generic Domain API | Generic domain Task factory → `DomainTaskFactory.createDomainTask`                                                         | Shared abstraction used by all domain modules to construct domain‑specific Task metadata views on top of the canonical Task model. |
 | Domain Modules     | Generic Domain API | Domain workflow override → `DomainWorkflowService.applyOverrides`                                                          | Applies domain‑specific overrides (e.g. tighter HR reactivity, different escalation levels) on top of global workflow rules.       |
+
+
 
 ---
 
@@ -234,6 +281,8 @@ Where both backend and frontend artifacts exist, they are listed together in the
 | Security & Compliance     | Validation             | Validate incoming API payload → `PayloadValidationPipe`                                                       | Validates DTOs for Tasks, Cases, workflows, and imports at controller boundaries.                                             |
 | Security & Compliance     | Validation             | Normalize Task metadata → `MetadataService.normalizeMetadata`                                                 | Normalizes free‑form Task metadata to avoid conflicts with canonical Task fields and enums.                                   |
 
+
+
 ---
 
 ## 4. How To Use These Code Names
@@ -268,4 +317,4 @@ Where both backend and frontend artifacts exist, they are listed together in the
      * A new RTK Query endpoint/hook, or
      * A new background job or Airflow DAG,
 
-     must add a corresponding row to this inventory as part of the pull request. Code review should block merges until the inventory remains consistent with the implementation and with the canonical schemas/enums in Docs 1–2.
+     must add a corresponding row to this inventory as part of the pull request. Code review should block merges until the inventory remains consistent with the implementation and with the canonical schemas/enums in Docs 1–2. 

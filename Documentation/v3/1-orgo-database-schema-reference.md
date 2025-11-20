@@ -1,5 +1,75 @@
-﻿Here is the complete, updated text of **Document 1 – Orgo v3 Database Schema Reference (Custom Tables)**. 
+﻿Preface
+1.1 Scope
+1.2 Technology & naming assumptions
+1.3 Multi‑tenancy conventions
+1.4 Default audit columns
+1.5 Enum implementation
 
+Module 1 – Core Platform & Multi‑Tenancy
+2.1 Organization (organizations)
+2.2 Organization Profile (organization_profiles)
+
+Module 2 – Identity & Access Control
+3.1 User Accounts & Person Profiles (user_accounts, person_profiles)
+3.2 Roles, Permissions & User Role Assignments (roles, permissions, role_permissions, user_role_assignments)
+3.3 Sessions & API Tokens (login_sessions, api_tokens)
+
+Module 3 – Communication & Email
+4.1 Email Account Configuration (email_account_configs)
+4.2 Role Inboxes (role_inboxes)
+4.3 Email Threads & Messages (email_threads, email_messages)
+4.4 Email Attachments (email_attachments)
+4.5 Email Ingestion & Processing Events (email_ingestion_batches, email_processing_events)
+
+Module 4 – Task & Workflow Engine
+5.1 Tasks, Assignments, Events & Comments (tasks, task_assignments, task_events, task_comments)
+5.2 Routing Rules (routing_rules)
+5.3 Workflow Definitions & Instances (workflow_definitions, workflow_instances, workflow_transition_events)
+5.4 Escalation Policies, Instances & Events (escalation_policies, escalation_instances, escalation_events)
+
+Module 5 – Configuration, Parameters & Feature Flags
+6.1 Parameter Overrides (parameter_overrides)
+6.2 Feature Flags (feature_flags)
+
+Module 6 – Labeling & Classification
+7.1 Label Definitions (label_definitions)
+7.2 Entity Labels (entity_labels)
+
+Module 7 – Notifications
+8.1 Notification Templates (notification_templates)
+8.2 Notifications (notifications)
+
+Module 8 – Logging, Audit & Observability
+9.1 Activity Logs (activity_logs)
+9.2 Security Events (security_events)
+9.3 System Metric Snapshots (system_metric_snapshots)
+
+Module 9 – Cases (Generic)
+10.1 Cases (cases)
+
+Module 10 – Domain: Operations & Maintenance
+11.1 Maintenance Assets (maintenance_assets)
+11.2 Maintenance Task Links (maintenance_task_links)
+11.3 Maintenance Calendar Slots (maintenance_calendar_slots)
+
+Module 11 – Domain: HR & Wellbeing
+12.1 HR Cases & Participants (hr_cases, hr_case_participants)
+12.2 HR Case Task Links (hr_case_task_links)
+12.3 Wellbeing Check‑Ins (wellbeing_checkins)
+
+Module 12 – Domain: Education & Groups
+13.1 Learning Groups & Memberships (learning_groups, learning_group_memberships)
+13.2 Education Task Links (education_task_links)
+
+Module 13 – Offline & Sync
+14.1 Offline Nodes & Sync Sessions (offline_nodes, sync_sessions)
+14.2 Sync Conflicts (sync_conflicts)
+14.3 Email Archive Imports & Message Mappings (email_archive_import_batches, imported_message_mappings)
+
+Module 14 – Analytics / Insights Star‑Schema (insights.*)
+15.1 Date & Organization Dimensions (insights.dim_dates, insights.dim_organizations)
+15.2 Task, Case, Person & Group Dimensions (insights.dim_tasks, insights.dim_cases, insights.dim_persons, insights.dim_learning_groups)
+15.3 Fact Tables (Tasks, Cases, Wellbeing Check‑Ins) (insights.fact_tasks, insights.fact_cases, insights.fact_wellbeing_checkins)
 ---
 
 # Orgo v3 – Database Schema Reference (Custom Tables)
@@ -17,11 +87,12 @@ This document is the **canonical reference for all custom Orgo v3 database table
   * Migration bookkeeping (e.g. Alembic tables).
   * Any third‑party auth/session tables we might adopt later.
 
-Other documents (e.g. Insights / Analytics specs) may describe **how** these tables are populated or queried, but **table names and core columns are defined here** and must not diverge.
+Other documents (e.g. Foundations, Core Services, Domain Modules, Insights / Analytics specs) may describe **how** these tables are populated or queried, but **table names and core columns are defined here** and must not diverge.
 
 ### Technology & naming assumptions
 
-* **Database:** PostgreSQL **15+**.
+ * **Operational database:** PostgreSQL **15+**.
+   *This document defines the canonical shapes for both the operational schema and the analytics star‑schema. The analytics star‑schema MAY be implemented on PostgreSQL 15+ or mirrored into an external warehouse (e.g., BigQuery, Snowflake); when not on Postgres, the same column shapes and token sets apply with warehouse‑appropriate types.*
 * **Back‑end stacks (implementation‑neutral spec):**
 
   * **Python reference implementation:** Python **3.11.x** + SQLAlchemy 2.x.
@@ -58,7 +129,7 @@ We don’t repeat these in every “Key columns” list unless there’s somethi
 
 ### Enum implementation
 
-For Orgo v3, all enums listed here are **implemented as PostgreSQL ENUM types** with the exact value sets given in this document (not just free‑text columns).
+For Orgo v3, all enums listed here are implemented as PostgreSQL ENUM types on the **operational schema** with the exact value sets given in this document (not just free‑text columns). For the **Insights/analytics star‑schema** (`insights.*`), the same token sets are stored as `TEXT` columns containing the canonical values, to decouple the warehouse from OLTP enums (see Module 14 and the Insights config).
 
 Key examples:
 
@@ -68,6 +139,7 @@ Key examples:
 * `task_severity_enum = 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL'`
 * `visibility_enum = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED'`
 * `task_source_enum = 'email' | 'api' | 'manual' | 'sync'`
+* `notification_channel_enum = 'email' | 'sms' | 'in_app' | 'webhook'`
 
 > Historical data where `severity = 'info'` SHALL be treated as `severity = 'MINOR'` on read.
 > Historical Task/Case `source` values:
@@ -101,7 +173,7 @@ Key columns:
 * `default_locale` (text; e.g. `"en"`, `"fr-CA"`)
 
 **Organization Profile → OrganizationProfile (table: organization_profiles)**
-Purpose: Stores high‑level behavioural profile for an organization (reactivity, transparency, retention, pattern sensitivity).
+Purpose: Stores high‑level behavioural profile for an organization (reactivity, transparency, retention, pattern sensitivity). Profile codes correspond to entries in the profiles YAML (friend_group, hospital, advocacy_group, retail_chain, military_organization, environmental_group, artist_collective, etc.). 
 Key columns:
 
 * `id` (UUID PK)
@@ -268,7 +340,7 @@ Key columns:
 * `last_message_at` (timestamptz)
 
 **Email Message → EmailMessage (table: email_messages)**
-Purpose: Normalized metadata and body for individual emails Orgo ingests or sends.
+Purpose: Normalized metadata and body for individual emails Orgo ingests or sends. Logical use in Core Services follows the EMAIL_MESSAGE model in the Core Services spec; this table is the physical storage. 
 Key columns:
 
 * `id` (UUID PK)
@@ -333,7 +405,7 @@ Key columns:
 ### Tasks & Comments
 
 **Task → Task (table: tasks)**
-Purpose: Central unit of work in Orgo; all workflows (maintenance, HR, education, etc.) map to tasks with metadata.
+Purpose: Central unit of work in Orgo; all workflows (maintenance, HR, education, etc.) map to tasks with metadata. The canonical Task field set and enums are locked in the Foundations doc and reused by domain modules and core services.
 Key columns:
 
 * `id` (UUID PK)
@@ -402,6 +474,8 @@ Key columns:
 * `author_user_id` (UUID FK → user_accounts.id, nullable for system notes)
 * `visibility` (enum: `internal_only` | `requester_visible` | `org_wide`)
 * `body` (text)
+
+> `TaskComment.visibility` is a **comment‑level audience flag**, distinct from the global `visibility_enum` used on Tasks/Cases.
 
 ### Routing Rules
 
@@ -511,7 +585,7 @@ Key columns:
 ## Module 5 – Configuration, Parameters & Feature Flags
 
 **Parameter Override → ParameterOverride (table: parameter_overrides)**
-Purpose: Physical storage of configuration knobs (parameters) per org, aligned with the Global Parameter Reference.
+Purpose: Physical storage of configuration knobs (parameters) per org, aligned with the Global Parameter Reference. 
 Key columns:
 
 * `id` (UUID PK)
@@ -582,7 +656,7 @@ Key columns:
 * `id` (UUID PK)
 * `organization_id` (UUID FK → organizations.id, nullable for global templates)
 * `code` (text; unique per org, e.g. `task_created_requester`, `task_escalated_owner`)
-* `channel` (enum: `email` | `in_app` | `sms` | `webhook`)
+* `channel` (`notification_channel_enum`: `email` | `sms` | `in_app` | `webhook`)
 * `subject_template` (text, nullable; email‑only)
 * `body_template` (text; text or JSON payload template)
 * `is_active` (boolean)
@@ -594,9 +668,9 @@ Key columns:
 
 * `id` (UUID PK)
 * `organization_id` (UUID FK → organizations.id)
-* `channel` (enum: `email` | `in_app` | `sms` | `webhook`)
+* `channel` (`notification_channel_enum`: `email` | `sms` | `in_app` | `webhook`)
 * `recipient_user_id` (UUID FK → user_accounts.id, nullable)
-* `recipient_address` (text, nullable; email/phone/webhook URL)
+* `recipient_address` (text, nullable; email/phone/webhook URL/device token)
 * `template_id` (UUID FK → notification_templates.id, nullable if custom payload)
 * `payload` (JSONB; merged data ready for the channel)
 * `status` (enum: `queued` | `sent` | `failed` | `cancelled`)
@@ -605,6 +679,8 @@ Key columns:
 * `sent_at` (timestamptz, nullable)
 * `failed_at` (timestamptz, nullable)
 * `error_message` (text, nullable)
+
+  Channel values in both tables are stored as lower-case tokens and map 1:1 to the global `NOTIFICATION_CHANNEL` enum (`EMAIL`, `SMS`, `IN_APP`, `WEBHOOK`) used in configs and services. Mobile push, if implemented, is modelled via `IN_APP` plus client-side delivery rather than a separate `PUSH` channel.
 
 ---
 
@@ -652,7 +728,7 @@ Key columns:
 ## Module 9 – Cases (Generic)
 
 **Case → Case (table: cases)**
-Purpose: Generic case container that groups tasks, patterns, and context across domains (HR, maintenance incidents, education support, advocacy, etc.).
+Purpose: Generic case container that groups tasks, patterns, and context across domains (HR, maintenance incidents, education support, advocacy, etc.). JSON contracts and lifecycle semantics are defined in the Cyclic Overview / JSON doc; this table is the physical backing.
 Key columns:
 
 * `id` (UUID PK)
@@ -876,7 +952,9 @@ Key columns:
 
 ## Module 14 – Analytics / Insights Star‑Schema
 
-All analytics tables live in the **`insights` schema** of the primary PostgreSQL database. This module defines the **canonical fact and dimension tables** used by the Insights layer.
+All analytics tables live in the **`insights` schema** of the primary PostgreSQL database (or a dedicated analytics database with the same schema names). This module defines the **canonical fact and dimension tables** used by the Insights layer; configuration and retention are defined in the Insights Module Config.
+
+In line with the Insights config, **enum‑like fields in this schema are stored as `TEXT` columns** whose values are the canonical enum tokens from the operational schema (`TASK_STATUS`, `TASK_PRIORITY`, `TASK_SEVERITY`, `VISIBILITY`, etc.). They are not Postgres ENUMs in the warehouse.
 
 ### Dimensions
 
@@ -917,14 +995,14 @@ Key columns:
 * `type` (text)
 * `category` (text)
 * `subtype` (text, nullable)
-* `priority` (`task_priority_enum`)
-* `severity` (`task_severity_enum`)
-* `visibility` (`visibility_enum`)
-* `source` (`task_source_enum`)
+* `priority` (text; one of `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`)
+* `severity` (text; one of `MINOR`, `MODERATE`, `MAJOR`, `CRITICAL`)
+* `visibility` (text; one of `PUBLIC`, `INTERNAL`, `RESTRICTED`, `ANONYMISED`)
+* `source` (text; one of `email`, `api`, `manual`, `sync`)
 * `assignee_role` (text, nullable)
 * `created_at` (timestamptz)
 * `closed_at` (timestamptz, nullable)
-* `current_status` (`task_status_enum`)
+* `current_status` (text; one of `PENDING`, `IN_PROGRESS`, `ON_HOLD`, `COMPLETED`, `FAILED`, `ESCALATED`, `CANCELLED`)
 
 **Analytics Case Dimension → DimCase (table: insights.dim_cases)**
 Purpose: Denormalized view of cases for reporting.
@@ -934,8 +1012,8 @@ Key columns:
 * `organization_id` (UUID FK → organizations.id)
 * `label` (text)
 * `title` (text)
-* `status` (enum: `open` | `in_progress` | `resolved` | `archived`)
-* `severity` (`task_severity_enum`)
+* `status` (text; one of `open`, `in_progress`, `resolved`, `archived`)
+* `severity` (text; one of `MINOR`, `MODERATE`, `MAJOR`, `CRITICAL`)
 * `origin_vertical_level` (integer)
 * `origin_role` (text)
 * `opened_at` (timestamptz)
@@ -972,10 +1050,10 @@ Key columns:
 * `organization_id` (UUID FK → organizations.id)
 * `created_date_key` (date FK → insights.dim_dates.date_key)
 * `closed_date_key` (date FK → insights.dim_dates.date_key, nullable)
-* `current_status` (`task_status_enum`)
-* `priority` (`task_priority_enum`)
-* `severity` (`task_severity_enum`)
-* `source` (`task_source_enum`)
+* `current_status` (text; one of `PENDING`, `IN_PROGRESS`, `ON_HOLD`, `COMPLETED`, `FAILED`, `ESCALATED`, `CANCELLED`)
+* `priority` (text; one of `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`)
+* `severity` (text; one of `MINOR`, `MODERATE`, `MAJOR`, `CRITICAL`)
+* `source` (text; one of `email`, `api`, `manual`, `sync`)
 * `time_to_first_response_seconds` (bigint, nullable)
 * `time_to_completion_seconds` (bigint, nullable)
 * `escalation_count` (integer, default 0)
@@ -990,8 +1068,8 @@ Key columns:
 * `organization_id` (UUID FK → organizations.id)
 * `opened_date_key` (date FK → insights.dim_dates.date_key)
 * `closed_date_key` (date FK → insights.dim_dates.date_key, nullable)
-* `status` (enum: `open` | `in_progress` | `resolved` | `archived`)
-* `severity` (`task_severity_enum`)
+* `status` (text; one of `open`, `in_progress`, `resolved`, `archived`)
+* `severity` (text; one of `MINOR`, `MODERATE`, `MAJOR`, `CRITICAL`)
 * `linked_task_count` (integer, default 0)
 * `escalation_count` (integer, default 0)
 * `review_count` (integer, default 0)

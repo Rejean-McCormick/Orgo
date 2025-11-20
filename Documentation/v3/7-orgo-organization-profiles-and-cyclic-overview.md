@@ -1,4 +1,18 @@
-﻿profiles:
+﻿<!-- INDEX: Doc 7 – Organization Profiles & Behavioural Archetypes (profiles YAML) (Use YAML comments only so the file stays valid.) -->
+INDEX
+1. _template – Schema template (reference only)
+2. default – Balanced default organizational profile
+3. friend_group – Low‑stakes social group
+4. hospital – Clinical / hospital environment (safety‑critical)
+5. advocacy_group – Advocacy / human‑rights NGO
+6. retail_chain – Distributed retail / franchise operations
+7. military_organization – Highly sensitive, fully audited environment
+8. environmental_group – Environmental / climate organization
+9. artist_collective – Creative collective, relaxed timing
+
+
+
+profiles:
   # ---------------------------------------------------------------------------
   # SCHEMA TEMPLATE (REFERENCE ONLY)
   # ---------------------------------------------------------------------------
@@ -7,9 +21,9 @@
 
     # --- File-level metadata for this profile (per your config checklist) ---
     metadata:
-      version: "1.0"
+      version: "3.0"
       last_updated: "2025-11-19"
-      environment: "production"          # development | staging | production
+      environment: "prod"               # dev | staging | prod | offline
 
     # 1. Reactivity / Escalation timing
     reactivity_seconds: 0               # base time before first escalation (in seconds)
@@ -20,7 +34,7 @@
     #   public      -> PUBLIC
     #   internal    -> INTERNAL
     #   restricted  -> RESTRICTED
-    #   anonymized  -> ANONYMISED
+    #   anonymised  -> ANONYMISED
     transparency_level: balanced        # full | balanced | restricted | private
 
     # 3. Escalation structure
@@ -30,7 +44,7 @@
     review_frequency: monthly           # real_time | daily | weekly | monthly | quarterly | yearly | ad_hoc
 
     # 5. Who gets notified
-    notification_scope: department      # individual | small_team | department | org_wide
+    notification_scope: department      # user | team | department | org_wide
 
     # 6. Pattern detection
     pattern_sensitivity: medium         # low | medium | high | critical
@@ -63,9 +77,9 @@
     # 10. Defaults for task metadata
     # JSON values map to canonical enums:
     #   default_priority: low|medium|high|critical -> TASK_PRIORITY
-    #   visibility: public|internal|restricted|anonymized -> VISIBILITY
+    #   visibility: public|internal|restricted|anonymised -> VISIBILITY
     default_task_metadata:
-      visibility: internal              # public | internal | restricted | anonymized
+      visibility: internal              # public | internal | restricted | anonymised
       default_priority: medium          # low | medium | high | critical
       default_reactivity_seconds: 86400 # default SLA for tasks created under this profile
 
@@ -84,15 +98,71 @@
         high_risk_indicators: false
 
   # ---------------------------------------------------------------------------
+  # DEFAULT PROFILE
+  # Balanced org-wide defaults when nothing more specific is selected
+  # ---------------------------------------------------------------------------
+  default:
+    description: "Default balanced organizational profile used when no more specific archetype is selected."
+    metadata:
+      version: "3.0"
+      last_updated: "2025-11-19"
+      environment: "prod"
+
+    # Reactivity: moderate (12–24h)
+    reactivity_seconds: 43200           # 12 hours
+    max_escalation_seconds: 172800      # 48 hours
+
+    transparency_level: balanced
+    escalation_granularity: moderate
+    review_frequency: monthly
+    notification_scope: department      # canonical enum value
+
+    pattern_sensitivity: medium
+    pattern_window_days: 30
+    pattern_min_events: 3
+
+    severity_threshold: medium
+    severity_policy:
+      critical:
+        immediate_escalation: true
+      major:
+        immediate_escalation: true
+      minor:
+        immediate_escalation: false
+
+    logging_level: standard
+    log_retention_days: 1095            # ~3 years
+
+    automation_level: medium
+
+    default_task_metadata:
+      visibility: internal
+      default_priority: medium
+      default_reactivity_seconds: 43200
+
+    cyclic_overview:
+      enabled: true
+      schedule:
+        weekly: true
+        monthly: true
+        yearly: true
+      threshold_triggers:
+        incident_frequency:
+          min_events: 3
+          window_days: 30
+        cross_departmental_trends: true
+        high_risk_indicators: true
+
+  # ---------------------------------------------------------------------------
   # 1. FRIEND GROUP
   # Low‑stakes social group, almost everything transparent, low urgency
   # ---------------------------------------------------------------------------
   friend_group:
     description: "Small, low‑stakes social group; almost everything is transparent; escalation over days or weeks."
     metadata:
-      version: "1.0"
+      version: "3.0"
       last_updated: "2025-11-19"
-      environment: "production"
+      environment: "prod"
 
     # Reactivity: relaxed (days)
     reactivity_seconds: 259200          # 3 days before first escalation
@@ -108,7 +178,7 @@
     review_frequency: ad_hoc            # explicit annual or ad‑hoc reviews only
 
     # Notification scope: small team
-    notification_scope: small_team      # only people directly involved / mentioned
+    notification_scope: team            # only people directly involved / mentioned
 
     # Patterns: only very persistent patterns matter
     pattern_sensitivity: low
@@ -159,9 +229,9 @@
   hospital:
     description: "Clinical / hospital environment: life‑critical, rapid escalation, strong privacy, full audit trail."
     metadata:
-      version: "1.0"
+      version: "3.0"
       last_updated: "2025-11-19"
-      environment: "production"
+      environment: "prod"
 
     # Reactivity: immediate (minutes)
     reactivity_seconds: 300             # 5 minutes to first escalation
@@ -177,7 +247,7 @@
     review_frequency: real_time         # operational reviews happen continuously
 
     # Notification scope: focused small team
-    notification_scope: small_team      # on‑call clinical / safety team
+    notification_scope: team            # on‑call clinical / safety team
 
     # Patterns: highly sensitive
     pattern_sensitivity: high
@@ -228,9 +298,9 @@
   advocacy_group:
     description: "Advocacy / human‑rights NGO: responsive within 12–24h, balanced transparency, strong but not extreme traceability."
     metadata:
-      version: "1.0"
+      version: "3.0"
       last_updated: "2025-11-19"
-      environment: "production"
+      environment: "prod"
 
     # Reactivity: responsive (12–24h)
     reactivity_seconds: 43200           # 12 hours to first escalation
@@ -297,9 +367,9 @@
   retail_chain:
     description: "Multi‑store retail / franchise: 24–72h SLA, focus on incidents and operations, moderate automation and logging."
     metadata:
-      version: "1.0"
+      version: "3.0"
       last_updated: "2025-11-19"
-      environment: "production"
+      environment: "prod"
 
     # Reactivity: 24–72h
     reactivity_seconds: 86400           # 24 hours to first escalation
@@ -366,9 +436,9 @@
   military_organization:
     description: "Military / defense environment: immediate escalation, highly private, full automation and long‑term retention."
     metadata:
-      version: "1.0"
+      version: "3.0"
       last_updated: "2025-11-19"
-      environment: "production"
+      environment: "prod"
 
     # Reactivity: immediate (minutes)
     reactivity_seconds: 120             # 2 minutes to first escalation
@@ -384,7 +454,7 @@
     review_frequency: real_time
 
     # Notification scope: very small team (ops / command)
-    notification_scope: small_team
+    notification_scope: team
 
     # Patterns: immediate, very high sensitivity
     pattern_sensitivity: critical
@@ -435,9 +505,9 @@
   environmental_group:
     description: "Environmental / climate organization: high pattern sensitivity, org‑wide signalling, balanced oversight."
     metadata:
-      version: "1.0"
+      version: "3.0"
       last_updated: "2025-11-19"
-      environment: "production"
+      environment: "prod"
 
     # Reactivity: responsive (12–24h)
     reactivity_seconds: 43200           # 12 hours
@@ -504,9 +574,9 @@
   artist_collective:
     description: "Artist / creative collective: relaxed deadlines, balanced transparency within the group, minimal logging."
     metadata:
-      version: "1.0"
+      version: "3.0"
       last_updated: "2025-11-19"
-      environment: "production"
+      environment: "prod"
 
     # Reactivity: relaxed (days/weeks)
     reactivity_seconds: 259200          # 3 days

@@ -1,4 +1,59 @@
-﻿# Doc 8 – Cyclic Overview, Labels & Universal Flow Rules (Orgo v3)
+﻿<!-- INDEX: Doc 8 – Cyclic Overview, Labels & Universal Flow Rules (Orgo v3) -->
+Index
+
+8.1 Purpose & scope
+
+8.2 Core concepts & glossary
+– Organization (tenant)
+– User vs Person
+– Case
+– Task
+– Label
+– Profile
+– Insights / Cyclic overview
+
+8.3 Labeling system (vertical & horizontal axes)
+8.3.1 Label structure (canonical format)
+8.3.2 Vertical axis – levels & broadcast bases
+8.3.3 Categories (first decimal)
+8.3.4 Subcategories (second decimal)
+8.3.5 Horizontal roles (functional axis)
+8.3.6 Broadcast bases (10/100/1000) – informational by default
+
+8.4 Canonical JSON contracts (Case & Task)
+8.4.1 Case JSON schema
+8.4.2 Task JSON schema
+
+8.5 Status lifecycles & allowed transitions
+8.5.1 Case status lifecycle (CASE_STATUS)
+8.5.2 Task status lifecycle (TASK_STATUS)
+
+8.6 Cyclic overview system (pattern recognition)
+8.6.1 Review frequencies (weekly / monthly / yearly)
+8.6.2 Case lifecycle in the cyclic system
+8.6.3 Threshold triggers (incident frequency, cross‑department trends, high‑risk indicators)
+8.6.4 Example: wet floor pattern
+
+8.7 Universal rules for information flow
+8.7.1 Flow types (vertical, horizontal, cyclic)
+8.7.2 Rule 1 – Function‑based routing
+8.7.3 Rule 2 – Time‑based escalation (reactivity_time, reactivity_deadline_at)
+8.7.4 Rule 3 – Broadcast semantics
+8.7.5 Rule 4 – Role‑driven collaboration
+8.7.6 Rule 5 – Categorization‑based handling
+
+8.8 Implementation & cross‑document rules
+8.8.1 JSON vs DB naming
+8.8.2 State enforcement
+8.8.3 Broadcast handling
+8.8.4 Cyclic reviews as work
+
+8.9 Scope cleanup – replacement of “Site Navigation Map”
+
+
+---
+
+# Doc 8 – Cyclic Overview, Labels & Universal Flow Rules (Orgo v3)
 
 **Document ID**: `orgo-v3-doc-8`
 **Role in set**: 8/8 (Labels, Case/Task JSON, Cyclic Overview, Flow Rules)
@@ -46,13 +101,13 @@ It assumes the multi‑tenant backbone, Task/Case model, domain modules, profile
 
 * **User vs Person**
   *User* = has an Orgo login (`user_accounts`).
-  *Person* = who things are about (`person_profiles` – students, players, employees, community members). 
+  *Person* = who things are about (`person_profiles` – students, players, employees, community members).
 
 * **Case**
   Long‑lived container for an incident, situation, pattern, or theme. It aggregates Tasks, labels, severity, participants, and context (location, groups, persons). Cases are what the cyclic overview reviews over time.
 
 * **Task**
-  The central unit of work. Tasks are created from signals (email/API/offline), live in a canonical global table, and have a strict, shared schema: type, category, subtype, label, status, priority, severity, visibility, assignee, deadlines, escalation level, metadata.
+  The central unit of work. Tasks are created from signals (email/API/offline), live in a canonical global table, and have a strict, shared schema: type, category, subtype, label, status, priority, severity, visibility, **normalized ownership (`owner_role_id` / `owner_user_id`) plus denormalised `assignee_role`**, deadlines (`due_at`, `reactivity_time`, `reactivity_deadline_at`), escalation level, and metadata.
 
 * **Label**
   A structured “information label” encoding *where* in the organization and *what kind of information* something is:
@@ -66,10 +121,10 @@ It assumes the multi‑tenant backbone, Task/Case model, domain modules, profile
   * `100` – broadcast level (department heads / vertical tier).
   * `.9` – Crisis & emergency info.
   * `.4` – Report (structured reporting).
-  * `Operations.Safety` – horizontal role. 
+  * `Operations.Safety` – horizontal role.
 
 * **Profile**
-  A template (“friend_group”, “hospital”, “advocacy_group”, “retail_chain”, etc.) describing how intense/urgent/private things are: reactivity seconds, transparency level, review cadence, notification scope, pattern sensitivity, severity policy, logging depth, automation level. Profiles plug into task creation, escalation logic, cyclic reviews, logging, and privacy.
+  A template (“friend_group”, “hospital”, “advocacy_group”, “retail_chain”, etc.) describing how intense/urgent/private things are: reactivity seconds, transparency level, review cadence, notification scope, pattern sensitivity, severity policy, logging depth, automation level. Profiles plug into task creation, escalation logic, cyclic reviews, logging, and privacy. 
 
 * **Insights / Cyclic overview**
   An analytics module on top of star‑schema tables (`insights.dim_*`, `insights.fact_*`) plus Airflow DAGs. It continuously computes patterns and cyclic reviews and turns threshold crossings into new Cases.
@@ -95,7 +150,7 @@ Examples:
 
 * `1.32` – CEO‑level compliance update.
 * `11.51.HR.Recruitment` – department‑head level training request for HR Recruitment.
-* `100.94.Operations.Safety` – department‑head broadcast of a crisis‑related safety report. 
+* `100.94.Operations.Safety` – department‑head broadcast of a crisis‑related safety report.
 
 Tasks and Cases each have exactly one **canonical label** string (`tasks.label`, `cases.label`) in this format; additional classification is done via `label_definitions` / `entity_labels`. 
 
@@ -183,7 +238,7 @@ This section defines the JSON shape used at API boundaries. It must map cleanly 
 
 ### 8.4.1 Case JSON Schema
 
-Operationally, Cases are stored in `cases` with the columns defined in Doc 1; this is their JSON contract. 
+Operationally, Cases are stored in `cases` with the columns defined in Doc 1; this is their JSON contract.
 
 ```yaml
 Case:
@@ -337,11 +392,7 @@ Task:
     assignee_role:
       type: string
       nullable: true
-      description: Routing role (e.g. "Ops.Maintenance").
-    assignee_user_id:
-      type: string
-      format: uuid
-      nullable: true
+      description: Denormalised routing role label (e.g. "Ops.Maintenance"); current primary assignee for UX, not the full history.
     created_by_user_id:
       type: string
       format: uuid
@@ -352,6 +403,16 @@ Task:
       format: uuid
       nullable: true
       description: Person the work is for (student, player, employee, etc.).
+    owner_role_id:
+      type: string
+      format: uuid
+      nullable: true
+      description: Primary owning role for this task (FK → roles.id).
+    owner_user_id:
+      type: string
+      format: uuid
+      nullable: true
+      description: Direct owner (FK → user_accounts.id); may be null if owned only by a role.
     due_at:
       type: string
       format: date-time
@@ -359,10 +420,22 @@ Task:
     reactivity_time:
       type: string
       nullable: true
-      description: ISO‑8601 duration; SLA window from creation.
+      description: ISO‑8601 duration (e.g. "PT2H"); SLA window from creation used to derive reactivity_deadline_at.
+    reactivity_deadline_at:
+      type: string
+      format: date-time
+      nullable: true
+      readOnly: true
+      description: Computed deadline for first response (usually created_at + reactivity_time under the active profile).
     escalation_level:
       type: integer
       description: 0 = none; 1+ = depth in escalation path.
+    closed_at:
+      type: string
+      format: date-time
+      nullable: true
+      readOnly: true
+      description: Timestamp when the task entered a terminal state (COMPLETED, FAILED or CANCELLED).
     metadata:
       type: object
       additionalProperties: true
@@ -378,12 +451,13 @@ Task:
 ```
 
 * Core services must reject unknown enum values and treat `status`, `priority`, `severity`, and `visibility` as the canonical enums from Doc 2.
+* Note: multiple assignees and assignment history are stored in `task_assignments`; `assignee_role` is a denormalised convenience field for routing and UI.
 
 ---
 
 ## 8.5 Status Lifecycles & Allowed Transitions
 
-Any service that mutates `cases.status` or `tasks.status` must enforce these state machines. Invalid transitions must be rejected and logged as validation errors (`INVALID_TASK_STATE_TRANSITION`, similar for Cases). 
+Any service that mutates `cases.status` or `tasks.status` must enforce these state machines. Invalid transitions must be rejected and logged as validation errors (`INVALID_TASK_STATE_TRANSITION`, similar for Cases).
 
 ### 8.5.1 Case Status Lifecycle
 
@@ -439,28 +513,20 @@ Semantics:
 **Allowed transitions** (locked to Core Services state machine):
 
 * `PENDING` → `IN_PROGRESS`
-
 * `PENDING` → `CANCELLED`
-
 * `IN_PROGRESS` → `ON_HOLD`
-
 * `IN_PROGRESS` → `COMPLETED`
-
 * `IN_PROGRESS` → `FAILED`
-
 * `IN_PROGRESS` → `ESCALATED`
-
 * `ON_HOLD` → `IN_PROGRESS`
-
 * `ON_HOLD` → `CANCELLED`
-
 * `ESCALATED` → `IN_PROGRESS`
-
 * `ESCALATED` → `COMPLETED`
-
 * `ESCALATED` → `FAILED`
-
 * `COMPLETED`, `FAILED`, `CANCELLED` – terminal (no further transitions).
+
+**Normative note (closed_at):**
+When a task enters a terminal state (`COMPLETED`, `FAILED`, or `CANCELLED`), Core Services **MUST** set `closed_at` to the transition timestamp. When a task is in a non‑terminal state (`PENDING`, `IN_PROGRESS`, `ON_HOLD`, `ESCALATED`), `closed_at` MUST remain `null`.
 
 **Unresolved Tasks (for escalation & patterns)**
 
@@ -494,7 +560,7 @@ By default (subject to org profile and Insights config):
 * **Yearly review**
 
   * Focus: systemic issues and long‑term risk.
-  * Scope: Cases in the last 12–24 months (configurable; must fit within analytics retention). 
+  * Scope: Cases in the last 12–24 months (configurable; must fit within analytics retention).
 
 Exact windows (e.g. 28 days / 180 days / 730 days) are defined in Doc 6 and profile templates in Doc 7; this document defines their semantics.
 
@@ -526,7 +592,7 @@ Exact windows (e.g. 28 days / 180 days / 730 days) are defined in Doc 6 and pr
    * Weekly DAG (`insights_weekly_pattern_review`) reads operational `tasks` and `cases` into `insights.fact_*` tables.
    * It flags:
 
-     * Overdue unresolved Cases (past `reactivity_time`).
+     * Overdue unresolved Cases (past their reactivity window / deadline).
      * Short‑window clusters (e.g. 2–3 similar high‑severity incidents in 7 days for a hospital profile).
 
 5. **Monthly roll‑up**
@@ -609,7 +675,9 @@ Every Task and Case gets a **reactivity_time** derived from:
 * Organization profile (friend_group vs hospital vs military). 
 * Task category, severity, domain, and sometimes label.
 
-If unresolved when `reactivity_time` elapses:
+Core services derive `reactivity_deadline_at` from `created_at + reactivity_time` (or the profile/workflow‑specific rule) and use this as the canonical timestamp for escalation checks. Escalation jobs **MUST** compare the current time against `reactivity_deadline_at`, not recompute ad‑hoc from raw profile settings.
+
+If unresolved when `reactivity_time` / `reactivity_deadline_at` elapses:
 
 * Workflow/Task Handler must trigger escalation:
 
@@ -637,11 +705,9 @@ Default behaviour:
 
 Horizontal handoffs are expressed via labels and routing rules:
 
-* e.g. HR onboarding Case/Task leads to IT setup Task:
-
-  ```text
-  11.51.HR.Recruitment   →   11.11.IT.Support
-  ```
+```text
+11.51.HR.Recruitment   →   11.11.IT.Support
+```
 
 Domain modules for HR and IT plug into the same Task engine and label semantics; they do not own separate task tables or lifecycles.
 
@@ -663,7 +729,7 @@ Workflow rules in Doc 3/5 encode the actual behaviour per organization and dom
 
 ### 8.8.1 JSON vs DB Naming
 
-* DB primary keys: typically `id`; API/JSON must expose them as `task_id` / `case_id`. 
+* DB primary keys: typically `id`; API/JSON must expose them as `task_id` / `case_id`.
 * DB enums: stored as canonical uppercase (`PENDING`, `ANONYMISED`); JSON may use either uppercase or lower‑case; mapping is 1:1 and enforced on input.
 
 ### 8.8.2 State Enforcement
@@ -701,6 +767,6 @@ For Orgo v3:
   * Status lifecycles and transitions.
   * Cyclic overview and pattern semantics.
 
-* Any UI or navigation diagrams must live in separate Interface/UX documentation and reference this document only for data and flow semantics. 
+* Any UI or navigation diagrams must live in separate Interface/UX documentation and reference this document only for data and flow semantics.
 
 This version supersedes all previous “Doc 8” drafts and is the integral, updated specification for labels, JSON contracts, and cyclic overview in Orgo v3.

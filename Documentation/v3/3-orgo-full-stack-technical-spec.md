@@ -1,5 +1,44 @@
-﻿Below is the current, integral, and cross‑doc‑aligned **Document 3/8 – Domain Modules (Orgo v3)**.
-You can drop this in as the full contents of `3-orgo-full-stack-technical-spec.md`.
+﻿<!-- INDEX: Doc 3 – Domain Modules (Orgo v3) -->
+Index
+
+Canonical Concepts (shared with other docs)
+0.1 Global Task Model (summary)
+0.2 Cases and labels (context)
+0.3 Domain Modules vs DomainTasks
+
+Domain Module directory layout
+
+Domain Module config spec (<domain>_module.yaml)
+2.1 Top‑level structure
+2.2 Category vs type vs subtype alignment
+2.3 Subtype semantics (allowed_subtypes)
+2.4 Email mapping (email_patterns)
+2.5 Labels & broadcast semantics
+
+DomainTask model and mapping to Task
+3.1 Shape of DomainTask
+3.2 Construction rules
+
+Domain handler interface (<domain>_handler.py)
+4.1 Required functions (on_task_create, on_task_created, on_task_update, on_task_updated, get_domain_fields)
+4.2 Optional functions (suggest_category_and_subtype, get_domain_filters)
+
+Domain Module lifecycle
+5.1 Module discovery
+5.2 Email → DomainTask creation flow
+5.3 API / UI listing flow
+5.4 Status, visibility, profiles
+5.5 Case linkage (optional)
+
+Worked example – Maintenance Module
+6.1 Config example (maintenance_module.yaml)
+6.2 Handler outline (maintenance_handler.py)
+
+Worked example – HR Module
+7.1 Config example (hr_module.yaml)
+7.2 Handler sketch
+
+Checklist for Domain Modules (Doc 3 compliance)
 
 ---
 
@@ -14,15 +53,15 @@ Domain modules are **thin adapters** over the core Orgo platform:
 * They do **not** own a task lifecycle.
 * They do **not** maintain their own task tables.
 * They **wrap** the canonical **Task** (and optionally **Case**) model with domain‑specific configuration, validation, and field mapping.
-* They use the shared **label system** and **broadcast semantics** from Doc 8 for routing and visibility. 
+* They use the shared **label system** and **broadcast semantics** from Doc 8 for routing and visibility.
 
 Routing, lifecycle, escalation, and pattern detection always flow through:
 
-* Core task handler – Doc 5 (`task_handler` service). 
-* Workflow engine – Doc 5 (`workflow_engine` service). 
+* Core task handler – Doc 5 (`task_handler` service).
+* Workflow engine – Doc 5 (`workflow_engine` service).
 * Canonical Task/Case models and enums – Docs 1–2 and Doc 8.
 
-This doc **supersedes** earlier informal notes on domain modules (e.g. Doc 2 §4 directory sketch). Where there is conflict, **Doc 3 wins** for module layout and handler contracts. 
+This doc **supersedes** earlier informal notes on domain modules (e.g. Doc 2 §4 directory sketch). Where there is conflict, **Doc 3 wins** for module layout and handler contracts.
 
 ---
 
@@ -52,23 +91,26 @@ Key fields (simplified):
 * `priority`: `TASK_PRIORITY` enum – `LOW | MEDIUM | HIGH | CRITICAL`
 * `severity`: `TASK_SEVERITY` enum – `MINOR | MODERATE | MAJOR | CRITICAL`
 * `visibility`: `VISIBILITY` enum – `PUBLIC | INTERNAL | RESTRICTED | ANONYMISED`
-* `due_at`, `reactivity_time`, `escalation_level`
-* `assignee_role`, `assignee_user_id` (plus `task_assignments` table for history)
+* `source`: `TASK_SOURCE` enum – `email | api | manual | sync`
+* `due_at`, `reactivity_time`, `reactivity_deadline_at`, `escalation_level`, `closed_at`
+* `owner_role_id`, `owner_user_id` – normalized FKs for the current owning role/user
+* `assignee_role` – denormalised routing string (e.g. `"Ops.Maintenance"`); assignment history lives in `task_assignments`
 * `metadata`: JSONB – domain‑specific, must **not duplicate** core fields
 
 **Important alignment points for domain modules:**
 
 * `organization_id` is the canonical multi‑tenant key (not `tenant_id`).
 * `subtype` is a first‑class column in `tasks.subtype` and must hold the **domain subtype** used in configs (not just `metadata["domain_subtype"]`).
-* `visibility` must be one of `PUBLIC/INTERNAL/RESTRICTED/ANONYMISED` (DB) and may be lower‑case equivalents in JSON/YAML. 
+* `visibility` must be one of `PUBLIC/INTERNAL/RESTRICTED/ANONYMISED` (DB) and may be lower‑case equivalents in JSON/YAML.
+* `source`, `reactivity_deadline_at` and `closed_at` are canonical fields set by core services; domain modules treat them as read‑only and must not attempt to re‑implement SLA logic independently of profiles and workflows.
 
 ### 0.2 Cases and Labels (Context Only)
 
 * **Case** is a long‑lived container that groups Tasks, patterns, and context. Cases use the same label and severity model as Tasks.
 * `cases.label` and `tasks.label` hold the **canonical information label** `<BASE>.<CATEGORY><SUBCATEGORY>.<HORIZONTAL_ROLE>`.
-* Classification tags (e.g. `self_harm_risk`, `equipment_failure`) are separate – `label_definitions` + `entity_labels`. 
+* Classification tags (e.g. `self_harm_risk`, `equipment_failure`) are separate – `label_definitions` + `entity_labels`.
 
-Domain modules may **read** and **suggest** labels and tags, but they **do not change** the underlying label system; this is defined centrally in Doc 8. 
+Domain modules may **read** and **suggest** labels and tags, but they **do not change** the underlying label system; this is defined centrally in Doc 8.
 
 ### 0.3 Domain Modules vs DomainTasks
 
@@ -176,7 +218,7 @@ Validation invariants:
 * `allowed_categories` ⊆ global enum `{request, incident, update, report, distribution}`.
 * `default_category ∈ allowed_categories`.
 * `default_visibility ∈ allowed_visibility ⊆ {public, internal, restricted, anonymised}`.
-* Visibility values are in **JSON/Config form** (lowercase), but must map to DB enum `VISIBILITY`. 
+* Visibility values are in **JSON/Config form** (lowercase), but must map to DB enum `VISIBILITY`.
 
 ### 2.2 Category vs Type vs Subtype (Alignment)
 
@@ -275,7 +317,7 @@ The mapping logic lives in the **Email Gateway + Workflow Engine**; domain modul
 
 ### 2.5 Labels & Broadcast Semantics
 
-Domain modules must respect the global **label system** and **broadcast bases** from Doc 8. 
+Domain modules must respect the global **label system** and **broadcast bases** from Doc 8.
 
 Key points:
 
@@ -330,6 +372,8 @@ class DomainTask:
     label: str             # == Task.label (canonical label code)
 
     status: str            # == Task.status
+    priority: str          # == Task.priority  (TASK_PRIORITY)
+    severity: str          # == Task.severity  (TASK_SEVERITY)
     visibility: str        # == Task.visibility
 
     title: str             # == Task.title
@@ -340,7 +384,7 @@ class DomainTask:
     created_at: datetime
     updated_at: datetime
 
-    assignee_user_ids: list[UUID]   # from TaskAssignment history
+    assignee_user_ids: list[UUID]   # from TaskAssignment history + current owner
     assignee_roles: list[str]       # e.g. ["Ops.Maintenance"]
 
     classification_labels: list[str]  # codes from label_definitions/entity_labels
@@ -354,6 +398,8 @@ Constraints:
 * `subtype == Task.subtype`
 * `label == Task.label`
 * `status == Task.status` (global enum)
+* `priority == Task.priority` (global enum)
+* `severity == Task.severity` (global enum)
 * `visibility == Task.visibility` (global enum)
 
 DomainTask is **read‑only** with respect to the DB; updates must go through the core task handler APIs.
@@ -368,15 +414,17 @@ Given a `Task` row (plus assignments and labels):
 4. `subtype = task.subtype`
 5. `label = task.label`
 6. `status = task.status`
-7. `visibility = task.visibility`
-8. `title = task.title`
-9. `description = task.description`
-10. `case_id = task.case_id`
-11. `assignee_user_ids` and `assignee_roles` derived from `task_assignments` + `assignee_role`/`assignee_user_id`. 
-12. `classification_labels` from `entity_labels` for that task. 
-13. `metadata` = curated view returned by `get_domain_fields` (handler).
+7. `priority = task.priority`
+8. `severity = task.severity`
+9. `visibility = task.visibility`
+10. `title = task.title`
+11. `description = task.description`
+12. `case_id = task.case_id`
+13. `assignee_user_ids` and `assignee_roles` are derived from `task_assignments` (primary and secondary assignments), plus the current `owner_role_id` / `owner_user_id` and `assignee_role` fields on the Task.
+14. `classification_labels` from `entity_labels` for that task.
+15. `metadata` = curated view returned by `get_domain_fields` (handler).
 
-Domain modules **never** talk directly to the DB; they work through the domain API and core services defined in Doc 5. 
+Domain modules **never** talk directly to the DB; they work through the domain API and core services defined in Doc 5.
 
 ---
 
@@ -477,7 +525,7 @@ On startup, `config_loader`:
 
 2. For each directory containing `<domain>_module.yaml` and `<domain>_handler.py`:
 
-   * Loads and validates YAML (using global config validation). 
+   * Loads and validates YAML (using global config validation).
    * Imports the handler module.
    * Registers the module in an in‑memory `DomainRegistry`.
 
@@ -534,7 +582,7 @@ Example endpoint: `GET /domain/<domain>/tasks`
 
 * Status transitions:
 
-  * Must follow the global Task state machine (Doc 8 §8.5.2). 
+  * Must follow the global Task state machine (Doc 8 §8.5.2).
   * Domain modules may **restrict** transitions but cannot introduce new states.
 
 * Visibility:
@@ -550,7 +598,7 @@ Example endpoint: `GET /domain/<domain>/tasks`
 
 Some domains (especially HR and compliance) treat Cases as primary:
 
-* HR module may create or attach to an `HrCase` (Doc 1 Module 11) when certain subtypes appear (e.g. `harassment`). 
+* HR module may create or attach to an `HrCase` (Doc 1 Module 11) when certain subtypes appear (e.g. `harassment`).
 * Domain handler itself does **not** write to `hr_cases` or `cases` directly; it triggers workflows that create/link Cases using core services.
 
 General rule:
@@ -749,7 +797,7 @@ def get_domain_fields(ctx: DomainContext, task_id: str) -> dict:
 
 HR workflows may also:
 
-* Trigger or link to `HrCase` rows (Doc 1 Module 11) based on subtype/label. 
+* Trigger or link to `HrCase` rows (Doc 1 Module 11) based on subtype/label.
 * Use broadcast labels only for high‑level updates, not for work creation.
 
 ---
@@ -773,7 +821,7 @@ For **each** domain module, the following must hold:
 * [ ] `<domain>_handler.py`:
 
   * [ ] Implements required functions: `on_task_create`, `on_task_created`, `on_task_update`, `on_task_updated`, `get_domain_fields`.
-  * [ ] Uses Only canonical Task/Case fields and enums.
+  * [ ] Uses only canonical Task/Case fields and enums.
   * [ ] Reads/writes `subtype` via `Task.subtype` (not hidden metadata).
   * [ ] Does not bypass visibility rules; only suggests defaults within allowed range.
   * [ ] Does not directly manipulate DB; uses core services.

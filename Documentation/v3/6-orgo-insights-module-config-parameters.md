@@ -1,15 +1,54 @@
-﻿# Document 6 – Insights Module Config Parameters (Orgo v3)
+﻿<!-- INDEX: Doc 6 – Insights Module Config Parameters (Orgo v3) -->
+Index
 
-This document defines configuration parameters and operational constraints for the **Insights / Analytics module** in Orgo v3. 
+Scope, dependencies and baseline
+1.1 Scope of Insights module
+1.2 Canonical enums overlay for Insights
+1.3 Documentation dependencies & cross‑references
+1.4 Orgo v3 Insights tech stack baseline
+
+Configuration parameters and invariants
+2.1 Data retention and purge (analytics layer)
+2.2 Backup and recovery policies
+2.3 Cache TTLs and aggregation windows
+2.4 Export limits and privacy safeguards
+2.5 Access control and routing invariants
+2.6 Environment‑specific defaults overview
+
+Insights config schema (/config/insights/config.yaml)
+3.1 Top‑level structure (insights: subtree)
+3.2 Profiles and pattern settings (default_profile_key, overrides_by_domain)
+
+ETL and Airflow job configuration
+4.1 DAG inventory (daily/weekly/monthly/yearly jobs, cache warmup)
+4.2 Job‑level constraints and invariants
+
+Environment variables and secrets (Insights slice)
+
+Deployment, scaling and monitoring (Insights slice)
+6.1 Runtime components
+6.2 Scaling policies
+6.3 Monitoring metrics and alerts
+
+Cross‑document alignment notes
+7.1 Tech stack alignment
+7.2 Enum consistency
+7.3 Profiles vs Insights config
+7.4 Environment‑specific defaults vs global ENVIRONMENT
+
+
+# Document 6 – Insights Module Config Parameters (Orgo v3)
+
+This document defines configuration parameters and operational constraints for the **Insights / Analytics module** in Orgo v3.
 
 It is a **module‑scoped parameter overlay** on top of:
 
-* Doc 1 – Database Schema Reference (analytics tables and star schema).
-* Doc 2 – Global Parameter Reference (enums, ENVIRONMENT, route invariants).
-* Doc 7 – Profiles & Pattern Configuration (profiles schema and pre‑configured profiles).
-* Doc 8 – Cyclic Overview & JSON Schemas (case JSON, cyclic review windows, pattern rules).
+* Doc 1 – Database Schema Reference (Custom Tables; includes the `insights.*` star schema).
+* Doc 2 – Foundations, Locked Variables & Operational Checklists (enums, `ENVIRONMENT`, config invariants).
+* Doc 7 – Organization Profiles & Cyclic Overview Settings (profiles schema and pre‑configured profiles).
+* Doc 8 – Cyclic Overview, Labels & Universal Flow Rules (Case/Task JSON contracts, cyclic review semantics, pattern rules).
 
-Core services (task ingestion, routing, email parsing, UI, etc.) are specified in Docs 3–5. This document **does not redefine core behaviour**; it only configures how analytics/insights ingest, store, aggregate and expose data.
+Core services (task ingestion, routing, workflow engine, email gateway, domain modules) are specified in Docs 3–5. This document **does not redefine core behaviour**; it only configures how Insights/analytics ingest, store, aggregate and expose data.
 
 ---
 
@@ -20,7 +59,7 @@ Core services (task ingestion, routing, email parsing, UI, etc.) are specified i
 The Insights module covers:
 
 * Analytical storage (star schema, materialized views, pattern tables).
-* ETL and Airflow jobs that hydrate the analytics warehouse.
+* ETL and Airflow jobs that hydrate the analytics warehouse / star schema.
 * Pattern detection and cyclic overview computations.
 * Read‑only reporting APIs and caches used by dashboards.
 * Module‑specific retention, backup and export limits for analytics data.
@@ -29,9 +68,9 @@ Out of scope here:
 
 * Core operational task/case tables (Doc 1).
 * Global parameter matrix and environment definitions (Doc 2).
-* UI page specifications (Doc 7.1).
-* API contracts for the reporting service (`reports-api`) (Doc 7.2).
-* Infrastructure details beyond what is needed to parameterize Insights (Doc 7.4).
+* UI page specifications and dashboard layouts (interface/UX and frontend documentation).
+* API contracts for the reporting service (`reports-api`) (see code/API mapping in Doc 4 and related interface docs).
+* Infrastructure and monitoring details beyond what is needed to parameterize Insights (Core Services / infrastructure & operations documentation, including Doc 5).
 
 ### 1.2 Canonical Enums Overlay for Insights
 
@@ -77,8 +116,10 @@ The Insights module **reuses** the global enums defined in Doc 2. For clarity,
 
 Rules:
 
-* Analytics tables store these as `TEXT` columns whose values are exactly the above tokens.
-* Any change to these enums in Doc 2 must be mirrored in this section and in analytics DDL (Doc 1 and Doc 7.3).
+
+ * Analytics tables in the `insights.*` schema store the **same tokens** as the operational enums, but as **TEXT** columns (even on Postgres) to decouple the warehouse from OLTP enum DDL.
+ * For non‑Postgres warehouses (`warehouse.type != "postgres"`), the values MUST appear as the **exact same tokens** at rest (upper‑snake), stored as generic string types.
+* Any change to these enums in Doc 2 must be mirrored in this section and in the analytics DDL in Doc 1 (Module 14 – Analytics / Insights Star‑Schema) and any derived warehouse schemas.
 
 ### 1.3 Documentation Dependencies and Cross‑References
 
@@ -86,45 +127,47 @@ This document assumes the following:
 
 * **Doc 1 – Database Schema Reference (Custom Tables)**
 
-  * Defines `analytics_*` tables (facts, dimensions, pattern tables, materialized views).
+  * Defines `insights.*` tables (facts, dimensions, pattern tables, materialized views).
   * Parameters in this document such as retention windows and partitioning assumptions apply to those tables.
 
-* **Doc 2 – Global Parameter Reference (v14‑stable)**
+* **Doc 2 – Foundations, Locked Variables & Operational Checklists**
 
   * Is the **canonical source** for enums listed in §1.2 and for `ENVIRONMENT`.
+  * Defines global config structure/validation and guardrails (visibility, audit, exports).
   * This document only declares module‑specific defaults; it does not introduce new enum values.
 
-* **Doc 7 – Profiles & Pattern Configuration**
+* **Doc 7 – Organization Profiles & Cyclic Overview Settings**
 
-  * Defines the **profiles schema** and the pre‑configured profiles (`friend_group`, `hospital`, `advocacy_group`, etc.).
+  * Defines the **profiles schema** (YAML `profiles:`) and the pre‑configured profiles (`friend_group`, `hospital`, `advocacy_group`, `retail_chain`, etc.).
   * This document references those profile keys as configuration values (e.g. `default_profile_key`, overrides).
 
-* **Doc 8 – Cyclic Overview & JSON Schemas**
+* **Doc 8 – Cyclic Overview, Labels & Universal Flow Rules**
 
   * Defines:
 
-    * Case JSON schema (including `label`, `status`, `severity`, `metadata`).
+    * Label semantics and Case/Task JSON contracts at the API boundary.
+    * Task and Case status lifecycles and allowed transitions.
     * Cyclic overview rules for weekly / monthly / yearly reviews.
-    * Threshold semantics (e.g., “5 similar incidents in 6 months”).
+    * Threshold semantics (e.g., “≥ N similar incidents in window_days”).
 
-All pattern windows, thresholds and review frequencies in this document must be compatible with the cyclic definitions in Doc 8 and the profiles in Doc 7. 
+All pattern windows, thresholds and review frequencies in this document must be compatible with the cyclic definitions in Doc 8 and the profiles in Doc 7.
 
 ### 1.4 Orgo v3 Insights Tech Stack Baseline
 
-The Insights module uses a **Python + Airflow + Postgres + Redis** stack dedicated to analytics. Core Orgo services may run on a different stack (e.g., Node/NestJS + Next.js + Prisma + Postgres); that separation is intentional.
+The Insights module uses a **Python + Airflow + Postgres + Redis** stack dedicated to analytics. Core Orgo services may run on a different stack (e.g., NestJS + Prisma + Next.js + RTK Query + Postgres); that separation is intentional.
 
-| Aspect                  | Orgo v3 Insights Baseline                          | Notes                                                                            |
-| ----------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Analytics runtime       | Python **3.11.6**                                  | Used by ETL workers and analytics services.                                      |
-| Orchestration           | Apache Airflow **2.8.x**                           | Manages ETL DAGs and pattern detection jobs.                                     |
-| Warehouse / DB          | PostgreSQL **15.x**                                | Same major version as core DB; may be separate instance or schema `analytics`.   |
-| Cache                   | Redis **7.x**                                      | Used for report result caching and dashboard pre‑computation.                    |
-| Reporting API (logical) | `reports-api` (read‑only service over star schema) | Technology choice detailed in Doc 7.2; this document constrains its config only. |
+| Aspect                  | Orgo v3 Insights Baseline                          | Notes                                                                                     |
+| ----------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Analytics runtime       | Python **3.11.6**                                  | Used by ETL workers and analytics services.                                               |
+| Orchestration           | Apache Airflow **2.8.x**                           | Manages ETL DAGs and pattern detection jobs.                                              |
+| Warehouse / DB          | PostgreSQL **15.x**                                | Same major version as core DB; may be a separate instance or host the `insights` schema.  |
+| Cache                   | Redis **7.x**                                      | Used for report result caching and dashboard pre‑computation.                             |
+| Reporting API (logical) | `reports-api` (read‑only service over star schema) | Implementation and code mapping described in Doc 4; this document constrains config only. |
 
 Clarifications:
 
-* **Core DB**: Doc 1/5 designate Postgres 15+ as the core OLTP engine; Insights uses Postgres 15+ for the analytics star schema.
-* **Redis & Airflow** in this document are **analytics‑specific components**. Core services may use Redis for other caching or queues, but the parameters here govern **only** the Insights use cases. 
+* **Core DB**: Doc 1/5 designate Postgres 15+ as the core OLTP engine; Insights uses Postgres 15+ for the analytics star schema (`insights.*`).
+* **Redis & Airflow** in this document are **analytics‑specific components**. Core services may use Redis for other caching or queues, but the parameters here govern **only** the Insights use cases.
 
 ---
 
@@ -138,7 +181,7 @@ These parameters apply to **analytics storage**, not to operational task/case ta
 
 * **`analytics.raw_event_retention_days`**
 
-  * Definition: Number of days to retain raw events in `analytics_events_fact` (or equivalent fact table).
+  * Definition: Number of days to retain raw events in the base fact tables in the `insights` schema (e.g. `insights.fact_tasks`, `insights.fact_cases`, `insights.fact_wellbeing_checkins`).
   * Defaults:
 
     * `dev`: 30
@@ -164,7 +207,7 @@ These parameters apply to **analytics storage**, not to operational task/case ta
 
 * **`analytics.pattern_result_retention_days`**
 
-  * Definition: Days to retain computed pattern records (pattern tables produced by cyclic overview jobs).
+  * Definition: Days to retain computed pattern records (pattern tables and pattern snapshot tables produced by cyclic overview jobs).
   * Defaults:
 
     * `dev`: 90
@@ -210,7 +253,7 @@ These parameters govern the analytics warehouse and ETL metadata (Airflow databa
   * Snapshot at least daily in `staging`, every 4 hours in `prod`.
 * Offline / `offline` environment:
 
-  * No automatic backups; manual exports only. 
+  * No automatic backups; manual exports only.
 
 ### 2.3 Cache TTLs and Aggregation Windows
 
@@ -222,7 +265,7 @@ These parameters drive Redis caching and derived aggregation behaviour.
   * Default: `300` seconds (5 minutes) in all environments.
   * Invariants:
 
-    * `reports-api` (Doc 7.2) must use this as its default TTL for non‑streaming endpoints.
+    * `reports-api` must use this as its default TTL for non‑streaming endpoints.
 
 * **`analytics.cache.ttl_seconds.dashboard_slow`**
 
@@ -268,8 +311,8 @@ These parameters guard against over‑large exports and enforce privacy requirem
   * Boolean, default `true` for all environments.
   * Semantics:
 
-    * When `true`, the reporting layer masks or hashes columns marked as PII in Doc 7.3.
-    * The masking rules must be compatible with `VISIBILITY` semantics in Doc 2 and case metadata visibility in Doc 8.
+    * When `true`, the reporting layer masks or hashes columns designated as PII by the schemas and guardrails in Doc 1/Doc 2 (and any dedicated security/privacy documentation).
+    * The masking rules must be compatible with `VISIBILITY` semantics in Doc 2 and case/task metadata visibility in Doc 8.
 
 * **`analytics.export.allowed_visibilities`**
 
@@ -295,11 +338,11 @@ Invariants:
 * Access rules must be **consistent** with:
 
   * Case access control in Doc 8.
-  * Role definitions and RBAC in core security specs (Doc 3/5). 
+  * Role definitions and RBAC/guardrails in Doc 2 and the Core Services/security specs (Doc 5 and any dedicated security documentation).
 
 ### 2.6 Environment‑Specific Defaults Overview
 
-For quick reference, the main environment‑dependent values from §§2.1–2.4 are summarized here: 
+For quick reference, the main environment‑dependent values from §§2.1–2.4 are summarized here:
 
 * **`ENVIRONMENT = "dev"`**
 
@@ -342,7 +385,9 @@ Doc 2 remains the canonical reference for allowed environment names; this sect
 
 ## 3. Insights Config Schema
 
-This section defines a machine‑readable schema for Insights configuration, typically serialized as YAML in e.g. `/config/insights/config.yaml`. 
+This section defines a machine‑readable schema for Insights configuration, typically serialized as YAML in e.g. `/config/insights/config.yaml`.
+
+All general config expectations (metadata, validation, per‑environment handling) are defined in Doc 2; this section defines the **`insights:`** subtree.
 
 ### 3.1 Top‑Level Structure
 
@@ -353,7 +398,7 @@ insights:
   warehouse:
     type: "postgres"              # "postgres" | "bigquery" | "snowflake"
     connection_url: "${INSIGHTS_WAREHOUSE_URL}"
-    schema: "analytics"
+    schema: "insights"
     read_only_user: "orgo_insights_ro"
     write_user: "orgo_insights_etl"
 
@@ -433,10 +478,20 @@ insights:
       min_distinct_sources: 3
 ```
 
+Notes:
+
+* `insights.environment` must match both:
+
+  * The `INSIGHTS_ENV` environment variable, and
+  * One of the canonical `ENVIRONMENT` values from Doc 2.
+
+* `warehouse.schema` is set to `"insights"` to match the canonical star schema in Doc 1; when an external warehouse is used, this schema may be mirrored there.
+
 ### 3.2 Profiles and Pattern Settings
 
 * `default_profile_key` and values under `overrides_by_domain` must correspond to profile keys defined in Doc 7 (e.g. `friend_group`, `hospital`, `advocacy_group`, `retail_chain`, etc.).
-* Each profile defines:
+* The value used in `default_profile_key` (e.g. `"default"`) **must** be defined as a real profile entry in the profiles YAML (Doc 7) alongside the other named profiles.
+* Each profile defines (see Doc 2/7):
 
   * Reactivity time.
   * Transparency.
@@ -453,13 +508,13 @@ Relationship between profiles and Insights config:
 * **Profiles** describe **behavioural expectations** and default metadata at the operational level.
 * **Insights config** describes **how much data** is kept, how often analytics run, and which profile is used by default per domain.
 
-If a profile includes a long `data_retention_policy` (e.g. hospital = 10 years) while `analytics.raw_event_retention_days` is shorter, that means analytics will not capture the full operational horizon but must, at minimum, retain data long enough to satisfy the cyclic pattern windows from Doc 8. 
+If a profile includes a long `data_retention_policy` (e.g. hospital = 10 years) while `analytics.raw_event_retention_days` is shorter, analytics will not capture the full operational horizon but must, at minimum, retain data long enough to satisfy the cyclic pattern windows from Doc 8.
 
 ---
 
 ## 4. ETL and Airflow Job Configuration
 
-This section defines the DAGs that populate the analytics schema and compute patterns. 
+This section defines the DAGs that populate the `insights.*` schema and compute patterns.
 
 ### 4.1 DAG Inventory (YAML‑Style)
 
@@ -469,38 +524,44 @@ etl_dags:
   daily_events_load:
     id: "insights_daily_events_load"
     schedule: "0 2 * * *"   # daily at 02:00 UTC
-    description: "Load operational tasks/cases into analytics_events_fact"
+    description: "Load operational tasks/cases into the insights fact tables (insights.fact_tasks, insights.fact_cases, insights.fact_wellbeing_checkins, etc.)"
     enabled_environments: ["staging", "prod"]
+	queue_job_id: "orgo.analytics.export-facts"
 
   daily_dimensions_sync:
     id: "insights_daily_dimensions_sync"
     schedule: "30 2 * * *"
-    description: "Sync dimension tables (organizations, roles, labels)"
+    description: "Sync dimension tables (organizations, roles, labels) into insights.dim_*"
     enabled_environments: ["staging", "prod"]
+	queue_job_id: "orgo.analytics.export-facts"
 
   weekly_pattern_review:
     id: "insights_weekly_pattern_review"
     schedule: "0 3 * * 1"   # every Monday at 03:00 UTC
-    description: "Compute weekly patterns based on weekly.window_days"
+    description: "Compute weekly patterns based on patterns.weekly.window_days"
     enabled_environments: ["staging", "prod"]
+	queue_job_id: "orgo.insights.weekly-pattern-review"
 
   monthly_trend_report:
     id: "insights_monthly_trend_report"
     schedule: "0 4 1 * *"   # first of each month
-    description: "Generate monthly trend aggregates and store in summary tables"
+    description: "Generate monthly trend aggregates and store in summary tables / materialized views"
     enabled_environments: ["staging", "prod"]
+	queue_job_id: "orgo.insights.monthly-trend-report"
 
   yearly_systemic_review:
     id: "insights_yearly_systemic_review"
     schedule: "0 5 1 1 *"   # January 1st
     description: "Compute yearly systemic patterns used by leadership overviews"
     enabled_environments: ["prod"]
+	queue_job_id: "orgo.insights.yearly-systemic-review"
 
   cache_warmup_dashboards:
     id: "insights_cache_warmup_dashboards"
     schedule: "*/15 * * * *"  # every 15 minutes
     description: "Pre‑warm caches for high‑traffic dashboards"
     enabled_environments: ["staging", "prod"]
+	queue_job_id: "orgo.insights.cache-warmup-dashboards"
 ```
 
 ### 4.2 Job‑Level Constraints and Invariants
@@ -514,26 +575,26 @@ etl_dags:
 * All ETL DAGs:
 
   * Must treat `ENVIRONMENT = "offline"` as **no‑op**, unless explicitly enabled in offline deployments.
-  * Must not mutate operational tables; they are read‑only consumers of the canonical Task and Case models. 
+  * Must not mutate operational tables; they are read‑only consumers of the canonical Task and Case models.
 
 ---
 
 ## 5. Environment Variables and Secrets
 
-These are the primary configuration variables for the Insights module. Values come from environment variables, secret managers (e.g., Vault, KMS) or config maps. 
+These are the primary configuration variables for the Insights module. Values come from environment variables, secret managers (e.g., Vault, KMS) or config maps.
 
-| Environment Variable              | Used By                       | Default / Example                      | Source & Notes                                                              |
-| --------------------------------- | ----------------------------- | -------------------------------------- | --------------------------------------------------------------------------- |
-| `INSIGHTS_ENV`                    | All insights components       | `dev` / `staging` / `prod` / `offline` | Must match `ENVIRONMENT` enum; used to select per‑environment defaults.     |
-| `INSIGHTS_WAREHOUSE_URL`          | ETL workers, `reports-api`    | `postgresql://.../orgo_analytics`      | Stored in secret manager; never committed to VCS.                           |
-| `INSIGHTS_REDIS_URL`              | `reports-api`, cache warmers  | `redis://redis:6379/1`                 | May share Redis instance with core, but uses separate DB/namespace.         |
-| `AIRFLOW__CORE__SQL_ALCHEMY_CONN` | Airflow scheduler & webserver | `postgresql+psycopg2://.../airflow`    | Airflow’s internal metadata DB.                                             |
-| `AIRFLOW__CORE__FERNET_KEY`       | Airflow                       | Random 32‑byte base64 key              | Key rotation rules defined in security/DevOps docs; Secrets‑backed in prod. |
-| `INSIGHTS_DEFAULT_PROFILE_KEY`    | `reports-api`, ETL            | `default`                              | Must match a profile in Doc 7; fallback when no domain override applies.    |
-| `INSIGHTS_PATTERN_CONFIG_PATH`    | ETL, pattern DAGs             | `/config/insights/patterns.yaml`       | Optional override for pattern thresholds; must respect schema in §3.1–3.2.  |
-| `INSIGHTS_EXPORT_S3_BUCKET`       | Export workers (if used)      | `orgo-insights-exports-prod`           | Required only when exports are stored in object storage.                    |
+| Environment Variable              | Used By                       | Default / Example                      | Source & Notes                                                                               |
+| --------------------------------- | ----------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `INSIGHTS_ENV`                    | All insights components       | `dev` / `staging` / `prod` / `offline` | Must match `ENVIRONMENT` enum; used to select per‑environment defaults.                      |
+| `INSIGHTS_WAREHOUSE_URL`          | ETL workers, `reports-api`    | `postgresql://.../orgo_analytics`      | Stored in secret manager; must point at the DB/warehouse hosting the `insights` star schema. |
+| `INSIGHTS_REDIS_URL`              | `reports-api`, cache warmers  | `redis://redis:6379/1`                 | May share Redis instance with core, but uses separate DB/namespace.                          |
+| `AIRFLOW__CORE__SQL_ALCHEMY_CONN` | Airflow scheduler & webserver | `postgresql+psycopg2://.../airflow`    | Airflow’s internal metadata DB.                                                              |
+| `AIRFLOW__CORE__FERNET_KEY`       | Airflow                       | Random 32‑byte base64 key              | Key rotation rules defined in security/DevOps docs; secrets‑backed in prod.                  |
+| `INSIGHTS_DEFAULT_PROFILE_KEY`    | `reports-api`, ETL            | `default`                              | Must match a profile in Doc 7; fallback when no domain override applies.                     |
+| `INSIGHTS_PATTERN_CONFIG_PATH`    | ETL, pattern DAGs             | `/config/insights/patterns.yaml`       | Optional override for pattern thresholds; must respect schema in §3.1–3.2.                   |
+| `INSIGHTS_EXPORT_S3_BUCKET`       | Export workers (if used)      | `orgo-insights-exports-prod`           | Required only when exports are stored in object storage.                                     |
 
-Additional environment variables and secrets for monitoring and logging are defined in Doc 7.4; they must be consistent with the base infrastructure configuration.
+Additional environment variables and secrets for monitoring and logging are covered in the core infrastructure / monitoring / security documentation (e.g. Docs 4–5 and any dedicated ops or security specs) and must be consistent with the base infrastructure configuration.
 
 ---
 
@@ -546,7 +607,7 @@ Typical components (Kubernetes or equivalent):
 * `reports-api` deployment
 * `insights-etl-worker` deployment(s)
 * `airflow-webserver`, `airflow-scheduler`, `airflow-worker` deployments
-* `analytics-db` (Postgres 15.x) or logical schema within core Postgres
+* `analytics-db` (Postgres 15.x) hosting the `insights.*` star schema, or a logical `insights` schema within the core Postgres instance
 * `insights-redis` (Redis 7.x) cache
 
 Recommended prod baseline:
@@ -606,13 +667,13 @@ Suggested alerts:
 * **Cache Hit Ratio Low**:
 
   * Condition: `insights_redis_cache_hit_ratio < 0.7` for 30 min.
-  * Action: Review cache key strategy and TTLs in §2.3. 
+  * Action: Review cache key strategy and TTLs in §2.3.
 
 ---
 
 ## 7. Cross‑Document Alignment Notes
 
-This section encodes explicitly the alignment guidance so the document is self‑contained. 
+This section encodes explicitly the alignment guidance so the document is self‑contained.
 
 ### 7.1 Tech Stack Alignment
 
@@ -621,13 +682,13 @@ This section encodes explicitly the alignment guidance so the document is self�
 * Postgres 15+ is common across both:
 
   * Core OLTP tables (Doc 1).
-  * Analytics star schema (Doc 1 + Doc 7.3).
+  * Analytics star schema (`insights.*` in Doc 1, Module 14 – Analytics / Insights Star‑Schema).
 * Redis and Airflow parameters in this document apply **only to the Insights module** unless Doc 5 explicitly states shared usage.
 
 ### 7.2 Enum Consistency
 
-* TASK_STATUS, TASK_PRIORITY, TASK_SEVERITY, VISIBILITY and ENVIRONMENT values in §1.2 are **exactly the same** as in Doc 2.
-* If Doc 2 is updated (e.g. a new case status or visibility value), §1.2 and any analytics DDL that depends on these enums must be updated in lockstep.
+* `TASK_STATUS`, `TASK_PRIORITY`, `TASK_SEVERITY`, `VISIBILITY` and `ENVIRONMENT` values in §1.2 are **exactly the same** as in Doc 2.
+* If Doc 2 is updated (e.g. a new status or visibility value), §1.2 and any analytics DDL that depends on these enums must be updated in lockstep.
 
 ### 7.3 Profiles vs Config
 
@@ -649,5 +710,5 @@ This section encodes explicitly the alignment guidance so the document is self�
 * Other modules may:
 
   * Use the same environments without per‑environment variation (e.g., core services with mostly static config).
-  * Or define their own environment‑specific defaults in Doc 5.
+  * Or define their own environment‑specific defaults (e.g., Core Services in Doc 5).
 * The important invariant is that **every module interprets environment names consistently**, but parameter values per environment can differ by module; this document captures the Insights slice.
