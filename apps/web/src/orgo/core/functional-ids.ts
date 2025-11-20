@@ -1,0 +1,150 @@
+/**
+ * Shared stable functional IDs used across Orgo v3 for logging, analytics,
+ * configuration references, etc.
+ *
+ * This file is mirrored by `apps/api/src/orgo/core/functional-ids.ts`.
+ */
+export const FUNCTIONAL_ID_VALUES = [
+  // Backbone – organizations, users & persons
+  "FN_ORG_CREATE",
+  "FN_ORG_UPDATE",
+  "FN_PERSON_PROFILE_UPSERT",
+  "FN_ROLE_CREATE",
+  "FN_RBAC_PERMISSION_ASSIGN",
+  "FN_IDENTITY_LINK_USER_TO_PERSON",
+
+  // Signals & ingestion (email, API, offline, sync)
+  "FN_EMAIL_SEND",
+  "FN_EMAIL_FETCH_INCOMING",
+  "FN_EMAIL_PARSE_INCOMING",
+  "FN_EMAIL_VALIDATE_PAYLOAD",
+  "FN_EMAIL_POLL_MAILBOX",
+  "FN_EMAIL_ROUTE_TO_WORKFLOW",
+  "FN_EMAIL_IMPORT_ARCHIVE",
+  "FN_SIGNAL_INGEST",
+  "FN_SYNC_OFFLINE_NODE",
+  "FN_SYNC_OFFLINE_TASKS",
+
+  // Cases & cyclic review
+  "FN_CASE_CREATE_FROM_SIGNAL",
+  "FN_CASE_GET_WITH_TASKS",
+  "FN_CASE_RUN_CYCLIC_REVIEW",
+
+  // Workflow engine & escalation
+  "FN_WORKFLOW_EXECUTE",
+  "FN_WORKFLOW_VALIDATE_RULES",
+  "FN_WORKFLOW_SIMULATE",
+  "FN_WORKFLOW_EVALUATE_ESCALATIONS",
+
+  // Task management
+  "FN_TASK_CREATE",
+  "FN_TASK_UPDATE_STATUS",
+  "FN_TASK_ESCALATE",
+  "FN_TASK_ASSIGN",
+  "FN_TASK_ADD_COMMENT",
+  "FN_TASK_GET_BY_ID",
+
+  // Label & routing
+  "FN_ROUTING_RESOLVE_LABEL",
+  "FN_ROUTING_APPLY_RULES",
+  "FN_LABEL_CREATE_DEFINITION",
+
+  // Database / persistence
+  "FN_DB_CONNECT",
+  "FN_DB_GET_CLIENT",
+  "FN_DB_FETCH_RECORDS",
+  "FN_DB_INSERT_RECORD",
+  "FN_DB_UPDATE_RECORD",
+  "FN_DB_REPOSITORY_OPERATION",
+
+  // Profiles, configuration & feature flags
+  "FN_PROFILE_LOAD",
+  "FN_PROFILE_APPLY_DEFAULTS",
+  "FN_PROFILE_PREVIEW_DIFF",
+  "FN_CONFIG_GET_GLOBAL",
+  "FN_CONFIG_UPDATE_SERVICE",
+  "FN_CONFIG_IMPORT_BUNDLE",
+  "FN_CONFIG_VALIDATE",
+  "FN_CONFIG_VALIDATE_BUNDLE",
+  "FN_FEATURE_FLAG_SET",
+
+  // Public API controllers
+  "FN_API_TASK_LIST",
+  "FN_API_TASK_GET",
+  "FN_API_TASK_CREATE",
+  "FN_API_CASE_LIST",
+  "FN_API_CASE_GET",
+  "FN_API_WORKFLOW_EXECUTE",
+
+  // Admin UI / screens
+  "FN_UI_ADMIN_TASK_OVERVIEW",
+  "FN_UI_ADMIN_CASE_OVERVIEW",
+  "FN_UI_ADMIN_PROFILE_SETTINGS",
+
+  // Notifications & live updates
+  "FN_NOTIFICATION_SEND_IN_APP",
+  "FN_WS_TASK_EVENTS_STREAM",
+
+  // Domain modules
+  "FN_DOMAIN_MAINTENANCE_REGISTER_INCIDENT",
+  "FN_DOMAIN_MAINTENANCE_LIST_INCIDENTS",
+  "FN_DOMAIN_HR_REGISTER_REPORT",
+  "FN_DOMAIN_HR_LIST_CASES",
+  "FN_DOMAIN_EDUCATION_REGISTER_STUDENT_INCIDENT",
+  "FN_DOMAIN_EDUCATION_LIST_INCIDENTS",
+  "FN_DOMAIN_TASK_FACTORY_CREATE",
+  "FN_DOMAIN_WORKFLOW_APPLY_OVERRIDES",
+
+  // Insights & reporting
+  "FN_INSIGHTS_GET_TASK_VOLUME_REPORT",
+  "FN_INSIGHTS_GET_SLA_BREACHES",
+  "FN_INSIGHTS_GET_PROFILE_SCORE",
+  "FN_INSIGHTS_EXPORT_FACTS",
+  "FN_INSIGHTS_REFRESH_VIEWS",
+  "FN_INSIGHTS_PATTERN_RUN_WEEKLY",
+  "FN_INSIGHTS_PATTERN_RUN_MONTHLY",
+  "FN_INSIGHTS_PATTERN_RUN_YEARLY",
+  "FN_INSIGHTS_CACHE_WARM_DASHBOARDS",
+  "FN_INSIGHTS_EXPORT_ANALYTICS",
+  "FN_UI_INSIGHTS_OVERVIEW",
+
+  // Infrastructure, health, metrics & alerts
+  "FN_INFRA_HEALTHCHECK",
+  "FN_INFRA_WORKER_HEARTBEAT",
+  "FN_INFRA_METRICS_RECORD_WORKFLOW_LATENCY",
+  "FN_INFRA_METRICS_RECORD_QUEUE_DEPTH",
+  "FN_ALERT_ESCALATION_DELAY",
+  "FN_ALERT_ERROR_RATE",
+
+  // Security & compliance
+  "FN_SECURITY_AUTH_VALIDATE_ACCESS_TOKEN",
+  "FN_SECURITY_RBAC_CHECK_PERMISSION",
+  "FN_SECURITY_PRIVACY_ANONYMIZE_PAYLOAD",
+  "FN_SECURITY_AUDIT_RECORD_EVENT",
+  "FN_SECURITY_COMPLIANCE_EXPORT_AUDIT_LOG",
+
+  // Logging
+  "FN_LOG_SYSTEM_EVENT",
+  "FN_LOG_SECURITY_EVENT",
+  "FN_LOG_ROTATE",
+  "FN_LOG_GET_ACTIVITY_FOR_ENTITY",
+
+  // Validation & metadata
+  "FN_VALIDATION_VALIDATE_PAYLOAD",
+  "FN_VALIDATION_NORMALIZE_METADATA",
+] as const;
+
+export type FunctionalId = (typeof FUNCTIONAL_ID_VALUES)[number];
+
+export const FunctionalIds: Record<FunctionalId, FunctionalId> =
+  FUNCTIONAL_ID_VALUES.reduce(
+    (acc, id) => {
+      acc[id] = id;
+      return acc;
+    },
+    {} as Record<FunctionalId, FunctionalId>,
+  );
+
+export function isFunctionalId(value: string): value is FunctionalId {
+  return (FUNCTIONAL_ID_VALUES as readonly string[]).includes(value);
+}
