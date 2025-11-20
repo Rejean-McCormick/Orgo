@@ -184,8 +184,8 @@ These parameters apply to **analytics storage**, not to operational task/case ta
   * Definition: Number of days to retain raw events in the base fact tables in the `insights` schema (e.g. `insights.fact_tasks`, `insights.fact_cases`, `insights.fact_wellbeing_checkins`).
   * Defaults:
 
-    * `dev`: 30
-    * `staging`: 365
+    * `dev`: 730
+    * `staging`: 730
     * `prod`: 730
   * Invariants:
 
@@ -347,7 +347,7 @@ For quick reference, the main environment‑dependent values from §§2.1–2.4 
 * **`ENVIRONMENT = "dev"`**
 
   * Small data volumes, rapid schema evolution.
-  * `analytics.raw_event_retention_days = 30`
+  * `analytics.raw_event_retention_days = 730`
   * `analytics.aggregated_retention_days = 90`
   * `analytics.pattern_result_retention_days = 90`
   * `analytics.backup.rpo_minutes = 1440`
@@ -357,7 +357,7 @@ For quick reference, the main environment‑dependent values from §§2.1–2.4 
 * **`ENVIRONMENT = "staging"`**
 
   * Near‑prod realistic loads.
-  * `analytics.raw_event_retention_days = 365`
+  * `analytics.raw_event_retention_days = 730`
   * `analytics.aggregated_retention_days = 730`
   * `analytics.pattern_result_retention_days = 730`
   * `analytics.backup.rpo_minutes = 60`
@@ -422,8 +422,8 @@ insights:
 
   retention:
     raw_event_retention_days:
-      dev: 30
-      staging: 365
+      dev: 730
+      staging: 730
       prod: 730
     aggregated_retention_days:
       dev: 90
@@ -462,8 +462,8 @@ insights:
     default_profile_key: "default"   # must exist in Doc 7 profiles
     overrides_by_domain:
       maintenance: "hospital"
-      hr: "advocacy_group"
-      retail: "retail_chain"
+      hr_case: "advocacy_group"
+      education_support: "retail_chain"
     weekly:
       window_days: 28
       min_events: 3
@@ -476,6 +476,10 @@ insights:
       window_days: 730
       min_events: 10
       min_distinct_sources: 3
+    # Keys under `overrides_by_domain` MUST match canonical Task.type values
+    # (for example: "maintenance", "hr_case", "education_support"), not arbitrary labels.
+
+
 ```
 
 Notes:

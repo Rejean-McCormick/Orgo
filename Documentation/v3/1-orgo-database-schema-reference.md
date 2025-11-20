@@ -680,7 +680,8 @@ Key columns:
 * `failed_at` (timestamptz, nullable)
 * `error_message` (text, nullable)
 
-  Channel values in both tables are stored as lower-case tokens and map 1:1 to the global `NOTIFICATION_CHANNEL` enum (`EMAIL`, `SMS`, `IN_APP`, `WEBHOOK`) used in configs and services. Mobile push, if implemented, is modelled via `IN_APP` plus client-side delivery rather than a separate `PUSH` channel.
++  Channel values in both tables are stored as lower-case tokens and map 1:1 to the global `NOTIFICATION_CHANNEL` enum (`EMAIL`, `SMS`, `IN_APP`, `WEBHOOK`) used in configs and services. Mobile push, if implemented, MUST be modelled via `IN_APP` plus client-side delivery; a distinct `PUSH` channel is not supported.
+
 
 ---
 

@@ -283,7 +283,7 @@ Case:
     severity:
       type: string
       enum: [minor, moderate, major, critical]
-      description: JSON form of TASK_SEVERITY; maps to MINOR/MODERATE/MAJOR/CRITICAL.
+      description: JSON uses lower-case TASK_SEVERITY tokens; implementations MAY also accept upper-case forms and normalise to the canonical DB enum values (MINOR, MODERATE, MAJOR, CRITICAL).
     reactivity_time:
       type: string
       nullable: true
@@ -325,6 +325,7 @@ Case:
 ### 8.4.2 Task JSON Schema
 
 Task JSON reuses the canonical Task fields from Doc 2 and adds source/actor fields from Doc 1.
+
 
 ```yaml
 Task:
@@ -452,6 +453,8 @@ Task:
 
 * Core services must reject unknown enum values and treat `status`, `priority`, `severity`, and `visibility` as the canonical enums from Doc 2.
 * Note: multiple assignees and assignment history are stored in `task_assignments`; `assignee_role` is a denormalised convenience field for routing and UI.
+**Note:** Task comments use the COMMENT_VISIBILITY enum (`internal_only`, `requester_visible`, `org_wide`) defined in Doc 2 §2.6.1. Implementations MUST enforce the same visibility values and semantics when exposing `task_comments` through API or domain views.
+
 
 ---
 

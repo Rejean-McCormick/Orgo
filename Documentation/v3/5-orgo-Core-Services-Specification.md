@@ -679,9 +679,15 @@ def assign_task(task_id: str,
       - records a TaskEvent (ownership_changed).
     """
 
-def add_task_comment(task_id: str, comment: str, author_user_id: str) -> dict:
+def add_task_comment(task_id: str,
+                  comment: str,
+                  author_user_id: str,
+                  visibility: str = "internal_only") -> dict:
     """
     Appends a comment to task_comments for auditability and collaboration.
+
+    `visibility` must be one of the COMMENT_VISIBILITY enum values
+    (`internal_only`, `requester_visible`, `org_wide`) defined in Doc 2.
     """
 ```
 

@@ -35,7 +35,7 @@ Worked example – Maintenance Module
 6.2 Handler outline (maintenance_handler.py)
 
 Worked example – HR Module
-7.1 Config example (hr_module.yaml)
+7.1 Config example (hr_case_module.yaml)
 7.2 Handler sketch
 
 Checklist for Domain Modules (Doc 3 compliance)
@@ -140,9 +140,9 @@ domain_modules/
     maintenance_handler.py
     templates/
       ...
-  hr/
-    hr_module.yaml
-    hr_handler.py
+  hr_case/
+    hr_case_module.yaml
+    hr_case_handler.py
     templates/
       ...
   education/
@@ -720,7 +720,7 @@ def get_domain_fields(ctx: DomainContext, task_id: str) -> dict:
 
 ## 7. Worked Example – HR Module (Outline)
 
-### 7.1 Config (`domain_modules/hr/hr_module.yaml`)
+### 7.1 Config (`domain_modules/hr_case/hr_case_module.yaml`)
 
 ```yaml
 domain: "hr_case"
