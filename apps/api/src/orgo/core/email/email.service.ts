@@ -131,6 +131,7 @@ export class EmailService {
         identifier: FN_EMAIL_SEND,
         metadata: {
           code: validationError.code,
+          details: validationError.details,
         },
       });
 
@@ -208,20 +209,24 @@ export class EmailService {
         } catch (err) {
           lastError = err;
 
+          const transient = this.isTransientError(err);
+
           this.logService.logEvent({
             category: 'EMAIL',
-            logLevel: 'WARNING',
+            logLevel: transient ? 'WARNING' : 'ERROR',
             message: 'Email send attempt failed',
             identifier: FN_EMAIL_SEND,
             metadata: {
               to,
               attempt,
+              transient,
               errorMessage:
                 err instanceof Error ? err.message : 'Unknown error',
             },
           });
 
-          const isLastAttempt = attempt === maxRetries;
+          const isLastAttempt =
+            attempt === maxRetries || !transient || maxRetries <= 1;
           if (isLastAttempt) {
             break;
           }
@@ -323,6 +328,35 @@ export class EmailService {
           message: `Email size ${approxMb.toFixed(
             2,
           )} MB exceeds configured maximum of ${maxMb} MB`,
+          details: {
+            approximateSizeMb: approxMb,
+            maxAllowedMb: maxMb,
+          },
+        };
+      }
+    }
+
+    const allowedTypes = emailConfig.limits?.allowed_attachment_mimetypes;
+    if (allowedTypes && allowedTypes.length && options.attachments?.length) {
+      const disallowed = new Set<string>();
+
+      for (const att of options.attachments) {
+        if (!att.contentType) {
+          continue;
+        }
+        if (!allowedTypes.includes(att.contentType)) {
+          disallowed.add(att.contentType);
+        }
+      }
+
+      if (disallowed.size > 0) {
+        return {
+          code: 'EMAIL_ATTACHMENT_TYPE_NOT_ALLOWED',
+          message: 'One or more attachment MIME types are not allowed',
+          details: {
+            disallowedTypes: Array.from(disallowed),
+            allowedTypes,
+          },
         };
       }
     }
@@ -359,8 +393,7 @@ export class EmailService {
         ? smtp.use_ssl
         : smtp.port === 465 || smtp.use_tls === true;
 
-    const connectionTimeoutMs =
-      (smtp.connection_timeout_secs ?? 10) * 1000;
+    const connectionTimeoutMs = (smtp.connection_timeout_secs ?? 10) * 1000;
     const socketTimeoutMs = (smtp.send_timeout_secs ?? 30) * 1000;
 
     const transporter = nodemailer.createTransport({
@@ -470,14 +503,10 @@ export class EmailService {
     };
 
     add(
-      Array.isArray(options.to)
-        ? options.to.join(',')
-        : options.to ?? '',
+      Array.isArray(options.to) ? options.to.join(',') : options.to ?? '',
     );
     add(
-      Array.isArray(options.cc)
-        ? options.cc.join(',')
-        : options.cc ?? '',
+      Array.isArray(options.cc) ? options.cc.join(',') : options.cc ?? '',
     );
     add(
       Array.isArray(options.bcc)
@@ -501,6 +530,45 @@ export class EmailService {
     }
 
     return bytes / (1024 * 1024);
+  }
+
+  /**
+   * Heuristic detection of transient SMTP / network errors.
+   * Used to decide whether to retry.
+   */
+  private isTransientError(err: unknown): boolean {
+    if (!err || typeof err !== 'object') {
+      return false;
+    }
+
+    const anyErr = err as { code?: string; responseCode?: number };
+
+    const transientNodeErrorCodes = new Set([
+      'ETIMEDOUT',
+      'ECONNRESET',
+      'EAI_AGAIN',
+      'ECONNREFUSED',
+      'ENOTFOUND',
+    ]);
+
+    if (anyErr.code && transientNodeErrorCodes.has(anyErr.code)) {
+      return true;
+    }
+
+    // For SMTP codes, treat typical resource/availability issues as transient.
+    if (typeof anyErr.responseCode === 'number') {
+      const code = anyErr.responseCode;
+      if (
+        code === 421 || // Service not available, closing transmission channel
+        code === 450 || // Requested mail action not taken: mailbox unavailable
+        code === 451 || // Local error in processing
+        code === 452 // Insufficient system storage
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private sleep(ms: number): Promise<void> {

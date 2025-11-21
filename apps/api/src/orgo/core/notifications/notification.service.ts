@@ -263,10 +263,10 @@ export class NotificationService {
         scope,
       });
 
-      const primaryEmails = this.extractEmails(recipients.primary);
-      const ccEmails = this.extractEmails(recipients.cc);
+      const hasAnyResolvedRecipient =
+        recipients.primary.length > 0 || recipients.cc.length > 0;
 
-      if (primaryEmails.length === 0 && ccEmails.length === 0) {
+      if (!hasAnyResolvedRecipient) {
         const summary: TaskNotificationDispatchSummary = {
           taskId: task.taskId,
           organizationId: task.organizationId,
@@ -292,39 +292,94 @@ export class NotificationService {
         };
       }
 
+      const recipientsByChannel = this.splitRecipientsByChannel(recipients);
+
+      const hasRecipientsForAtLeastOneChannel = channels.some((channel) => {
+        const channelRecipients = recipientsByChannel[channel];
+        return (
+          channelRecipients.primary.length > 0 ||
+          channelRecipients.cc.length > 0
+        );
+      });
+
+      if (!hasRecipientsForAtLeastOneChannel) {
+        const summary: TaskNotificationDispatchSummary = {
+          taskId: task.taskId,
+          organizationId: task.organizationId,
+          eventType,
+          scope,
+          suppressed: true,
+          suppressionReason:
+            'No recipients resolved for any of the selected notification channels',
+          channels: [],
+        };
+
+        await this.logService.logEvent({
+          category: 'TASK',
+          logLevel: 'INFO',
+          message:
+            'Notification suppressed: recipients have no matching channel preferences',
+          identifier: `task_id:${task.taskId}`,
+          metadata: {
+            eventType,
+            scope,
+            visibility: task.visibility,
+            channels,
+          },
+        });
+
+        return {
+          ok: true,
+          data: summary,
+          error: null,
+        };
+      }
+
       const channelResults: NotificationChannelDispatchResult[] = [];
 
       for (const channel of channels) {
+        const channelRecipients = recipientsByChannel[channel];
+
         switch (channel) {
           case 'EMAIL': {
+            const to = this.extractEmails(channelRecipients.primary);
+            const cc = this.extractEmails(channelRecipients.cc);
+
             const result = await this.sendEmailTaskNotification(
               task,
               eventType,
               notificationConfig,
-              primaryEmails,
-              ccEmails,
+              to,
+              cc,
             );
             channelResults.push(result);
             break;
           }
 
           case 'IN_APP': {
+            const recipientIdentifiers = this.extractInAppRecipientIdentifiers(
+              channelRecipients.primary,
+              channelRecipients.cc,
+            );
+
             const result = await this.sendInAppTaskNotification(
               task,
               eventType,
-              primaryEmails,
+              recipientIdentifiers,
             );
             channelResults.push(result);
             break;
           }
 
           default: {
-            // Channels such as SMS/WEBHOOK are not implemented here yet.
+            const normalised = this.normaliseRecipientIdentifiers(
+              channelRecipients,
+            );
             channelResults.push({
               channel,
               success: false,
-              recipients: primaryEmails,
-              cc: ccEmails,
+              recipients: normalised.to,
+              cc: normalised.cc,
               error: 'Channel not implemented',
             });
             break;
@@ -457,6 +512,60 @@ export class NotificationService {
   }
 
   /**
+   * Check whether a recipient allows a given channel based on preferredChannels.
+   * If preferredChannels is empty/undefined, all channels are allowed.
+   */
+  private doesRecipientAllowChannel(
+    recipient: NotificationRecipient,
+    channel: NotificationChannel,
+  ): boolean {
+    const { preferredChannels } = recipient;
+    if (!preferredChannels || preferredChannels.length === 0) {
+      return true;
+    }
+    return preferredChannels.includes(channel);
+  }
+
+  /**
+   * Split resolved recipients into per-channel buckets, respecting
+   * per-recipient preferredChannels.
+   */
+  private splitRecipientsByChannel(
+    recipients: ResolvedNotificationRecipients,
+  ): Record<
+    NotificationChannel,
+    { primary: NotificationRecipient[]; cc: NotificationRecipient[] }
+  > {
+    const result: Record<
+      NotificationChannel,
+      { primary: NotificationRecipient[]; cc: NotificationRecipient[] }
+    > = {
+      EMAIL: { primary: [], cc: [] },
+      SMS: { primary: [], cc: [] },
+      IN_APP: { primary: [], cc: [] },
+      WEBHOOK: { primary: [], cc: [] },
+    };
+
+    const addRecipient = (
+      recipient: NotificationRecipient,
+      type: 'primary' | 'cc',
+    ) => {
+      (['EMAIL', 'SMS', 'IN_APP', 'WEBHOOK'] as NotificationChannel[]).forEach(
+        (channel) => {
+          if (this.doesRecipientAllowChannel(recipient, channel)) {
+            result[channel][type].push(recipient);
+          }
+        },
+      );
+    };
+
+    recipients.primary.forEach((recipient) => addRecipient(recipient, 'primary'));
+    recipients.cc.forEach((recipient) => addRecipient(recipient, 'cc'));
+
+    return result;
+  }
+
+  /**
    * Send email notification using EmailService (Doc 4 / Doc 5 §4.3).
    */
   private async sendEmailTaskNotification(
@@ -515,6 +624,15 @@ export class NotificationService {
     eventType: TaskNotificationEventType,
     recipientIdentifiers: string[],
   ): Promise<NotificationChannelDispatchResult> {
+    if (recipientIdentifiers.length === 0) {
+      return {
+        channel: 'IN_APP',
+        success: false,
+        recipients: [],
+        error: 'No in-app recipients resolved',
+      };
+    }
+
     // For now, we only log an in-app notification event.
     await this.logService.logEvent({
       category: 'TASK',
@@ -598,6 +716,70 @@ export class NotificationService {
       metadata: task.metadata ?? {},
       eventType,
     };
+  }
+
+  /**
+   * Normalise a single recipient identifier for logging / unimplemented channels.
+   * Preference order: email → userId → displayName.
+   */
+  private normaliseRecipientIdentifier(
+    recipient: NotificationRecipient,
+  ): string | null {
+    const email = (recipient.email || '').trim();
+    if (email.length > 0) {
+      return email;
+    }
+
+    const userId = (recipient.userId || '').trim();
+    if (userId.length > 0) {
+      return userId;
+    }
+
+    const displayName = (recipient.displayName || '').trim();
+    if (displayName.length > 0) {
+      return displayName;
+    }
+
+    return null;
+  }
+
+  private normaliseRecipientIdentifiers(recipients: {
+    primary: NotificationRecipient[];
+    cc: NotificationRecipient[];
+  }): { to: string[]; cc: string[] } {
+    const to = recipients.primary
+      .map((recipient) => this.normaliseRecipientIdentifier(recipient))
+      .filter((identifier): identifier is string => !!identifier);
+
+    const cc = recipients.cc
+      .map((recipient) => this.normaliseRecipientIdentifier(recipient))
+      .filter((identifier): identifier is string => !!identifier);
+
+    return { to, cc };
+  }
+
+  /**
+   * Extract identifiers for IN_APP notifications.
+   * Prefers userId; falls back to normalised identifiers if none present.
+   */
+  private extractInAppRecipientIdentifiers(
+    primaryRecipients: NotificationRecipient[],
+    ccRecipients: NotificationRecipient[],
+  ): string[] {
+    const byUserId = [...primaryRecipients, ...ccRecipients]
+      .map((recipient) => (recipient.userId || '').trim())
+      .filter((userId) => userId.length > 0);
+
+    if (byUserId.length > 0) {
+      return byUserId;
+    }
+
+    const normalised = this.normaliseRecipientIdentifiers({
+      primary: primaryRecipients,
+      cc: ccRecipients,
+    });
+
+    return [...normalised.to, ...normalised.cc];
   }
 
   private extractEmails(recipients: NotificationRecipient[]): string[] {

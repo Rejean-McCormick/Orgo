@@ -34,7 +34,7 @@ export interface ParsedEmailPayload {
 
 /**
  * Canonical service error shape for Core Services:
- * aligns with Doc 5's `{ ok, data, error }` result contract. :contentReference[oaicite:0]{index=0}
+ * aligns with the `{ ok, data, error }` result contract.
  */
 export interface ServiceError {
   code: string;
@@ -43,7 +43,7 @@ export interface ServiceError {
 }
 
 /**
- * Canonical service result wrapper used by core services. :contentReference[oaicite:1]{index=1}
+ * Canonical service result wrapper used by core services.
  */
 export interface ServiceResult<T> {
   ok: boolean;
@@ -62,7 +62,7 @@ export interface EmailValidationSummary {
 
 /**
  * Email limits derived from configuration.
- * Mirrors the `limits` section of `email_config.yaml` in Doc 5. :contentReference[oaicite:2]{index=2}
+ * Mirrors the `limits` section of `email_config.yaml`.
  */
 export interface EmailLimitsConfig {
   maxEmailSizeMb: number;
@@ -72,11 +72,11 @@ export interface EmailLimitsConfig {
 /**
  * Email validator for the Email Gateway.
  *
- * Responsibilities (aligned with Doc 5 §4.3–4.4):
+ * Responsibilities:
  *  - Enforce required fields on parsed email payloads.
  *  - Enforce max total email size (default 10MB, configurable).
  *  - Enforce allowed attachment MIME types.
- *  - Return a standard `{ ok, data, error }` result shape. :contentReference[oaicite:3]{index=3}
+ *  - Return a standard `{ ok, data, error }` result shape.
  */
 @Injectable()
 export class EmailValidatorService {
@@ -85,7 +85,7 @@ export class EmailValidatorService {
   private readonly maxEmailSizeBytes: number;
   private readonly allowedAttachmentMimetypes: Set<string>;
 
-  // Defaults taken from the email config example in the Core Services spec. :contentReference[oaicite:4]{index=4}
+  // Defaults taken from the email config example in the Core Services spec.
   private static readonly DEFAULT_MAX_EMAIL_SIZE_MB = 10;
   private static readonly DEFAULT_ALLOWED_MIMETYPES: string[] = [
     'application/pdf',
@@ -121,7 +121,7 @@ export class EmailValidatorService {
       attachmentName?: string | null;
     }> = [];
 
-    // 1. Required fields: subject, from, to, and at least one body. :contentReference[oaicite:5]{index=5}
+    // 1. Required fields: subject, from, to, and at least one body.
     if (!payload.subject || !payload.subject.trim()) {
       issues.push({
         code: 'MISSING_SUBJECT',
@@ -174,7 +174,7 @@ export class EmailValidatorService {
       });
     }
 
-    // 2. Attachment MIME type validation against allowed list. :contentReference[oaicite:6]{index=6}
+    // 2. Attachment MIME type validation against allowed list.
     const attachments = payload.attachments ?? [];
     for (const attachment of attachments) {
       const contentType = (attachment.contentType ?? '').toLowerCase().trim();
@@ -184,14 +184,16 @@ export class EmailValidatorService {
           code: 'EMAIL_ATTACHMENT_TYPE_NOT_ALLOWED',
           message: `Attachment "${
             attachment.filename ?? 'unnamed'
-          }" has disallowed or unknown MIME type "${attachment.contentType ?? 'unknown'}".`,
+          }" has disallowed or unknown MIME type "${
+            attachment.contentType ?? 'unknown'
+          }".`,
           field: 'attachments',
           attachmentName: attachment.filename ?? null,
         });
       }
     }
 
-    // 3. Total size validation (payload + attachments) vs configured max. :contentReference[oaicite:7]{index=7}
+    // 3. Total size validation (payload + attachments) vs configured max.
     const totalSizeBytes = this.computeApproximateSize(payload);
     if (totalSizeBytes > this.maxEmailSizeBytes) {
       issues.push({
@@ -238,8 +240,8 @@ export class EmailValidatorService {
    *   - EMAIL_ALLOWED_ATTACHMENT_MIMETYPES (comma‑separated list of MIME types)
    *
    * This is intentionally compatible with the `email_config.yaml` structure
-   * described in Doc 5; a future Orgo config loader can hydrate these into
-   * environment variables or ConfigService keys. :contentReference[oaicite:8]{index=8}
+   * described in the Core Services spec; a future Orgo config loader can hydrate
+   * these into environment variables or ConfigService keys.
    */
   private loadLimitsFromConfig(): EmailLimitsConfig {
     const maxSizeFromEnv = this.configService.get<number | string>(
@@ -323,8 +325,7 @@ export class EmailValidatorService {
     }
 
     // Basic pattern: local@domain with at least one dot in the domain.
-    const basicEmailRegex =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const basicEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     return basicEmailRegex.test(trimmed);
   }

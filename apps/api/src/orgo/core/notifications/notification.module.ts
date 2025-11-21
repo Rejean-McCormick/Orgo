@@ -9,27 +9,17 @@ import { NotificationService } from './notification.service';
 /**
  * NotificationModule
  *
- * Wires up the core NotificationService (notifier_service) with:
- * - Persistence (for storing notification records if needed),
+ * Exposes NotificationService and integrates it with:
+ * - Nest env config (ConfigModule),
  * - Orgo YAML config (notification_config.yaml),
+ * - Shared persistence layer,
  * - Structured logging.
- *
- * See:
- * - Doc 2 – Foundations (NOTIFICATION_CHANNEL / NOTIFICATION_SCOPE)
- * - Doc 5 – Core Services (Notification Service spec)
  */
 @Module({
   imports: [
-    // Nest env config (global, but safe to import here as well)
     ConfigModule,
-
-    // Orgo-wide YAML configuration (notification_config.yaml, profiles, etc.)
     OrgoConfigModule,
-
-    // Shared Prisma-based persistence layer
     PersistenceModule,
-
-    // Structured logging (LOG_CATEGORY / LOG_LEVEL)
     LoggerModule,
   ],
   providers: [NotificationService],
