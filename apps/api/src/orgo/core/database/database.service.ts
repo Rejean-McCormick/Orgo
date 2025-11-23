@@ -21,12 +21,22 @@ export interface OrgoError {
  * Standard Orgo result shape (Doc 5 §2.4).
  * ok: true  -> data is set, error is null
  * ok: false -> data is null, error is set
+ *
+ * Implemented as a discriminated union so TypeScript can narrow correctly.
  */
-export interface OrgoResult<T> {
-  ok: boolean;
-  data: T | null;
-  error: OrgoError | null;
+export interface OrgoSuccess<T> {
+  ok: true;
+  data: T;
+  error: null;
 }
+
+export interface OrgoFailure {
+  ok: false;
+  data: null;
+  error: OrgoError;
+}
+
+export type OrgoResult<T> = OrgoSuccess<T> | OrgoFailure;
 
 /**
  * Core Database Service for Orgo v3.
@@ -40,7 +50,7 @@ export interface OrgoResult<T> {
  *
  * Notes:
  * - ONLINE mode uses Postgres via Prisma and DATABASE_URL (validated by ConfigModule).
- * - OFFLINE mode (SQLite) is not implemented in this starter and will return UNSUPPORTED_DB_MODE.
+ * - OFFLINE mode (SQLite) is not implemented in this starter and returns UNSUPPORTED_DB_MODE.
  */
 @Injectable()
 export class DatabaseService {
@@ -73,6 +83,8 @@ export class DatabaseService {
       this.logger.error(
         'DATABASE_URL is not set. Check your environment (.env) configuration.',
       );
+      // In bootstrap, a hard failure here is acceptable; downstream OrgoResult
+      // codes (DB_CONFIG_ERROR) are used for runtime connection issues.
       throw new Error('DATABASE_URL is required but was not provided.');
     }
 
@@ -84,7 +96,7 @@ export class DatabaseService {
    *
    * Functional inventory reference:
    *   Core Services / Database Ops → DatabaseService.getPrismaClient
-   *   (Doc 4 – Functional Code‑Name Inventory) :contentReference[oaicite:0]{index=0}
+   *   (Doc 4 – Functional Code‑Name Inventory)
    */
   getPrismaClient(): PrismaClient {
     return this.prisma;
@@ -100,52 +112,20 @@ export class DatabaseService {
   /**
    * Connect to the database in the requested mode.
    *
-   * Logical contract from Doc 5 §8.3 (connect_to_database). :contentReference[oaicite:1]{index=1}
+   * Logical contract from Doc 5 §8.3 (connect_to_database).
    *
    * In this starter:
    * - Only ONLINE (Postgres via Prisma) is supported.
-   * - OFFLINE (SQLite) is not implemented yet and will throw.
+   * - OFFLINE (SQLite) is not implemented yet and returns UNSUPPORTED_DB_MODE.
    */
   async connectToDatabase(
     mode: DatabaseMode = 'ONLINE',
-  ): Promise<PrismaClient> {
+  ): Promise<OrgoResult<PrismaClient>> {
     if (mode === 'OFFLINE') {
       this.logger.error(
         "Database mode 'OFFLINE' requested, but offline/SQLite support is not implemented in this build.",
       );
-      throw new Error(
-        "Database mode 'OFFLINE' is not supported in this deployment.",
-      );
-    }
 
-    if (!this.hasConnected) {
-      await this.prisma.$connect();
-      this.hasConnected = true;
-      this.logger.log('Successfully connected to the primary database (ONLINE).');
-    }
-
-    return this.prisma;
-  }
-
-  /**
-   * Fetch records from a logical table / Prisma model.
-   *
-   * Logical contract from Doc 5 §8.3 (fetch_records). :contentReference[oaicite:2]{index=2}
-   *
-   * This uses Prisma delegates dynamically:
-   *   const delegate = (prisma as any)[table];
-   *   delegate.findMany({ where })
-   *
-   * @param table Prisma model name (e.g. "user", "tasks", "cases").
-   * @param where Optional filter object (Prisma "where" clause).
-   * @param mode  ONLINE/ OFFLINE (ONLINE only in this build).
-   */
-  async fetchRecords<T = unknown>(
-    table: string,
-    where?: Record<string, unknown>,
-    mode: DatabaseMode = 'ONLINE',
-  ): Promise<OrgoResult<T[]>> {
-    if (mode === 'OFFLINE') {
       return {
         ok: false,
         data: null,
@@ -153,15 +133,79 @@ export class DatabaseService {
           code: 'UNSUPPORTED_DB_MODE',
           message:
             "Database mode 'OFFLINE' is not supported in this deployment.",
-          details: { table, mode },
+          details: { mode },
         },
       };
     }
 
     try {
-      await this.connectToDatabase('ONLINE');
+      if (!this.hasConnected) {
+        await this.prisma.$connect();
+        this.hasConnected = true;
+        this.logger.log(
+          'Successfully connected to the primary database (ONLINE).',
+        );
+      }
 
-      const delegate = (this.prisma as any)[table];
+      return {
+        ok: true,
+        data: this.prisma,
+        error: null,
+      };
+    } catch (err) {
+      const error = err as Error;
+
+      this.logger.error(
+        `Failed to connect to database in mode '${mode}': ${error.message}`,
+        error.stack,
+      );
+
+      return {
+        ok: false,
+        data: null,
+        error: {
+          code: 'DB_CONFIG_ERROR',
+          message: 'Failed to connect to the database.',
+          details: {
+            mode,
+            error: error.message,
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Fetch records from a logical table / Prisma model.
+   *
+   * Logical contract from Doc 5 §8.3 (fetch_records).
+   *
+   * This uses Prisma delegates dynamically:
+   *   const delegate = (prisma as any)[table];
+   *   delegate.findMany({ where })
+   *
+   * @param table Prisma model name (e.g. "user", "tasks", "cases").
+   * @param where Optional filter object (Prisma "where" clause).
+   * @param mode  ONLINE / OFFLINE (ONLINE only in this build).
+   */
+  async fetchRecords<T = unknown>(
+    table: string,
+    where?: Record<string, unknown>,
+    mode: DatabaseMode = 'ONLINE',
+  ): Promise<OrgoResult<T[]>> {
+    const connection = await this.connectToDatabase(mode);
+    if (!connection.ok) {
+      return {
+        ok: false,
+        data: null,
+        error: connection.error,
+      };
+    }
+
+    const prisma = connection.data;
+
+    try {
+      const delegate = (prisma as any)[table];
       if (!delegate || typeof delegate.findMany !== 'function') {
         return {
           ok: false,
@@ -210,34 +254,30 @@ export class DatabaseService {
   /**
    * Insert a record into a logical table / Prisma model.
    *
-   * Logical contract from Doc 5 §8.3 (insert_record). :contentReference[oaicite:3]{index=3}
+   * Logical contract from Doc 5 §8.3 (insert_record).
    *
    * @param table Prisma model name.
    * @param data  Data object matching the Prisma model "create" input.
-   * @param mode  ONLINE/ OFFLINE (ONLINE only in this build).
+   * @param mode  ONLINE / OFFLINE (ONLINE only in this build).
    */
   async insertRecord<T = unknown>(
     table: string,
     data: Record<string, unknown>,
     mode: DatabaseMode = 'ONLINE',
   ): Promise<OrgoResult<T>> {
-    if (mode === 'OFFLINE') {
+    const connection = await this.connectToDatabase(mode);
+    if (!connection.ok) {
       return {
         ok: false,
         data: null,
-        error: {
-          code: 'UNSUPPORTED_DB_MODE',
-          message:
-            "Database mode 'OFFLINE' is not supported in this deployment.",
-          details: { table, mode },
-        },
+        error: connection.error,
       };
     }
 
-    try {
-      await this.connectToDatabase('ONLINE');
+    const prisma = connection.data;
 
-      const delegate = (this.prisma as any)[table];
+    try {
+      const delegate = (prisma as any)[table];
       if (!delegate || typeof delegate.create !== 'function') {
         return {
           ok: false,
@@ -283,12 +323,12 @@ export class DatabaseService {
   /**
    * Update a record in a logical table / Prisma model.
    *
-   * Logical contract from Doc 5 §8.3 (update_record). :contentReference[oaicite:4]{index=4}
+   * Logical contract from Doc 5 §8.3 (update_record).
    *
    * @param table   Prisma model name.
    * @param key     Primary key / unique key filter (Prisma "where" clause).
    * @param updates Partial data to update (Prisma "data" clause).
-   * @param mode    ONLINE/ OFFLINE (ONLINE only in this build).
+   * @param mode    ONLINE / OFFLINE (ONLINE only in this build).
    */
   async updateRecord<T = unknown>(
     table: string,
@@ -296,23 +336,19 @@ export class DatabaseService {
     updates: Record<string, unknown>,
     mode: DatabaseMode = 'ONLINE',
   ): Promise<OrgoResult<T>> {
-    if (mode === 'OFFLINE') {
+    const connection = await this.connectToDatabase(mode);
+    if (!connection.ok) {
       return {
         ok: false,
         data: null,
-        error: {
-          code: 'UNSUPPORTED_DB_MODE',
-          message:
-            "Database mode 'OFFLINE' is not supported in this deployment.",
-          details: { table, mode },
-        },
+        error: connection.error,
       };
     }
 
-    try {
-      await this.connectToDatabase('ONLINE');
+    const prisma = connection.data;
 
-      const delegate = (this.prisma as any)[table];
+    try {
+      const delegate = (prisma as any)[table];
       if (!delegate || typeof delegate.update !== 'function') {
         return {
           ok: false,

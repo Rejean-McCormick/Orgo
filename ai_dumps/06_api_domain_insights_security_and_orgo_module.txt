@@ -1,0 +1,5721 @@
+=== FILE 1/18: apps/api/src/orgo/domain/education/education.module.ts ===
+
+import { Module } from '@nestjs/common';
+import { EducationModuleService } from './education-module.service';
+import { EducationController } from './education.controller';
+
+@Module({
+  controllers: [EducationController],
+  providers: [EducationModuleService],
+  exports: [EducationModuleService],
+})
+export class EducationModule {}
+
+
+=== FILE 2/18: apps/api/src/orgo/domain/hr/hr.module.ts ===
+
+import { Module } from '@nestjs/common';
+import { HrModuleService } from './hr.service';
+import { HrModuleController } from './hr.controller';
+
+/**
+ * Canonical domain type used for HR Tasks (`Task.type` = "hr_case").
+ * This must stay aligned with the hr_case domain module config (hr_case_module.yaml)
+ * and the global domain module specification.
+ */
+export const HR_DOMAIN_TYPE = 'hr_case';
+
+@Module({
+  controllers: [HrModuleController],
+  providers: [HrModuleService],
+  exports: [HrModuleService],
+})
+export class HrModule {}
+
+
+=== FILE 3/18: apps/api/src/orgo/domain/hr/hr.service.ts ===
+
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma, PrismaClient } from '@prisma/client';
+
+/**
+ * Canonical enums (aligned with Doc 2 / Doc 8)
+ */
+export type TaskStatus =
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'ON_HOLD'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'ESCALATED'
+  | 'CANCELLED';
+
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type TaskSeverity = 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL';
+
+export type Visibility = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
+
+export type TaskSource = 'email' | 'api' | 'manual' | 'sync';
+
+export type HrCaseStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
+
+export type HrCaseConfidentialityLevel = 'sensitive' | 'highly_sensitive';
+
+export type HrCaseParticipantRole =
+  | 'complainant'
+  | 'respondent'
+  | 'witness'
+  | 'advocate'
+  | 'other';
+
+/**
+ * Minimal row shapes used for mapping raw SQL results.
+ * These reflect the Doc 1 schema (key columns only).
+ */
+export interface CaseRow {
+  id: string;
+  organization_id: string;
+  label: string;
+  title: string;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'archived';
+  severity: TaskSeverity;
+  origin_vertical_level: number | null;
+  origin_role: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface HrCaseRow {
+  id: string;
+  organization_id: string;
+  case_id: string;
+  case_code: string;
+  title: string;
+  description: string;
+  status: HrCaseStatus;
+  confidentiality_level: HrCaseConfidentialityLevel;
+  case_owner_role_id: string | null;
+  case_owner_user_id: string | null;
+  primary_task_id: string | null;
+  opened_at: Date;
+  closed_at: Date | null;
+}
+
+export interface TaskRow {
+  id: string;
+  organization_id: string;
+  case_id: string | null;
+  type: string;
+  category: 'request' | 'incident' | 'update' | 'report' | 'distribution';
+  subtype: string | null;
+  label: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  severity: TaskSeverity;
+  visibility: Visibility;
+  source: TaskSource;
+  created_by_user_id: string | null;
+  requester_person_id: string | null;
+  owner_role_id: string | null;
+  owner_user_id: string | null;
+  assignee_role: string | null;
+  due_at: Date | null;
+  reactivity_deadline_at: Date | null;
+  escalation_level: number;
+  closed_at: Date | null;
+}
+
+export interface HrCaseParticipantRow {
+  id: string;
+  hr_case_id: string;
+  person_id: string;
+  role_in_case: HrCaseParticipantRole;
+  notes: string | null;
+}
+
+/**
+ * Input DTO for registering a new HR report.
+ * This is a service-level DTO; controller-level DTOs can extend/validate this shape.
+ */
+export interface RegisterHrReportInput {
+  organizationId: string;
+
+  /**
+   * Human-facing title and description of the report.
+   */
+  title: string;
+  description: string;
+
+  /**
+   * Canonical enums (JSON inputs may be lower-case; normalization happens in service).
+   */
+  severity?: TaskSeverity | string;
+  priority?: TaskPriority | string;
+  visibility?: Visibility | string;
+
+  /**
+   * Task category & subtype (domain-specific for HR).
+   * Category must be one of: request | incident | update | report | distribution.
+   */
+  category?: 'request' | 'incident' | 'update' | 'report' | 'distribution';
+  subtype?: string; // e.g. "onboarding" | "offboarding" | "harassment" | "policy_question"
+
+  /**
+   * Canonical information label; if omitted, a sane HR default is used.
+   * Example: "100.94.HR.CaseOfficer"
+   */
+  label?: string;
+
+  /**
+   * Signal/source metadata (aligned with task_source_enum / cases.source_type).
+   */
+  sourceType?: TaskSource;
+  sourceReference?: string | null;
+
+  /**
+   * Ownership / routing hints.
+   */
+  caseOwnerRoleId?: string | null;
+  caseOwnerUserId?: string | null;
+  assigneeRole?: string | null;
+
+  /**
+   * HR participants (mapped into hr_case_participants).
+   */
+  reporterPersonId?: string | null;
+  respondentPersonId?: string | null;
+  otherParticipantIds?: string[];
+  reporterNotes?: string | null;
+  respondentNotes?: string | null;
+  otherParticipantsRoleInCase?: HrCaseParticipantRole; // default: "witness"
+
+  /**
+   * Additional context.
+   */
+  tags?: string[];
+  location?: unknown;
+  caseMetadata?: Record<string, unknown> | null;
+  taskMetadata?: Record<string, unknown> | null;
+
+  /**
+   * Explicit confidentiality hint (in addition to severity/subtype-based derivation).
+   */
+  requiresHighConfidentiality?: boolean;
+
+  /**
+   * Due date for the primary task.
+   */
+  dueAt?: string | Date | null;
+
+  /**
+   * Actor who is creating the report (user account).
+   */
+  createdByUserId?: string | null;
+
+  /**
+   * Optional HR-specific title/description overrides for the HR case record.
+   */
+  hrTitleOverride?: string | null;
+  hrDescriptionOverride?: string | null;
+}
+
+/**
+ * Summary shape returned from listCases().
+ */
+export interface HrCaseSummary {
+  id: string; // hr_cases.id
+  caseId: string;
+  caseCode: string;
+  title: string;
+  status: HrCaseStatus;
+  severity: TaskSeverity;
+  confidentialityLevel: HrCaseConfidentialityLevel;
+  openedAt: string;
+  closedAt?: string;
+  primaryTaskId?: string;
+}
+
+/**
+ * Paginated list wrapper for HR case summaries.
+ */
+export interface PaginatedHrCaseSummary {
+  items: HrCaseSummary[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Options for listing HR cases.
+ */
+export interface ListHrCasesOptions {
+  organizationId: string;
+  status?: HrCaseStatus | HrCaseStatus[];
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Detailed result of a newly registered HR report.
+ */
+export interface HrCaseWithPrimaryTask {
+  case: CaseRow;
+  hrCase: HrCaseRow;
+  primaryTask: TaskRow;
+  participants: HrCaseParticipantRow[];
+}
+
+/**
+ * TxClient type alias for use inside Prisma transactions.
+ */
+type TxClient = Prisma.TransactionClient;
+
+@Injectable()
+export class HrModuleService {
+  /**
+   * Default canonical label for HR case work (Doc 8 example).
+   * 100  = broadcast base (department head level)
+   * .9   = crisis/emergency information
+   * .4   = report
+   * HR.CaseOfficer = horizontal functional role
+   */
+  private static readonly DEFAULT_HR_LABEL = '100.94.HR.CaseOfficer';
+
+  private readonly prisma: PrismaClient;
+
+  constructor() {
+    // Note: if you already have a shared PrismaService / DatabaseService,
+    // inject it here instead of instantiating PrismaClient directly.
+    this.prisma = new PrismaClient();
+  }
+
+  /**
+   * Register a new HR report:
+   * - Creates a generic Case (`cases`)
+   * - Creates an HR Case (`hr_cases`) linked 1:1 with the Case
+   * - Creates a primary Task (`tasks`) of type "hr_case"
+   * - Creates hr_case_participants for reporter/respondent/others
+   * - Creates a primary hr_case_task_links entry
+   */
+  async registerReport(input: RegisterHrReportInput): Promise<HrCaseWithPrimaryTask> {
+    this.ensureRequiredFields(input);
+
+    const severity = this.normalizeSeverity(input.severity);
+    const priority = this.normalizePriority(input.priority ?? this.derivePriorityFromSeverity(severity));
+    const visibility = this.normalizeVisibility(input.visibility ?? 'RESTRICTED');
+    const sourceType: TaskSource = (input.sourceType ?? 'manual') as TaskSource;
+    const category: 'request' | 'incident' | 'update' | 'report' | 'distribution' =
+      input.category ?? 'request';
+
+    const label = input.label?.trim() || HrModuleService.DEFAULT_HR_LABEL;
+    const { verticalBase, horizontalRole } = this.parseLabel(label);
+
+    const now = new Date();
+    const organizationId = input.organizationId;
+    const originVerticalLevel = verticalBase;
+    const originRole = horizontalRole;
+
+    const confidentialityLevel = this.deriveConfidentialityLevel({
+      severity,
+      subtype: input.subtype,
+      requiresHighConfidentiality: input.requiresHighConfidentiality,
+    });
+
+    const dueAt = this.normalizeOptionalDate(input.dueAt);
+
+    const tags = input.tags ?? [];
+    const locationJson = input.location != null ? JSON.stringify(input.location) : 'null';
+    const caseMetadataJson = JSON.stringify(input.caseMetadata ?? {});
+    const taskMetadataJson = JSON.stringify(
+      input.taskMetadata ?? {
+        domain: 'hr_case',
+        subtype: input.subtype ?? null,
+        reporter_person_id: input.reporterPersonId ?? null,
+        respondent_person_id: input.respondentPersonId ?? null,
+      },
+    );
+
+    return this.prisma.$transaction(async (tx: TxClient) => {
+      // 1. Insert into cases
+      const [caseRow] = await tx.$queryRaw<CaseRow[]>`
+        INSERT INTO cases (
+          organization_id,
+          source_type,
+          source_reference,
+          label,
+          title,
+          description,
+          status,
+          severity,
+          reactivity_time,
+          origin_vertical_level,
+          origin_role,
+          tags,
+          location,
+          metadata
+        ) VALUES (
+          ${organizationId},
+          ${sourceType},
+          ${input.sourceReference ?? null},
+          ${label},
+          ${input.title},
+          ${input.description},
+          ${'open'},
+          ${severity},
+          ${null},
+          ${originVerticalLevel},
+          ${originRole},
+          ${tags},
+          ${locationJson}::jsonb,
+          ${caseMetadataJson}::jsonb
+        )
+        RETURNING
+          id,
+          organization_id,
+          label,
+          title,
+          description,
+          status,
+          severity,
+          origin_vertical_level,
+          origin_role,
+          created_at,
+          updated_at
+      `;
+
+      if (!caseRow) {
+        throw new Error('Failed to create Case for HR report');
+      }
+
+      // 2. Generate a human-readable HR case code (e.g. HR-2025-0001)
+      const caseCode = await this.generateCaseCode(tx, organizationId, now);
+
+      // 3. Insert into hr_cases
+      const hrTitle = input.hrTitleOverride?.trim() || input.title;
+      const hrDescription = input.hrDescriptionOverride?.trim() || input.description;
+
+      const [hrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
+        INSERT INTO hr_cases (
+          organization_id,
+          case_id,
+          case_code,
+          title,
+          description,
+          status,
+          confidentiality_level,
+          case_owner_role_id,
+          case_owner_user_id,
+          primary_task_id,
+          opened_at,
+          closed_at
+        ) VALUES (
+          ${organizationId},
+          ${caseRow.id},
+          ${caseCode},
+          ${hrTitle},
+          ${hrDescription},
+          ${'open'},
+          ${confidentialityLevel},
+          ${input.caseOwnerRoleId ?? null},
+          ${input.caseOwnerUserId ?? null},
+          ${null},
+          ${now},
+          ${null}
+        )
+        RETURNING
+          id,
+          organization_id,
+          case_id,
+          case_code,
+          title,
+          description,
+          status,
+          confidentiality_level,
+          case_owner_role_id,
+          case_owner_user_id,
+          primary_task_id,
+          opened_at,
+          closed_at
+      `;
+
+      if (!hrCaseRow) {
+        throw new Error('Failed to create HrCase for HR report');
+      }
+
+      // 4. Insert primary Task
+      const [taskRow] = await tx.$queryRaw<TaskRow[]>`
+        INSERT INTO tasks (
+          organization_id,
+          case_id,
+          type,
+          category,
+          subtype,
+          label,
+          title,
+          description,
+          status,
+          priority,
+          severity,
+          visibility,
+          source,
+          created_by_user_id,
+          requester_person_id,
+          owner_role_id,
+          owner_user_id,
+          assignee_role,
+          due_at,
+          reactivity_time,
+          reactivity_deadline_at,
+          escalation_level,
+          closed_at,
+          metadata
+        ) VALUES (
+          ${organizationId},
+          ${caseRow.id},
+          ${'hr_case'},
+          ${category},
+          ${input.subtype ?? null},
+          ${label},
+          ${`HR case: ${hrTitle}`},
+          ${hrDescription},
+          ${'PENDING'},
+          ${priority},
+          ${severity},
+          ${visibility},
+          ${sourceType},
+          ${input.createdByUserId ?? null},
+          ${input.reporterPersonId ?? null},
+          ${input.caseOwnerRoleId ?? null},
+          ${input.caseOwnerUserId ?? null},
+          ${input.assigneeRole ?? 'HR.CaseOfficer'},
+          ${dueAt},
+          ${null},
+          ${null},
+          ${0},
+          ${null},
+          ${taskMetadataJson}::jsonb
+        )
+        RETURNING
+          id,
+          organization_id,
+          case_id,
+          type,
+          category,
+          subtype,
+          label,
+          title,
+          description,
+          status,
+          priority,
+          severity,
+          visibility,
+          source,
+          created_by_user_id,
+          requester_person_id,
+          owner_role_id,
+          owner_user_id,
+          assignee_role,
+          due_at,
+          reactivity_deadline_at,
+          escalation_level,
+          closed_at
+      `;
+
+      if (!taskRow) {
+        throw new Error('Failed to create primary Task for HR report');
+      }
+
+      // 5. Update HrCase with primary_task_id
+      const [updatedHrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
+        UPDATE hr_cases
+        SET primary_task_id = ${taskRow.id}
+        WHERE id = ${hrCaseRow.id}
+        RETURNING
+          id,
+          organization_id,
+          case_id,
+          case_code,
+          title,
+          description,
+          status,
+          confidentiality_level,
+          case_owner_role_id,
+          case_owner_user_id,
+          primary_task_id,
+          opened_at,
+          closed_at
+      `;
+
+      const finalHrCaseRow = updatedHrCaseRow ?? hrCaseRow;
+
+      // 6. Insert hr_case_participants rows
+      const participants: HrCaseParticipantRow[] = [];
+
+      if (input.reporterPersonId) {
+        const [p] = await tx.$queryRaw<HrCaseParticipantRow[]>`
+          INSERT INTO hr_case_participants (
+            hr_case_id,
+            person_id,
+            role_in_case,
+            notes
+          ) VALUES (
+            ${finalHrCaseRow.id},
+            ${input.reporterPersonId},
+            ${'complainant'},
+            ${input.reporterNotes ?? null}
+          )
+          RETURNING
+            id,
+            hr_case_id,
+            person_id,
+            role_in_case,
+            notes
+        `;
+        if (p) {
+          participants.push(p);
+        }
+      }
+
+      if (input.respondentPersonId) {
+        const [p] = await tx.$queryRaw<HrCaseParticipantRow[]>`
+          INSERT INTO hr_case_participants (
+            hr_case_id,
+            person_id,
+            role_in_case,
+            notes
+          ) VALUES (
+            ${finalHrCaseRow.id},
+            ${input.respondentPersonId},
+            ${'respondent'},
+            ${input.respondentNotes ?? null}
+          )
+          RETURNING
+            id,
+            hr_case_id,
+            person_id,
+            role_in_case,
+            notes
+        `;
+        if (p) {
+          participants.push(p);
+        }
+      }
+
+      if (input.otherParticipantIds?.length) {
+        const roleForOthers: HrCaseParticipantRole =
+          input.otherParticipantsRoleInCase ?? 'witness';
+
+        for (const personId of input.otherParticipantIds) {
+          const [p] = await tx.$queryRaw<HrCaseParticipantRow[]>`
+            INSERT INTO hr_case_participants (
+              hr_case_id,
+              person_id,
+              role_in_case,
+              notes
+            ) VALUES (
+              ${finalHrCaseRow.id},
+              ${personId},
+              ${roleForOthers},
+              ${null}
+            )
+            RETURNING
+              id,
+              hr_case_id,
+              person_id,
+              role_in_case,
+              notes
+          `;
+          if (p) {
+            participants.push(p);
+          }
+        }
+      }
+
+      // 7. Link HrCase and Task in hr_case_task_links (link_type "primary")
+      await tx.$queryRaw`
+        INSERT INTO hr_case_task_links (
+          hr_case_id,
+          task_id,
+          link_type
+        ) VALUES (
+          ${finalHrCaseRow.id},
+          ${taskRow.id},
+          ${'primary'}
+        )
+      `;
+
+      return {
+        case: caseRow,
+        hrCase: finalHrCaseRow,
+        primaryTask: taskRow,
+        participants,
+      };
+    });
+  }
+
+  /**
+   * List HR cases for an organization with basic filtering and pagination.
+   */
+  async listCases(options: ListHrCasesOptions): Promise<PaginatedHrCaseSummary> {
+    const { organizationId } = options;
+    if (!organizationId || !organizationId.trim()) {
+      throw new BadRequestException('organizationId is required');
+    }
+
+    const statuses = this.normalizeHrCaseStatusFilter(options.status);
+    const search = options.search?.trim() || null;
+
+    const limit = this.normalizeLimit(options.limit);
+    const offset = this.normalizeOffset(options.offset);
+
+    const statusCondition: Prisma.Sql = statuses.length
+      ? Prisma.sql`AND hc.status = ANY(${statuses})`
+      : Prisma.sql``;
+
+    const searchCondition: Prisma.Sql = search
+      ? Prisma.sql`AND (
+          hc.title ILIKE ${`%${search}%`}
+          OR c.title ILIKE ${`%${search}%`}
+          OR c.description ILIKE ${`%${search}%`}
+        )`
+      : Prisma.sql``;
+
+    const rows = await this.prisma.$queryRaw<
+      Array<{
+        id: string;
+        case_id: string;
+        case_code: string;
+        title: string;
+        status: HrCaseStatus;
+        confidentiality_level: HrCaseConfidentialityLevel;
+        opened_at: Date;
+        closed_at: Date | null;
+        primary_task_id: string | null;
+        severity: TaskSeverity;
+      }>
+    >`
+      SELECT
+        hc.id,
+        hc.case_id,
+        hc.case_code,
+        hc.title,
+        hc.status,
+        hc.confidentiality_level,
+        hc.opened_at,
+        hc.closed_at,
+        hc.primary_task_id,
+        c.severity
+      FROM hr_cases hc
+      JOIN cases c ON hc.case_id = c.id
+      WHERE hc.organization_id = ${organizationId}
+      ${statusCondition}
+      ${searchCondition}
+      ORDER BY hc.opened_at DESC
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `;
+
+    const [countRow] = await this.prisma.$queryRaw<{ total: bigint }[]>`
+      SELECT COUNT(*)::bigint AS total
+      FROM hr_cases hc
+      JOIN cases c ON hc.case_id = c.id
+      WHERE hc.organization_id = ${organizationId}
+      ${statusCondition}
+      ${searchCondition}
+    `;
+
+    const total = countRow ? Number(countRow.total) : 0;
+
+    const items: HrCaseSummary[] = rows.map((r) => ({
+      id: r.id,
+      caseId: r.case_id,
+      caseCode: r.case_code,
+      title: r.title,
+      status: r.status,
+      severity: r.severity,
+      confidentialityLevel: r.confidentiality_level,
+      openedAt: r.opened_at.toISOString(),
+      closedAt: r.closed_at ? r.closed_at.toISOString() : undefined,
+      primaryTaskId: r.primary_task_id ?? undefined,
+    }));
+
+    return {
+      items,
+      total,
+      limit,
+      offset,
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  private ensureRequiredFields(input: RegisterHrReportInput): void {
+    if (!input.organizationId || !input.organizationId.trim()) {
+      throw new BadRequestException('organizationId is required');
+    }
+    if (!input.title || !input.title.trim()) {
+      throw new BadRequestException('title is required');
+    }
+    if (!input.description || !input.description.trim()) {
+      throw new BadRequestException('description is required');
+    }
+  }
+
+  private normalizeSeverity(severity?: TaskSeverity | string): TaskSeverity {
+    if (!severity) {
+      return 'MODERATE';
+    }
+    const raw = severity.toString().trim();
+    const upper = raw.toUpperCase();
+
+    if (upper === 'INFO') {
+      // Historical mapping rule: treat "info" as MINOR
+      return 'MINOR';
+    }
+
+    const allowed: TaskSeverity[] = ['MINOR', 'MODERATE', 'MAJOR', 'CRITICAL'];
+
+    if (!allowed.includes(upper as TaskSeverity)) {
+      throw new BadRequestException(
+        `Invalid severity "${severity}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return upper as TaskSeverity;
+  }
+
+  private normalizePriority(priority?: TaskPriority | string): TaskPriority {
+    if (!priority) {
+      return 'MEDIUM';
+    }
+    const upper = priority.toString().trim().toUpperCase();
+    const allowed: TaskPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+
+    if (!allowed.includes(upper as TaskPriority)) {
+      throw new BadRequestException(
+        `Invalid priority "${priority}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return upper as TaskPriority;
+  }
+
+  private normalizeVisibility(visibility?: Visibility | string): Visibility {
+    if (!visibility) {
+      return 'RESTRICTED';
+    }
+    const upper = visibility.toString().trim().toUpperCase();
+    const allowed: Visibility[] = ['PUBLIC', 'INTERNAL', 'RESTRICTED', 'ANONYMISED'];
+
+    if (!allowed.includes(upper as Visibility)) {
+      throw new BadRequestException(
+        `Invalid visibility "${visibility}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return upper as Visibility;
+  }
+
+  private derivePriorityFromSeverity(severity: TaskSeverity): TaskPriority {
+    switch (severity) {
+      case 'CRITICAL':
+        return 'CRITICAL';
+      case 'MAJOR':
+        return 'HIGH';
+      case 'MODERATE':
+        return 'MEDIUM';
+      case 'MINOR':
+      default:
+        return 'LOW';
+    }
+  }
+
+  private deriveConfidentialityLevel(opts: {
+    severity: TaskSeverity;
+    subtype?: string;
+    requiresHighConfidentiality?: boolean;
+  }): HrCaseConfidentialityLevel {
+    if (opts.requiresHighConfidentiality) {
+      return 'highly_sensitive';
+    }
+
+    const subtype = (opts.subtype ?? '').toLowerCase().trim();
+
+    if (subtype === 'harassment') {
+      return 'highly_sensitive';
+    }
+
+    if (opts.severity === 'MAJOR' || opts.severity === 'CRITICAL') {
+      return 'highly_sensitive';
+    }
+
+    return 'sensitive';
+  }
+
+  private normalizeOptionalDate(value?: string | Date | null): Date | null {
+    if (!value) {
+      return null;
+    }
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) {
+        throw new BadRequestException('Invalid Date instance for dueAt');
+      }
+      return value;
+    }
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) {
+      throw new BadRequestException(`Invalid ISO date string for dueAt: "${value}"`);
+    }
+    return d;
+  }
+
+  private parseLabel(label: string): { verticalBase: number | null; horizontalRole: string | null } {
+    const trimmed = label.trim();
+    if (!trimmed) {
+      return { verticalBase: null, horizontalRole: null };
+    }
+
+    const parts = trimmed.split('.');
+    if (parts.length < 2) {
+      return { verticalBase: null, horizontalRole: null };
+    }
+
+    const verticalBase = Number.parseInt(parts[0]!, 10);
+    const horizontalRole = parts.length > 2 ? parts.slice(2).join('.') : null;
+
+    return {
+      verticalBase: Number.isFinite(verticalBase) ? verticalBase : null,
+      horizontalRole,
+    };
+  }
+
+  private async generateCaseCode(
+    tx: TxClient,
+    organizationId: string,
+    openedAt: Date,
+  ): Promise<string> {
+    const year = openedAt.getUTCFullYear();
+
+    const [row] = await tx.$queryRaw<{ count: number }[]>`
+      SELECT COUNT(*)::int AS count
+      FROM hr_cases
+      WHERE organization_id = ${organizationId}
+        AND date_part('year', opened_at) = ${year}
+    `;
+
+    const sequence = (row?.count ?? 0) + 1;
+    const sequenceStr = String(sequence).padStart(4, '0');
+
+    return `HR-${year}-${sequenceStr}`;
+  }
+
+  private normalizeHrCaseStatusFilter(
+    status?: HrCaseStatus | HrCaseStatus[],
+  ): HrCaseStatus[] {
+    if (!status) {
+      return [];
+    }
+    const allowed: HrCaseStatus[] = ['open', 'under_review', 'resolved', 'dismissed'];
+
+    const arr: string[] = Array.isArray(status) ? status : [status];
+
+    const normalized: HrCaseStatus[] = arr.map((s) => {
+      const val = s.toString().trim() as HrCaseStatus;
+      if (!allowed.includes(val)) {
+        throw new BadRequestException(
+          `Invalid hrCase status "${s}". Expected one of: ${allowed.join(', ')}`,
+        );
+      }
+      return val;
+    });
+
+    return normalized;
+  }
+
+  private normalizeLimit(limit?: number): number {
+    if (limit == null) {
+      return 50;
+    }
+    if (!Number.isFinite(limit) || limit <= 0) {
+      throw new BadRequestException('limit must be a positive number');
+    }
+    return Math.min(Math.floor(limit), 500);
+  }
+
+  private normalizeOffset(offset?: number): number {
+    if (offset == null) {
+      return 0;
+    }
+    if (!Number.isFinite(offset) || offset < 0) {
+      throw new BadRequestException('offset must be a non-negative number');
+    }
+    return Math.floor(offset);
+  }
+}
+
+
+=== FILE 4/18: apps/api/src/orgo/insights/cache/insights-cache-warmup.service.ts ===
+
+// apps/api/src/orgo/insights/cache/insights-cache-warmup.service.ts
+
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { ReportsService } from '../reports/reports.service';
+
+export const INSIGHTS_CACHE_WARMUP_JOB_ID = 'orgo.insights.cache-warmup-dashboards';
+
+/**
+ * Options for a cache warmup run.
+ *
+ * In most cases callers will just invoke `warmDashboards()` with no arguments
+ * and let this service derive organization IDs from configuration. Passing
+ * explicit organization IDs is useful for targeted warmups in tests or tools.
+ */
+export interface InsightsCacheWarmupOptions {
+  /**
+   * One or more organization IDs whose dashboards should be pre‑warmed.
+   * If omitted, the service will try to read `INSIGHTS_CACHE_WARMUP_ORG_IDS`
+   * (comma‑separated UUIDs) from configuration.
+   */
+  organizationIds?: string[];
+
+  /**
+   * Optional subset of dashboards to warm. If omitted, all known high‑traffic
+   * dashboards are warmed.
+   */
+  dashboards?: Array<'taskVolume' | 'slaBreaches' | 'profileScore'>;
+}
+
+/**
+ * Pre‑warms Redis caches for high‑traffic insights dashboards by issuing the
+ * same queries the UI uses, letting the reporting layer cache the results
+ * using the TTLs defined in the insights configuration. :contentReference[oaicite:1]{index=1}
+ *
+ * This service is typically invoked by a scheduled worker tied to the
+ * `orgo.insights.cache-warmup-dashboards` queue/job ID. 
+ */
+@Injectable()
+export class InsightsCacheWarmupService {
+  private readonly logger = new Logger(InsightsCacheWarmupService.name);
+
+  // Only staging + prod are configured to run this job by default.
+  private static readonly ENABLED_ENVIRONMENTS = new Set(['staging', 'prod']);
+
+  constructor(
+    private readonly reportsService: ReportsService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  /**
+   * Entry point used by the background job handler.
+   *
+   * Behaviour:
+   * - Skips execution entirely when INSIGHTS_ENV is not one of
+   *   ["staging", "prod"] (or is set to "offline").
+   * - Determines the set of organizations to warm from the options or from
+   *   `INSIGHTS_CACHE_WARMUP_ORG_IDS` (comma‑separated UUIDs).
+   * - For each organization, calls the main high‑traffic reporting endpoints
+   *   so that their results are cached for upcoming dashboard requests.
+   */
+  async warmDashboards(options: InsightsCacheWarmupOptions = {}): Promise<void> {
+    const env = this.getInsightsEnvironment();
+
+    if (!InsightsCacheWarmupService.ENABLED_ENVIRONMENTS.has(env)) {
+      this.logger.debug(
+        `Insights cache warmup skipped: INSIGHTS_ENV=${env} is not in enabled environments ${Array.from(
+          InsightsCacheWarmupService.ENABLED_ENVIRONMENTS,
+        ).join(', ')}`,
+      );
+      return;
+    }
+
+    if (env === 'offline') {
+      this.logger.debug('Insights cache warmup skipped: offline environment');
+      return;
+    }
+
+    const organizationIds =
+      (options.organizationIds && options.organizationIds.length > 0
+        ? options.organizationIds
+        : this.getConfiguredOrganizationIds()) || [];
+
+    if (organizationIds.length === 0) {
+      this.logger.warn(
+        'Insights cache warmup skipped: no organization IDs provided and INSIGHTS_CACHE_WARMUP_ORG_IDS is not configured',
+      );
+      return;
+    }
+
+    const dashboards =
+      options.dashboards && options.dashboards.length > 0
+        ? options.dashboards
+        : (['taskVolume', 'slaBreaches', 'profileScore'] as const);
+
+    this.logger.log(
+      `Starting insights cache warmup (env=${env}, orgs=${organizationIds.length}, dashboards=${dashboards.join(
+        ', ',
+      )})`,
+    );
+
+    const startedAt = Date.now();
+
+    const results = await Promise.allSettled(
+      organizationIds.map((organizationId) =>
+        this.warmDashboardsForOrganization(organizationId, dashboards),
+      ),
+    );
+
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    const durationMs = Date.now() - startedAt;
+
+    if (failed > 0) {
+      this.logger.warn(
+        `Insights cache warmup finished with ${failed} failures out of ${organizationIds.length} organizations in ${durationMs} ms`,
+      );
+    } else {
+      this.logger.log(
+        `Insights cache warmup finished successfully for ${organizationIds.length} organizations in ${durationMs} ms`,
+      );
+    }
+  }
+
+  /**
+   * Warm the configured set of dashboards for a single organization.
+   *
+   * This delegates to the reporting service, which is responsible for:
+   * - honouring analytics cache TTLs from the insights config;
+   * - applying access‑control and visibility rules;
+   * - performing any internal caching through Redis.
+   */
+  private async warmDashboardsForOrganization(
+    organizationId: string,
+    dashboards: Array<'taskVolume' | 'slaBreaches' | 'profileScore'>,
+  ): Promise<void> {
+    this.logger.debug(
+      `Warming insights dashboards for organization ${organizationId} (${dashboards.join(
+        ', ',
+      )})`,
+    );
+
+    const tasks: Promise<unknown>[] = [];
+
+    if (dashboards.includes('taskVolume')) {
+      tasks.push(
+        this.reportsService
+          // Typical dashboards show "recent activity" for an org; the reporting
+          // service can interpret an organization‑only payload as "default range".
+          .getTaskVolumeReport({ organizationId })
+          .catch((error) =>
+            this.logDashboardError(
+              organizationId,
+              'taskVolume',
+              error as Error,
+            ),
+          ),
+      );
+    }
+
+    if (dashboards.includes('slaBreaches')) {
+      tasks.push(
+        this.reportsService
+          .getSlaBreaches({ organizationId })
+          .catch((error) =>
+            this.logDashboardError(
+              organizationId,
+              'slaBreaches',
+              error as Error,
+            ),
+          ),
+      );
+    }
+
+    if (dashboards.includes('profileScore')) {
+      tasks.push(
+        this.reportsService
+          .getProfileScore({ organizationId })
+          .catch((error) =>
+            this.logDashboardError(
+              organizationId,
+              'profileScore',
+              error as Error,
+            ),
+          ),
+      );
+    }
+
+    // Run all dashboard warmups for this org in parallel; errors are handled
+    // per‑dashboard above so we do not reject the entire org on a single failure.
+    await Promise.all(tasks);
+  }
+
+  /**
+   * Derives the current insights environment.
+   *
+   * Prefers the explicit INSIGHTS_ENV (as defined in the insights module
+   * config) and falls back to the global ENVIRONMENT when not set. 
+   */
+  private getInsightsEnvironment(): string {
+    const fromInsightsEnv =
+      this.configService.get<string>('INSIGHTS_ENV') ||
+      this.configService.get<string>('insights.environment');
+    const fromGlobalEnv =
+      this.configService.get<string>('ENVIRONMENT') ||
+      this.configService.get<string>('environment');
+
+    return (fromInsightsEnv || fromGlobalEnv || 'dev').toLowerCase();
+  }
+
+  /**
+   * Reads the default set of organization IDs to warm from configuration.
+   *
+   * By convention this is supplied via the environment variable
+   * `INSIGHTS_CACHE_WARMUP_ORG_IDS` as a comma‑separated list of UUIDs, e.g.:
+   *
+   *   INSIGHTS_CACHE_WARMUP_ORG_IDS=org-uuid-1,org-uuid-2
+   */
+  private getConfiguredOrganizationIds(): string[] {
+    const raw =
+      this.configService.get<string>('INSIGHTS_CACHE_WARMUP_ORG_IDS') || '';
+
+    return raw
+      .split(',')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+  }
+
+  private logDashboardError(
+    organizationId: string,
+    dashboard: string,
+    error: Error,
+  ): void {
+    this.logger.error(
+      `Failed to warm insights dashboard "${dashboard}" for organization ${organizationId}: ${error.message}`,
+      error.stack,
+    );
+  }
+}
+
+
+=== FILE 5/18: apps/api/src/orgo/insights/export/analytics-export.service.ts ===
+
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import {
+  EmailService,
+  EmailAddress,
+} from '../../core/email/email.service';
+
+export type AnalyticsExportFormat = 'csv' | 'json';
+
+export interface AnalyticsExportFilters {
+  orgId?: string;
+  projectId?: string;
+  userId?: string;
+  from?: Date | string;
+  to?: Date | string;
+  eventTypes?: string[];
+  [key: string]: unknown;
+}
+
+export interface AnalyticsExportRequest {
+  /**
+   * Export format. Defaults to "csv" if omitted.
+   */
+  format?: AnalyticsExportFormat;
+
+  /**
+   * Filters for the analytics query.
+   */
+  filters: AnalyticsExportFilters;
+
+  /**
+   * Timezone identifier for interpreting date filters (e.g. "UTC", "America/New_York").
+   * If omitted, a default can be provided via configuration.
+   */
+  timezone?: string;
+
+  /**
+   * ID of the user requesting the export. Used for logging/auditing and storage metadata.
+   */
+  requestedByUserId: string;
+
+  /**
+   * Optional human‑readable label for the export, used in filenames and logs.
+   */
+  label?: string;
+}
+
+export interface AnalyticsExportResult {
+  fileName: string;
+  mimeType: string;
+  size: number;
+  rowCount: number;
+  truncated: boolean;
+  buffer: Buffer;
+  url?: string;
+  storageKey?: string;
+}
+
+export interface AnalyticsExportEmailOptions {
+  to: EmailAddress | EmailAddress[];
+  subject?: string;
+  text?: string;
+  html?: string;
+}
+
+export type AnalyticsDataRow = Record<string, unknown>;
+
+export interface AnalyticsExportQuery {
+  filters: AnalyticsExportFilters;
+  timezone?: string;
+}
+
+export interface AnalyticsQueryService {
+  /**
+   * Returns rows suitable for export, already filtered/aggregated according to the query.
+   */
+  queryForExport(query: AnalyticsExportQuery): Promise<AnalyticsDataRow[]>;
+}
+
+export interface AnalyticsExportStoragePayload {
+  fileName: string;
+  mimeType: string;
+  buffer: Buffer;
+  metadata?: Record<string, unknown>;
+}
+
+export interface AnalyticsExportStorageResult {
+  url?: string;
+  storageKey?: string;
+}
+
+export interface AnalyticsExportStorage {
+  /**
+   * Persist an export file and return its storage location.
+   */
+  saveExport(
+    payload: AnalyticsExportStoragePayload,
+  ): Promise<AnalyticsExportStorageResult>;
+}
+
+export const ANALYTICS_QUERY_SERVICE = Symbol('ANALYTICS_QUERY_SERVICE');
+export const ANALYTICS_EXPORT_STORAGE = Symbol('ANALYTICS_EXPORT_STORAGE');
+
+@Injectable()
+export class AnalyticsExportService {
+  private readonly logger = new Logger(AnalyticsExportService.name);
+  private readonly maxRows: number;
+  private readonly defaultFormat: AnalyticsExportFormat;
+  private readonly defaultTimezone: string;
+
+  constructor(
+    @Inject(ANALYTICS_QUERY_SERVICE)
+    private readonly analyticsQueryService: AnalyticsQueryService,
+    private readonly configService: ConfigService,
+    @Optional()
+    @Inject(ANALYTICS_EXPORT_STORAGE)
+    private readonly storage?: AnalyticsExportStorage,
+    @Optional()
+    private readonly emailService?: EmailService,
+  ) {
+    const fromConfig = this.configService.get<number>(
+      'INSIGHTS_EXPORT_MAX_ROWS',
+    );
+    const fromEnv = process.env.INSIGHTS_EXPORT_MAX_ROWS
+      ? parseInt(process.env.INSIGHTS_EXPORT_MAX_ROWS, 10)
+      : undefined;
+
+    this.maxRows =
+      (fromConfig && fromConfig > 0 && fromConfig) ||
+      (fromEnv && fromEnv > 0 && fromEnv) ||
+      100_000;
+
+    const defaultFormat =
+      this.configService.get<AnalyticsExportFormat>(
+        'INSIGHTS_EXPORT_DEFAULT_FORMAT',
+      ) ?? 'csv';
+    this.defaultFormat = defaultFormat === 'json' ? 'json' : 'csv';
+
+    this.defaultTimezone =
+      this.configService.get<string>('INSIGHTS_DEFAULT_TIMEZONE') ??
+      'UTC';
+  }
+
+  /**
+   * Generate an analytics export and return the file contents and metadata.
+   *
+   * If a storage implementation is configured, the generated file is also persisted,
+   * and its URL / storage key returned in the result.
+   */
+  async export(
+    request: AnalyticsExportRequest,
+  ): Promise<AnalyticsExportResult> {
+    this.validateRequest(request);
+
+    const format = request.format ?? this.defaultFormat;
+    const timezone = request.timezone ?? this.defaultTimezone;
+
+    const rows =
+      (await this.analyticsQueryService.queryForExport({
+        filters: request.filters ?? {},
+        timezone,
+      })) ?? [];
+
+    let truncated = false;
+    let limitedRows = rows;
+
+    if (this.maxRows && rows.length > this.maxRows) {
+      truncated = true;
+      limitedRows = rows.slice(0, this.maxRows);
+    }
+
+    const { buffer, mimeType } = this.formatRows(limitedRows, format);
+    const fileName = this.buildFileName(request, format);
+
+    let url: string | undefined;
+    let storageKey: string | undefined;
+
+    if (this.storage) {
+      try {
+        const stored = await this.storage.saveExport({
+          fileName,
+          mimeType,
+          buffer,
+          metadata: {
+            orgId: request.filters.orgId,
+            projectId: request.filters.projectId,
+            userId: request.filters.userId,
+            requestedByUserId: request.requestedByUserId,
+            label: request.label,
+            format,
+            rowCount: limitedRows.length,
+            truncated,
+            timezone,
+          },
+        });
+
+        url = stored.url;
+        storageKey = stored.storageKey;
+      } catch (err) {
+        const error = err as Error;
+        this.logger.error(
+          `Failed to persist analytics export "${fileName}": ${error.message}`,
+        );
+        // Continue and return the in‑memory file even if storage fails.
+      }
+    }
+
+    const size = buffer.byteLength;
+
+    this.logger.debug(
+      `Generated analytics export "${fileName}" for user "${request.requestedByUserId}" with ${limitedRows.length} row(s)${
+        truncated ? ' (truncated)' : ''
+      }.`,
+    );
+
+    return {
+      fileName,
+      mimeType,
+      size,
+      rowCount: limitedRows.length,
+      truncated,
+      buffer,
+      url,
+      storageKey,
+    };
+  }
+
+  /**
+   * Generate an analytics export and email it to the specified recipient(s).
+   *
+   * If a storage backend is configured and returns a URL, the email body will
+   * refer to the download link. Otherwise, the file is attached directly.
+   */
+  async exportAndEmail(
+    request: AnalyticsExportRequest,
+    emailOptions: AnalyticsExportEmailOptions,
+  ): Promise<AnalyticsExportResult> {
+    if (!this.emailService) {
+      throw new Error(
+        'EmailService is not configured for AnalyticsExportService.',
+      );
+    }
+
+    const result = await this.export(request);
+
+    const subject =
+      emailOptions.subject ??
+      `Your analytics export "${result.fileName}" is ready`;
+
+    const defaultTextParts: string[] = [];
+
+    defaultTextParts.push(
+      `Your analytics export "${result.fileName}" is ready.`,
+    );
+
+    if (result.url) {
+      defaultTextParts.push('');
+      defaultTextParts.push(`Download link: ${result.url}`);
+    } else {
+      defaultTextParts.push('');
+      defaultTextParts.push(
+        'The export file is attached to this email.',
+      );
+    }
+
+    const text =
+      emailOptions.text ?? defaultTextParts.join('\n');
+
+    const attachments =
+      result.url != null
+        ? undefined
+        : [
+            {
+              filename: result.fileName,
+              content: result.buffer,
+              contentType: result.mimeType,
+            },
+          ];
+
+    await this.emailService.send({
+      to: emailOptions.to,
+      subject,
+      text,
+      html: emailOptions.html,
+      attachments,
+    });
+
+    return result;
+  }
+
+  private validateRequest(request: AnalyticsExportRequest): void {
+    if (!request) {
+      throw new BadRequestException('Export request is required.');
+    }
+
+    if (!request.requestedByUserId?.toString().trim()) {
+      throw new BadRequestException(
+        'requestedByUserId is required for analytics export.',
+      );
+    }
+
+    if (!request.filters || typeof request.filters !== 'object') {
+      throw new BadRequestException(
+        'filters are required for analytics export.',
+      );
+    }
+
+    if (
+      request.format &&
+      request.format !== 'csv' &&
+      request.format !== 'json'
+    ) {
+      throw new BadRequestException(
+        `Unsupported export format "${request.format}".`,
+      );
+    }
+  }
+
+  private formatRows(
+    rows: AnalyticsDataRow[],
+    format: AnalyticsExportFormat,
+  ): { buffer: Buffer; mimeType: string } {
+    if (format === 'json') {
+      const json = this.formatAsJson(rows);
+      return {
+        buffer: Buffer.from(json, 'utf8'),
+        mimeType: 'application/json',
+      };
+    }
+
+    const csv = this.formatAsCsv(rows);
+    return {
+      buffer: Buffer.from(csv, 'utf8'),
+      mimeType: 'text/csv',
+    };
+  }
+
+  private formatAsJson(rows: AnalyticsDataRow[]): string {
+    if (!rows.length) {
+      return '[]';
+    }
+
+    return JSON.stringify(rows);
+  }
+
+  private formatAsCsv(rows: AnalyticsDataRow[]): string {
+    if (!rows.length) {
+      return '';
+    }
+
+    const headerSet = new Set<string>();
+
+    for (const row of rows) {
+      Object.keys(row || {}).forEach((key) => headerSet.add(key));
+    }
+
+    const headers = Array.from(headerSet);
+    const lines: string[] = [];
+
+    lines.push(headers.join(','));
+
+    for (const row of rows) {
+      const values = headers.map((header) =>
+        this.escapeCsvValue((row as any)[header]),
+      );
+      lines.push(values.join(','));
+    }
+
+    return lines.join('\n');
+  }
+
+  private escapeCsvValue(value: unknown): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    const str = String(value);
+    if (
+      str.includes('"') ||
+      str.includes(',') ||
+      str.includes('\n') ||
+      str.includes('\r')
+    ) {
+      const escaped = str.replace(/"/g, '""');
+      return `"${escaped}"`;
+    }
+
+    return str;
+  }
+
+  private buildFileName(
+    request: AnalyticsExportRequest,
+    format: AnalyticsExportFormat,
+  ): string {
+    const labelPart = request.label
+      ? request.label.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      : request.filters.orgId
+      ? String(request.filters.orgId)
+      : 'analytics';
+
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-');
+
+    const safeLabel = labelPart.replace(/^-+|-+$/g, '') || 'analytics';
+
+    return `analytics-export-${safeLabel}-${timestamp}.${format}`;
+  }
+}
+
+
+=== FILE 6/18: apps/api/src/orgo/insights/insights.module.ts ===
+
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+
+import { ReportsController } from './reports.controller';
+import { ReportsService } from './reports.service';
+import { AnalyticsExportService } from './analytics-export.service';
+import { PatternDetectionService } from './pattern-detection.service';
+import { InsightsCacheWarmupService } from './insights-cache-warmup.service';
+
+/**
+ * InsightsModule
+ *
+ * Wires up the reporting / analytics slice of Orgo over the `insights.*`
+ * star schema (see Orgo v3 Docs 4 & 6 for functional + config contracts).
+ */
+@Module({
+  imports: [
+    // Provides ConfigService so insights services can read ENV / config.yaml
+    ConfigModule,
+  ],
+  controllers: [
+    // HTTP reporting API (task volume, SLA breaches, profile scores, etc.)
+    ReportsController,
+  ],
+  providers: [
+    // Read-only reporting over the insights star schema
+    ReportsService,
+    // Export and materialized-view refresh hooks (used by jobs / queues)
+    AnalyticsExportService,
+    // Weekly / monthly / yearly pattern detection orchestration
+    PatternDetectionService,
+    // Cache warmup for high-traffic dashboards
+    InsightsCacheWarmupService,
+  ],
+  exports: [
+    ReportsService,
+    AnalyticsExportService,
+    PatternDetectionService,
+    InsightsCacheWarmupService,
+  ],
+})
+export class InsightsModule {}
+
+
+=== FILE 7/18: apps/api/src/orgo/insights/patterns/pattern-detection.service.ts ===
+
+// apps/api/src/orgo/insights/patterns/pattern-detection.service.ts
+
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+/**
+ * Stable job IDs for pattern detection, aligned with Doc 4 – Functional
+ * Code‑Name Inventory and the Insights config (Doc 6).
+ */
+export const INSIGHTS_WEEKLY_PATTERN_REVIEW_JOB_ID =
+  'orgo.insights.weekly-pattern-review';
+
+export const INSIGHTS_MONTHLY_TREND_REPORT_JOB_ID =
+  'orgo.insights.monthly-trend-report';
+
+export const INSIGHTS_YEARLY_SYSTEMIC_REVIEW_JOB_ID =
+  'orgo.insights.yearly-systemic-review';
+
+/**
+ * Logical pattern detection frequencies supported by this service.
+ */
+export type PatternDetectionKind = 'weekly' | 'monthly' | 'yearly';
+
+/**
+ * Options for triggering a pattern detection run.
+ *
+ * In most scheduled runs, callers will simply invoke the relevant
+ * method with no arguments and let this service derive organization
+ * IDs and thresholds from configuration. Explicit organization IDs
+ * are useful for targeted runs in tests or operations tooling.
+ */
+export interface PatternDetectionRunOptions {
+  /**
+   * One or more organization IDs to run pattern detection for.
+   *
+   * If omitted, this service will attempt to derive a default set
+   * from configuration:
+   *
+   *   - INSIGHTS_PATTERN_ORG_IDS
+   *   - or, as a fallback, INSIGHTS_CACHE_WARMUP_ORG_IDS
+   *
+   * Both are expected to be comma‑separated UUID lists.
+   */
+  organizationIds?: string[];
+
+  /**
+   * When true, the service only logs what it would do without actually
+   * triggering any external work. This is primarily intended for dry‑run
+   * tooling and operational debugging.
+   */
+  dryRun?: boolean;
+
+  /**
+   * Optional correlation identifier (trace ID, job run ID, etc.) that
+   * will be included in log messages for easier tracing across systems.
+   */
+  correlationId?: string;
+}
+
+/**
+ * PatternDetectionService
+ *
+ * Thin orchestration layer for weekly / monthly / yearly pattern detection
+ * jobs in the Insights / Analytics slice.
+ *
+ * Responsibilities:
+ *  - Derive the effective Insights environment (dev/staging/prod/offline).
+ *  - Apply job‑level environment constraints from the Insights config:
+ *      * weekly_pattern_review → staging + prod
+ *      * monthly_trend_report → staging + prod
+ *      * yearly_systemic_review → prod only
+ *      * offline → always treated as no‑op
+ *  - Resolve which organizations should be included in a run.
+ *  - Emit structured logs that can be picked up by workers / job runners
+ *    that actually implement the analytics / ETL work.
+ *
+ * The heavy‑weight pattern detection logic (clustering incidents, computing
+ * thresholds, populating pattern tables, and creating review Cases) is
+ * implemented in the analytics / ETL stack (Python + Airflow + Postgres)
+ * described in the Insights documentation (Docs 6–8). Integration with
+ * that stack (queue publish, HTTP call, etc.) should be wired into the
+ * `runForOrganization` method.
+ */
+@Injectable()
+export class PatternDetectionService {
+  private readonly logger = new Logger(PatternDetectionService.name);
+
+  // Environment gating follows Doc 6 §4.2:
+  // - weekly_pattern_review: staging + prod
+  // - monthly_trend_report:  staging + prod
+  // - yearly_systemic_review: prod only
+  // - offline: always no‑op
+  private static readonly WEEKLY_ENABLED_ENVIRONMENTS = new Set([
+    'staging',
+    'prod',
+  ]);
+  private static readonly MONTHLY_ENABLED_ENVIRONMENTS = new Set([
+    'staging',
+    'prod',
+  ]);
+  private static readonly YEARLY_ENABLED_ENVIRONMENTS = new Set(['prod']);
+
+  constructor(private readonly configService: ConfigService) {}
+
+  /**
+   * Run the weekly pattern review job across one or more organizations.
+   *
+   * This corresponds to the `weekly_pattern_review` DAG /
+   * `orgo.insights.weekly-pattern-review` job in the Insights stack.
+   */
+  async runWeekly(
+    options: PatternDetectionRunOptions = {},
+  ): Promise<void> {
+    await this.run(
+      'weekly',
+      INSIGHTS_WEEKLY_PATTERN_REVIEW_JOB_ID,
+      options,
+    );
+  }
+
+  /**
+   * Run the monthly trend report job across one or more organizations.
+   *
+   * This corresponds to the `monthly_trend_report` DAG /
+   * `orgo.insights.monthly-trend-report` job.
+   */
+  async runMonthly(
+    options: PatternDetectionRunOptions = {},
+  ): Promise<void> {
+    await this.run(
+      'monthly',
+      INSIGHTS_MONTHLY_TREND_REPORT_JOB_ID,
+      options,
+    );
+  }
+
+  /**
+   * Run the yearly systemic review job across one or more organizations.
+   *
+   * This corresponds to the `yearly_systemic_review` DAG /
+   * `orgo.insights.yearly-systemic-review` job.
+   */
+  async runYearly(
+    options: PatternDetectionRunOptions = {},
+  ): Promise<void> {
+    await this.run(
+      'yearly',
+      INSIGHTS_YEARLY_SYSTEMIC_REVIEW_JOB_ID,
+      options,
+    );
+  }
+
+  /**
+   * Shared implementation for weekly/monthly/yearly runs.
+   */
+  private async run(
+    kind: PatternDetectionKind,
+    jobId: string,
+    options: PatternDetectionRunOptions,
+  ): Promise<void> {
+    const environment = this.getInsightsEnvironment();
+
+    if (!this.isEnvironmentEnabled(kind, environment)) {
+      this.logger.debug(
+        `Skipping ${kind} pattern detection (${jobId}) in environment "${environment}" – job disabled for this environment.`,
+      );
+      return;
+    }
+
+    const organizationIds =
+      options.organizationIds && options.organizationIds.length > 0
+        ? this.normalizeOrganizationIds(options.organizationIds)
+        : this.getConfiguredOrganizationIds();
+
+    if (organizationIds.length === 0) {
+      this.logger.warn(
+        `No organization IDs resolved for ${kind} pattern detection (${jobId}); nothing to do.`,
+      );
+      return;
+    }
+
+    const prefix = options.dryRun ? '[DRY RUN] ' : '';
+    const correlationSuffix = options.correlationId
+      ? `, correlationId=${options.correlationId}`
+      : '';
+
+    this.logger.log(
+      `${prefix}Starting ${kind} pattern detection (${jobId}) for ${organizationIds.length} organization(s) in environment "${environment}"${correlationSuffix}.`,
+    );
+
+    for (const organizationId of organizationIds) {
+      await this.runForOrganization(
+        kind,
+        jobId,
+        environment,
+        organizationId,
+        options,
+      );
+    }
+
+    this.logger.log(
+      `${prefix}Finished ${kind} pattern detection (${jobId}) for ${organizationIds.length} organization(s) in environment "${environment}"${correlationSuffix}.`,
+    );
+  }
+
+  /**
+   * Orchestrates pattern detection for a single organization.
+   *
+   * In the current NestJS implementation this method is intentionally
+   * conservative and only performs structured logging. The actual
+   * implementation of pattern detection is expected to be handled by
+   * the analytics / ETL workers (e.g. via a queue, scheduler, or
+   * Airflow trigger) that integrate with this orchestration layer.
+   *
+   * When wiring in a concrete integration, this is the place to:
+   *  - Enqueue a job for the ETL worker.
+   *  - Call an HTTP endpoint on the analytics service.
+   *  - Publish a message to a queue/topic that ETL listens on.
+   */
+  private async runForOrganization(
+    kind: PatternDetectionKind,
+    jobId: string,
+    environment: string,
+    organizationId: string,
+    options: PatternDetectionRunOptions,
+  ): Promise<void> {
+    const prefix = options.dryRun ? '[DRY RUN] ' : '';
+    const correlationSuffix = options.correlationId
+      ? `, correlationId=${options.correlationId}`
+      : '';
+
+    this.logger.debug(
+      `${prefix}Triggering ${kind} pattern detection (${jobId}) for organization=${organizationId} in env=${environment}${correlationSuffix}.`,
+    );
+
+    // NOTE:
+    //  - The heavy lifting (reading from insights.fact_* tables, applying
+    //    pattern windows and thresholds from patterns.yaml / profiles, and
+    //    writing to pattern tables or creating review Cases) is performed
+    //    by the analytics / ETL layer.
+    //  - To avoid coupling this NestJS service to a particular ETL mechanism,
+    //    we only handle orchestration concerns here. Integrations should be
+    //    implemented by extending this method with queue/HTTP calls as needed.
+  }
+
+  /**
+   * Derives the current Insights environment.
+   *
+   * Prefers the explicit INSIGHTS_ENV (as defined in the Insights module
+   * config) and falls back to the global ENVIRONMENT when not set.
+   */
+  private getInsightsEnvironment(): string {
+    const fromInsightsEnv =
+      this.configService.get<string>('INSIGHTS_ENV') ||
+      this.configService.get<string>('insights.environment');
+    const fromGlobalEnv =
+      this.configService.get<string>('ENVIRONMENT') ||
+      this.configService.get<string>('environment');
+
+    return (fromInsightsEnv || fromGlobalEnv || 'dev').toLowerCase();
+  }
+
+  /**
+   * Determines whether a given pattern detection kind is allowed to run
+   * in the specified environment.
+   */
+  private isEnvironmentEnabled(
+    kind: PatternDetectionKind,
+    environment: string,
+  ): boolean {
+    const env = (environment || 'dev').toLowerCase();
+
+    // Offline is always treated as no‑op for Insights jobs.
+    if (env === 'offline') {
+      return false;
+    }
+
+    switch (kind) {
+      case 'weekly':
+        return PatternDetectionService.WEEKLY_ENABLED_ENVIRONMENTS.has(
+          env,
+        );
+      case 'monthly':
+        return PatternDetectionService.MONTHLY_ENABLED_ENVIRONMENTS.has(
+          env,
+        );
+      case 'yearly':
+        return PatternDetectionService.YEARLY_ENABLED_ENVIRONMENTS.has(
+          env,
+        );
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Normalises a user‑provided list of organization IDs:
+   *  - trims whitespace
+   *  - drops empty entries
+   *  - de‑duplicates while preserving order
+   */
+  private normalizeOrganizationIds(
+    organizationIds: string[],
+  ): string[] {
+    const seen = new Set<string>();
+    const result: string[] = [];
+
+    for (const raw of organizationIds) {
+      const value = (raw ?? '').trim();
+      if (!value || seen.has(value)) {
+        continue;
+      }
+      seen.add(value);
+      result.push(value);
+    }
+
+    return result;
+  }
+
+  /**
+   * Reads the default set of organization IDs to run pattern detection for.
+   *
+   * By convention this is supplied via:
+   *   - INSIGHTS_PATTERN_ORG_IDS
+   *   - or, if not set, INSIGHTS_CACHE_WARMUP_ORG_IDS
+   *
+   * Both are expected to be comma‑separated lists of UUIDs.
+   */
+  private getConfiguredOrganizationIds(): string[] {
+    const raw =
+      this.configService.get<string>('INSIGHTS_PATTERN_ORG_IDS') ||
+      process.env.INSIGHTS_PATTERN_ORG_IDS ||
+      this.configService.get<string>('INSIGHTS_CACHE_WARMUP_ORG_IDS') ||
+      process.env.INSIGHTS_CACHE_WARMUP_ORG_IDS ||
+      '';
+
+    return raw
+      .split(',')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+  }
+}
+
+
+=== FILE 8/18: apps/api/src/orgo/insights/reports/reports.controller.ts ===
+
+import { Controller, Get, Query } from '@nestjs/common';
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEnum,
+  IsISO8601,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
+import { ReportsService } from './reports.service';
+
+/**
+ * Canonical task enums (mirroring Doc 2 / Doc 1).
+ */
+export enum TaskStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  ON_HOLD = 'ON_HOLD',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  ESCALATED = 'ESCALATED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum TaskPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL',
+}
+
+export enum TaskSeverity {
+  MINOR = 'MINOR',
+  MODERATE = 'MODERATE',
+  MAJOR = 'MAJOR',
+  CRITICAL = 'CRITICAL',
+}
+
+/**
+ * Reporting‑specific enums.
+ */
+export enum TaskVolumeGranularity {
+  DAY = 'day',
+  WEEK = 'week',
+  MONTH = 'month',
+}
+
+export enum TaskVolumeGroupBy {
+  STATUS = 'status',
+  TYPE = 'type',
+  PRIORITY = 'priority',
+  SEVERITY = 'severity',
+  LABEL = 'label',
+}
+
+/**
+ * Query DTO for the task‑volume report endpoint.
+ *
+ * This maps to aggregations over insights.fact_tasks (by date and dimension).
+ */
+export class TaskVolumeReportQueryDto {
+  /**
+   * Tenant / organization identifier (required).
+   */
+  @IsUUID('4')
+  organizationId!: string;
+
+  /**
+   * Inclusive start of the reporting window (ISO‑8601).
+   * If omitted, the service will use its own default window.
+   */
+  @IsOptional()
+  @IsISO8601()
+  startDate?: string;
+
+  /**
+   * Inclusive end of the reporting window (ISO‑8601).
+   */
+  @IsOptional()
+  @IsISO8601()
+  endDate?: string;
+
+  /**
+   * Time bucket size for aggregation (day/week/month).
+   */
+  @IsOptional()
+  @IsEnum(TaskVolumeGranularity)
+  granularity?: TaskVolumeGranularity;
+
+  /**
+   * Primary dimension to group by (status/type/priority/severity/label).
+   */
+  @IsOptional()
+  @IsEnum(TaskVolumeGroupBy)
+  groupBy?: TaskVolumeGroupBy;
+
+  /**
+   * Optional status filter; if present, only these statuses are counted.
+   */
+  @IsOptional()
+  @IsEnum(TaskStatus, { each: true })
+  @Type(() => String)
+  statuses?: TaskStatus[];
+
+  /**
+   * Optional priority filter.
+   */
+  @IsOptional()
+  @IsEnum(TaskPriority, { each: true })
+  @Type(() => String)
+  priorities?: TaskPriority[];
+
+  /**
+   * Optional severity filter.
+   */
+  @IsOptional()
+  @IsEnum(TaskSeverity, { each: true })
+  @Type(() => String)
+  severities?: TaskSeverity[];
+}
+
+/**
+ * Query DTO for the SLA‑breach report endpoint.
+ *
+ * This focuses on tasks whose reactivity/completion deadlines were exceeded.
+ */
+export class SlaBreachesReportQueryDto {
+  @IsUUID('4')
+  organizationId!: string;
+
+  @IsOptional()
+  @IsISO8601()
+  startDate?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  endDate?: string;
+
+  /**
+   * Minimum severity to include (e.g. only MAJOR/CRITICAL).
+   */
+  @IsOptional()
+  @IsEnum(TaskSeverity)
+  minSeverity?: TaskSeverity;
+
+  /**
+   * Optional status filter; defaults to unresolved states in the service layer.
+   */
+  @IsOptional()
+  @IsEnum(TaskStatus, { each: true })
+  @Type(() => String)
+  statuses?: TaskStatus[];
+
+  /**
+   * When true (default), only unresolved/open tasks are considered breaches.
+   */
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  onlyOpen?: boolean;
+}
+
+/**
+ * Query DTO for the profile‑effectiveness score endpoint.
+ *
+ * This compares actual behaviour vs profile expectations (reactivity, SLAs, etc.).
+ */
+export class ProfileScoreReportQueryDto {
+  @IsUUID('4')
+  organizationId!: string;
+
+  /**
+   * Optional explicit profile key (e.g. "hospital", "advocacy_group").
+   * If omitted, the org’s active profile is used.
+   */
+  @IsOptional()
+  @IsString()
+  profileKey?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  startDate?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  endDate?: string;
+}
+
+@Controller('insights/reports')
+export class ReportsController {
+  constructor(private readonly reportsService: ReportsService) {}
+
+  /**
+   * GET /insights/reports/tasks/volume
+   *
+   * Returns aggregated task volume over time, grouped by a primary dimension.
+   */
+  @Get('tasks/volume')
+  getTaskVolumeReport(@Query() query: TaskVolumeReportQueryDto) {
+    const {
+      organizationId,
+      startDate,
+      endDate,
+      granularity,
+      groupBy,
+      statuses,
+      priorities,
+      severities,
+    } = query;
+
+    return this.reportsService.getTaskVolumeReport({
+      organizationId,
+      startDate,
+      endDate,
+      granularity: granularity ?? TaskVolumeGranularity.DAY,
+      groupBy: groupBy ?? TaskVolumeGroupBy.STATUS,
+      statuses,
+      priorities,
+      severities,
+    });
+  }
+
+  /**
+   * GET /insights/reports/tasks/sla-breaches
+   *
+   * Returns tasks that breached SLAs (reactivity or completion), with optional
+   * severity and status filters.
+   */
+  @Get('tasks/sla-breaches')
+  getSlaBreachesReport(@Query() query: SlaBreachesReportQueryDto) {
+    const {
+      organizationId,
+      startDate,
+      endDate,
+      minSeverity,
+      statuses,
+      onlyOpen,
+    } = query;
+
+    return this.reportsService.getSlaBreaches({
+      organizationId,
+      startDate,
+      endDate,
+      minSeverity,
+      statuses,
+      onlyOpen: onlyOpen !== undefined ? onlyOpen : true,
+    });
+  }
+
+  /**
+   * GET /insights/reports/profiles/score
+   *
+   * Returns an effectiveness score for the organization’s behavioural profile
+   * over the selected time window.
+   */
+  @Get('profiles/score')
+  getProfileScore(@Query() query: ProfileScoreReportQueryDto) {
+    const { organizationId, profileKey, startDate, endDate } = query;
+
+    return this.reportsService.getProfileScore({
+      organizationId,
+      profileKey,
+      startDate,
+      endDate,
+    });
+  }
+}
+
+
+=== FILE 9/18: apps/api/src/orgo/insights/reports/reports.service.ts ===
+
+// apps/api/src/orgo/insights/reports/reports.service.ts
+
+import { Injectable, Logger } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+
+/**
+ * Canonical task enums (string unions) aligned with Doc 2 / TASK_STATUS,
+ * TASK_PRIORITY and TASK_SEVERITY. These mirror the DB enums and JSON
+ * contracts but are kept local to the reports service so it can type
+ * its responses without importing additional dependencies.
+ */
+export type TaskStatus =
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'ON_HOLD'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'ESCALATED'
+  | 'CANCELLED';
+
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type TaskSeverity = 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL';
+
+/**
+ * Parameters for the task volume report.
+ * All date values are interpreted as UTC and truncated to a date key
+ * (YYYY-MM-DD) to match insights.dim_dates / insights.fact_tasks.
+ */
+export interface TaskVolumeReportParams {
+  organizationId: string;
+  fromDate?: Date | string;
+  toDate?: Date | string;
+  /**
+   * Optional filter for current_status (TASK_STATUS).
+   * If omitted, all statuses are included.
+   */
+  status?: TaskStatus[];
+  /**
+   * Optional filter for Task.type / domain;
+   * this is resolved via insights.dim_tasks.type.
+   */
+  type?: string;
+}
+
+/**
+ * One bucket in the task volume report – counts per day and status.
+ */
+export interface TaskVolumeBucket {
+  /**
+   * ISO date (YYYY-MM-DD), matching insights.dim_dates.date_key.
+   */
+  date: string;
+  status: TaskStatus;
+  count: number;
+}
+
+/**
+ * Parameters used for SLA breach reporting. Thresholds are provided
+ * by the caller (typically derived from organization profiles and
+ * global config).
+ */
+export interface SlaBreachesParams {
+  organizationId: string;
+  fromDate?: Date | string;
+  toDate?: Date | string;
+  /**
+   * Threshold (seconds) for time_to_first_response_seconds beyond
+   * which a task is considered to have breached the reactivity SLA.
+   */
+  reactivitySecondsThreshold: number;
+  /**
+   * Threshold (seconds) for time_to_completion_seconds beyond
+   * which a task is considered to have breached the completion SLA.
+   */
+  completionSecondsThreshold: number;
+  /**
+   * Optional filter for Task.type / domain.
+   */
+  type?: string;
+}
+
+/**
+ * Aggregated SLA breach data per domain (Task.type).
+ */
+export interface SlaBreachRow {
+  /**
+   * Task.type from insights.dim_tasks.type (e.g. "maintenance", "hr_case").
+   */
+  domainType: string;
+  /**
+   * Total tasks considered for this domain within the date window.
+   */
+  totalTasks: number;
+  /**
+   * Tasks that breached either the reactivity or completion SLA.
+   */
+  breachedTasks: number;
+  /**
+   * breachedTasks / totalTasks, in [0, 1]. 0 when totalTasks == 0.
+   */
+  breachRate: number;
+}
+
+/**
+ * Profile score parameters – equivalent to SLA breach parameters,
+ * since the score is derived from the same aggregates.
+ */
+export interface ProfileScoreParams extends SlaBreachesParams {}
+
+/**
+ * Overall profile effectiveness score plus per-domain breakdown.
+ */
+export interface ProfileScore {
+  organizationId: string;
+  fromDate: string;
+  toDate: string;
+  /**
+   * Total tasks considered across all domains.
+   */
+  overallTasks: number;
+  /**
+   * Total tasks that breached SLA across all domains.
+   */
+  overallBreachedTasks: number;
+  /**
+   * Score in [0, 100]. 100 means no breaches, 0 means all breached.
+   */
+  overallScore: number;
+  /**
+   * Per-domain SLA breach breakdown.
+   */
+  perDomain: SlaBreachRow[];
+}
+
+/**
+ * Utility: normalize a Date or date-like string to a YYYY-MM-DD string in UTC.
+ * Throws if the input cannot be parsed as a date.
+ */
+function toDateKey(input: Date | string): string {
+  const d = typeof input === 'string' ? new Date(input) : input;
+  const time = d.getTime();
+
+  if (Number.isNaN(time)) {
+    throw new Error(`Invalid date value: ${String(input)}`);
+  }
+
+  const year = d.getUTCFullYear();
+  const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = d.getUTCDate().toString().padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Default lookback window for date ranges when none is provided.
+ * This is intentionally conservative and can be overridden by callers.
+ */
+const DEFAULT_LOOKBACK_DAYS = 30;
+
+/**
+ * ReportsService
+ *
+ * Read-only service over the analytics star-schema (insights.*),
+ * providing high-level reporting aggregates used by dashboards:
+ *
+ * - getTaskVolumeReport: task counts by day and status.
+ * - getSlaBreaches: SLA breach rates per domain.
+ * - getProfileScore: aggregate profile effectiveness score derived
+ *   from SLA breaches.
+ *
+ * The DataSource injected here should be configured to talk to the
+ * analytics database that hosts the `insights` schema. If the same
+ * Postgres instance is used for OLTP and analytics, this service can
+ * use the default application DataSource.
+ */
+@Injectable()
+export class ReportsService {
+  private readonly logger = new Logger(ReportsService.name);
+
+  constructor(private readonly dataSource: DataSource) {}
+
+  /**
+   * Returns task volume buckets grouped by created_date_key and
+   * current_status for a given organization and date window.
+   *
+   * Data source:
+   *   - insights.fact_tasks (created_date_key, current_status, organization_id)
+   *   - optional join to insights.dim_tasks when filtering by Task.type.
+   */
+  async getTaskVolumeReport(
+    params: TaskVolumeReportParams,
+  ): Promise<TaskVolumeBucket[]> {
+    const { organizationId, status, type } = params;
+    const { fromKey, toKey } = this.normalizeDateRange(
+      params.fromDate,
+      params.toDate,
+    );
+
+    const conditions: string[] = [];
+    const values: any[] = [];
+
+    // 1) organization_id filter
+    values.push(organizationId);
+    let paramIndex = 1;
+    conditions.push(`ft.organization_id = $${paramIndex++}`);
+
+    // 2) date window (created_date_key is a DATE)
+    values.push(fromKey);
+    conditions.push(`ft.created_date_key >= $${paramIndex++}`);
+
+    values.push(toKey);
+    conditions.push(`ft.created_date_key <= $${paramIndex++}`);
+
+    // 3) optional status filter
+    if (status && status.length > 0) {
+      values.push(status);
+      conditions.push(`ft.current_status = ANY($${paramIndex++})`);
+    }
+
+    // 4) optional domain type filter (requires dim_tasks join)
+    if (type) {
+      values.push(type);
+      conditions.push(`dt.type = $${paramIndex++}`);
+    }
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const sql = `
+      SELECT
+        ft.created_date_key AS date,
+        ft.current_status AS status,
+        COUNT(*)::int AS count
+      FROM insights.fact_tasks ft
+      LEFT JOIN insights.dim_tasks dt
+        ON dt.task_id = ft.task_id
+      ${whereClause}
+      GROUP BY ft.created_date_key, ft.current_status
+      ORDER BY ft.created_date_key ASC, ft.current_status ASC;
+    `;
+
+    try {
+      const rows: Array<{
+        date: string | Date;
+        status: TaskStatus;
+        count: string | number;
+      }> = await this.dataSource.query(sql, values);
+
+      return rows.map((row) => ({
+        date:
+          row.date instanceof Date
+            ? row.date.toISOString().slice(0, 10)
+            : String(row.date),
+        status: row.status,
+        count: typeof row.count === 'string' ? parseInt(row.count, 10) : row.count,
+      }));
+    } catch (error) {
+      this.logger.error(
+        `Failed to compute task volume report for org=${organizationId}`,
+        (error as Error).stack ?? String(error),
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Returns SLA breach statistics per domain (Task.type) for a given
+   * organization and date window.
+   *
+   * A task is counted as "breached" if either:
+   *   - time_to_first_response_seconds > reactivitySecondsThreshold, OR
+   *   - time_to_completion_seconds > completionSecondsThreshold.
+   *
+   * Data source:
+   *   - insights.fact_tasks (metrics & dates)
+   *   - insights.dim_tasks (domain type, organization)
+   */
+  async getSlaBreaches(params: SlaBreachesParams): Promise<SlaBreachRow[]> {
+    const {
+      organizationId,
+      reactivitySecondsThreshold,
+      completionSecondsThreshold,
+      type,
+    } = params;
+
+    const { fromKey, toKey } = this.normalizeDateRange(
+      params.fromDate,
+      params.toDate,
+    );
+
+    if (
+      reactivitySecondsThreshold == null ||
+      Number.isNaN(reactivitySecondsThreshold)
+    ) {
+      throw new Error(
+        'reactivitySecondsThreshold is required and must be a number',
+      );
+    }
+
+    if (
+      completionSecondsThreshold == null ||
+      Number.isNaN(completionSecondsThreshold)
+    ) {
+      throw new Error(
+        'completionSecondsThreshold is required and must be a number',
+      );
+    }
+
+    const conditions: string[] = [];
+    const values: any[] = [];
+
+    // 1) organization filter (from fact_tasks)
+    values.push(organizationId);
+    let paramIndex = 1;
+    conditions.push(`ft.organization_id = $${paramIndex++}`);
+
+    // 2) date window
+    values.push(fromKey);
+    conditions.push(`ft.created_date_key >= $${paramIndex++}`);
+
+    values.push(toKey);
+    conditions.push(`ft.created_date_key <= $${paramIndex++}`);
+
+    // 3) optional type filter (dim_tasks.type)
+    if (type) {
+      values.push(type);
+      conditions.push(`dt.type = $${paramIndex++}`);
+    }
+
+    // 4) SLA thresholds – added as parameters used in FILTER clause
+    const reactivityIndex = paramIndex++;
+    const completionIndex = paramIndex++;
+
+    values.push(reactivitySecondsThreshold);
+    values.push(completionSecondsThreshold);
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const sql = `
+      SELECT
+        dt.type AS domain_type,
+        COUNT(*)::int AS total_tasks,
+        COUNT(*) FILTER (
+          WHERE
+            (ft.time_to_first_response_seconds IS NOT NULL
+             AND ft.time_to_first_response_seconds > $${reactivityIndex})
+            OR
+            (ft.time_to_completion_seconds IS NOT NULL
+             AND ft.time_to_completion_seconds > $${completionIndex})
+        )::int AS breached_tasks
+      FROM insights.fact_tasks ft
+      JOIN insights.dim_tasks dt
+        ON dt.task_id = ft.task_id
+      ${whereClause}
+      GROUP BY dt.type
+      ORDER BY dt.type;
+    `;
+
+    try {
+      const rows: Array<{
+        domain_type: string;
+        total_tasks: string | number;
+        breached_tasks: string | number;
+      }> = await this.dataSource.query(sql, values);
+
+      return rows.map((row) => {
+        const total =
+          typeof row.total_tasks === 'string'
+            ? parseInt(row.total_tasks, 10)
+            : row.total_tasks;
+        const breached =
+          typeof row.breached_tasks === 'string'
+            ? parseInt(row.breached_tasks, 10)
+            : row.breached_tasks;
+        const breachRate = total > 0 ? breached / total : 0;
+
+        return {
+          domainType: row.domain_type,
+          totalTasks: total,
+          breachedTasks: breached,
+          breachRate,
+        };
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to compute SLA breaches for org=${organizationId}`,
+        (error as Error).stack ?? String(error),
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Computes an overall "profile effectiveness" score for an organization
+   * over a date window, based on SLA breaches, and returns that score plus
+   * the per-domain breakdown.
+   *
+   * The score is currently defined as:
+   *
+   *   overallScore = round((1 - breachRate) * 100),
+   *
+   * where breachRate = overallBreachedTasks / overallTasks.
+   *
+   * Callers are responsible for providing the SLA thresholds; this service
+   * focuses purely on analytics aggregation.
+   */
+  async getProfileScore(params: ProfileScoreParams): Promise<ProfileScore> {
+    const { organizationId } = params;
+    const { fromKey, toKey } = this.normalizeDateRange(
+      params.fromDate,
+      params.toDate,
+    );
+
+    try {
+      const perDomain = await this.getSlaBreaches({
+        ...params,
+        fromDate: fromKey,
+        toDate: toKey,
+      });
+
+      const overallTasks = perDomain.reduce(
+        (sum, row) => sum + row.totalTasks,
+        0,
+      );
+      const overallBreachedTasks = perDomain.reduce(
+        (sum, row) => sum + row.breachedTasks,
+        0,
+      );
+
+      const breachRate =
+        overallTasks > 0 ? overallBreachedTasks / overallTasks : 0;
+      const overallScore = Math.round((1 - breachRate) * 100);
+
+      return {
+        organizationId,
+        fromDate: fromKey,
+        toDate: toKey,
+        overallTasks,
+        overallBreachedTasks,
+        overallScore,
+        perDomain,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to compute profile score for org=${organizationId}`,
+        (error as Error).stack ?? String(error),
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Normalizes any provided from/to dates to UTC date keys (YYYY-MM-DD).
+   * If either is missing, default to a rolling window ending "today"
+   * (UTC) with DEFAULT_LOOKBACK_DAYS lookback.
+   */
+  private normalizeDateRange(
+    fromDate?: Date | string,
+    toDate?: Date | string,
+  ): { fromKey: string; toKey: string } {
+    const now = new Date();
+
+    const to =
+      toDate != null
+        ? toDateKey(toDate)
+        : toDateKey(now);
+
+    const defaultFromDate = new Date(
+      now.getTime() - DEFAULT_LOOKBACK_DAYS * 24 * 60 * 60 * 1000,
+    );
+
+    const from =
+      fromDate != null
+        ? toDateKey(fromDate)
+        : toDateKey(defaultFromDate);
+
+    return { fromKey: from, toKey: to };
+  }
+}
+
+
+=== FILE 10/18: apps/api/src/orgo/orgo.module.ts ===
+
+// apps/api/src/orgo/orgo.module.ts
+
+import { Module } from '@nestjs/common';
+import { APP_PIPE } from '@nestjs/core';
+
+import { PersistenceModule } from '../persistence/persistence.module';
+
+import { LoggerModule } from './core/logging/logger.module';
+import { PayloadValidationPipe } from './core/validation/payload-validation.pipe';
+import { ConfigValidationService } from './core/validation/config-validation.service';
+
+import { TaskModule } from './core/tasks/task.module';
+import { CaseModule } from './core/cases/case.module';
+import { WorkflowModule } from './core/workflow/workflow.module';
+import { LabelsModule } from './core/labels/labels.module';
+import { OrgoConfigModule } from './config/config.module';
+
+@Module({
+  imports: [
+    // DB / Prisma access
+    PersistenceModule,
+
+    // Cross-cutting infrastructure
+    LoggerModule,
+    OrgoConfigModule,
+
+    // Core Orgo services
+    TaskModule,
+    CaseModule,
+    WorkflowModule,
+    LabelsModule,
+  ],
+  providers: [
+    // Validate Orgo YAML/config bundles at startup
+    ConfigValidationService,
+
+    // Global payload validation (DTO + enum enforcement)
+    {
+      provide: APP_PIPE,
+      useClass: PayloadValidationPipe,
+    },
+  ],
+  exports: [
+    // Re-export key feature modules so consumers can just import OrgoModule
+    LoggerModule,
+    OrgoConfigModule,
+    TaskModule,
+    CaseModule,
+    WorkflowModule,
+    LabelsModule,
+  ],
+})
+export class OrgoModule {}
+
+
+=== FILE 11/18: apps/api/src/orgo/security/audit/audit-trail.service.ts ===
+
+import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { DatabaseService } from '../../core/database/database.service';
+
+export type AuditEventType =
+  | 'failed_login'
+  | 'permission_escalation'
+  | 'api_abuse'
+  | 'data_export'
+  | 'config_change';
+
+export type AuditEventSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type AuditActorType = 'user' | 'system';
+
+export interface AuditActivityMetadata {
+  /**
+   * Logical action name for the audit/activity log.
+   * Examples: "config_updated", "permission_changed", "report_exported".
+   */
+  action: string;
+
+  /**
+   * What kind of entity this action is about.
+   * Examples: "security_event", "role", "permission", "report".
+   */
+  targetType?: string;
+
+  /**
+   * ID of the target entity, if any (Task, Case, Role, etc.).
+   * For security events this typically defaults to the security_events.id row.
+   */
+  targetId?: string | null;
+
+  /**
+   * Optional login/session context.
+   */
+  sessionId?: string | null;
+
+  /**
+   * Actor type stored in activity_logs.actor_type.
+   * Defaults to "user" if userId is present, otherwise "system".
+   */
+  actorType?: AuditActorType;
+
+  /**
+   * Additional JSON details specific to the activity log row.
+   * This will be merged on top of the base security event details.
+   */
+  activityDetails?: Record<string, unknown>;
+}
+
+export interface RecordAuditEventInput {
+  /**
+   * Tenant scope for the event. May be null for global/system-wide events in security_events.
+   * Required if an activity_logs row should be created.
+   */
+  organizationId?: string | null;
+
+  /**
+   * User responsible for the event, if any.
+   */
+  userId?: string | null;
+
+  /**
+   * Network and client context (optional).
+   */
+  ipAddress?: string | null;
+  userAgent?: string | null;
+
+  /**
+   * Security event classification and severity.
+   */
+  eventType: AuditEventType;
+  severity: AuditEventSeverity;
+
+  /**
+   * Arbitrary structured details to store in security_events.details.
+   */
+  details?: Record<string, unknown>;
+
+  /**
+   * Optional activity log metadata. When provided (and organizationId is non-null),
+   * an activity_logs entry will be created alongside the security_events row.
+   */
+  activity?: AuditActivityMetadata;
+}
+
+export interface RecordAuditEventSuccessData {
+  securityEventId: string;
+  activityLogId?: string | null;
+}
+
+export interface RecordAuditEventError {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface RecordAuditEventResult {
+  ok: boolean;
+  data: RecordAuditEventSuccessData | null;
+  error: RecordAuditEventError | null;
+}
+
+@Injectable()
+export class AuditTrailService {
+  private readonly logger = new Logger(AuditTrailService.name);
+
+  constructor(private readonly databaseService: DatabaseService) {}
+
+  /**
+   * Generate an audit trail entry for a security‑relevant operation.
+   *
+   * Primary persistence:
+   *   - security_events (always, if insert succeeds)
+   * Optional secondary persistence:
+   *   - activity_logs (only when organizationId and activity metadata are provided)
+   *
+   * Returns the standard { ok, data, error } result shape.
+   */
+  async recordAuditEvent(input: RecordAuditEventInput): Promise<RecordAuditEventResult> {
+    const prisma = this.databaseService.getPrismaClient();
+
+    // 1. Write canonical security_events row
+    let securityEventId: string;
+
+    try {
+      const securityRows = await prisma.$queryRaw<{ id: string }[]>(
+        Prisma.sql`
+          INSERT INTO security_events (
+            organization_id,
+            user_id,
+            event_type,
+            ip_address,
+            user_agent,
+            details,
+            severity
+          ) VALUES (
+            ${input.organizationId ?? null},
+            ${input.userId ?? null},
+            ${input.eventType},
+            ${input.ipAddress ?? null},
+            ${input.userAgent ?? null},
+            ${input.details ?? {}},
+            ${input.severity}
+          )
+          RETURNING id
+        `,
+      );
+
+      if (!securityRows || securityRows.length === 0) {
+        this.logger.error('security_events insert returned no rows');
+        return {
+          ok: false,
+          data: null,
+          error: {
+            code: 'AUDIT_EVENT_WRITE_FAILED',
+            message: 'Failed to record audit event (no row returned from security_events)',
+          },
+        };
+      }
+
+      securityEventId = securityRows[0].id;
+    } catch (err) {
+      const error = err as Error;
+      this.logger.error(
+        `Failed to record security event: ${error.message}`,
+        error.stack,
+      );
+
+      return {
+        ok: false,
+        data: null,
+        error: {
+          code: 'AUDIT_EVENT_WRITE_FAILED',
+          message: 'Failed to record audit event',
+          details: {
+            originalError: error.message,
+          },
+        },
+      };
+    }
+
+    // 2. Optionally write a linked activity_logs row
+    let activityLogId: string | null = null;
+
+    if (input.activity && input.organizationId) {
+      const activity = input.activity;
+
+      const actorType: AuditActorType =
+        activity.actorType ?? (input.userId ? 'user' : 'system');
+
+      const targetType = activity.targetType ?? 'security_event';
+      const targetId = activity.targetId ?? securityEventId;
+
+      const activityDetails: Record<string, unknown> = {
+        event_type: input.eventType,
+        severity: input.severity,
+        ip_address: input.ipAddress,
+        user_agent: input.userAgent,
+        security_event_id: securityEventId,
+        ...(input.details ?? {}),
+        ...(activity.activityDetails ?? {}),
+      };
+
+      try {
+        const activityRows = await prisma.$queryRaw<{ id: string }[]>(
+          Prisma.sql`
+            INSERT INTO activity_logs (
+              organization_id,
+              user_id,
+              session_id,
+              actor_type,
+              action,
+              target_type,
+              target_id,
+              details
+            ) VALUES (
+              ${input.organizationId},
+              ${input.userId ?? null},
+              ${activity.sessionId ?? null},
+              ${actorType},
+              ${activity.action},
+              ${targetType},
+              ${targetId},
+              ${activityDetails}
+            )
+            RETURNING id
+          `,
+        );
+
+        if (activityRows && activityRows.length > 0) {
+          activityLogId = activityRows[0].id;
+        } else {
+          this.logger.error(
+            'activity_logs insert returned no rows for audit event',
+          );
+        }
+      } catch (err) {
+        const error = err as Error;
+        this.logger.error(
+          `Failed to record activity log for audit event: ${error.message}`,
+          error.stack,
+        );
+        // Non‑fatal: we still return ok=true as the primary security event is persisted.
+      }
+    }
+
+    // 3. Return standard result shape
+    return {
+      ok: true,
+      data: {
+        securityEventId,
+        activityLogId,
+      },
+      error: null,
+    };
+  }
+}
+
+
+=== FILE 12/18: apps/api/src/orgo/security/auth/auth.guard.ts ===
+
+// apps/api/src/orgo/security/auth/auth.guard.ts
+
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
+
+/**
+ * Shape of the authenticated user context attached to the request.
+ *
+ * Mirrors the interface used in RbacController:
+ *   - userId:         authenticated user identifier (JWT sub)
+ *   - organizationId: tenant identifier (from header or token)
+ *   - roles:          optional list of role codes
+ *   - permissions:    optional list of permission codes
+ */
+export interface AuthenticatedUserContext {
+  userId: string;
+  organizationId: string;
+  roles?: string[];
+  permissions?: string[];
+}
+
+/**
+ * Minimal extension of Express Request used internally by the guard.
+ * Controllers may use their own request interfaces; this stays local.
+ */
+interface RequestWithAuth extends Request {
+  user?: AuthenticatedUserContext;
+  userId?: string;
+  organizationId?: string;
+}
+
+/**
+ * JWT payload shape for access tokens.
+ * Only fields used by the guard are modelled explicitly.
+ */
+interface AccessTokenPayload {
+  sub?: string | number;
+  email?: string | null;
+  type?: string; // 'access' | 'refresh' | other
+  // Optional org claims for future compatibility
+  organizationId?: string;
+  organization_id?: string;
+  orgId?: string;
+  org_id?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+/**
+ * AuthGuard
+ *
+ * Responsibilities (Doc 4 – Authentication & RBAC):
+ *  - Validate bearer access tokens on incoming API requests.
+ *  - Enforce that a tenant context is present (multi‑tenant scoping).
+ *  - Attach a canonical AuthenticatedUserContext to request.user.
+ *  - Mirror userId/organizationId onto request for legacy controllers.
+ */
+@Injectable()
+export class AuthGuard implements CanActivate {
+  private readonly logger = new Logger(AuthGuard.name);
+
+  constructor(private readonly jwtService: JwtService) {}
+
+  /**
+   * Main NestJS guard entry point.
+   *
+   * - Extracts and validates the access token.
+   * - Resolves organizationId (header or token claim).
+   * - Attaches { userId, organizationId, roles?, permissions? } to request.user.
+   */
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<RequestWithAuth>();
+
+    const authContext = await this.validateAccessToken(request);
+
+    // Attach canonical auth context for downstream controllers/guards.
+    request.user = authContext;
+
+    // Also mirror onto top-level properties for controllers that expect them
+    // (e.g. RequestWithContext in person-profile.controller).
+    request.userId = authContext.userId;
+    request.organizationId = authContext.organizationId;
+
+    return true;
+  }
+
+  /**
+   * Validate an access token for a given HTTP request and build the
+   * AuthenticatedUserContext.
+   *
+   * This is the canonical "Authenticate API request" hook referenced in
+   * the functional inventory (Doc 4).
+   */
+  public async validateAccessToken(
+    req: RequestWithAuth,
+  ): Promise<AuthenticatedUserContext> {
+    const token = this.extractBearerToken(req);
+
+    let payload: AccessTokenPayload;
+
+    try {
+      payload = await this.jwtService.verifyAsync<AccessTokenPayload>(token);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Unknown JWT verification error';
+      this.logger.debug(`Access token verification failed: ${message}`);
+      throw new UnauthorizedException('Invalid or expired access token.');
+    }
+
+    if (payload.type && payload.type !== 'access') {
+      this.logger.debug(
+        `Rejected JWT with non-access type "${payload.type ?? 'undefined'}".`,
+      );
+      throw new UnauthorizedException('Invalid token type (expected access token).');
+    }
+
+    const userId =
+      typeof payload.sub === 'string' || typeof payload.sub === 'number'
+        ? String(payload.sub)
+        : undefined;
+
+    if (!userId) {
+      throw new UnauthorizedException(
+        'Access token payload is missing subject (sub).',
+      );
+    }
+
+    const organizationId = this.resolveOrganizationId(req, payload);
+
+    const authContext: AuthenticatedUserContext = {
+      userId,
+      organizationId,
+    };
+
+    // If the token already carries roles/permissions, surface them.
+    // This is optional and can be expanded later without breaking callers.
+    if (Array.isArray((payload as any).roles)) {
+      authContext.roles = (payload as any).roles.map((r: unknown) => String(r));
+    }
+
+    if (Array.isArray((payload as any).permissions)) {
+      authContext.permissions = (payload as any).permissions.map((p: unknown) =>
+        String(p),
+      );
+    }
+
+    return authContext;
+  }
+
+  /**
+   * Extracts a Bearer token from the Authorization header.
+   *
+   * Expected format:
+   *   Authorization: Bearer <jwt>
+   */
+  private extractBearerToken(req: Request): string {
+    const header = this.getHeader(req, 'authorization');
+
+    if (!header) {
+      throw new UnauthorizedException('Missing Authorization header.');
+    }
+
+    const parts = header.split(' ').filter(Boolean);
+
+    if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+      throw new UnauthorizedException(
+        'Invalid Authorization header format (expected "Bearer <token>").',
+      );
+    }
+
+    const token = parts[1]?.trim();
+    if (!token) {
+      throw new UnauthorizedException('Access token is missing.');
+    }
+
+    return token;
+  }
+
+  /**
+   * Resolves the organization identifier for the current request.
+   *
+   * Precedence:
+   *   1. X-Organization-Id header
+   *   2. X-Org-Id header (legacy alias)
+   *   3. JWT claims: organizationId | organization_id | orgId | org_id
+   *
+   * If both header and token claim are present and differ, the request
+   * is rejected to prevent cross-tenant confusion.
+   */
+  private resolveOrganizationId(
+    req: Request,
+    payload: AccessTokenPayload,
+  ): string {
+    const headerOrgRaw =
+      this.getHeader(req, 'x-organization-id') ||
+      this.getHeader(req, 'x-org-id');
+
+    const headerOrg = headerOrgRaw?.trim() || undefined;
+
+    const claimOrgRaw =
+      payload.organizationId ||
+      payload.organization_id ||
+      payload.orgId ||
+      payload.org_id ||
+      undefined;
+
+    const claimOrg = claimOrgRaw?.trim() || undefined;
+
+    if (headerOrg && claimOrg && headerOrg !== claimOrg) {
+      this.logger.warn(
+        `Organization mismatch between header and token: header="${headerOrg}", token="${claimOrg}".`,
+      );
+      throw new UnauthorizedException(
+        'Organization context does not match authenticated token.',
+      );
+    }
+
+    const resolved = headerOrg || claimOrg;
+
+    if (!resolved) {
+      throw new BadRequestException(
+        'Missing organization identifier (expected X-Org-Id or X-Organization-Id header, or token claim).',
+      );
+    }
+
+    return resolved;
+  }
+
+  /**
+   * Helper to read a header value in a case-insensitive way and
+   * normalize string[] → string.
+   */
+  private getHeader(req: Request, name: string): string | undefined {
+    const headerName = name.toLowerCase();
+    const value = req.headers[headerName];
+
+    if (Array.isArray(value)) {
+      return value[0];
+    }
+
+    return value as string | undefined;
+  }
+}
+
+
+=== FILE 13/18: apps/api/src/orgo/security/auth/auth.module.ts ===
+
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+
+import { RbacModule } from '../../backbone/rbac/rbac.module';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './jwt.strategy';
+import { AuthGuard } from './auth.guard';
+
+/**
+ * AuthModule
+ *
+ * Responsibilities:
+ *  - Configure JWT- and Passport-based authentication.
+ *  - Expose AuthService for validating credentials and tokens.
+ *  - Register JwtStrategy for attaching user/org context to requests.
+ *  - Integrate with RBAC (RbacModule) for permission checks.
+ */
+@Module({
+  imports: [
+    // Make environment/config available (ENVIRONMENT, secrets, etc.).
+    ConfigModule,
+
+    // Configure Passport to use JWT as the default strategy.
+    PassportModule.register({
+      defaultStrategy: 'jwt',
+      session: false,
+      property: 'user', // request.user
+    }),
+
+    // JWT configuration is driven by env/config via ConfigService.
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): JwtModuleOptions => {
+        const secret =
+          config.get<string>('ORGO_JWT_SECRET') ||
+          config.get<string>('security.jwt.secret') ||
+          'change-me-in-prod';
+
+        const expiresInEnv =
+          config.get<string | number>('ORGO_ACCESS_TOKEN_TTL_SECONDS') ||
+          config.get<string | number>('security.jwt.accessTokenTtlSeconds') ||
+          3600;
+
+        // Ensure expiresIn is a number or string acceptable to @nestjs/jwt
+        const expiresIn =
+          typeof expiresInEnv === 'number'
+            ? expiresInEnv
+            : parseInt(String(expiresInEnv), 10) || 3600;
+
+        return {
+          secret,
+          signOptions: {
+            expiresIn,
+          },
+        };
+      },
+    }),
+
+    // RBAC services (role/permission checks).
+    RbacModule,
+  ],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    AuthGuard,
+  ],
+  exports: [
+    AuthService,
+    JwtModule,
+    PassportModule,
+    AuthGuard,
+  ],
+})
+export class AuthModule {}
+
+
+=== FILE 14/18: apps/api/src/orgo/security/auth/auth.service.ts ===
+
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  Optional,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+
+import { User } from '../../backbone/user/user.entity';
+import { EmailService } from '../../core/email/email.service';
+import {
+  NotificationService,
+  NotificationChannel,
+} from '../../core/notifications/notification.service';
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface AuthenticatedUser {
+  id: string | number;
+  email?: string | null;
+  [key: string]: any;
+}
+
+export interface AuthResult {
+  user: AuthenticatedUser;
+  tokens: AuthTokens;
+}
+
+@Injectable()
+export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
+  private readonly accessTokenTtl: string | number;
+  private readonly refreshTokenTtl: string | number;
+  private readonly emailVerificationTtl: string | number;
+  private readonly passwordResetTtl: string | number;
+  private readonly passwordSaltRounds: number;
+  private readonly frontendBaseUrl: string;
+
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly emailService: EmailService,
+    @Optional()
+    private readonly notificationService?: NotificationService,
+  ) {
+    this.accessTokenTtl =
+      this.configService.get<string | number>('AUTH_ACCESS_TOKEN_TTL') ??
+      '15m';
+    this.refreshTokenTtl =
+      this.configService.get<string | number>('AUTH_REFRESH_TOKEN_TTL') ??
+      '7d';
+    this.emailVerificationTtl =
+      this.configService.get<string | number>('AUTH_EMAIL_VERIFICATION_TTL') ??
+      '2d';
+    this.passwordResetTtl =
+      this.configService.get<string | number>('AUTH_PASSWORD_RESET_TTL') ??
+      '1h';
+
+    const saltConfig =
+      this.configService.get<number>('AUTH_PASSWORD_SALT_ROUNDS') ??
+      parseInt(process.env.AUTH_PASSWORD_SALT_ROUNDS || '', 10);
+    this.passwordSaltRounds = Number.isFinite(saltConfig) && saltConfig > 0
+      ? saltConfig
+      : 12;
+
+    this.frontendBaseUrl =
+      this.configService.get<string>('APP_FRONTEND_BASE_URL') ??
+      process.env.APP_FRONTEND_BASE_URL ??
+      'http://localhost:3000';
+  }
+
+  /**
+   * Login with email and password, returning the authenticated user and tokens.
+   */
+  async loginWithEmailAndPassword(
+    email: string,
+    password: string,
+  ): Promise<AuthResult> {
+    if (!email?.trim() || !password?.trim()) {
+      throw new BadRequestException('Email and password are required.');
+    }
+
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    await this.ensureUserIsActive(user);
+    await this.verifyPassword(user, password);
+
+    await this.markLastLogin(user);
+
+    const tokens = await this.issueTokens(user);
+    const safeUser = this.toSafeUser(user);
+
+    return { user: safeUser, tokens };
+  }
+
+  /**
+   * Register a new user with email and password.
+   * Returns the newly created user and their tokens.
+   * Optionally sends an email verification link.
+   */
+  async register(params: {
+    email: string;
+    password: string;
+    metadata?: Record<string, any>;
+  }): Promise<AuthResult> {
+    const email = params.email?.trim().toLowerCase();
+    const password = params.password?.trim();
+
+    if (!email) {
+      throw new BadRequestException('Email is required.');
+    }
+
+    if (!password) {
+      throw new BadRequestException('Password is required.');
+    }
+
+    await this.ensureEmailIsAvailable(email);
+
+    const passwordHash = await this.hashPassword(password);
+
+    const user = this.userRepository.create({
+      email,
+      passwordHash,
+      ...(params.metadata ?? {}),
+    } as Partial<User>);
+
+    const saved = await this.userRepository.save(user);
+
+    // Fire-and-forget; do not block registration on email issues.
+    this.sendVerificationEmailSafe(saved).catch((err) => {
+      this.logger.warn(
+        `Failed to send verification email for user "${saved.id}": ${err.message}`,
+      );
+    });
+
+    const tokens = await this.issueTokens(saved);
+    const safeUser = this.toSafeUser(saved);
+
+    return { user: safeUser, tokens };
+  }
+
+  /**
+   * Refreshes access and refresh tokens using a valid refresh token.
+   */
+  async refreshTokens(refreshToken: string): Promise<AuthResult> {
+    if (!refreshToken?.trim()) {
+      throw new BadRequestException('Refresh token is required.');
+    }
+
+    let payload: any;
+
+    try {
+      payload = await this.jwtService.verifyAsync(
+        refreshToken,
+        this.getJwtVerifyOptions(),
+      );
+    } catch (err) {
+      this.logger.debug(`Invalid refresh token: ${(err as Error).message}`);
+      throw new UnauthorizedException('Invalid refresh token.');
+    }
+
+    if (payload?.type !== 'refresh' || !payload?.sub) {
+      throw new UnauthorizedException('Invalid refresh token.');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: payload.sub },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found for this token.');
+    }
+
+    await this.ensureUserIsActive(user);
+
+    const tokens = await this.issueTokens(user);
+    const safeUser = this.toSafeUser(user);
+
+    return { user: safeUser, tokens };
+  }
+
+  /**
+   * Initiates a password reset by sending a reset email.
+   * Does not reveal whether the email exists to avoid user enumeration.
+   */
+  async requestPasswordReset(email: string): Promise<void> {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new BadRequestException('Email is required.');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      // Do not reveal existence; log internally.
+      this.logger.debug(
+        `Password reset requested for non-existent email "${normalizedEmail}".`,
+      );
+      return;
+    }
+
+    const token = await this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email: user.email,
+        purpose: 'reset-password',
+      },
+      {
+        ...this.getJwtBaseOptions(),
+        expiresIn: this.passwordResetTtl,
+      },
+    );
+
+    const resetUrl = `${this.frontendBaseUrl}/auth/reset-password?token=${encodeURIComponent(
+      token,
+    )}`;
+
+    await this.emailService.sendTemplate({
+      to: user.email!,
+      template: 'auth.password-reset',
+      context: {
+        userId: user.id,
+        email: user.email,
+        token,
+        url: resetUrl,
+      },
+    });
+  }
+
+  /**
+   * Resets a user's password using a previously issued reset token.
+   */
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    if (!token?.trim()) {
+      throw new BadRequestException('Reset token is required.');
+    }
+
+    if (!newPassword?.trim()) {
+      throw new BadRequestException('New password is required.');
+    }
+
+    let payload: any;
+
+    try {
+      payload = await this.jwtService.verifyAsync(
+        token,
+        this.getJwtVerifyOptions(),
+      );
+    } catch (err) {
+      this.logger.debug(`Invalid reset token: ${(err as Error).message}`);
+      throw new BadRequestException('Invalid or expired reset token.');
+    }
+
+    if (payload?.purpose !== 'reset-password' || !payload?.sub) {
+      throw new BadRequestException('Invalid reset token.');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: payload.sub },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid reset token.');
+    }
+
+    await this.ensureUserIsActive(user);
+
+    const passwordHash = await this.hashPassword(newPassword);
+    user.passwordHash = passwordHash as any;
+
+    await this.userRepository.save(user);
+
+    // Optional security notification
+    this.notificationService
+      ?.notify({
+        userId: String(user.id),
+        type: 'auth.password-changed',
+        channels: [NotificationChannel.IN_APP, NotificationChannel.EMAIL],
+        title: 'Your password was changed',
+        body: 'If you did not perform this change, please contact support immediately.',
+        data: { userId: user.id },
+        email: user.email
+          ? {
+              to: user.email,
+              subject: 'Your password was changed',
+              template: 'auth.password-changed',
+              context: {
+                userId: user.id,
+                email: user.email,
+              },
+            }
+          : undefined,
+      })
+      .catch((err) => {
+        this.logger.warn(
+          `Failed to send password-changed notification for user "${user.id}": ${err.message}`,
+        );
+      });
+  }
+
+  /**
+   * Sends an email verification link to a user.
+   */
+  async sendVerificationEmail(userId: string | number): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found.');
+    }
+
+    await this.sendVerificationEmailSafe(user);
+  }
+
+  /**
+   * Verifies a user's email using a verification token.
+   */
+  async verifyEmail(token: string): Promise<void> {
+    if (!token?.trim()) {
+      throw new BadRequestException('Verification token is required.');
+    }
+
+    let payload: any;
+
+    try {
+      payload = await this.jwtService.verifyAsync(
+        token,
+        this.getJwtVerifyOptions(),
+      );
+    } catch (err) {
+      this.logger.debug(`Invalid verification token: ${(err as Error).message}`);
+      throw new BadRequestException('Invalid or expired verification token.');
+    }
+
+    if (payload?.purpose !== 'verify-email' || !payload?.sub) {
+      throw new BadRequestException('Invalid verification token.');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: payload.sub },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid verification token.');
+    }
+
+    await this.ensureUserIsActive(user);
+
+    // If already verified, do nothing.
+    if ((user as any).isEmailVerified === true) {
+      return;
+    }
+
+    (user as any).isEmailVerified = true;
+    await this.userRepository.save(user);
+  }
+
+  /**
+   * Validates credentials and returns the user if valid. Throws otherwise.
+   * This is suitable for use by Passport strategies.
+   */
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<AuthenticatedUser> {
+    const result = await this.loginWithEmailAndPassword(email, password);
+    return result.user;
+  }
+
+  /**
+   * Ensures the user is active (not disabled/locked).
+   * Adjust this to match your actual user status fields.
+   */
+  private async ensureUserIsActive(user: User): Promise<void> {
+    const status = (user as any).status;
+    if (status && status !== 'active') {
+      throw new ForbiddenException('User account is not active.');
+    }
+  }
+
+  private async findUserByEmail(email: string): Promise<User | null> {
+    const normalized = email.trim().toLowerCase();
+    return this.userRepository.findOne({ where: { email: normalized } });
+  }
+
+  private async ensureEmailIsAvailable(email: string): Promise<void> {
+    const existing = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Email is already in use.');
+    }
+  }
+
+  private async verifyPassword(user: User, password: string): Promise<void> {
+    const hash = (user as any).passwordHash;
+    if (!hash) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const match = await bcrypt.compare(password, hash);
+    if (!match) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, this.passwordSaltRounds);
+  }
+
+  private async markLastLogin(user: User): Promise<void> {
+    if (!('lastLoginAt' in user)) {
+      return;
+    }
+
+    (user as any).lastLoginAt = new Date();
+    await this.userRepository.save(user);
+  }
+
+  private async issueTokens(user: User): Promise<AuthTokens> {
+    const payloadBase = {
+      sub: user.id,
+      email: (user as any).email,
+    };
+
+    const accessToken = await this.jwtService.signAsync(
+      {
+        ...payloadBase,
+        type: 'access',
+      },
+      {
+        ...this.getJwtBaseOptions(),
+        expiresIn: this.accessTokenTtl,
+      },
+    );
+
+    const refreshToken = await this.jwtService.signAsync(
+      {
+        ...payloadBase,
+        type: 'refresh',
+      },
+      {
+        ...this.getJwtBaseOptions(),
+        expiresIn: this.refreshTokenTtl,
+      },
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  private toSafeUser(user: User): AuthenticatedUser {
+    const { passwordHash, ...rest } = user as any;
+    return rest as AuthenticatedUser;
+  }
+
+  private getJwtBaseOptions(): JwtSignOptions {
+    const issuer =
+      this.configService.get<string>('AUTH_JWT_ISSUER') ??
+      process.env.AUTH_JWT_ISSUER;
+    const audience =
+      this.configService.get<string>('AUTH_JWT_AUDIENCE') ??
+      process.env.AUTH_JWT_AUDIENCE;
+
+    const options: JwtSignOptions = {};
+    if (issuer) {
+      options.issuer = issuer;
+    }
+    if (audience) {
+      options.audience = audience;
+    }
+    return options;
+  }
+
+  private getJwtVerifyOptions(): JwtVerifyOptions {
+    const base = this.getJwtBaseOptions();
+    const options: JwtVerifyOptions = {
+      issuer: base.issuer,
+      audience: base.audience,
+    };
+    return options;
+  }
+
+  private async sendVerificationEmailSafe(user: User): Promise<void> {
+    const email = (user as any).email;
+    if (!email) {
+      return;
+    }
+
+    const token = await this.jwtService.signAsync(
+      {
+        sub: user.id,
+        email,
+        purpose: 'verify-email',
+      },
+      {
+        ...this.getJwtBaseOptions(),
+        expiresIn: this.emailVerificationTtl,
+      },
+    );
+
+    const verifyUrl = `${this.frontendBaseUrl}/auth/verify-email?token=${encodeURIComponent(
+      token,
+    )}`;
+
+    await this.emailService.sendTemplate({
+      to: email,
+      template: 'auth.verify-email',
+      context: {
+        userId: user.id,
+        email,
+        token,
+        url: verifyUrl,
+      },
+    });
+  }
+}
+
+
+=== FILE 15/18: apps/api/src/orgo/security/compliance/compliance-export.service.ts ===
+
+import { Injectable, Logger } from '@nestjs/common';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+
+import { DatabaseService } from '../../core/database/database.service';
+
+export type ComplianceAuditLogSource = 'activity_log' | 'security_event';
+
+export interface ComplianceAuditLogExportOptions {
+  /**
+   * Organization to scope the export to.
+   * If null/undefined, all organizations are included (restricted to caller's RBAC elsewhere).
+   */
+  organizationId?: string | null;
+
+  /**
+   * Inclusive lower bound for log timestamps.
+   */
+  from: Date;
+
+  /**
+   * Inclusive upper bound for log timestamps.
+   */
+  to: Date;
+
+  /**
+   * Whether to include rows from activity_logs.
+   * Defaults to true.
+   */
+  includeActivityLogs?: boolean;
+
+  /**
+   * Whether to include rows from security_events.
+   * Defaults to true.
+   */
+  includeSecurityEvents?: boolean;
+
+  /**
+   * Maximum number of rows to return.
+   * This is further clamped by the hard upper bound.
+   */
+  maxRows?: number;
+
+  /**
+   * If false (default), PII and sensitive fields are masked.
+   * If true, raw values are returned (caller must ensure appropriate RBAC).
+   */
+  includeSensitiveFields?: boolean;
+
+  /**
+   * Optional identity of the user requesting the export.
+   * Used only for the security_events audit row.
+   */
+  requestedByUserId?: string | null;
+
+  /**
+   * Optional IP address of the requester (for audit trail).
+   */
+  requestIp?: string | null;
+
+  /**
+   * Optional user agent of the requester (for audit trail).
+   */
+  requestUserAgent?: string | null;
+}
+
+export interface ComplianceAuditLogExportRow {
+  /**
+   * ISO-8601 timestamp of the original log row (created_at).
+   */
+  timestamp: string;
+  source: ComplianceAuditLogSource;
+
+  organizationId: string | null;
+  userId: string | null;
+  sessionId: string | null;
+
+  /**
+   * For activity_logs: action.
+   * For security_events: event_type.
+   */
+  eventType: string;
+
+  /**
+   * For security_events only; null for activity_logs.
+   */
+  severity: string | null;
+
+  ipAddress: string | null;
+  userAgent: string | null;
+
+  /**
+   * For activity_logs only; null for security_events.
+   */
+  targetType: string | null;
+  targetId: string | null;
+
+  /**
+   * JSON payload from details column (possibly masked).
+   */
+  details: Record<string, unknown> | null;
+}
+
+export interface ComplianceAuditLogExportResult {
+  exportId: string;
+  generatedAt: Date;
+
+  from: Date;
+  to: Date;
+  organizationId: string | null;
+
+  /**
+   * Number of rows actually returned (after masking and truncation).
+   */
+  rowCount: number;
+
+  /**
+   * True if more rows exist in the given window than were returned
+   * (i.e. export was truncated at maxRows).
+   */
+  hasMore: boolean;
+
+  rows: ComplianceAuditLogExportRow[];
+}
+
+/**
+ * Local view of the activity_logs row shape.
+ * Mirrors the schema in the database; not all columns are included.
+ */
+type ActivityLogRow = {
+  id: string;
+  organization_id: string;
+  user_id: string | null;
+  session_id: string | null;
+  actor_type: 'user' | 'system';
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  details: Prisma.JsonValue | null;
+  created_at: Date;
+};
+
+/**
+ * Local view of the security_events row shape.
+ * Mirrors the schema in the database; not all columns are included.
+ */
+type SecurityEventRow = {
+  id: string;
+  organization_id: string | null;
+  user_id: string | null;
+  event_type: 'failed_login' | 'permission_escalation' | 'api_abuse' | 'data_export' | 'config_change';
+  ip_address: string | null;
+  user_agent: string | null;
+  details: Prisma.JsonValue | null;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  created_at: Date;
+};
+
+/**
+ * Service responsible for preparing audit-log exports (activity_logs + security_events)
+ * for compliance and regulatory review. Exports are:
+ *
+ * - Scoped by organization and time window.
+ * - Row-limited to protect the system.
+ * - Optionally PII-masked, depending on includeSensitiveFields.
+ *
+ * RBAC / visibility checks are enforced at the controller/guard layer;
+ * this service only implements the data shaping and audit logging.
+ */
+@Injectable()
+export class ComplianceExportService {
+  /**
+   * Hard upper bound for any single export, regardless of config.
+   * This should stay aligned with analytics/export limits.
+   */
+  private static readonly HARD_ROW_LIMIT = 100_000;
+
+  /**
+   * Default soft limit when no explicit maxRows is provided.
+   * This is aligned with the production analytics export default (50k rows).
+   */
+  private static readonly DEFAULT_SOFT_ROW_LIMIT = 50_000;
+
+  private readonly logger = new Logger(ComplianceExportService.name);
+
+  constructor(private readonly databaseService: DatabaseService) {}
+
+  private get prisma(): PrismaClient {
+    return this.databaseService.getPrismaClient();
+  }
+
+  async exportAuditLog(
+    options: ComplianceAuditLogExportOptions,
+  ): Promise<ComplianceAuditLogExportResult> {
+    const from = new Date(options.from);
+    const to = new Date(options.to);
+
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+      throw new Error('Invalid from/to date supplied to ComplianceExportService.exportAuditLog');
+    }
+
+    if (from > to) {
+      throw new Error('"from" must be less than or equal to "to" in ComplianceExportService.exportAuditLog');
+    }
+
+    const includeActivityLogs = options.includeActivityLogs ?? true;
+    const includeSecurityEvents = options.includeSecurityEvents ?? true;
+
+    if (!includeActivityLogs && !includeSecurityEvents) {
+      throw new Error('At least one of includeActivityLogs/includeSecurityEvents must be true');
+    }
+
+    const maxRows = this.resolveMaxRows(options.maxRows);
+    const includeSensitive = options.includeSensitiveFields === true;
+
+    this.logger.log(
+      `Preparing compliance audit log export from ${from.toISOString()} to ${to.toISOString()} ` +
+        `(org=${options.organizationId ?? 'ALL'}, maxRows=${maxRows}, includeSensitive=${includeSensitive})`,
+    );
+
+    const [activityLogs, securityEvents] = await Promise.all([
+      includeActivityLogs ? this.fetchActivityLogs(options.organizationId, from, to, maxRows) : Promise.resolve([]),
+      includeSecurityEvents ? this.fetchSecurityEvents(options.organizationId, from, to, maxRows) : Promise.resolve([]),
+    ]);
+
+    const combined: ComplianceAuditLogExportRow[] = [
+      ...activityLogs.map((row) => this.mapActivityLogRow(row)),
+      ...securityEvents.map((row) => this.mapSecurityEventRow(row)),
+    ];
+
+    combined.sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    );
+
+    const hasMore = combined.length > maxRows;
+    let rows = hasMore ? combined.slice(0, maxRows) : combined;
+
+    if (!includeSensitive) {
+      rows = rows.map((row) => this.maskRow(row));
+    }
+
+    const exportId = uuidv4();
+    const generatedAt = new Date();
+
+    await this.recordComplianceSecurityEvent(exportId, options, rows.length, hasMore, from, to);
+
+    this.logger.log(
+      `Compliance audit log export ${exportId} prepared with ${rows.length} rows (hasMore=${hasMore})`,
+    );
+
+    return {
+      exportId,
+      generatedAt,
+      from,
+      to,
+      organizationId: options.organizationId ?? null,
+      rowCount: rows.length,
+      hasMore,
+      rows,
+    };
+  }
+
+  private resolveMaxRows(requested?: number): number {
+    const envLimitRaw = process.env.COMPLIANCE_EXPORT_MAX_ROWS;
+    const envLimit =
+      envLimitRaw && !Number.isNaN(Number(envLimitRaw)) ? Number(envLimitRaw) : undefined;
+
+    const base =
+      requested && requested > 0
+        ? requested
+        : envLimit && envLimit > 0
+        ? envLimit
+        : ComplianceExportService.DEFAULT_SOFT_ROW_LIMIT;
+
+    return Math.min(base, ComplianceExportService.HARD_ROW_LIMIT);
+  }
+
+  private async fetchActivityLogs(
+    organizationId: string | null | undefined,
+    from: Date,
+    to: Date,
+    maxRows: number,
+  ): Promise<ActivityLogRow[]> {
+    const where: Prisma.activity_logsWhereInput = {
+      created_at: {
+        gte: from,
+        lte: to,
+      },
+      ...(organizationId ? { organization_id: organizationId } : {}),
+    };
+
+    return (this.prisma.activity_logs.findMany({
+      where,
+      orderBy: { created_at: 'asc' },
+      take: maxRows,
+    }) as unknown) as ActivityLogRow[];
+  }
+
+  private async fetchSecurityEvents(
+    organizationId: string | null | undefined,
+    from: Date,
+    to: Date,
+    maxRows: number,
+  ): Promise<SecurityEventRow[]> {
+    const where: Prisma.security_eventsWhereInput = {
+      created_at: {
+        gte: from,
+        lte: to,
+      },
+      ...(organizationId ? { organization_id: organizationId } : {}),
+    };
+
+    return (this.prisma.security_events.findMany({
+      where,
+      orderBy: { created_at: 'asc' },
+      take: maxRows,
+    }) as unknown) as SecurityEventRow[];
+  }
+
+  private mapActivityLogRow(row: ActivityLogRow): ComplianceAuditLogExportRow {
+    return {
+      timestamp: row.created_at.toISOString(),
+      source: 'activity_log',
+      organizationId: row.organization_id,
+      userId: row.user_id,
+      sessionId: row.session_id,
+      eventType: row.action,
+      severity: null,
+      ipAddress: null,
+      userAgent: null,
+      targetType: row.target_type,
+      targetId: row.target_id,
+      details: (row.details as Record<string, unknown> | null) ?? null,
+    };
+  }
+
+  private mapSecurityEventRow(row: SecurityEventRow): ComplianceAuditLogExportRow {
+    return {
+      timestamp: row.created_at.toISOString(),
+      source: 'security_event',
+      organizationId: row.organization_id,
+      userId: row.user_id,
+      sessionId: null,
+      eventType: row.event_type,
+      severity: row.severity,
+      ipAddress: row.ip_address,
+      userAgent: row.user_agent,
+      targetType: null,
+      targetId: null,
+      details: (row.details as Record<string, unknown> | null) ?? null,
+    };
+  }
+
+  private maskRow(row: ComplianceAuditLogExportRow): ComplianceAuditLogExportRow {
+    return {
+      ...row,
+      userId: row.userId ? this.hashIdentifier(row.userId) : null,
+      sessionId: row.sessionId ? this.hashIdentifier(row.sessionId) : null,
+      ipAddress: row.ipAddress ? this.maskIp(row.ipAddress) : null,
+      details: row.details ? (this.maskDetails(row.details) as Record<string, unknown>) : null,
+    };
+  }
+
+  private maskDetails(value: unknown): unknown {
+    if (value === null || value === undefined) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((v) => this.maskDetails(v));
+    }
+
+    if (typeof value !== 'object') {
+      return value;
+    }
+
+    const piiKeys = new Set([
+      'email',
+      'email_address',
+      'phone',
+      'phone_number',
+      'ssn',
+      'national_id',
+      'nationalInsuranceNumber',
+    ]);
+
+    const masked: Record<string, unknown> = {};
+    for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+      if (piiKeys.has(key)) {
+        masked[key] = raw == null ? raw : '***REDACTED***';
+      } else if (key.toLowerCase().includes('ip')) {
+        masked[key] = raw == null ? raw : this.maskIp(String(raw));
+      } else if (key.toLowerCase().endsWith('_id')) {
+        masked[key] = raw == null ? raw : this.hashIdentifier(String(raw));
+      } else if (typeof raw === 'object') {
+        masked[key] = this.maskDetails(raw);
+      } else {
+        masked[key] = raw;
+      }
+    }
+
+    return masked;
+  }
+
+  private maskIp(ip: string): string {
+    const ipv4Parts = ip.split('.');
+    if (ipv4Parts.length === 4) {
+      return `${ipv4Parts[0]}.${ipv4Parts[1]}.${ipv4Parts[2]}.x`;
+    }
+
+    if (ip.includes(':')) {
+      const parts = ip.split(':');
+      if (parts.length > 2) {
+        return [...parts.slice(0, parts.length - 2), 'xxxx', 'xxxx'].join(':');
+      }
+    }
+
+    return '***REDACTED***';
+  }
+
+  private hashIdentifier(value: string): string {
+    // Lightweight, deterministic hash suitable for masking IDs in exports.
+    // Not intended as a cryptographic guarantee.
+    let hash = 0;
+    for (let i = 0; i < value.length; i += 1) {
+      hash = (hash << 5) - hash + value.charCodeAt(i);
+      hash |= 0; // Convert to 32-bit int
+    }
+    return `hash_${Math.abs(hash).toString(16)}`;
+  }
+
+  private async recordComplianceSecurityEvent(
+    exportId: string,
+    options: ComplianceAuditLogExportOptions,
+    rowCount: number,
+    hasMore: boolean,
+    from: Date,
+    to: Date,
+  ): Promise<void> {
+    try {
+      await this.prisma.security_events.create({
+        data: {
+          organization_id: options.organizationId ?? null,
+          user_id: options.requestedByUserId ?? null,
+          event_type: 'data_export',
+          ip_address: options.requestIp ?? null,
+          user_agent: options.requestUserAgent ?? null,
+          severity: 'medium',
+          details: {
+            exportId,
+            kind: 'compliance_audit_log_export',
+            rowCount,
+            hasMore,
+            from: from.toISOString(),
+            to: to.toISOString(),
+          } as Prisma.JsonObject,
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to record compliance export security event for ${exportId}`,
+        (error as Error)?.stack,
+      );
+    }
+  }
+}
+
+
+=== FILE 16/18: apps/api/src/orgo/security/logging/log-query.service.ts ===
+
+// apps/api/src/orgo/security/logging/log-query.service.ts
+
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  Prisma,
+  PrismaClient,
+  TaskEvent as TaskEventModel,
+} from '@prisma/client';
+import { DatabaseService } from '../../core/database/database.service';
+import { FN_LOG_QUERY_ENTITY_ACTIVITY } from '../../core/functional-ids';
+
+export interface StandardResultError {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface StandardResult<T> {
+  ok: boolean;
+  data: T | null;
+  error: StandardResultError | null;
+}
+
+export type ActivityLogSource = 'activity_log' | 'task_event';
+
+export interface EntityActivityLogItem {
+  /**
+   * Stable identifier of the underlying log/event row.
+   */
+  id: string;
+
+  /**
+   * Logical source of the event.
+   * - "activity_log" → activity_logs table
+   * - "task_event"   → task_events table
+   */
+  source: ActivityLogSource;
+
+  /**
+   * Tenant / organization scope.
+   */
+  organizationId: string;
+
+  /**
+   * High-level entity type this item is about (e.g. "task", "case", "person").
+   */
+  entityType: string;
+
+  /**
+   * ID of the entity this event relates to.
+   */
+  entityId: string;
+
+  /**
+   * Event timestamp in ISO 8601 format.
+   */
+  timestamp: string;
+
+  /**
+   * Actor classification. Derived from the underlying row when available.
+   */
+  actorType: 'user' | 'system' | null;
+
+  /**
+   * User responsible for the event, if known.
+   */
+  actorUserId: string | null;
+
+  /**
+   * Role of the actor, if recorded (task_events only).
+   */
+  actorRoleId: string | null;
+
+  /**
+   * Optional login/session correlation (activity_logs only).
+   */
+  sessionId: string | null;
+
+  /**
+   * Logical event type/action.
+   * - activity_logs.action
+   * - task_events.eventType
+   */
+  eventType: string;
+
+  /**
+   * Origin of the event when tracked (e.g. "api", "ui", "worker").
+   * Populated from task_events.origin, null for generic activity logs.
+   */
+  origin: string | null;
+
+  /**
+   * Optional low-level target classification from the source table.
+   */
+  targetType: string | null;
+
+  /**
+   * Optional low-level target id from the source table.
+   */
+  targetId: string | null;
+
+  /**
+   * Event details. For task_events this will contain an object with
+   * oldValue/newValue when present.
+   */
+  details: Prisma.JsonValue | null;
+
+  /**
+   * Optional raw old/new values for task_events.
+   */
+  oldValue?: Prisma.JsonValue | null;
+  newValue?: Prisma.JsonValue | null;
+}
+
+export interface EntityActivityLogResult {
+  /**
+   * Combined, chronologically ordered items for the requested entity.
+   */
+  items: EntityActivityLogItem[];
+
+  /**
+   * True when there are more events available than returned in `items`.
+   */
+  hasMore: boolean;
+}
+
+export interface GetEntityActivityLogOptions {
+  /**
+   * Optional lower bound for event timestamps.
+   */
+  from?: Date | string;
+
+  /**
+   * Optional upper bound for event timestamps.
+   */
+  to?: Date | string;
+
+  /**
+   * Maximum number of items to return across all sources.
+   * Defaults to 200, capped at a hard limit.
+   */
+  limit?: number;
+
+  /**
+   * Whether to include generic activity_logs rows.
+   * Defaults to true.
+   */
+  includeActivityLogs?: boolean;
+
+  /**
+   * Whether to include task_events rows.
+   * Defaults to true when entityType === "task", otherwise false.
+   */
+  includeTaskEvents?: boolean;
+}
+
+/**
+ * Narrow DB view of activity_logs for mapping.
+ */
+type ActivityLogRow = {
+  id: string;
+  organization_id: string;
+  user_id: string | null;
+  session_id: string | null;
+  actor_type: 'user' | 'system';
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  details: Prisma.JsonValue | null;
+  created_at: Date;
+};
+
+@Injectable()
+export class LogQueryService {
+  private static readonly DEFAULT_LIMIT = 200;
+  private static readonly HARD_LIMIT = 1000;
+
+  private readonly logger = new Logger(LogQueryService.name);
+
+  constructor(private readonly databaseService: DatabaseService) {}
+
+  private get prisma(): PrismaClient {
+    return this.databaseService.getPrismaClient();
+  }
+
+  /**
+   * Fetch combined activity for a given entity within an organization.
+   *
+   * Sources:
+   *   - activity_logs: target_type = entityType, target_id = entityId
+   *   - task_events:   taskId = entityId (when entityType === "task")
+   *
+   * Returns the standard { ok, data, error } result shape.
+   */
+  async getActivityForEntity(
+    organizationId: string,
+    entityType: string,
+    entityId: string,
+    options?: GetEntityActivityLogOptions,
+  ): Promise<StandardResult<EntityActivityLogResult>> {
+    if (!organizationId || !organizationId.trim()) {
+      return this.fail('INVALID_INPUT', 'organizationId is required.', {
+        organizationId,
+      });
+    }
+
+    if (!entityType || !entityType.trim()) {
+      return this.fail('INVALID_INPUT', 'entityType is required.', {
+        entityType,
+      });
+    }
+
+    if (!entityId || !entityId.trim()) {
+      return this.fail('INVALID_INPUT', 'entityId is required.', {
+        entityId,
+      });
+    }
+
+    const includeActivityLogs =
+      options?.includeActivityLogs ?? true;
+
+    const includeTaskEvents =
+      options?.includeTaskEvents ?? entityType === 'task';
+
+    if (!includeActivityLogs && !includeTaskEvents) {
+      return this.fail(
+        'NO_SOURCES_SELECTED',
+        'At least one of includeActivityLogs or includeTaskEvents must be true.',
+        { entityType },
+      );
+    }
+
+    const requestedLimit =
+      options?.limit && options.limit > 0
+        ? options.limit
+        : LogQueryService.DEFAULT_LIMIT;
+
+    const limit = Math.min(
+      requestedLimit,
+      LogQueryService.HARD_LIMIT,
+    );
+
+    // Fetch one extra row per source so we can detect hasMore.
+    const perSourceLimit = limit + 1;
+
+    const fromDate = this.parseOptionalDate(options?.from);
+    if (options?.from && !fromDate) {
+      return this.fail('INVALID_DATE', 'Invalid from date.', {
+        from: options.from,
+      });
+    }
+
+    const toDate = this.parseOptionalDate(options?.to);
+    if (options?.to && !toDate) {
+      return this.fail('INVALID_DATE', 'Invalid to date.', {
+        to: options.to,
+      });
+    }
+
+    if (fromDate && toDate && fromDate > toDate) {
+      return this.fail(
+        'INVALID_DATE_RANGE',
+        'from must be less than or equal to to.',
+        {
+          from: options?.from,
+          to: options?.to,
+        },
+      );
+    }
+
+    this.logger.debug(
+      `Querying entity activity log for org=${organizationId} entity=${entityType}:${entityId} [${FN_LOG_QUERY_ENTITY_ACTIVITY}]`,
+    );
+
+    try {
+      const promises: Array<Promise<EntityActivityLogItem[]>> = [];
+
+      if (includeActivityLogs) {
+        promises.push(
+          this.fetchActivityLogsForEntity(
+            organizationId,
+            entityType,
+            entityId,
+            fromDate,
+            toDate,
+            perSourceLimit,
+          ),
+        );
+      }
+
+      if (includeTaskEvents && entityType === 'task') {
+        promises.push(
+          this.fetchTaskEventsForTask(
+            organizationId,
+            entityId,
+            fromDate,
+            toDate,
+            perSourceLimit,
+          ),
+        );
+      }
+
+      const results = await Promise.all(promises);
+      const combined = results.flat();
+
+      // Sort most recent first for trimming to limit.
+      combined.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() -
+          new Date(a.timestamp).getTime(),
+      );
+
+      const hasMore = combined.length > limit;
+      const window = combined.slice(0, limit);
+
+      // Present to callers in chronological order (oldest first).
+      window.sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() -
+          new Date(b.timestamp).getTime(),
+      );
+
+      return this.ok({
+        items: window,
+        hasMore,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to query entity activity log for org=${organizationId} entity=${entityType}:${entityId} [${FN_LOG_QUERY_ENTITY_ACTIVITY}]`,
+        (error as Error).stack ?? String(error),
+      );
+
+      return this.fail(
+        'QUERY_FAILED',
+        'Failed to load activity log for entity.',
+        {
+          organizationId,
+          entityType,
+          entityId,
+          error:
+            error instanceof Error
+              ? error.message
+              : String(error),
+        },
+      );
+    }
+  }
+
+  private parseOptionalDate(
+    value?: Date | string,
+  ): Date | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) {
+        return undefined;
+      }
+      return value;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return undefined;
+    }
+
+    return parsed;
+  }
+
+  private async fetchActivityLogsForEntity(
+    organizationId: string,
+    entityType: string,
+    entityId: string,
+    from?: Date,
+    to?: Date,
+    limit?: number,
+  ): Promise<EntityActivityLogItem[]> {
+    const createdAtFilter: { gte?: Date; lte?: Date } = {};
+
+    if (from) {
+      createdAtFilter.gte = from;
+    }
+
+    if (to) {
+      createdAtFilter.lte = to;
+    }
+
+    const where: Prisma.activity_logsWhereInput = {
+      organization_id: organizationId,
+      target_type: entityType,
+      target_id: entityId,
+      ...(from || to ? { created_at: createdAtFilter } : {}),
+    };
+
+    const rows = (await this.prisma.activity_logs.findMany({
+      where,
+      orderBy: { created_at: 'desc' },
+      take: limit,
+    })) as unknown as ActivityLogRow[];
+
+    return rows.map((row) =>
+      this.mapActivityLogRowToItem(row, entityType, entityId),
+    );
+  }
+
+  private async fetchTaskEventsForTask(
+    organizationId: string,
+    taskId: string,
+    from?: Date,
+    to?: Date,
+    limit?: number,
+  ): Promise<EntityActivityLogItem[]> {
+    const createdAtFilter: { gte?: Date; lte?: Date } = {};
+
+    if (from) {
+      createdAtFilter.gte = from;
+    }
+
+    if (to) {
+      createdAtFilter.lte = to;
+    }
+
+    const where: Prisma.TaskEventWhereInput = {
+      organizationId,
+      taskId,
+      ...(from || to ? { createdAt: createdAtFilter } : {}),
+    };
+
+    const rows = (await this.prisma.taskEvent.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    })) as unknown as TaskEventModel[];
+
+    return rows.map((row) => this.mapTaskEventRowToItem(row));
+  }
+
+  private mapActivityLogRowToItem(
+    row: ActivityLogRow,
+    entityType: string,
+    entityId: string,
+  ): EntityActivityLogItem {
+    return {
+      id: row.id,
+      source: 'activity_log',
+      organizationId: row.organization_id,
+      entityType: row.target_type ?? entityType,
+      entityId: row.target_id ?? entityId,
+      timestamp: row.created_at.toISOString(),
+      actorType: row.actor_type ?? null,
+      actorUserId: row.user_id,
+      actorRoleId: null,
+      sessionId: row.session_id,
+      eventType: row.action,
+      origin: null,
+      targetType: row.target_type,
+      targetId: row.target_id,
+      details: row.details,
+    };
+  }
+
+  private mapTaskEventRowToItem(
+    row: TaskEventModel,
+  ): EntityActivityLogItem {
+    const details =
+      row.oldValue || row.newValue
+        ? ({
+            oldValue: row.oldValue ?? null,
+            newValue: row.newValue ?? null,
+          } as Prisma.JsonValue)
+        : null;
+
+    return {
+      id: row.id,
+      source: 'task_event',
+      organizationId: row.organizationId,
+      entityType: 'task',
+      entityId: row.taskId,
+      timestamp: row.createdAt.toISOString(),
+      actorType: row.actorUserId ? 'user' : 'system',
+      actorUserId: row.actorUserId,
+      actorRoleId: row.actorRoleId ?? null,
+      sessionId: null,
+      eventType: row.eventType,
+      origin: row.origin ?? null,
+      targetType: 'task',
+      targetId: row.taskId,
+      details,
+      oldValue: row.oldValue ?? null,
+      newValue: row.newValue ?? null,
+    };
+  }
+
+  private ok<T>(data: T): StandardResult<T> {
+    return {
+      ok: true,
+      data,
+      error: null,
+    };
+  }
+
+  private fail<T>(
+    code: string,
+    message: string,
+    details?: Record<string, unknown>,
+  ): StandardResult<T> {
+    return {
+      ok: false,
+      data: null,
+      error: {
+        code,
+        message,
+        ...(details ? { details } : {}),
+      },
+    };
+  }
+}
+
+
+=== FILE 17/18: apps/api/src/orgo/security/privacy/privacy.service.ts ===
+
+import { Injectable } from '@nestjs/common';
+
+/**
+ * Canonical VISIBILITY values (DB enum visibility_enum).
+ *
+ * See Orgo v3 foundations doc for semantics:
+ *   PUBLIC      – visible across the org (subject to RBAC)
+ *   INTERNAL    – limited to org-internal teams/roles
+ *   RESTRICTED  – minimal set of users/roles
+ *   ANONYMISED  – pseudonymised or fully anonymised content
+ */
+export type Visibility = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
+
+/**
+ * Options controlling how anonymisation is applied.
+ *
+ * - piiFieldPaths / strongPiiFieldPaths:
+ *     Dot-separated path selectors (e.g. "metadata.person.email").
+ *     These are matched in a case-insensitive, punctuation-insensitive way.
+ * - maskStrategy:
+ *     "redact" – replace value with a redaction marker (default).
+ *     "hash"   – replace value with a deterministic non-cryptographic hash.
+ *     "drop"   – remove the field entirely from the payload.
+ * - customRedactionText:
+ *     Custom marker to use instead of "[redacted]" when maskStrategy = "redact".
+ */
+export interface AnonymizeOptions {
+  piiFieldPaths?: string[];
+  strongPiiFieldPaths?: string[];
+  maskStrategy?: 'redact' | 'hash' | 'drop';
+  customRedactionText?: string;
+}
+
+/**
+ * Options for export-time masking.
+ *
+ * - allowedVisibilities:
+ *     VISIBILITY values that may appear in raw exports.
+ *     If omitted, defaults to ["PUBLIC","INTERNAL"] (per Insights export guardrails).
+ * - dropIfVisibilityDisallowed:
+ *     If true (default), entities with disallowed visibility are dropped (return null).
+ *     If false, entities with disallowed visibility are anonymised instead.
+ *
+ * All other fields are forwarded to anonymisation logic if masking is needed.
+ */
+export interface ExportPrivacyOptions extends AnonymizeOptions {
+  allowedVisibilities?: Visibility[];
+  dropIfVisibilityDisallowed?: boolean;
+}
+
+/**
+ * PrivacyService centralises anonymisation and export-time masking rules.
+ *
+ * Typical usage:
+ *   - When persisting highly sensitive records with visibility = ANONYMISED,
+ *     call anonymizePayloadForVisibility before writing to the DB.
+ *   - When preparing exports, call maskForExport on each record to enforce
+ *     allowedVisibilities and PII masking.
+ */
+@Injectable()
+export class PrivacyService {
+  /**
+   * Default visibilities allowed for raw exports from analytics/reporting.
+   * This mirrors the default ["PUBLIC","INTERNAL"] configuration for
+   * analytics exports.
+   */
+  public static readonly DEFAULT_EXPORT_ALLOWED_VISIBILITIES: readonly Visibility[] = [
+    'PUBLIC',
+    'INTERNAL',
+  ] as const;
+
+  /**
+   * Default text used when maskStrategy = "redact".
+   */
+  private static readonly DEFAULT_REDACTION_TEXT = '[redacted]';
+
+  /**
+   * Field-name heuristics for PII. Keys are stored in a normalised form:
+   *   - lower-cased
+   *   - all non-alphanumeric characters removed
+   *
+   * Example:
+   *   "full_name"   → "fullname"
+   *   "emailAddress" → "emailaddress"
+   */
+  private readonly defaultPiiKeys: Set<string> = new Set<string>([
+    // Names
+    'name',
+    'fullname',
+    'firstname',
+    'lastname',
+    // Emails
+    'email',
+    'emailaddress',
+    'primarycontactemail',
+    // Phones
+    'phone',
+    'phonenumber',
+    'primarycontactphone',
+    // Dates of birth
+    'dateofbirth',
+    'dob',
+    // Addresses
+    'address',
+    'homeaddress',
+    'postaladdress',
+    // Identity / reference IDs
+    'personid',
+    'employeeid',
+    'studentid',
+    'subjectid',
+    'hrcaseid',
+  ]);
+
+  /**
+   * Field-name heuristics for strong PII (national IDs, sensitive identifiers).
+   * These are treated the same as defaultPiiKeys by this service, but are
+   * separated to allow more aggressive strategies in the future if needed.
+   */
+  private readonly defaultStrongPiiKeys: Set<string> = new Set<string>([
+    'nationalid',
+    'ssn',
+    'socialsecuritynumber',
+    'passportnumber',
+  ]);
+
+  /**
+   * Normalises a VISIBILITY token from API/JSON/config form into the canonical
+   * upper-case enum used in the DB.
+   *
+   * Throws if the token is not recognised.
+   */
+  public normalizeVisibilityToken(visibility: string | Visibility): Visibility {
+    const upper = String(visibility).toUpperCase().trim();
+
+    switch (upper) {
+      case 'PUBLIC':
+      case 'INTERNAL':
+      case 'RESTRICTED':
+      case 'ANONYMISED':
+        return upper;
+      default:
+        throw new Error(`Unknown visibility token: "${visibility}"`);
+    }
+  }
+
+  /**
+   * Apply anonymisation according to a target VISIBILITY.
+   *
+   * Currently:
+   *   - For ANONYMISED: deep-clone and anonymise using the provided options.
+   *   - For PUBLIC / INTERNAL / RESTRICTED: payload is returned unchanged.
+   *
+   * This method is intended to be used when creating/updating entities where
+   * the persisted visibility is known (e.g. HR cases with ANONYMISED visibility).
+   */
+  public anonymizePayloadForVisibility<T>(
+    payload: T,
+    visibility: Visibility | string,
+    options?: AnonymizeOptions,
+  ): T {
+    const normalised = this.normalizeVisibilityToken(visibility);
+
+    if (normalised !== 'ANONYMISED') {
+      // Non-anonymised visibilities are passed through unchanged here.
+      // Access control and visibility enforcement are handled elsewhere.
+      return payload;
+    }
+
+    return this.anonymizePayload(payload, options);
+  }
+
+  /**
+   * Deep-clone and anonymise a payload using a combination of:
+   *   - builtin PII heuristics (field-name based), and
+   *   - explicit piiFieldPaths / strongPiiFieldPaths.
+   *
+   * The original payload is never mutated.
+   */
+  public anonymizePayload<T>(payload: T, options?: AnonymizeOptions): T {
+    const merged = this.mergeOptions(options);
+    return this.deepCloneAndAnonymize(payload as unknown, merged) as T;
+  }
+
+  /**
+   * Apply export-time visibility and PII rules to a single record.
+   *
+   * Behaviour:
+   *   1. Normalises the record's visibility token.
+   *   2. If visibility is not in allowedVisibilities:
+   *        - If dropIfVisibilityDisallowed (default true): returns null.
+   *        - Otherwise: returns an anonymised version of the payload.
+   *   3. If visibility is allowed:
+   *        - If no masking options are provided, returns payload unchanged.
+   *        - If piiFieldPaths / strongPiiFieldPaths are provided (and/or
+   *          maskStrategy is set), returns an anonymised clone of the payload.
+   */
+  public maskForExport<T>(
+    payload: T,
+    visibility: Visibility | string,
+    options?: ExportPrivacyOptions,
+  ): T | null {
+    const normalisedVisibility = this.normalizeVisibilityToken(visibility);
+    const allowed =
+      options?.allowedVisibilities ??
+      (PrivacyService.DEFAULT_EXPORT_ALLOWED_VISIBILITIES.slice() as Visibility[]);
+    const dropIfDisallowed = options?.dropIfVisibilityDisallowed ?? true;
+
+    if (!allowed.includes(normalisedVisibility)) {
+      if (dropIfDisallowed) {
+        return null;
+      }
+
+      // Visibility is disallowed for raw export, but caller opted to keep the
+      // record in anonymised form.
+      return this.anonymizePayload(payload, options);
+    }
+
+    // Visibility is allowed. If caller provided no masking-related options,
+    // return the payload unchanged.
+    const hasExplicitMaskingConfig =
+      (options?.piiFieldPaths && options.piiFieldPaths.length > 0) ||
+      (options?.strongPiiFieldPaths && options.strongPiiFieldPaths.length > 0) ||
+      typeof options?.maskStrategy === 'string';
+
+    if (!hasExplicitMaskingConfig) {
+      return payload;
+    }
+
+    // Caller requested masking even though visibility is allowed.
+    return this.anonymizePayload(payload, options);
+  }
+
+  /**
+   * Merge user-provided options with service defaults.
+   */
+  private mergeOptions(options?: AnonymizeOptions): Required<AnonymizeOptions> {
+    return {
+      piiFieldPaths: options?.piiFieldPaths ?? [],
+      strongPiiFieldPaths: options?.strongPiiFieldPaths ?? [],
+      maskStrategy: options?.maskStrategy ?? 'redact',
+      customRedactionText:
+        options?.customRedactionText ?? PrivacyService.DEFAULT_REDACTION_TEXT,
+    };
+  }
+
+  /**
+   * Deep-clone and anonymise a value (object/array/primitive) according to the
+   * provided options. Objects and arrays are cloned; primitives are returned as-is.
+   */
+  private deepCloneAndAnonymize(
+    value: unknown,
+    options: Required<AnonymizeOptions>,
+    path: string[] = [],
+  ): unknown {
+    if (Array.isArray(value)) {
+      return value.map((item, index) =>
+        this.deepCloneAndAnonymize(item, options, path.concat(String(index))),
+      );
+    }
+
+    if (this.isPlainObject(value)) {
+      const clone: Record<string, unknown> = {};
+
+      for (const [key, child] of Object.entries(value)) {
+        const nextPath = path.concat(key);
+
+        if (this.shouldMaskKey(key, nextPath, options)) {
+          // Apply masking strategy at this field.
+          if (options.maskStrategy === 'drop') {
+            // Field is omitted entirely from the clone.
+            continue;
+          }
+
+          if (options.maskStrategy === 'hash') {
+            clone[key] = this.hashValue(child);
+          } else {
+            // "redact" or anything unknown falls back to redaction text.
+            clone[key] = options.customRedactionText;
+          }
+        } else {
+          clone[key] = this.deepCloneAndAnonymize(child, options, nextPath);
+        }
+      }
+
+      return clone;
+    }
+
+    // Primitives are returned unchanged unless specifically targeted via paths,
+    // which is handled at the object level above.
+    return value;
+  }
+
+  /**
+   * Decide whether a field should be treated as PII and masked, based on:
+   *   - known PII key heuristics, and
+   *   - configured piiFieldPaths / strongPiiFieldPaths.
+   */
+  private shouldMaskKey(
+    key: string,
+    path: string[],
+    options: Required<AnonymizeOptions>,
+  ): boolean {
+    const normalisedKey = this.normalizeToken(key);
+
+    if (
+      this.defaultPiiKeys.has(normalisedKey) ||
+      this.defaultStrongPiiKeys.has(normalisedKey)
+    ) {
+      return true;
+    }
+
+    const pathStr = path.map((segment) => this.normalizeToken(segment)).join('.');
+
+    if (
+      options.piiFieldPaths.some((configuredPath) =>
+        this.isPathMatch(configuredPath, pathStr),
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      options.strongPiiFieldPaths.some((configuredPath) =>
+        this.isPathMatch(configuredPath, pathStr),
+      )
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Compare a configured path (dot-separated string) with a concrete path,
+   * using the same token normalisation as for field names.
+   *
+   * No wildcards are supported here; matching is exact after normalisation.
+   */
+  private isPathMatch(configuredPath: string, actualPath: string): boolean {
+    const normalisedConfigured = configuredPath
+      .split('.')
+      .map((segment) => this.normalizeToken(segment))
+      .join('.');
+
+    return normalisedConfigured === actualPath;
+  }
+
+  /**
+   * Normalise a token (field name or path segment) by:
+   *   - removing non-alphanumeric characters
+   *   - lowercasing the result
+   */
+  private normalizeToken(token: string): string {
+    return token.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  }
+
+  /**
+   * Simple deterministic, non-cryptographic hash for masking purposes.
+   *
+   * This is intentionally lightweight and NOT suitable for cryptographic use
+   * cases. For strong privacy requirements, a cryptographic hash (e.g. SHA-256)
+   * should be implemented at the infrastructure level and wired in here.
+   */
+  private hashValue(value: unknown): string {
+    const str = value == null ? '' : String(value);
+    let hash = 0;
+
+    for (let i = 0; i < str.length; i += 1) {
+      const chr = str.charCodeAt(i);
+      hash = (hash << 5) - hash + chr;
+      hash |= 0; // Convert to 32-bit integer
+    }
+
+    const hex = (hash >>> 0).toString(16);
+    return `hash:${hex}`;
+  }
+
+  /**
+   * Detect whether a value is a plain object (i.e. `{}` or an object with
+   * prototype Object.prototype or null). This avoids treating class instances,
+   * Dates, etc. as generic records.
+   */
+  private isPlainObject(value: unknown): value is Record<string, unknown> {
+    if (Object.prototype.toString.call(value) !== '[object Object]') {
+      return false;
+    }
+
+    const proto = Object.getPrototypeOf(value);
+    return proto === Object.prototype || proto === null;
+  }
+}
+
+
+=== FILE 18/18: apps/api/src/orgo/security/rbac/rbac.service.ts ===
+
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import { DatabaseService } from '../../core/database/database.service';
+
+/**
+ * Identity for which permissions are being evaluated.
+ *
+ * One of `userId` or `apiTokenId` must be present. `organizationId` is required
+ * and enforces multi‑tenant scoping as per Docs 1–2.
+ */
+export interface RbacSubject {
+  organizationId: string;
+  userId?: string;
+  apiTokenId?: string;
+}
+
+/**
+ * Optional resource context. This is intentionally minimal for now but leaves
+ * room for richer, resource‑aware policies (task/case visibility, ownership, etc.).
+ */
+export interface RbacResourceContext {
+  type: 'task' | 'case' | 'workflow' | 'config' | string;
+  id?: string;
+  organizationId?: string;
+  ownerUserId?: string;
+  ownerRoleId?: string;
+  visibility?: 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED' | string;
+  // Domain‑specific details can be added as needed.
+  [key: string]: unknown;
+}
+
+export interface CheckPermissionOptions {
+  /**
+   * Optional resource for more advanced policies. Currently only used
+   * to enforce same‑org access when `requireSameOrg` is true.
+   */
+  resource?: RbacResourceContext;
+
+  /**
+   * Enforce that the subject org must match the resource org (if provided).
+   * Defaults to true to respect multi‑tenant isolation.
+   */
+  requireSameOrg?: boolean;
+
+  /**
+   * When true, the method throws `ForbiddenException` instead of returning `false`.
+   * Defaults to false (boolean result only).
+   */
+  throwOnError?: boolean;
+
+  /**
+   * Optional free‑form reason, useful for logging / diagnostics.
+   */
+  reason?: string;
+}
+
+export type RequirePermissionOptions = Omit<CheckPermissionOptions, 'throwOnError'>;
+
+@Injectable()
+export class RbacService {
+  private readonly logger = new Logger(RbacService.name);
+
+  constructor(private readonly databaseService: DatabaseService) {}
+
+  /**
+   * Convenience accessor to the Prisma client. The client type is deliberately
+   * `any` here so that schema evolution / mapping does not make this service
+   * brittle; the actual Prisma model names are defined in the schema.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private get prisma(): any {
+    return this.databaseService.getPrismaClient();
+  }
+
+  /**
+   * Main enforcement hook used by guards/controllers.
+   *
+   * Returns true if the subject has the requested permission in the given
+   * organization (via roles and/or API token scopes), otherwise false.
+   *
+   * If `options.throwOnError` is true, throws `ForbiddenException` instead
+   * of returning false.
+   */
+  async checkPermission(
+    subject: RbacSubject,
+    permissionCode: string,
+    options: CheckPermissionOptions = {},
+  ): Promise<boolean> {
+    const { requireSameOrg = true, resource, throwOnError = false, reason } = options;
+
+    if (!subject.organizationId) {
+      this.logger.warn('RBAC check without organizationId; denying.', {
+        permissionCode,
+        subject,
+        reason,
+      });
+
+      if (throwOnError) {
+        throw new ForbiddenException('Missing organization context for permission check.');
+      }
+      return false;
+    }
+
+    if (!subject.userId && !subject.apiTokenId) {
+      this.logger.warn('RBAC check without userId/apiTokenId; denying.', {
+        permissionCode,
+        subject,
+        reason,
+      });
+
+      if (throwOnError) {
+        throw new ForbiddenException('Missing subject identity for permission check.');
+      }
+      return false;
+    }
+
+    if (
+      requireSameOrg &&
+      resource?.organizationId &&
+      resource.organizationId !== subject.organizationId
+    ) {
+      this.logger.warn('Cross‑organization resource access attempted; denying.', {
+        permissionCode,
+        subjectOrg: subject.organizationId,
+        resourceOrg: resource.organizationId,
+        reason,
+      });
+
+      if (throwOnError) {
+        throw new ForbiddenException('Cross‑organization access is not allowed.');
+      }
+      return false;
+    }
+
+    const effectivePermissions = await this.getEffectivePermissionsForSubject(subject);
+
+    const allowed = this.isPermissionGranted(permissionCode, effectivePermissions);
+
+    if (!allowed) {
+      this.logger.debug('Permission denied.', {
+        permissionCode,
+        subject,
+        resource,
+        reason,
+      });
+
+      if (throwOnError) {
+        throw new ForbiddenException('You do not have permission to perform this action.');
+      }
+    }
+
+    return allowed;
+  }
+
+  /**
+   * Variant of `checkPermission` that always throws on failure.
+   *
+   * Intended for use in service methods where a missing permission is an error
+   * rather than a branching condition.
+   */
+  async requirePermission(
+    subject: RbacSubject,
+    permissionCode: string,
+    options: RequirePermissionOptions = {},
+  ): Promise<void> {
+    await this.checkPermission(subject, permissionCode, { ...options, throwOnError: true });
+  }
+
+  /**
+   * Returns a de‑duplicated list of all permission codes that currently apply
+   * to a subject (roles + API token scopes).
+   *
+   * This is useful for attaching to a request context or debugging RBAC issues.
+   */
+  async getEffectivePermissionsForSubject(subject: RbacSubject): Promise<Set<string>> {
+    const permissionCodes = new Set<string>();
+
+    if (subject.userId) {
+      const rolePermissions = await this.getUserPermissionCodes(subject.organizationId, subject.userId);
+      for (const code of rolePermissions) {
+        permissionCodes.add(code);
+      }
+    }
+
+    if (subject.apiTokenId) {
+      const tokenPermissions = await this.getApiTokenPermissionCodes(
+        subject.organizationId,
+        subject.apiTokenId,
+      );
+      for (const code of tokenPermissions) {
+        permissionCodes.add(code);
+      }
+    }
+
+    return permissionCodes;
+  }
+
+  /**
+   * Helper returning a plain array to make it convenient for controllers/guards
+   * that want to serialise permissions into request context.
+   */
+  async listEffectivePermissionsForSubject(subject: RbacSubject): Promise<string[]> {
+    const set = await this.getEffectivePermissionsForSubject(subject);
+    return Array.from(set);
+  }
+
+  /**
+   * Fetch permission codes granted to a user via role assignments in the given org.
+   *
+   * This respects:
+   *  - user_role_assignments scoped by organization_id and not revoked,
+   *  - roles that are either global (organization_id IS NULL) or match the org,
+   *  - role_permissions linking roles to permissions.
+   */
+  private async getUserPermissionCodes(
+    organizationId: string,
+    userId: string,
+  ): Promise<Set<string>> {
+    const result = new Set<string>();
+
+    // NOTE: Model/field names here assume a conventional Prisma mapping from
+    // the Doc 1 schema; adapt them to your actual Prisma schema as needed.
+    const assignments = await this.prisma.userRoleAssignment.findMany({
+      where: {
+        userId,
+        organizationId,
+        revokedAt: null,
+      },
+      include: {
+        role: {
+          include: {
+            rolePermissions: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    for (const assignment of assignments ?? []) {
+      const role = assignment.role;
+      if (!role) {
+        continue;
+      }
+
+      // Allow global/system roles (organizationId null) and org‑local roles.
+      if (role.organizationId && role.organizationId !== organizationId) {
+        continue;
+      }
+
+      for (const rp of role.rolePermissions ?? []) {
+        const permission = rp.permission;
+        if (permission?.code) {
+          result.add(permission.code);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Fetch permission codes granted directly via an API token's scopes.
+   *
+   * This respects:
+   *  - token organization_id matching the subject organization,
+   *  - revoked_at being null,
+   *  - expires_at not in the past.
+   *
+   * `scopes` is assumed to be a JSONB field holding an array of permission codes
+   * or patterns (e.g. `["task.view", "task.edit", "task.*"]`).
+   */
+  private async getApiTokenPermissionCodes(
+    organizationId: string,
+    apiTokenId: string,
+  ): Promise<Set<string>> {
+    const result = new Set<string>();
+
+    const token = await this.prisma.apiToken.findFirst({
+      where: {
+        id: apiTokenId,
+        organizationId,
+        revokedAt: null,
+      },
+    });
+
+    if (!token) {
+      return result;
+    }
+
+    const now = new Date();
+    if (token.expiresAt && token.expiresAt <= now) {
+      return result;
+    }
+
+    const scopes = this.normalizeScopes(token.scopes);
+    for (const scope of scopes) {
+      result.add(scope);
+    }
+
+    return result;
+  }
+
+  /**
+   * Normalises the `scopes` JSONB field on `api_tokens` into an array of
+   * string permission codes.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private normalizeScopes(scopes: any): string[] {
+    if (!scopes) {
+      return [];
+    }
+
+    if (Array.isArray(scopes)) {
+      return scopes.filter((s): s is string => typeof s === 'string');
+    }
+
+    if (typeof scopes === 'object' && Array.isArray(scopes.codes)) {
+      return scopes.codes.filter((s: unknown): s is string => typeof s === 'string');
+    }
+
+    return [];
+  }
+
+  /**
+   * Evaluates whether `permissionCode` is granted given a set of effective
+   * permissions. Supports:
+   *
+   *  - exact matches, e.g. `task.view_sensitive`,
+   *  - global wildcard `*`,
+   *  - prefix wildcards like `task.*` or `workflow.edit_*` (treated as simple
+   *    `<prefix>.*` matches on dot‑separated segments).
+   */
+  private isPermissionGranted(permissionCode: string, effective: Set<string>): boolean {
+    if (effective.has(permissionCode)) {
+      return true;
+    }
+
+    // Global wildcard: everything is allowed.
+    if (effective.has('*')) {
+      return true;
+    }
+
+    // Support simple dotted prefix wildcards: "task.*", "workflow.*", etc.
+    const segments = permissionCode.split('.');
+    if (segments.length > 1) {
+      let prefix = '';
+      for (let i = 0; i < segments.length - 1; i += 1) {
+        prefix = i === 0 ? segments[0] : `${prefix}.${segments[i]}`;
+        const wildcard = `${prefix}.*`;
+        if (effective.has(wildcard)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+}
+
+

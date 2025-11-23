@@ -223,8 +223,9 @@ export class NotificationService {
         ) as Promise<OrgProfile>,
       ]);
 
-      const scope: NotificationScope =
-        (profile?.notification_scope as NotificationScope) || 'department';
+      const scope = this.normaliseNotificationScope(
+        profile?.notification_scope,
+      );
 
       const channels = this.selectChannelsForEvent(
         notificationConfig,
@@ -242,7 +243,7 @@ export class NotificationService {
           channels: [],
         };
 
-        await this.logService.logEvent({
+        await this.safeLogEvent({
           category: 'TASK',
           logLevel: 'INFO',
           message: 'Notification suppressed: no enabled channels',
@@ -277,7 +278,7 @@ export class NotificationService {
           channels: [],
         };
 
-        await this.logService.logEvent({
+        await this.safeLogEvent({
           category: 'TASK',
           logLevel: 'INFO',
           message: 'Notification suppressed: no recipients',
@@ -296,6 +297,23 @@ export class NotificationService {
 
       const hasRecipientsForAtLeastOneChannel = channels.some((channel) => {
         const channelRecipients = recipientsByChannel[channel];
+
+        if (channel === 'EMAIL') {
+          const to = this.extractEmails(channelRecipients.primary);
+          const cc = this.extractEmails(channelRecipients.cc);
+          return to.length > 0 || cc.length > 0;
+        }
+
+        if (channel === 'IN_APP') {
+          const identifiers = this.extractInAppRecipientIdentifiers(
+            channelRecipients.primary,
+            channelRecipients.cc,
+          );
+          return identifiers.length > 0;
+        }
+
+        // For unimplemented channels (SMS/WEBHOOK), we keep the original
+        // preference-based behaviour.
         return (
           channelRecipients.primary.length > 0 ||
           channelRecipients.cc.length > 0
@@ -314,7 +332,7 @@ export class NotificationService {
           channels: [],
         };
 
-        await this.logService.logEvent({
+        await this.safeLogEvent({
           category: 'TASK',
           logLevel: 'INFO',
           message:
@@ -396,7 +414,7 @@ export class NotificationService {
         channels: channelResults,
       };
 
-      await this.logService.logEvent({
+      await this.safeLogEvent({
         category: 'TASK',
         logLevel: 'INFO',
         message: 'Task notifications dispatched',
@@ -423,7 +441,7 @@ export class NotificationService {
         error.stack,
       );
 
-      await this.logService.logEvent({
+      await this.safeLogEvent({
         category: 'TASK',
         logLevel: 'ERROR',
         message: 'Task notification failed',
@@ -462,6 +480,26 @@ export class NotificationService {
     }
 
     return config;
+  }
+
+  /**
+   * Normalise org notification scope coming from OrgProfile into the canonical
+   * NotificationScope enum, falling back to "department" for unknown/missing values
+   * (Doc 2 §2.8 / Doc 7).
+   */
+  private normaliseNotificationScope(
+    rawScope: string | null | undefined,
+  ): NotificationScope {
+    if (
+      rawScope === 'user' ||
+      rawScope === 'team' ||
+      rawScope === 'department' ||
+      rawScope === 'org_wide'
+    ) {
+      return rawScope;
+    }
+
+    return 'department';
   }
 
   /**
@@ -559,7 +597,9 @@ export class NotificationService {
       );
     };
 
-    recipients.primary.forEach((recipient) => addRecipient(recipient, 'primary'));
+    recipients.primary.forEach((recipient) =>
+      addRecipient(recipient, 'primary'),
+    );
     recipients.cc.forEach((recipient) => addRecipient(recipient, 'cc'));
 
     return result;
@@ -567,6 +607,8 @@ export class NotificationService {
 
   /**
    * Send email notification using EmailService (Doc 4 / Doc 5 §4.3).
+   * Provider failures are captured as a channel-level error so that
+   * the overall notification operation can still return a structured result.
    */
   private async sendEmailTaskNotification(
     task: NotifiableTask,
@@ -589,30 +631,46 @@ export class NotificationService {
     const subject = this.buildEmailSubject(task, eventType);
     const variables = this.buildEmailTemplateVariables(task, eventType);
 
-    const result = await this.emailService.sendEmail({
-      to,
-      cc,
-      subject,
-      templateId,
-      variables,
-      senderName: config.channels.email.senderName,
-      senderAddress: config.channels.email.senderAddress,
-    });
+    try {
+      const result = await this.emailService.sendEmail({
+        to,
+        cc,
+        subject,
+        templateId,
+        variables,
+        senderName: config.channels.email.senderName,
+        senderAddress: config.channels.email.senderAddress,
+      });
 
-    if (!result.ok) {
-      this.logger.warn(
-        `Email notification failed for task ${task.taskId} (${eventType}): ${result.error?.message}`,
+      if (!result.ok) {
+        this.logger.warn(
+          `Email notification failed for task ${task.taskId} (${eventType}): ${result.error?.message}`,
+        );
+      }
+
+      return {
+        channel: 'EMAIL',
+        success: result.ok,
+        recipients: to,
+        cc,
+        error: result.ok ? undefined : result.error?.message,
+        providerMetadata: result.data ?? undefined,
+      };
+    } catch (err) {
+      const error = err as Error;
+      this.logger.error(
+        `Email notification threw for task ${task.taskId} (${eventType}): ${error.message}`,
+        error.stack,
       );
-    }
 
-    return {
-      channel: 'EMAIL',
-      success: result.ok,
-      recipients: to,
-      cc,
-      error: result.ok ? undefined : result.error?.message,
-      providerMetadata: result.data ?? undefined,
-    };
+      return {
+        channel: 'EMAIL',
+        success: false,
+        recipients: to,
+        cc,
+        error: error.message,
+      };
+    }
   }
 
   /**
@@ -634,7 +692,7 @@ export class NotificationService {
     }
 
     // For now, we only log an in-app notification event.
-    await this.logService.logEvent({
+    await this.safeLogEvent({
       category: 'TASK',
       logLevel: 'INFO',
       message: 'In-app notification emitted',
@@ -786,5 +844,21 @@ export class NotificationService {
     return recipients
       .map((r) => (r.email || '').trim())
       .filter((email) => email.length > 0);
+  }
+
+  /**
+   * Safely log notification-related events without allowing logging failures
+   * to break the notification flow (Doc 5 §2.4).
+   */
+  private async safeLogEvent(payload: any): Promise<void> {
+    try {
+      await this.logService.logEvent(payload);
+    } catch (err) {
+      const error = err as Error;
+      this.logger.warn(
+        `Failed to write notification log event: ${error.message}`,
+        error.stack,
+      );
+    }
   }
 }

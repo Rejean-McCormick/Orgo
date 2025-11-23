@@ -1,0 +1,3131 @@
+=== FILE 1/7: apps/api/src/orgo/config/config.controller.ts ===
+
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+
+import { ConfigService } from './config.service';
+import { OrgProfileService } from './org-profile.service';
+import { FeatureFlagService } from './feature-flag.service';
+
+/**
+ * Standard result shape used by core services (Doc 5).
+ * Controllers generally just pass this through to the client.
+ */
+export interface StandardResult<T = any> {
+  ok: boolean;
+  data: T | null;
+  error: {
+    code: string;
+    message: string;
+    details?: any;
+  } | null;
+}
+
+/**
+ * Global configuration request for GET /config.
+ * All fields are optional; the service is expected to apply defaults.
+ */
+export interface GetGlobalConfigOptions {
+  organizationId?: string;
+  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+  /**
+   * Optional list of module identifiers whose config should be included.
+   * Example: ["core", "insights", "maintenance"].
+   */
+  modules?: string[];
+}
+
+/**
+ * Payload for updating a slice of service configuration.
+ * This is intentionally generic; concrete validation lives in ConfigService.
+ */
+export interface UpdateServiceConfigRequest {
+  /**
+   * Optional organization scope; when omitted, applies to global/default config.
+   */
+  organizationId?: string;
+
+  /**
+   * Optional environment scope; must be one of the canonical ENVIRONMENT values (Doc 2).
+   */
+  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+
+  /**
+   * Logical module or service identifier, e.g. "core", "email", "logging", "insights".
+   */
+  module: string;
+
+  /**
+   * Arbitrary config patch for the module. The service is responsible
+   * for schema validation and for writing to parameter_overrides / YAML.
+   */
+  changes: Record<string, unknown>;
+
+  /**
+   * Optional free‑form description for audit logs.
+   */
+  reason?: string;
+}
+
+/**
+ * Payload for importing a full configuration bundle (YAML/JSON).
+ */
+export interface ImportConfigBundleRequest {
+  /**
+   * The raw bundle. For JSON imports this will be an object; for YAML
+   * you can send the YAML as a string and let ConfigService parse it.
+   */
+  bundle: string | Record<string, unknown>;
+
+  /**
+   * Optional hint for parser selection.
+   */
+  format?: 'yaml' | 'json';
+
+  /**
+   * When true, validate and compute the impact but do not persist.
+   */
+  dryRun?: boolean;
+
+  /**
+   * Optional environment this bundle targets.
+   */
+  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+
+  /**
+   * Optional organization scope for org‑specific bundles.
+   */
+  organizationId?: string;
+
+  /**
+   * Optional human‑readable description for audit trail.
+   */
+  reason?: string;
+}
+
+/**
+ * Payload for previewing the impact of an organization profile change.
+ * This is used by the Profile configuration screen (Admin UI).
+ */
+export interface PreviewOrgProfileRequest {
+  /**
+   * Target profile code, e.g. "friend_group", "hospital", "advocacy_group".
+   * Must correspond to a profile defined in the profiles YAML (Doc 7).
+   */
+  profileCode: string;
+
+  /**
+   * Optional fine‑grained overrides on top of the base profile.
+   * The exact structure maps to the profiles YAML schema.
+   */
+  overrides?: Record<string, unknown>;
+}
+
+/**
+ * Payload for toggling a feature flag.
+ */
+export interface SetFeatureFlagRequest {
+  /**
+   * Optional organization scope; when omitted, applies as a global flag.
+   */
+  organizationId?: string;
+
+  /**
+   * Whether the feature is enabled.
+   */
+  enabled: boolean;
+
+  /**
+   * Optional rollout strategy descriptor (JSONB column in DB),
+   * e.g. percentage rollout, role filters, etc.
+   */
+  rolloutStrategy?: Record<string, unknown>;
+}
+
+/**
+ * Options for listing feature flags.
+ */
+export interface ListFeatureFlagsOptions {
+  organizationId?: string;
+}
+
+/**
+ * Admin / configuration controller exposing:
+ * - Global configuration (ConfigService)
+ * - Organization profiles (OrgProfileService)
+ * - Feature flags (FeatureFlagService)
+ *
+ * Route prefix aligns with the /api/v3 namespace used for other controllers.
+ */
+@ApiTags('config')
+@Controller('api/v3/config')
+export class ConfigController {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly orgProfileService: OrgProfileService,
+    private readonly featureFlagService: FeatureFlagService,
+  ) {}
+
+  // ---------------------------------------------------------------------------
+  // Global configuration
+  // ---------------------------------------------------------------------------
+
+  @Get()
+  @ApiOperation({
+    summary: 'Fetch merged global configuration',
+    description:
+      'Returns merged base + environment + organization configuration, ' +
+      'optionally filtered by module list.',
+  })
+  @ApiQuery({
+    name: 'organizationId',
+    required: false,
+    description:
+      'Optional organization scope; when omitted, returns defaults/global config.',
+  })
+  @ApiQuery({
+    name: 'environment',
+    required: false,
+    description:
+      'Optional environment; one of dev, staging, prod, offline. ' +
+      'If omitted, the deployment default is used.',
+  })
+  @ApiQuery({
+    name: 'modules',
+    required: false,
+    description:
+      'Comma‑separated list of module identifiers (e.g. "core,insights,maintenance").',
+  })
+  async getGlobalConfig(
+    @Query('organizationId') organizationId?: string,
+    @Query('environment') environment?: string,
+    @Query('modules') modules?: string,
+  ): Promise<StandardResult> {
+    const opts: GetGlobalConfigOptions = {
+      organizationId: organizationId || undefined,
+      environment:
+        (environment as GetGlobalConfigOptions['environment']) || undefined,
+      modules: modules
+        ? modules
+            .split(',')
+            .map((m) => m.trim())
+            .filter(Boolean)
+        : undefined,
+    };
+
+    return this.configService.getGlobalConfig(opts);
+  }
+
+  @Put()
+  @ApiOperation({
+    summary: 'Update service configuration',
+    description:
+      'Applies a configuration patch for a given module/environment/org scope. ' +
+      'Changes are validated and audited by ConfigService.',
+  })
+  async updateServiceConfig(
+    @Body() body: UpdateServiceConfigRequest,
+  ): Promise<StandardResult> {
+    return this.configService.updateServiceConfig(body);
+  }
+
+  @Post('import-bundle')
+  @ApiOperation({
+    summary: 'Import configuration bundle',
+    description:
+      'Imports a YAML/JSON bundle (including profiles and insights settings). ' +
+      'Validation and atomic activation are handled by ConfigService.',
+  })
+  async importConfigBundle(
+    @Body() body: ImportConfigBundleRequest,
+  ): Promise<StandardResult> {
+    return this.configService.importConfigBundle(body);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Organization profiles
+  // ---------------------------------------------------------------------------
+
+  @Get('org-profiles/:organizationId')
+  @ApiOperation({
+    summary: 'Load organization profile',
+    description:
+      'Returns the active behavioral profile for the given organization, ' +
+      'including reactivity, transparency, pattern sensitivity and retention settings.',
+  })
+  @ApiParam({
+    name: 'organizationId',
+    description: 'Organization identifier (UUID or slug, depending on setup).',
+  })
+  @ApiQuery({
+    name: 'includeDerivedDefaults',
+    required: false,
+    description:
+      'When "true", includes derived defaults for tasks/cases/escalations in the response.',
+  })
+  async getOrganizationProfile(
+    @Param('organizationId') organizationId: string,
+    @Query('includeDerivedDefaults') includeDerivedDefaults?: string,
+  ): Promise<StandardResult> {
+    const includeDerived =
+      typeof includeDerivedDefaults === 'string' &&
+      includeDerivedDefaults.toLowerCase() === 'true';
+
+    return this.orgProfileService.loadProfile(organizationId, {
+      includeDerivedDefaults: includeDerived,
+    });
+  }
+
+  @Post('org-profiles/:organizationId/preview')
+  @ApiOperation({
+    summary: 'Preview impact of profile changes',
+    description:
+      'Simulates profile changes and returns their impact on escalation timings, ' +
+      'notification scope, retention and insights pattern sensitivity.',
+  })
+  @ApiParam({
+    name: 'organizationId',
+    description: 'Organization identifier (UUID or slug, depending on setup).',
+  })
+  async previewOrganizationProfile(
+    @Param('organizationId') organizationId: string,
+    @Body() body: PreviewOrgProfileRequest,
+  ): Promise<StandardResult> {
+    return this.orgProfileService.previewProfileDiff(organizationId, body);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Feature flags
+  // ---------------------------------------------------------------------------
+
+  @Get('feature-flags')
+  @ApiOperation({
+    summary: 'List feature flags',
+    description:
+      'Lists feature flags, optionally scoped to a specific organization.',
+  })
+  @ApiQuery({
+    name: 'organizationId',
+    required: false,
+    description:
+      'Organization identifier; when omitted, returns global feature flags.',
+  })
+  async listFeatureFlags(
+    @Query('organizationId') organizationId?: string,
+  ): Promise<StandardResult> {
+    const options: ListFeatureFlagsOptions = {
+      organizationId: organizationId || undefined,
+    };
+
+    return this.featureFlagService.listFlags(options);
+  }
+
+  @Post('feature-flags/:code')
+  @ApiOperation({
+    summary: 'Toggle a feature flag',
+    description:
+      'Enables or disables a feature flag, optionally scoped to an organization, ' +
+      'and records rollout strategy metadata.',
+  })
+  @ApiParam({
+    name: 'code',
+    description:
+      'Feature flag code (e.g. "insights_cyclic_reviews_v2", "maintenance_module_v3").',
+  })
+  async setFeatureFlag(
+    @Param('code') code: string,
+    @Body() body: SetFeatureFlagRequest,
+  ): Promise<StandardResult> {
+    return this.featureFlagService.setFlag({
+      code,
+      organizationId: body.organizationId,
+      enabled: body.enabled,
+      rolloutStrategy: body.rolloutStrategy,
+    });
+  }
+}
+
+
+=== FILE 2/7: apps/api/src/orgo/config/config.module.ts ===
+
+import { Global, Module } from '@nestjs/common';
+import { PersistenceModule } from '../../persistence/persistence.module';
+import { ConfigService } from './config.service';
+import { OrgProfileService } from './org-profile.service';
+import { FeatureFlagService } from './feature-flag.service';
+
+/**
+ * Orgo configuration & profiles module.
+ *
+ * Responsibilities:
+ * - Expose ConfigService for merged global/org configuration
+ *   (parameter_overrides + YAML/service configs).
+ * - Expose OrgProfileService for loading/applying organization profiles.
+ * - Expose FeatureFlagService for feature flag toggles.
+ *
+ * Marked as @Global so these services can be injected anywhere
+ * without re-importing the module in every feature module.
+ */
+@Global()
+@Module({
+  imports: [PersistenceModule],
+  providers: [ConfigService, OrgProfileService, FeatureFlagService],
+  exports: [ConfigService, OrgProfileService, FeatureFlagService],
+})
+export class OrgoConfigModule {}
+
+
+=== FILE 3/7: apps/api/src/orgo/config/config.service.ts ===
+
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService as NestConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as yaml from 'js-yaml';
+
+export type OrgoEnvironment = 'dev' | 'staging' | 'prod' | 'offline';
+
+export interface ConfigMetadata {
+  config_name: string;
+  version: string;
+  environment: OrgoEnvironment;
+  last_updated: string;
+  owner?: string;
+  organization_id?: string;
+}
+
+export interface BaseConfig {
+  metadata?: ConfigMetadata;
+  // Allow arbitrary additional keys – each config file defines its own subtree.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+/**
+ * Database config (database_connection.yaml)
+ * Shape aligned with Doc 5 Core Services specification. :contentReference[oaicite:0]{index=0}
+ */
+export interface DatabasePoolConfig {
+  min_connections?: number;
+  max_connections?: number;
+  idle_timeout_seconds?: number;
+}
+
+export interface PostgresDatabaseConfig {
+  enabled?: boolean;
+  url_env?: string;
+  host?: string;
+  port?: number;
+  database?: string;
+  schema?: string;
+  user_env?: string;
+  password_env?: string;
+  pool?: DatabasePoolConfig;
+}
+
+export interface SqliteDatabaseConfig {
+  enabled?: boolean;
+  file_path?: string;
+  timeout_seconds?: number;
+}
+
+export interface DatabaseConfig extends BaseConfig {
+  postgres?: PostgresDatabaseConfig;
+  sqlite?: SqliteDatabaseConfig;
+}
+
+/**
+ * Email config (email_config.yaml) :contentReference[oaicite:1]{index=1}
+ */
+export interface SmtpConfig {
+  host?: string;
+  port?: number;
+  use_tls?: boolean;
+  use_ssl?: boolean;
+  username_env?: string;
+  password_env?: string;
+  connection_timeout_secs?: number;
+  send_timeout_secs?: number;
+  max_retries?: number;
+  retry_backoff_secs?: number;
+}
+
+export interface ImapConfig {
+  host?: string;
+  port?: number;
+  use_ssl?: boolean;
+  username_env?: string;
+  password_env?: string;
+  connection_timeout_secs?: number;
+  read_timeout_secs?: number;
+  folder?: string;
+}
+
+export interface EmailLimitsConfig {
+  max_email_size_mb?: number;
+  allowed_attachment_mimetypes?: string[];
+}
+
+export interface EmailConfig extends BaseConfig {
+  smtp?: SmtpConfig;
+  imap?: ImapConfig;
+  limits?: EmailLimitsConfig;
+}
+
+/**
+ * Logging config (logging_config.yaml) :contentReference[oaicite:2]{index=2}
+ */
+export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+export type LogCategory =
+  | 'WORKFLOW'
+  | 'TASK'
+  | 'SYSTEM'
+  | 'SECURITY'
+  | 'EMAIL';
+
+export interface LoggingRootConfig {
+  level?: LogLevel;
+  format?: 'json' | 'text';
+  log_dir?: string;
+}
+
+export interface LoggingCategoryConfig {
+  file?: string;
+  retention_days?: number;
+  rotation?: 'daily' | 'weekly' | 'size';
+  max_file_size_mb?: number;
+}
+
+export interface LoggingConfig extends BaseConfig {
+  logging?: LoggingRootConfig;
+  categories?: Partial<Record<LogCategory | string, LoggingCategoryConfig>>;
+}
+
+/**
+ * Notification config (notification_config.yaml) :contentReference[oaicite:3]{index=3}
+ */
+export type NotificationChannel = 'EMAIL' | 'SMS' | 'IN_APP' | 'WEBHOOK';
+
+export interface NotificationChannelsConfig {
+  email?: {
+    enabled?: boolean;
+    sender_name?: string;
+    sender_address?: string;
+  };
+  in_app?: {
+    enabled?: boolean;
+  };
+  sms?: {
+    enabled?: boolean;
+  };
+  webhook?: {
+    enabled?: boolean;
+  };
+}
+
+export interface NotificationTemplatesConfig {
+  task_created?: string;
+  task_assignment?: string;
+  task_escalation?: string;
+  task_completed?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [templateId: string]: any;
+}
+
+export interface NotificationConfig extends BaseConfig {
+  notifications?: {
+    default_channel?: NotificationChannel;
+    channels?: NotificationChannelsConfig;
+    templates?: NotificationTemplatesConfig;
+  };
+}
+
+/**
+ * Insights config (config.yaml – wrapper around `insights:` subtree). :contentReference[oaicite:4]{index=4}
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface InsightsConfig extends BaseConfig {
+  insights?: any;
+}
+
+/**
+ * Profiles YAML (organization_profiles.yaml – top-level `profiles:` map). :contentReference[oaicite:5]{index=5}
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ProfilesConfig {
+  profiles: Record<string, any>;
+}
+
+export interface GlobalConfigSnapshot {
+  environment: OrgoEnvironment;
+  configBasePath: string;
+  database: DatabaseConfig | null;
+  email: EmailConfig | null;
+  logging: LoggingConfig | null;
+  notifications: NotificationConfig | null;
+  insights: InsightsConfig | null;
+  profiles: ProfilesConfig | null;
+}
+
+export class ConfigValidationError extends Error {
+  constructor(message: string, public readonly filePath?: string) {
+    super(filePath ? `${message} (config file: ${filePath})` : message);
+  }
+}
+
+@Injectable()
+export class ConfigService {
+  private readonly logger = new Logger(ConfigService.name);
+
+  private readonly env: OrgoEnvironment;
+  private readonly basePath: string;
+
+  private readonly cache = new Map<string, BaseConfig>();
+
+  private static readonly VALID_ENVIRONMENTS: OrgoEnvironment[] = [
+    'dev',
+    'staging',
+    'prod',
+    'offline',
+  ];
+
+  private static readonly VALID_LOG_LEVELS: LogLevel[] = [
+    'DEBUG',
+    'INFO',
+    'WARNING',
+    'ERROR',
+    'CRITICAL',
+  ];
+
+  private static readonly VALID_LOG_CATEGORIES: LogCategory[] = [
+    'WORKFLOW',
+    'TASK',
+    'SYSTEM',
+    'SECURITY',
+    'EMAIL',
+  ];
+
+  private static readonly VALID_NOTIFICATION_CHANNELS: NotificationChannel[] =
+    ['EMAIL', 'SMS', 'IN_APP', 'WEBHOOK'];
+
+  constructor(private readonly nestConfig: NestConfigService) {
+    this.env = this.resolveEnvironment();
+    this.basePath = this.resolveBasePath();
+
+    this.logger.log(
+      `Initialising Orgo ConfigService (env="${this.env}", basePath="${this.basePath}")`,
+    );
+
+    // Validate core configs eagerly so the app fails fast on misconfiguration.
+    this.ensureCoreConfigsLoaded();
+  }
+
+  /**
+   * Returns the canonical Orgo environment inferred from env vars.
+   */
+  getEnvironment(): OrgoEnvironment {
+    return this.env;
+  }
+
+  /**
+   * Returns the absolute base path where Orgo YAML configs are expected.
+   */
+  getConfigBasePath(): string {
+    return this.basePath;
+  }
+
+  /**
+   * Returns a merged view of key Orgo configuration slices.
+   */
+  getGlobalConfig(): GlobalConfigSnapshot {
+    return {
+      environment: this.env,
+      configBasePath: this.basePath,
+      database: this.getDatabaseConfig(false),
+      email: this.getEmailConfig(false),
+      logging: this.getLoggingConfig(false),
+      notifications: this.getNotificationConfig(false),
+      insights: this.getInsightsConfig(false),
+      profiles: this.getProfilesConfig(false),
+    };
+  }
+
+  /**
+   * Load and validate database_connection.yaml.
+   */
+  getDatabaseConfig(required = true): DatabaseConfig | null {
+    const config = this.loadYamlFile<DatabaseConfig>(
+      'database/database_connection.yaml',
+      { required, validateMetadata: true },
+    );
+    if (!config) {
+      return null;
+    }
+    this.validateDatabaseConfig(config, 'database/database_connection.yaml');
+    return config;
+  }
+
+  /**
+   * Load and validate email_config.yaml.
+   */
+  getEmailConfig(required = true): EmailConfig | null {
+    const config = this.loadYamlFile<EmailConfig>('email/email_config.yaml', {
+      required,
+      validateMetadata: true,
+    });
+    if (!config) {
+      return null;
+    }
+    this.validateEmailConfig(config, 'email/email_config.yaml');
+    return config;
+  }
+
+  /**
+   * Load and validate logging_config.yaml.
+   */
+  getLoggingConfig(required = true): LoggingConfig | null {
+    const config = this.loadYamlFile<LoggingConfig>(
+      'logging/logging_config.yaml',
+      {
+        required,
+        validateMetadata: true,
+      },
+    );
+    if (!config) {
+      return null;
+    }
+    this.validateLoggingConfig(config, 'logging/logging_config.yaml');
+    return config;
+  }
+
+  /**
+   * Load and validate notification_config.yaml.
+   */
+  getNotificationConfig(required = true): NotificationConfig | null {
+    const config = this.loadYamlFile<NotificationConfig>(
+      'notifications/notification_config.yaml',
+      { required, validateMetadata: true },
+    );
+    if (!config) {
+      return null;
+    }
+    this.validateNotificationConfig(
+      config,
+      'notifications/notification_config.yaml',
+    );
+    return config;
+  }
+
+  /**
+   * Load and validate insights/config.yaml.
+   */
+  getInsightsConfig(required = true): InsightsConfig | null {
+    const config = this.loadYamlFile<InsightsConfig>('insights/config.yaml', {
+      required,
+      validateMetadata: true,
+    });
+    if (!config) {
+      return null;
+    }
+    // Additional invariants for insights are mostly enforced by Insights module itself;
+    // here we only validate common metadata.
+    return config;
+  }
+
+  /**
+   * Load profiles YAML (organization profiles). This file uses per-profile metadata
+   * rather than a single top-level metadata block, so metadata validation is skipped. :contentReference[oaicite:6]{index=6}
+   */
+  getProfilesConfig(required = true): ProfilesConfig | null {
+    const config = this.loadYamlFile<ProfilesConfig>(
+      'profiles/organization_profiles.yaml',
+      {
+        required,
+        validateMetadata: false,
+      },
+    );
+    if (!config) {
+      return null;
+    }
+    if (!config.profiles || typeof config.profiles !== 'object') {
+      throw new ConfigValidationError(
+        'Profiles config must contain a top-level "profiles" map',
+        'profiles/organization_profiles.yaml',
+      );
+    }
+    return config;
+  }
+
+  /**
+   * Placeholder for future updates via admin APIs.
+   * Aligns with Doc 4 entry ConfigService.updateServiceConfig. :contentReference[oaicite:7]{index=7}
+   *
+   * This method is intentionally conservative and only supports in-process updates;
+   * persisting config changes back to YAML and writing audit logs should be handled
+   * by a dedicated configuration management flow.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async updateServiceConfig(
+    // e.g. "email", "logging", "database", "notifications", "insights"
+    logicalServiceName: string,
+    // New config subtree to apply (already validated at DTO level).
+    value: any,
+  ): Promise<void> {
+    this.logger.warn(
+      `updateServiceConfig("${logicalServiceName}") called, but dynamic persistence is not yet implemented. ` +
+        'You can implement YAML write-back and audit logging here when enabling the admin config UI.',
+    );
+    // No-op for now – config is read-only at runtime.
+  }
+
+  // -------------------------------------------------------------------------
+  // Internal helpers
+  // -------------------------------------------------------------------------
+
+  private resolveEnvironment(): OrgoEnvironment {
+    const explicit =
+      this.nestConfig.get<string>('ORGO_ENV') ?? process.env.ORGO_ENV;
+    const nodeEnv =
+      this.nestConfig.get<string>('NODE_ENV') ?? process.env.NODE_ENV;
+
+    let raw = (explicit ?? nodeEnv ?? 'dev').toLowerCase();
+
+    if (raw === 'development') {
+      raw = 'dev';
+    }
+    if (raw === 'production') {
+      raw = 'prod';
+    }
+
+    if (
+      (ConfigService.VALID_ENVIRONMENTS as string[]).includes(
+        raw as OrgoEnvironment,
+      )
+    ) {
+      return raw as OrgoEnvironment;
+    }
+
+    this.logger.warn(
+      `Unknown environment "${raw}", falling back to "dev". Expected one of: ${ConfigService.VALID_ENVIRONMENTS.join(
+        ', ',
+      )}`,
+    );
+    return 'dev';
+  }
+
+  private resolveBasePath(): string {
+    const override =
+      this.nestConfig.get<string>('ORGO_CONFIG_BASE_PATH') ??
+      process.env.ORGO_CONFIG_BASE_PATH;
+
+    if (override) {
+      return path.resolve(override);
+    }
+
+    // At runtime the API app usually executes from apps/api or apps/api/dist.
+    // Going two levels up reaches the monorepo root, then /config.
+    return path.resolve(process.cwd(), '..', '..', 'config');
+  }
+
+  /**
+   * Eagerly load and validate core configs so the app fails fast on misconfiguration.
+   */
+  private ensureCoreConfigsLoaded(): void {
+    try {
+      // Database & logging are required for any serious deployment.
+      this.getDatabaseConfig(true);
+      this.getLoggingConfig(true);
+
+      // Email, notifications and insights may be optional; load if present.
+      this.getEmailConfig(false);
+      this.getNotificationConfig(false);
+      this.getInsightsConfig(false);
+      this.getProfilesConfig(false);
+    } catch (error) {
+      if (error instanceof ConfigValidationError) {
+        this.logger.error(error.message);
+      } else {
+        this.logger.error(
+          `Unexpected error while loading Orgo config: ${
+            (error as Error)?.message ?? String(error)
+          }`,
+        );
+      }
+      // Re-throw so NestJS fails the bootstrap process.
+      throw error;
+    }
+  }
+
+  /**
+   * Load a YAML file from the config base path, optionally validate metadata,
+   * and cache the result for subsequent calls.
+   */
+  private loadYamlFile<T extends BaseConfig>(
+    relativePath: string,
+    options: { required?: boolean; validateMetadata?: boolean } = {},
+  ): T | null {
+    const { required = true, validateMetadata = true } = options;
+
+    if (this.cache.has(relativePath)) {
+      return this.cache.get(relativePath) as T;
+    }
+
+    const absolutePath = path.resolve(this.basePath, relativePath);
+
+    if (!fs.existsSync(absolutePath)) {
+      const message = `Config file not found at ${absolutePath}`;
+      if (required) {
+        throw new ConfigValidationError(message, relativePath);
+      }
+      this.logger.warn(message);
+      return null;
+    }
+
+    const fileContents = fs.readFileSync(absolutePath, 'utf8');
+    const parsed = yaml.load(fileContents) as T;
+
+    if (!parsed || typeof parsed !== 'object') {
+      throw new ConfigValidationError(
+        'Config file did not contain a YAML object at the top level',
+        relativePath,
+      );
+    }
+
+    if (validateMetadata) {
+      this.validateMetadata(parsed, relativePath);
+    }
+
+    this.cache.set(relativePath, parsed);
+    return parsed;
+  }
+
+  private validateMetadata(config: BaseConfig, relativePath: string): void {
+    if (!config.metadata || typeof config.metadata !== 'object') {
+      throw new ConfigValidationError(
+        'Missing or invalid "metadata" section',
+        relativePath,
+      );
+    }
+
+    const { config_name, version, environment, last_updated } = config.metadata;
+
+    if (!config_name || typeof config_name !== 'string') {
+      throw new ConfigValidationError(
+        '"metadata.config_name" must be a non-empty string',
+        relativePath,
+      );
+    }
+
+    if (!version || typeof version !== 'string') {
+      throw new ConfigValidationError(
+        '"metadata.version" must be a non-empty string',
+        relativePath,
+      );
+    }
+
+    // Doc 2: version must match ^3\.[0-9]+$ for Orgo v3 configs. :contentReference[oaicite:8]{index=8}
+    const versionPattern = /^3\.[0-9]+$/;
+    if (!versionPattern.test(version)) {
+      throw new ConfigValidationError(
+        `"metadata.version" must match ${versionPattern.source} for Orgo v3 configs`,
+        relativePath,
+      );
+    }
+
+    if (!environment || typeof environment !== 'string') {
+      throw new ConfigValidationError(
+        '"metadata.environment" must be set',
+        relativePath,
+      );
+    }
+
+    if (
+      !ConfigService.VALID_ENVIRONMENTS.includes(
+        environment as OrgoEnvironment,
+      )
+    ) {
+      throw new ConfigValidationError(
+        `"metadata.environment" must be one of ${ConfigService.VALID_ENVIRONMENTS.join(
+          ', ',
+        )}`,
+        relativePath,
+      );
+    }
+
+    if (!last_updated || typeof last_updated !== 'string') {
+      throw new ConfigValidationError(
+        '"metadata.last_updated" must be a non-empty string in YYYY-MM-DD format',
+        relativePath,
+      );
+    }
+
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (!datePattern.test(last_updated)) {
+      throw new ConfigValidationError(
+        '"metadata.last_updated" must be in YYYY-MM-DD format',
+        relativePath,
+      );
+    }
+  }
+
+  private validateDatabaseConfig(
+    config: DatabaseConfig,
+    relativePath: string,
+  ): void {
+    const postgresEnabled = !!config.postgres?.enabled;
+    const sqliteEnabled = !!config.sqlite?.enabled;
+
+    // Doc 2/5: exactly one of postgres.enabled / sqlite.enabled may be true. 
+    if (postgresEnabled && sqliteEnabled) {
+      throw new ConfigValidationError(
+        'Only one of postgres.enabled or sqlite.enabled can be true',
+        relativePath,
+      );
+    }
+
+    if (!postgresEnabled && !sqliteEnabled) {
+      this.logger.warn(
+        `Neither Postgres nor SQLite is enabled in ${relativePath} – database-dependent services may fail.`,
+      );
+    }
+
+    if (config.postgres?.pool) {
+      const { min_connections, max_connections } = config.postgres.pool;
+      if (
+        typeof min_connections === 'number' &&
+        typeof max_connections === 'number' &&
+        min_connections > max_connections
+      ) {
+        throw new ConfigValidationError(
+          'postgres.pool.min_connections must be <= postgres.pool.max_connections',
+          relativePath,
+        );
+      }
+    }
+
+    if (sqliteEnabled && !config.sqlite?.file_path) {
+      this.logger.warn(
+        `SQLite is enabled but "sqlite.file_path" is not set in ${relativePath}`,
+      );
+    }
+  }
+
+  private validateEmailConfig(
+    config: EmailConfig,
+    relativePath: string,
+  ): void {
+    const hasSmtpHost = !!config.smtp?.host;
+    const hasImapHost = !!config.imap?.host;
+
+    // Doc 2/5: at least one of SMTP/IMAP should be configured. 
+    if (!hasSmtpHost && !hasImapHost) {
+      this.logger.warn(
+        `Neither SMTP nor IMAP host is configured in ${relativePath} – email send/receive may be disabled.`,
+      );
+    }
+
+    if (!config.limits) {
+      throw new ConfigValidationError(
+        '"limits" section is required in email config',
+        relativePath,
+      );
+    }
+
+    if (
+      typeof config.limits.max_email_size_mb !== 'number' ||
+      config.limits.max_email_size_mb <= 0
+    ) {
+      throw new ConfigValidationError(
+        '"limits.max_email_size_mb" must be a positive number',
+        relativePath,
+      );
+    }
+
+    if (
+      !Array.isArray(config.limits.allowed_attachment_mimetypes) ||
+      config.limits.allowed_attachment_mimetypes.length === 0
+    ) {
+      throw new ConfigValidationError(
+        '"limits.allowed_attachment_mimetypes" must be a non-empty array',
+        relativePath,
+      );
+    }
+  }
+
+  private validateLoggingConfig(
+    config: LoggingConfig,
+    relativePath: string,
+  ): void {
+    if (!config.logging) {
+      throw new ConfigValidationError(
+        'Missing "logging" root block in logging config',
+        relativePath,
+      );
+    }
+
+    const level = config.logging.level;
+    if (
+      level &&
+      !ConfigService.VALID_LOG_LEVELS.includes(level as LogLevel)
+    ) {
+      throw new ConfigValidationError(
+        `"logging.level" must be one of ${ConfigService.VALID_LOG_LEVELS.join(
+          ', ',
+        )}`,
+        relativePath,
+      );
+    }
+
+    if (config.categories) {
+      Object.keys(config.categories).forEach((categoryKey) => {
+        if (
+          !ConfigService.VALID_LOG_CATEGORIES.includes(
+            categoryKey as LogCategory,
+          )
+        ) {
+          this.logger.warn(
+            `Unknown log category "${categoryKey}" in ${relativePath} – this is allowed but will not map to a canonical LOG_CATEGORY value.`,
+          );
+        }
+      });
+    }
+  }
+
+  private validateNotificationConfig(
+    config: NotificationConfig,
+    relativePath: string,
+  ): void {
+    if (!config.notifications) {
+      throw new ConfigValidationError(
+        'Missing "notifications" root block in notification config',
+        relativePath,
+      );
+    }
+
+    const { default_channel } = config.notifications;
+
+    if (
+      default_channel &&
+      !ConfigService.VALID_NOTIFICATION_CHANNELS.includes(
+        default_channel as NotificationChannel,
+      )
+    ) {
+      throw new ConfigValidationError(
+        `"notifications.default_channel" must be one of ${ConfigService.VALID_NOTIFICATION_CHANNELS.join(
+          ', ',
+        )}`,
+        relativePath,
+      );
+    }
+
+    if (!config.notifications.templates) {
+      this.logger.warn(
+        `No notification templates defined under "notifications.templates" in ${relativePath}`,
+      );
+    }
+  }
+}
+
+
+=== FILE 4/7: apps/api/src/orgo/config/feature-flag.controller.ts ===
+
+// apps/api/src/orgo/config/feature-flag.controller.ts
+
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  Put,
+  Query,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+  ApiProperty,
+} from '@nestjs/swagger';
+import { FeatureFlagService } from './feature-flag.service';
+
+/**
+ * Canonical environment values for Orgo v3 (Doc 2 – ENVIRONMENT).
+ * This is kept local to avoid coupling to config-loader details.
+ */
+export type OrgoEnvironment = 'dev' | 'staging' | 'prod' | 'offline';
+
+/**
+ * Scope for listing / reading / deleting feature flags.
+ * Flags can be global (organizationId = null) or scoped to a specific org.
+ */
+export class FeatureFlagScopeQueryDto {
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description:
+      'Organization to scope flags to. If omitted, global flags are used (organization_id = NULL).',
+  })
+  organizationId?: string;
+
+  @ApiProperty({
+    required: false,
+    enum: ['dev', 'staging', 'prod', 'offline'],
+    description:
+      'Environment to scope flags to. If omitted, derived from the server environment (NODE_ENV / ORGO_ENV).',
+  })
+  environment?: OrgoEnvironment;
+}
+
+/**
+ * DTO representing a feature flag as exposed via the API.
+ * The underlying storage will typically include additional fields;
+ * this shape is stable for external consumers.
+ */
+export class FeatureFlagDto {
+  @ApiProperty({
+    description:
+      'Stable feature flag key (e.g. "orgo.insights.enabled", "orgo.workflow.new_router").',
+  })
+  key!: string;
+
+  @ApiProperty({
+    description:
+      'Whether the flag is currently enabled for the given org/environment scope.',
+  })
+  enabled!: boolean;
+
+  @ApiProperty({
+    required: false,
+    description:
+      'Optional human-readable description for admins; does not affect behaviour.',
+  })
+  description?: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    minimum: 0,
+    maximum: 100,
+    description:
+      'Optional rollout percentage (0–100). When set, downstream services may use gradual rollout.',
+  })
+  rolloutPercentage?: number | null;
+
+  @ApiProperty({
+    enum: ['dev', 'staging', 'prod', 'offline'],
+    description: 'Environment this flag value applies to.',
+  })
+  environment!: OrgoEnvironment;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description:
+      'Organization this flag value applies to. NULL / undefined means global default (organization_id = NULL).',
+  })
+  organizationId?: string | null;
+
+  @ApiProperty({
+    required: false,
+    type: String,
+    format: 'date-time',
+    description: 'Last update timestamp in ISO‑8601 (UTC), if available.',
+  })
+  updatedAt?: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description:
+      'User ID that last updated the flag (if tracked by the implementation).',
+  })
+  updatedByUserId?: string | null;
+
+  @ApiProperty({
+    required: false,
+    description:
+      'True if this value is inherited from a global default rather than defined explicitly for the org.',
+  })
+  inherited?: boolean;
+}
+
+/**
+ * Payload for creating/updating (upserting) a feature flag value.
+ * The key is taken from the URL path; this DTO controls value-level fields.
+ */
+export class UpsertFeatureFlagDto {
+  @ApiProperty({
+    description:
+      'Whether the flag should be enabled for this org/environment scope.',
+  })
+  enabled!: boolean;
+
+  @ApiProperty({
+    required: false,
+    description:
+      'Optional human-readable description; stored with the flag for admin UIs.',
+  })
+  description?: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    minimum: 0,
+    maximum: 100,
+    description:
+      'Optional rollout percentage (0–100). When undefined, no gradual rollout is configured.',
+  })
+  rolloutPercentage?: number | null;
+
+  @ApiProperty({
+    required: false,
+    enum: ['dev', 'staging', 'prod', 'offline'],
+    description:
+      'Environment to scope this flag value to. If omitted, derived from the server environment.',
+  })
+  environment?: OrgoEnvironment;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description:
+      'Organization to scope this flag value to. If omitted, the flag is treated as global (organization_id = NULL).',
+  })
+  organizationId?: string | null;
+}
+
+@ApiTags('Config / Feature Flags')
+@Controller('orgo/config/feature-flags')
+export class FeatureFlagController {
+  constructor(
+    private readonly featureFlagService: FeatureFlagService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  /**
+   * Resolve an Orgo ENVIRONMENT value from an optional explicit value
+   * plus process / config environment variables.
+   *
+   * Canonical values: "dev" | "staging" | "prod" | "offline"
+   * (Doc 2 – Foundations, §2.1 Environments).
+   */
+  private resolveEnvironment(explicit?: string): OrgoEnvironment {
+    const raw =
+      explicit ??
+      this.configService.get<string>('ORGO_ENV') ??
+      this.configService.get<string>('NODE_ENV') ??
+      'dev';
+
+    const value = raw.toLowerCase();
+
+    if (value === 'dev' || value === 'development' || value === 'local') {
+      return 'dev';
+    }
+
+    if (value === 'staging' || value === 'stage') {
+      return 'staging';
+    }
+
+    if (value === 'prod' || value === 'production') {
+      return 'prod';
+    }
+
+    if (value === 'offline') {
+      return 'offline';
+    }
+
+    // Fallback: be explicit and predictable.
+    return 'dev';
+  }
+
+  // ---------------------------------------------------------------------------
+  // GET /orgo/config/feature-flags
+  // ---------------------------------------------------------------------------
+
+  @Get()
+  @ApiOperation({
+    summary: 'List feature flags',
+    description:
+      'Returns all feature flags for the given org/environment scope. If organizationId is omitted, global flags are returned.',
+  })
+  @ApiQuery({
+    name: 'organizationId',
+    required: false,
+    description:
+      'Organization to filter flags for. If omitted, returns global flags (organization_id = NULL).',
+  })
+  @ApiQuery({
+    name: 'environment',
+    required: false,
+    enum: ['dev', 'staging', 'prod', 'offline'],
+    description:
+      'Environment to filter flags for. If omitted, derived from server environment.',
+  })
+  @ApiResponse({ status: 200, type: FeatureFlagDto, isArray: true })
+  async listFeatureFlags(
+    @Query() scope: FeatureFlagScopeQueryDto,
+  ): Promise<FeatureFlagDto[]> {
+    const environment = this.resolveEnvironment(scope.environment);
+    const organizationId = scope.organizationId ?? null;
+
+    return this.featureFlagService.listFlags({
+      environment,
+      organizationId,
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // GET /orgo/config/feature-flags/:key
+  // ---------------------------------------------------------------------------
+
+  @Get(':key')
+  @ApiOperation({
+    summary: 'Get a single feature flag',
+    description:
+      'Returns the effective value of a feature flag for the given org/environment scope.',
+  })
+  @ApiParam({
+    name: 'key',
+    description:
+      'Feature flag key (e.g. "orgo.insights.enabled", "orgo.workflow.new_router").',
+  })
+  @ApiQuery({
+    name: 'organizationId',
+    required: false,
+    description:
+      'Organization scope. If omitted, the global value (organization_id = NULL) is returned.',
+  })
+  @ApiQuery({
+    name: 'environment',
+    required: false,
+    enum: ['dev', 'staging', 'prod', 'offline'],
+    description:
+      'Environment scope. If omitted, derived from server environment.',
+  })
+  @ApiResponse({ status: 200, type: FeatureFlagDto })
+  @ApiResponse({ status: 404, description: 'Flag not found for given scope.' })
+  async getFeatureFlag(
+    @Param('key') key: string,
+    @Query() scope: FeatureFlagScopeQueryDto,
+  ): Promise<FeatureFlagDto> {
+    const environment = this.resolveEnvironment(scope.environment);
+    const organizationId = scope.organizationId ?? null;
+
+    const flag = await this.featureFlagService.getFlag({
+      key,
+      environment,
+      organizationId,
+    });
+
+    if (!flag) {
+      throw new NotFoundException(
+        `Feature flag "${key}" not found for environment="${environment}" and organizationId="${organizationId ?? 'null'}".`,
+      );
+    }
+
+    return flag;
+  }
+
+  // ---------------------------------------------------------------------------
+  // PUT /orgo/config/feature-flags/:key
+  // ---------------------------------------------------------------------------
+
+  @Put(':key')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Create or update a feature flag (upsert)',
+    description:
+      'Creates or updates a feature flag value for a given org/environment scope. The key is taken from the URL path.',
+  })
+  @ApiParam({
+    name: 'key',
+    description:
+      'Feature flag key (e.g. "orgo.insights.enabled", "orgo.workflow.new_router").',
+  })
+  @ApiBody({ type: UpsertFeatureFlagDto })
+  @ApiResponse({ status: 200, type: FeatureFlagDto })
+  async upsertFeatureFlag(
+    @Param('key') key: string,
+    @Body() body: UpsertFeatureFlagDto,
+  ): Promise<FeatureFlagDto> {
+    const environment = this.resolveEnvironment(body.environment);
+    const organizationId = body.organizationId ?? null;
+
+    return this.featureFlagService.setFlag({
+      key,
+      enabled: body.enabled,
+      description: body.description,
+      rolloutPercentage: body.rolloutPercentage ?? null,
+      environment,
+      organizationId,
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // DELETE /orgo/config/feature-flags/:key
+  // ---------------------------------------------------------------------------
+
+  @Delete(':key')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete a feature flag value for a scope',
+    description:
+      'Removes a feature flag value for the given org/environment scope. Global defaults and other scopes are left untouched.',
+  })
+  @ApiParam({
+    name: 'key',
+    description: 'Feature flag key to delete.',
+  })
+  @ApiQuery({
+    name: 'organizationId',
+    required: false,
+    description:
+      'Organization scope. If omitted, deletes the global value (organization_id = NULL).',
+  })
+  @ApiQuery({
+    name: 'environment',
+    required: false,
+    enum: ['dev', 'staging', 'prod', 'offline'],
+    description:
+      'Environment scope. If omitted, derived from the server environment.',
+  })
+  @ApiResponse({ status: 204, description: 'Flag deleted (or not present).' })
+  async deleteFeatureFlag(
+    @Param('key') key: string,
+    @Query() scope: FeatureFlagScopeQueryDto,
+  ): Promise<void> {
+    const environment = this.resolveEnvironment(scope.environment);
+    const organizationId = scope.organizationId ?? null;
+
+    await this.featureFlagService.deleteFlag({
+      key,
+      environment,
+      organizationId,
+    });
+  }
+}
+
+
+=== FILE 5/7: apps/api/src/orgo/config/feature-flag.service.ts ===
+
+import { Injectable, Logger } from '@nestjs/common';
+import { FeatureFlag } from '@prisma/client';
+import { PrismaService } from '../../persistence/prisma/prisma.service';
+
+/**
+ * Rollout strategies supported via feature_flags.rollout_strategy (JSONB).
+ *
+ * Stored JSON is expected to contain at least a "type" discriminator:
+ *
+ *   { "type": "all" }
+ *   { "type": "percentage", "percentage": 10, "seed": "optional-stable-seed" }
+ *   { "type": "roles", "roleCodes": ["maintenance_coordinator", "hr_officer"] }
+ *   { "type": "users", "userIds": ["<uuid>", ...] }
+ */
+export type RolloutStrategy =
+  | { type: 'all' }
+  | { type: 'percentage'; percentage: number; seed?: string }
+  | { type: 'roles'; roleCodes: string[] }
+  | { type: 'users'; userIds: string[] };
+
+/**
+ * Context used when evaluating whether a flag is effectively enabled.
+ */
+export interface FeatureFlagEvaluationContext {
+  organizationId?: string | null;
+  userId?: string | null;
+  roleCodes?: string[];
+}
+
+/**
+ * Input for FeatureFlagService.setFlag.
+ *
+ * organizationId:
+ *   - UUID string for org‑scoped flags.
+ *   - null / undefined for global flags.
+ */
+export interface SetFeatureFlagInput {
+  organizationId?: string | null;
+  code: string;
+  enabled: boolean;
+  description?: string;
+  rolloutStrategy?: RolloutStrategy | Record<string, unknown> | null;
+  enabledFrom?: Date | string | null;
+  disabledAt?: Date | string | null;
+}
+
+/**
+ * FeatureFlagService
+ *
+ * Manages feature_flags to gradually roll out or restrict features per organization.
+ * Physical table shape is defined in the Orgo DB schema reference (Doc 1, feature_flags). 
+ */
+@Injectable()
+export class FeatureFlagService {
+  private readonly logger = new Logger(FeatureFlagService.name);
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Returns the effective set of flags for an organization:
+   * - Includes both global flags (organizationId = null) and org‑scoped flags.
+   * - For each code, org‑scoped row overrides the global row when both exist.
+   */
+  async listFlagsForOrganization(
+    organizationId?: string | null,
+  ): Promise<FeatureFlag[]> {
+    const orgId = organizationId ?? null;
+
+    const flags = await this.prisma.featureFlag.findMany({
+      where: {
+        OR: [{ organizationId: orgId }, { organizationId: null }],
+      },
+      orderBy: [{ code: 'asc' }, { organizationId: 'asc' }],
+    });
+
+    const byCode = new Map<string, FeatureFlag>();
+
+    for (const flag of flags) {
+      const existing = byCode.get(flag.code);
+      if (!existing) {
+        byCode.set(flag.code, flag);
+        continue;
+      }
+
+      // Prefer org‑specific override over global flag.
+      if (flag.organizationId && !existing.organizationId) {
+        byCode.set(flag.code, flag);
+      }
+    }
+
+    return Array.from(byCode.values());
+  }
+
+  /**
+   * Fetch a single flag by code for an organization, with override resolution:
+   * - Prefers org‑scoped flag if present.
+   * - Falls back to global flag.
+   */
+  async getFlag(
+    code: string,
+    organizationId?: string | null,
+  ): Promise<FeatureFlag | null> {
+    const orgId = organizationId ?? null;
+
+    const flag = await this.prisma.featureFlag.findFirst({
+      where: {
+        code,
+        OR: [{ organizationId: orgId }, { organizationId: null }],
+      },
+      orderBy: [
+        // Non‑null organizationId (org‑specific) should win over global.
+        { organizationId: 'desc' },
+      ],
+    });
+
+    return flag ?? null;
+  }
+
+  /**
+   * Evaluate whether a feature is effectively enabled for the given context:
+   * - resolves org/global override,
+   * - checks enabled boolean + time window,
+   * - applies rollout_strategy (percentage / roles / users) if present.
+   */
+  async isFeatureEnabled(
+    code: string,
+    params: {
+      organizationId?: string | null;
+      context?: FeatureFlagEvaluationContext;
+    } = {},
+  ): Promise<boolean> {
+    const { organizationId, context } = params;
+    const flag = await this.getFlag(code, organizationId);
+
+    if (!flag) {
+      return false;
+    }
+
+    if (!flag.enabled) {
+      return false;
+    }
+
+    if (!this.isWithinActiveWindow(flag)) {
+      return false;
+    }
+
+    const mergedContext: FeatureFlagEvaluationContext = {
+      organizationId: flag.organizationId ?? organizationId ?? null,
+      ...(context ?? {}),
+    };
+
+    const rolloutOk = this.evaluateRolloutStrategy(
+      flag.rolloutStrategy,
+      mergedContext,
+    );
+
+    return rolloutOk;
+  }
+
+  /**
+   * Create or update a feature flag for an organization.
+   *
+   * Semantics:
+   * - (orgId, code) pair is treated as unique (org override vs global default).
+   * - If a row exists, it is updated; otherwise a new row is created.
+   * - When enabled = true and no enabledFrom is provided, enabledFrom defaults to now.
+   * - When enabled = false and no disabledAt is provided, disabledAt defaults to now.
+   */
+  async setFlag(input: SetFeatureFlagInput): Promise<FeatureFlag> {
+    const orgId = input.organizationId ?? null;
+    const now = new Date();
+
+    const existing = await this.prisma.featureFlag.findFirst({
+      where: {
+        organizationId: orgId,
+        code: input.code,
+      },
+    });
+
+    const description =
+      input.description ?? existing?.description ?? input.code;
+
+    const enabledFrom = (() => {
+      const explicit = this.toDateOrNull(input.enabledFrom);
+      if (explicit) {
+        return explicit;
+      }
+
+      if (input.enabled) {
+        // Default to "now" whenever explicitly enabling without a schedule.
+        return now;
+      }
+
+      // For disabled flags, keep any existing enabledFrom (historical info),
+      // or leave null if there was none.
+      return existing?.enabledFrom ?? null;
+    })();
+
+    const disabledAt = (() => {
+      const explicit = this.toDateOrNull(input.disabledAt);
+      if (explicit) {
+        return explicit;
+      }
+
+      if (!input.enabled) {
+        // When disabling without an explicit schedule, mark disabled "now".
+        return now;
+      }
+
+      // When enabling and no explicit disabledAt is set, clear any previous value.
+      return null;
+    })();
+
+    const rolloutStrategy =
+      input.rolloutStrategy === undefined
+        ? existing?.rolloutStrategy ?? null
+        : (input.rolloutStrategy as unknown);
+
+    if (existing) {
+      const updated = await this.prisma.featureFlag.update({
+        where: { id: existing.id },
+        data: {
+          enabled: input.enabled,
+          description,
+          rolloutStrategy,
+          enabledFrom,
+          disabledAt,
+        },
+      });
+
+      this.logger.log(
+        `Updated feature flag "${updated.code}" for org=${updated.organizationId ?? 'GLOBAL'} enabled=${updated.enabled}`,
+      );
+
+      return updated;
+    }
+
+    const created = await this.prisma.featureFlag.create({
+      data: {
+        organizationId: orgId,
+        code: input.code,
+        enabled: input.enabled,
+        description,
+        rolloutStrategy,
+        enabledFrom,
+        disabledAt,
+      },
+    });
+
+    this.logger.log(
+      `Created feature flag "${created.code}" for org=${created.organizationId ?? 'GLOBAL'} enabled=${created.enabled}`,
+    );
+
+    return created;
+  }
+
+  /**
+   * Checks whether the current time falls within the active window of a flag.
+   *
+   * Active when:
+   * - enabledFrom is null or <= now, AND
+   * - disabledAt is null or > now.
+   */
+  private isWithinActiveWindow(
+    flag: FeatureFlag,
+    now: Date = new Date(),
+  ): boolean {
+    const { enabledFrom, disabledAt } = flag;
+
+    if (enabledFrom && enabledFrom > now) {
+      return false;
+    }
+
+    if (disabledAt && disabledAt <= now) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Apply rollout_strategy for a flag based on evaluation context.
+   *
+   * If rollout_strategy is null/undefined, it is treated as "no additional gating"
+   * and returns true (flag state is controlled solely by enabled/time window).
+   *
+   * If rollout_strategy is present but malformed or of an unknown type, the
+   * strategy is treated as invalid and the feature is considered disabled,
+   * which is the safe default for configuration errors.
+   */
+  private evaluateRolloutStrategy(
+    rawStrategy: unknown,
+    context: FeatureFlagEvaluationContext,
+  ): boolean {
+    if (rawStrategy === null || rawStrategy === undefined) {
+      return true;
+    }
+
+    const strategy = this.normalizeRolloutStrategy(rawStrategy);
+    if (!strategy) {
+      this.logger.warn(
+        'Unknown or invalid rollout strategy on feature flag; treating as disabled',
+      );
+      return false;
+    }
+
+    switch (strategy.type) {
+      case 'all':
+        return true;
+
+      case 'percentage': {
+        const percentage = Math.max(0, Math.min(100, strategy.percentage));
+        if (percentage === 0) {
+          return false;
+        }
+        if (percentage === 100) {
+          return true;
+        }
+
+        const seed =
+          strategy.seed ??
+          (context.userId
+            ? `user:${context.userId}`
+            : context.organizationId
+            ? `org:${context.organizationId}`
+            : context.roleCodes && context.roleCodes.length > 0
+            ? `roles:${context.roleCodes.sort().join(',')}`
+            : 'global');
+
+        const value = this.stableHashToUnitInterval(seed);
+        return value * 100 < percentage;
+      }
+
+      case 'roles': {
+        if (!context.roleCodes || context.roleCodes.length === 0) {
+          return false;
+        }
+        const allowed = new Set(strategy.roleCodes);
+        return context.roleCodes.some((role) => allowed.has(role));
+      }
+
+      case 'users': {
+        if (!context.userId) {
+          return false;
+        }
+        const allowedUsers = new Set(strategy.userIds);
+        return allowedUsers.has(context.userId);
+      }
+
+      default:
+        // Should not happen if normalizeRolloutStrategy is exhaustive.
+        return false;
+    }
+  }
+
+  /**
+   * Normalizes raw JSON from rollout_strategy into a RolloutStrategy object.
+   * Returns null if the JSON does not conform to any supported strategy.
+   */
+  private normalizeRolloutStrategy(raw: unknown): RolloutStrategy | null {
+    if (!raw || typeof raw !== 'object') {
+      return null;
+    }
+
+    const obj = raw as { [key: string]: unknown };
+    const type = typeof obj.type === 'string' ? obj.type : undefined;
+
+    switch (type) {
+      case 'all':
+        return { type: 'all' };
+
+      case 'percentage': {
+        const rawPercentage = (obj.percentage ?? obj['pct']) as
+          | number
+          | string
+          | undefined;
+
+        const percentage =
+          typeof rawPercentage === 'number'
+            ? rawPercentage
+            : rawPercentage !== undefined
+            ? Number(rawPercentage)
+            : NaN;
+
+        if (!Number.isFinite(percentage)) {
+          return null;
+        }
+
+        const seed =
+          typeof obj.seed === 'string' ? (obj.seed as string) : undefined;
+
+        return { type: 'percentage', percentage, seed };
+      }
+
+      case 'roles': {
+        const rawRoleCodes = Array.isArray(obj.roleCodes)
+          ? obj.roleCodes
+          : [];
+        const roleCodes = rawRoleCodes.filter(
+          (v): v is string => typeof v === 'string',
+        );
+
+        if (roleCodes.length === 0) {
+          return null;
+        }
+
+        return { type: 'roles', roleCodes };
+      }
+
+      case 'users': {
+        const rawUserIds = Array.isArray(obj.userIds) ? obj.userIds : [];
+        const userIds = rawUserIds.filter(
+          (v): v is string => typeof v === 'string',
+        );
+
+        if (userIds.length === 0) {
+          return null;
+        }
+
+        return { type: 'users', userIds };
+      }
+
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Deterministic hash from a string seed into [0, 1).
+   * Uses a simple 32‑bit accumulator; sufficient for stable percentage rollouts.
+   */
+  private stableHashToUnitInterval(seed: string): number {
+    let hash = 0;
+
+    for (let i = 0; i < seed.length; i += 1) {
+      hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+    }
+
+    const unsigned = hash >>> 0;
+    return unsigned / 0xffffffff;
+  }
+
+  /**
+   * Helper: parse Date or ISO string into Date, returning null on invalid input.
+   */
+  private toDateOrNull(value?: Date | string | null): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    if (value instanceof Date) {
+      return value;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    return parsed;
+  }
+}
+
+
+=== FILE 6/7: apps/api/src/orgo/config/org-profile.controller.ts ===
+
+// apps/api/src/orgo/config/org-profile.controller.ts
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiProperty,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
+import {
+  OrgProfileService,
+  ProfileTemplate,
+  ProfileDiffResult,
+  ResolvedOrgProfile,
+} from './org-profile.service';
+
+/**
+ * Snapshot of an organization's active behaviour profile,
+ * aligned with the OrgProfileSnapshot type used in the web app.
+ */
+export class OrgProfileSnapshotDto {
+  @ApiProperty({
+    description: 'Owning organization (tenant) identifier.',
+    example: 'd0f9d5c6-1234-4c89-9af1-12ab34cd56ef',
+  })
+  organization_id!: string;
+
+  @ApiProperty({
+    description: 'Organization slug, if available.',
+    required: false,
+    nullable: true,
+    example: 'northside-hospital',
+  })
+  organization_slug?: string | null;
+
+  @ApiProperty({
+    description: 'Human-readable display name, if available.',
+    required: false,
+    nullable: true,
+    example: 'Northside Hospital',
+  })
+  organization_display_name?: string | null;
+
+  @ApiProperty({
+    description:
+      'Behaviour profile code applied to the organization (from profiles YAML).',
+    example: 'hospital',
+  })
+  profile_code!: string;
+
+  @ApiProperty({
+    description:
+      'Profile version from organization_profiles.version, if tracked.',
+    required: false,
+    nullable: true,
+    example: 3,
+  })
+  version?: number | null;
+
+  @ApiProperty({
+    description:
+      'Resolved behaviour profile attributes for the organization (snake_case keys, mirrors profiles YAML).',
+    type: 'object',
+  })
+  profile!: ProfileTemplate;
+}
+
+/**
+ * Request body for previewing the impact of switching profiles.
+ *
+ * The RTK Query mutation signature in the web app is:
+ *   { organizationId, currentProfileCode, proposedProfileCode }
+ * where organizationId is carried in the URL, and the two codes
+ * are sent in the JSON body.
+ */
+export class ProfilePreviewRequestDto {
+  @ApiProperty({
+    description:
+      'Profile code currently applied to the organization (for context).',
+    required: false,
+    example: 'default',
+  })
+  currentProfileCode?: string;
+
+  @ApiProperty({
+    description:
+      'Profile code you are considering switching the organization to.',
+    example: 'hospital',
+  })
+  proposedProfileCode!: string;
+}
+
+/**
+ * Human-readable preview of the impact of a profile change.
+ * Matches the ProfilePreviewDiff type used by OrgProfileSettingsPage.
+ */
+export class ProfilePreviewResponseDto {
+  @ApiProperty({
+    description:
+      'One or two sentences summarising the overall impact of the change.',
+    required: false,
+    example:
+      'Switching from "default" to "hospital" speeds up reactivity and tightens visibility and logging.',
+  })
+  summary?: string;
+
+  @ApiProperty({
+    description: 'Bullet list of key behavioural changes.',
+    required: false,
+    type: [String],
+    example: [
+      'First escalation target becomes faster: 60 min → 15 min.',
+      'Logging level increases from "standard" to "audit".',
+    ],
+  })
+  impact_bullets?: string[];
+
+  @ApiProperty({
+    description:
+      'Structured diff over core behavioural knobs (reactivity, notifications, patterns, logging, defaults).',
+    required: false,
+    type: 'object',
+  })
+  raw_diff?: ProfileDiffResult;
+}
+
+@ApiTags('Config / Organization Profiles')
+@Controller('orgo/config/org-profiles')
+export class OrgProfileController {
+  constructor(private readonly orgProfileService: OrgProfileService) {}
+
+  /**
+   * Get the resolved behaviour profile for an organization.
+   *
+   * Typical route (with global prefix):
+   *   GET /api/v3/orgo/config/org-profiles/:organizationId
+   */
+  @Get(':organizationId')
+  @ApiOperation({
+    summary: 'Get organization profile',
+    description:
+      'Returns the active behaviour profile for the given organization, resolved from profiles YAML and organization_profiles.',
+  })
+  @ApiParam({
+    name: 'organizationId',
+    description: 'Organization (tenant) identifier.',
+    example: 'd0f9d5c6-1234-4c89-9af1-12ab34cd56ef',
+  })
+  @ApiResponse({
+    status: 200,
+    type: OrgProfileSnapshotDto,
+  })
+  async getOrganizationProfile(
+    @Param('organizationId') organizationId: string,
+  ): Promise<OrgProfileSnapshotDto> {
+    const resolved = await this.orgProfileService.loadProfile(organizationId);
+    return this.toSnapshot(resolved);
+  }
+
+  /**
+   * Preview the impact of switching an organization to a new profile code.
+   *
+   * Typical route (with global prefix):
+   *   POST /api/v3/orgo/config/org-profiles/:organizationId/preview
+   *
+   * This uses OrgProfileService.previewProfileDiff and turns its
+   * structured diff into the summary + bullet list expected
+   * by OrgProfileSettingsPage.
+   */
+  @Post(':organizationId/preview')
+  @ApiOperation({
+    summary: 'Preview impact of profile change',
+    description:
+      'Simulates switching an organization to a new profile and returns a human-readable summary of key behavioural changes.',
+  })
+  @ApiParam({
+    name: 'organizationId',
+    description: 'Organization (tenant) identifier.',
+    example: 'd0f9d5c6-1234-4c89-9af1-12ab34cd56ef',
+  })
+  @ApiResponse({
+    status: 200,
+    type: ProfilePreviewResponseDto,
+  })
+  async previewProfileChange(
+    @Param('organizationId') organizationId: string,
+    @Body() body: ProfilePreviewRequestDto,
+  ): Promise<ProfilePreviewResponseDto> {
+    const candidateProfileCode = body.proposedProfileCode;
+
+    if (!candidateProfileCode) {
+      throw new BadRequestException('proposedProfileCode is required.');
+    }
+
+    const diff = await this.orgProfileService.previewProfileDiff(
+      organizationId,
+      candidateProfileCode,
+    );
+
+    return this.buildPreviewResponse(diff);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*  Private helpers                                                       */
+  /* ---------------------------------------------------------------------- */
+
+  private toSnapshot(resolved: ResolvedOrgProfile): OrgProfileSnapshotDto {
+    const dto = new OrgProfileSnapshotDto();
+
+    dto.organization_id = resolved.organizationId;
+    dto.organization_slug = null;
+    dto.organization_display_name = null;
+    dto.profile_code = resolved.profileCode;
+    dto.version = resolved.dbProfile?.version ?? null;
+    dto.profile = resolved.template;
+
+    return dto;
+  }
+
+  private buildPreviewResponse(
+    diff: ProfileDiffResult,
+  ): ProfilePreviewResponseDto {
+    const response = new ProfilePreviewResponseDto();
+    response.summary = this.buildSummary(diff);
+    response.impact_bullets = this.buildImpactBullets(diff);
+    response.raw_diff = diff;
+    return response;
+  }
+
+  private buildSummary(diff: ProfileDiffResult): string {
+    const {
+      organizationId,
+      currentProfileCode,
+      candidateProfileCode,
+      currentProfileSummary,
+      candidateProfileSummary,
+    } = diff;
+
+    const candidateLabel =
+      candidateProfileSummary?.description || candidateProfileCode;
+    const currentLabel =
+      currentProfileSummary?.description || currentProfileCode || 'none';
+
+    let summary: string;
+
+    if (!currentProfileSummary) {
+      summary = `Applying profile "${candidateProfileCode}" (${candidateLabel}) for organization ${organizationId}.`;
+    } else {
+      summary = `Changing profile from "${currentProfileCode}" (${currentLabel}) to "${candidateProfileCode}" (${candidateLabel}) for organization ${organizationId}.`;
+    }
+
+    const reactivityChange = diff.numericChanges.find(
+      (c) => c.field === 'reactivity_seconds' && c.direction !== 'same',
+    );
+
+    if (reactivityChange) {
+      const directionText =
+        reactivityChange.direction === 'decrease'
+          ? 'faster initial response'
+          : 'slower initial response';
+
+      const fromText = this.formatSeconds(reactivityChange.from);
+      const toText = this.formatSeconds(reactivityChange.to);
+
+      summary += ` This will result in ${directionText} (${fromText} → ${toText}).`;
+    }
+
+    return summary;
+  }
+
+  private buildImpactBullets(diff: ProfileDiffResult): string[] {
+    const bullets: string[] = [];
+
+    for (const change of diff.numericChanges) {
+      if (change.direction === 'same') continue;
+
+      const { field, from, to, direction } = change;
+
+      switch (field) {
+        case 'reactivity_seconds': {
+          const faster = direction === 'decrease';
+          const fromText = this.formatSeconds(from);
+          const toText = this.formatSeconds(to);
+          bullets.push(
+            `First escalation target becomes ${
+              faster ? 'faster' : 'slower'
+            }: ${fromText} → ${toText}.`,
+          );
+          break;
+        }
+
+        case 'max_escalation_seconds': {
+          const fromText = this.formatSeconds(from);
+          const toText = this.formatSeconds(to);
+          bullets.push(
+            `Full escalation window changes from ${fromText} to ${toText}.`,
+          );
+          break;
+        }
+
+        case 'pattern_window_days': {
+          const fromText = this.formatDays(from);
+          const toText = this.formatDays(to);
+          bullets.push(
+            `Pattern detection window changes from ${fromText} to ${toText}.`,
+          );
+          break;
+        }
+
+        case 'pattern_min_events': {
+          const fromText =
+            typeof from === 'number' ? `${from}` : 'the current default';
+          bullets.push(
+            `Pattern detection will require ${to} events instead of ${fromText}.`,
+          );
+          break;
+        }
+
+        case 'log_retention_days': {
+          const fromText = this.formatDays(from);
+          const toText = this.formatDays(to);
+          bullets.push(
+            `Log retention changes from ${fromText} to ${toText}, affecting how long detailed records are kept.`,
+          );
+          break;
+        }
+
+        default:
+          break;
+      }
+    }
+
+    for (const change of diff.enumChanges) {
+      if (!change.changed) continue;
+
+      const fromText = change.from ? change.from.toLowerCase() : 'current';
+      const toText = change.to.toLowerCase();
+
+      switch (change.field) {
+        case 'notification_scope':
+          bullets.push(
+            `Notification scope changes from "${fromText}" to "${toText}", altering who is alerted by default.`,
+          );
+          break;
+
+        case 'pattern_sensitivity':
+          bullets.push(
+            `Pattern sensitivity changes from "${fromText}" to "${toText}", affecting how easily systemic patterns trigger reviews.`,
+          );
+          break;
+
+        case 'logging_level':
+          bullets.push(
+            `Logging level changes from "${fromText}" to "${toText}", adjusting traceability and audit depth.`,
+          );
+          break;
+
+        case 'default_visibility':
+          bullets.push(
+            `Default visibility for new Tasks and Cases changes from "${fromText}" to "${toText}".`,
+          );
+          break;
+
+        case 'default_priority':
+          bullets.push(
+            `Default priority for new Tasks and Cases changes from "${fromText}" to "${toText}".`,
+          );
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    return bullets;
+  }
+
+  private formatSeconds(value?: number | null): string {
+    if (value == null || Number.isNaN(value)) return '—';
+
+    const seconds = Math.round(value);
+    if (seconds < 60) return `${seconds}s`;
+
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 60) return `${minutes} min`;
+
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `${hours} h`;
+
+    const days = Math.round(hours / 24);
+    return `${days} d`;
+  }
+
+  private formatDays(value?: number | null): string {
+    if (value == null || Number.isNaN(value)) return '—';
+
+    const days = Math.round(value);
+    return days === 1 ? '1 day' : `${days} days`;
+  }
+}
+
+
+=== FILE 7/7: apps/api/src/orgo/config/org-profile.service.ts ===
+
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../../persistence/prisma/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as yaml from 'js-yaml';
+
+export type VisibilityToken = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
+export type TaskPriorityToken = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+type LowerVisibility =
+  | 'public'
+  | 'internal'
+  | 'restricted'
+  | 'anonymised'
+  | 'anonymized'; // accept US spelling as alias
+
+type LowerPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export interface ProfileDefaultTaskMetadataTemplate {
+  visibility: LowerVisibility;
+  default_priority: LowerPriority;
+  default_reactivity_seconds: number;
+}
+
+export interface CyclicOverviewConfig {
+  enabled: boolean;
+  schedule: {
+    weekly: boolean;
+    monthly: boolean;
+    yearly: boolean;
+  };
+  threshold_triggers: {
+    incident_frequency: {
+      min_events: number;
+      window_days: number;
+    };
+    cross_departmental_trends: boolean;
+    high_risk_indicators: boolean;
+  };
+}
+
+export type EnvironmentToken = 'dev' | 'staging' | 'prod' | 'offline';
+
+export interface ProfileTemplateMetadata {
+  version: string;
+  last_updated: string;
+  environment: EnvironmentToken;
+}
+
+export interface ProfileTemplate {
+  description: string;
+  metadata: ProfileTemplateMetadata;
+
+  // Reactivity / escalation timing
+  reactivity_seconds: number;
+  max_escalation_seconds: number;
+
+  // Information visibility
+  transparency_level: 'full' | 'balanced' | 'restricted' | 'private';
+
+  // Escalation structure
+  escalation_granularity: 'relaxed' | 'moderate' | 'detailed' | 'aggressive';
+
+  // Review cadence
+  review_frequency:
+    | 'real_time'
+    | 'daily'
+    | 'weekly'
+    | 'monthly'
+    | 'quarterly'
+    | 'yearly'
+    | 'ad_hoc';
+
+  // Notification scope
+  notification_scope: 'user' | 'team' | 'department' | 'org_wide';
+
+  // Pattern detection
+  pattern_sensitivity: 'low' | 'medium' | 'high' | 'critical';
+  pattern_window_days: number;
+  pattern_min_events: number;
+
+  // Severity / auto‑escalation
+  severity_threshold: 'very_high' | 'high' | 'medium' | 'low';
+  severity_policy: {
+    critical: { immediate_escalation: boolean };
+    major: { immediate_escalation: boolean };
+    minor: { immediate_escalation: boolean };
+  };
+
+  // Logging & traceability
+  logging_level: 'minimal' | 'standard' | 'detailed' | 'audit';
+  log_retention_days: number;
+
+  // Automation level
+  automation_level: 'manual' | 'low' | 'medium' | 'high' | 'full';
+
+  // Defaults for Task metadata
+  default_task_metadata: ProfileDefaultTaskMetadataTemplate;
+
+  // Cyclic overview / pattern review config
+  cyclic_overview: CyclicOverviewConfig;
+}
+
+export interface ResolvedOrgProfile {
+  organizationId: string;
+  profileCode: string;
+  template: ProfileTemplate;
+  // Shallow copy of DB row for callers that need it; type is intentionally loose
+  dbProfile?: {
+    id: string;
+    version: number;
+    reactivity_profile?: unknown;
+    transparency_profile?: unknown;
+    pattern_sensitivity_profile?: unknown;
+    retention_profile?: unknown;
+  };
+}
+
+export type DefaultsTargetKind = 'task' | 'case';
+
+export interface ApplyDefaultsInput {
+  organizationId: string;
+  /**
+   * What we are applying defaults to. For now this only changes how callers
+   * interpret the result; the actual values are the same.
+   */
+  kind: DefaultsTargetKind;
+  /**
+   * Existing canonical priority (TASK_PRIORITY) if already chosen.
+   * If omitted, profile default is used.
+   */
+  existingPriority?: TaskPriorityToken;
+  /**
+   * Existing canonical visibility (VISIBILITY) if already chosen.
+   * If omitted, profile default is used.
+   */
+  existingVisibility?: VisibilityToken;
+  /**
+   * If the caller already computed a reactivity SLA (in seconds),
+   * pass it here; otherwise the profile default is used.
+   */
+  requestedReactivitySeconds?: number | null;
+}
+
+/**
+ * Result of applying profile defaults to a Task/Case draft.
+ * This is deliberately small; Task/Case handlers can attach it into
+ * their own DTOs / DB models.
+ */
+export interface ApplyDefaultsResult {
+  organizationId: string;
+  profileCode: string;
+  kind: DefaultsTargetKind;
+  priority: TaskPriorityToken;
+  visibility: VisibilityToken;
+  /**
+   * SLA before first escalation, in seconds, after applying profile defaults.
+   */
+  reactivitySeconds: number;
+  /**
+   * Reactivity time expressed as ISO‑8601 duration (e.g. "PT3600S").
+   */
+  reactivityTimeIso: string;
+  /**
+   * Automation level from the org profile, useful for downstream
+   * workflow/notification engines.
+   */
+  automationLevel: ProfileTemplate['automation_level'];
+  /**
+   * Cyclic overview configuration copied from the profile, so
+   * callers can decide whether to schedule reviews.
+   */
+  cyclicOverview: CyclicOverviewConfig;
+}
+
+/**
+ * A simple numeric field change descriptor used in previewProfileDiff.
+ */
+export interface ProfileDiffNumericField {
+  field: string;
+  from: number | null;
+  to: number;
+  direction: 'increase' | 'decrease' | 'same';
+}
+
+/**
+ * A simple enum/string field change descriptor used in previewProfileDiff.
+ */
+export interface ProfileDiffEnumField {
+  field: string;
+  from: string | null;
+  to: string;
+  changed: boolean;
+}
+
+export interface ProfileSummary {
+  profileCode: string;
+  description: string;
+  reactivitySeconds: number;
+  maxEscalationSeconds: number;
+  notificationScope: string;
+  patternSensitivity: string;
+  patternWindowDays: number;
+  patternMinEvents: number;
+  loggingLevel: string;
+  logRetentionDays: number;
+  defaultVisibility: VisibilityToken;
+  defaultPriority: TaskPriorityToken;
+}
+
+/**
+ * Result of simulating the impact of switching to a new profile for an org.
+ */
+export interface ProfileDiffResult {
+  organizationId: string;
+  currentProfileCode: string | null;
+  candidateProfileCode: string;
+  currentProfileSummary: ProfileSummary | null;
+  candidateProfileSummary: ProfileSummary;
+  numericChanges: ProfileDiffNumericField[];
+  enumChanges: ProfileDiffEnumField[];
+}
+
+interface ProfilesFileShape {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata?: any;
+  profiles?: Record<string, ProfileTemplate>;
+}
+
+const DEFAULT_PROFILE_CODE = 'default';
+
+const PROFILE_CONFIG_ENV_VAR = 'ORGO_PROFILES_CONFIG_PATH';
+
+@Injectable()
+export class OrgProfileService {
+  private readonly logger = new Logger(OrgProfileService.name);
+
+  /**
+   * Profiles loaded from YAML configuration (Doc 7 shape).
+   * Keyed by profile_code (e.g. "default", "friend_group", "hospital").
+   */
+  private profileTemplates: Record<string, ProfileTemplate> = {};
+
+  private readonly profilesConfigPath: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {
+    const fromEnv = this.configService.get<string>(PROFILE_CONFIG_ENV_VAR);
+    this.profilesConfigPath =
+      fromEnv ??
+      path.resolve(
+        process.cwd(),
+        'config',
+        'profiles',
+        'organization_profiles.yaml',
+      );
+    this.loadProfilesFromConfig();
+  }
+
+  /**
+   * Load and cache profile templates from the profiles YAML file.
+   * Fails softly: if the file is missing or invalid, we fall back to
+   * a hard‑coded "default" profile so the system can still operate.
+   */
+  private loadProfilesFromConfig(): void {
+    try {
+      if (!fs.existsSync(this.profilesConfigPath)) {
+        this.logger.warn(
+          `Org profiles config not found at "${this.profilesConfigPath}". Falling back to hard‑coded default profile.`,
+        );
+        this.profileTemplates = {
+          [DEFAULT_PROFILE_CODE]: this.buildHardcodedDefaultProfile(),
+        };
+        return;
+      }
+
+      const raw = fs.readFileSync(this.profilesConfigPath, 'utf8');
+      const parsed = yaml.load(raw) as ProfilesFileShape | undefined;
+
+      if (!parsed || typeof parsed !== 'object' || !parsed.profiles) {
+        this.logger.warn(
+          `Org profiles config at "${this.profilesConfigPath}" is missing a "profiles" root key. Falling back to hard‑coded default profile.`,
+        );
+        this.profileTemplates = {
+          [DEFAULT_PROFILE_CODE]: this.buildHardcodedDefaultProfile(),
+        };
+        return;
+      }
+
+      this.profileTemplates = { ...parsed.profiles };
+
+      if (!this.profileTemplates[DEFAULT_PROFILE_CODE]) {
+        this.logger.warn(
+          `Org profiles config at "${this.profilesConfigPath}" does not define a "${DEFAULT_PROFILE_CODE}" profile. Injecting built‑in default profile.`,
+        );
+        this.profileTemplates[DEFAULT_PROFILE_CODE] =
+          this.buildHardcodedDefaultProfile();
+      }
+
+      // Never expose the internal "_template" as a usable profile.
+      if (this.profileTemplates._template) {
+        delete this.profileTemplates._template;
+      }
+
+      this.logger.log(
+        `Loaded ${Object.keys(this.profileTemplates).length} org profile templates from YAML config.`,
+      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : String(error ?? '');
+      this.logger.error(
+        `Failed to load org profiles config from "${this.profilesConfigPath}": ${message}. Falling back to hard‑coded default profile.`,
+      );
+      this.profileTemplates = {
+        [DEFAULT_PROFILE_CODE]: this.buildHardcodedDefaultProfile(),
+      };
+    }
+  }
+
+  /**
+   * Hard‑coded default profile matching the "default" profile from Doc 7.
+   * This is used as a safety net when YAML config is unavailable or invalid.
+   */
+  private buildHardcodedDefaultProfile(): ProfileTemplate {
+    return {
+      description:
+        'Default balanced organizational profile used when no more specific archetype is selected.',
+      metadata: {
+        version: '3.0',
+        last_updated: '2025-11-19',
+        environment: 'prod',
+      },
+      reactivity_seconds: 43200,
+      max_escalation_seconds: 172800,
+      transparency_level: 'balanced',
+      escalation_granularity: 'moderate',
+      review_frequency: 'monthly',
+      notification_scope: 'department',
+      pattern_sensitivity: 'medium',
+      pattern_window_days: 30,
+      pattern_min_events: 3,
+      severity_threshold: 'medium',
+      severity_policy: {
+        critical: { immediate_escalation: true },
+        major: { immediate_escalation: true },
+        minor: { immediate_escalation: false },
+      },
+      logging_level: 'standard',
+      log_retention_days: 1095,
+      automation_level: 'medium',
+      default_task_metadata: {
+        visibility: 'internal',
+        default_priority: 'medium',
+        default_reactivity_seconds: 43200,
+      },
+      cyclic_overview: {
+        enabled: true,
+        schedule: {
+          weekly: true,
+          monthly: true,
+          yearly: true,
+        },
+        threshold_triggers: {
+          incident_frequency: {
+            min_events: 3,
+            window_days: 30,
+          },
+          cross_departmental_trends: true,
+          high_risk_indicators: true,
+        },
+      },
+    };
+  }
+
+  /**
+   * Internal helper to fetch a profile template by code, falling back
+   * to the default profile when the requested code is unknown.
+   */
+  private getProfileTemplate(profileCode: string): ProfileTemplate {
+    const normalizedCode = profileCode || DEFAULT_PROFILE_CODE;
+    const fromConfig = this.profileTemplates[normalizedCode];
+
+    if (fromConfig) {
+      return fromConfig;
+    }
+
+    if (normalizedCode !== DEFAULT_PROFILE_CODE) {
+      this.logger.warn(
+        `Profile code "${normalizedCode}" not found in org profiles config. Falling back to "${DEFAULT_PROFILE_CODE}" profile.`,
+      );
+    }
+
+    const fallback =
+      this.profileTemplates[DEFAULT_PROFILE_CODE] ??
+      this.buildHardcodedDefaultProfile();
+
+    // Cache the fallback default to avoid re‑creating it.
+    if (!this.profileTemplates[DEFAULT_PROFILE_CODE]) {
+      this.profileTemplates[DEFAULT_PROFILE_CODE] = fallback;
+    }
+
+    return fallback;
+  }
+
+  /**
+   * Load an organization's active profile by combining:
+   *   - The profile record in organization_profiles (if present), and
+   *   - The profile template from the profiles YAML (Doc 7).
+   *
+   * If no DB row exists or the table is not yet present, the default profile
+   * template is returned.
+   */
+  async loadProfile(organizationId: string): Promise<ResolvedOrgProfile> {
+    if (!organizationId) {
+      throw new Error('organizationId is required to load org profile.');
+    }
+
+    let dbProfile:
+      | {
+          id: string;
+          organization_id: string;
+          profile_code: string;
+          version: number;
+          reactivity_profile?: unknown;
+          transparency_profile?: unknown;
+          pattern_sensitivity_profile?: unknown;
+          retention_profile?: unknown;
+        }
+      | null = null;
+
+    try {
+      // Use "any" to avoid tight coupling to a particular Prisma schema version.
+      const prismaAny = this.prisma as any;
+      if (
+        prismaAny &&
+        prismaAny.organizationProfile &&
+        typeof prismaAny.organizationProfile.findUnique === 'function'
+      ) {
+        dbProfile = await prismaAny.organizationProfile.findUnique({
+          where: { organization_id: organizationId },
+        });
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : String(error ?? '');
+      this.logger.warn(
+        `Failed to fetch organization profile from DB for org "${organizationId}": ${message}. Continuing with YAML profile only.`,
+      );
+    }
+
+    const profileCode = dbProfile?.profile_code ?? DEFAULT_PROFILE_CODE;
+    const template = this.getProfileTemplate(profileCode);
+
+    return {
+      organizationId,
+      profileCode,
+      template,
+      dbProfile:
+        dbProfile == null
+          ? undefined
+          : {
+              id: dbProfile.id,
+              version: dbProfile.version,
+              reactivity_profile: dbProfile.reactivity_profile,
+              transparency_profile: dbProfile.transparency_profile,
+              pattern_sensitivity_profile: dbProfile.pattern_sensitivity_profile,
+              retention_profile: dbProfile.retention_profile,
+            },
+    };
+  }
+
+  /**
+   * Applies profile‑driven defaults to a Task/Case draft:
+   *   - priority (TASK_PRIORITY)
+   *   - visibility (VISIBILITY)
+   *   - reactivity SLA (seconds + ISO‑8601 duration)
+   *   - automation level
+   *   - cyclic overview schedule (for review scheduling)
+   */
+  async applyDefaults(
+    input: ApplyDefaultsInput,
+  ): Promise<ApplyDefaultsResult> {
+    const resolved = await this.loadProfile(input.organizationId);
+    const template = resolved.template;
+    const defaults = template.default_task_metadata;
+
+    const priority =
+      input.existingPriority ??
+      this.normalizePriorityToken(defaults.default_priority);
+    const visibility =
+      input.existingVisibility ??
+      this.normalizeVisibilityToken(defaults.visibility);
+
+    const reactivitySeconds =
+      input.requestedReactivitySeconds ??
+      defaults.default_reactivity_seconds ??
+      template.reactivity_seconds;
+
+    const reactivityTimeIso = this.secondsToIsoDuration(reactivitySeconds);
+
+    return {
+      organizationId: input.organizationId,
+      profileCode: resolved.profileCode,
+      kind: input.kind,
+      priority,
+      visibility,
+      reactivitySeconds,
+      reactivityTimeIso,
+      automationLevel: template.automation_level,
+      cyclicOverview: template.cyclic_overview,
+    };
+  }
+
+  /**
+   * Simulate the impact of switching an organization to a new profile code.
+   *
+   * Returns a compact diff over key behavioural knobs:
+   *   - Reactivity & escalation timing
+   *   - Notification scope
+   *   - Pattern sensitivity & windows
+   *   - Logging retention
+   *   - Default visibility & priority
+   */
+  async previewProfileDiff(
+    organizationId: string,
+    candidateProfileCode: string,
+  ): Promise<ProfileDiffResult> {
+    if (!candidateProfileCode) {
+      throw new Error('candidateProfileCode is required.');
+    }
+
+    const [currentResolved, candidateTemplate] = await Promise.all([
+      this.loadProfile(organizationId).catch(() => null),
+      Promise.resolve(this.getProfileTemplate(candidateProfileCode)),
+    ]);
+
+    const currentTemplate = currentResolved?.template ?? null;
+
+    const currentSummary = currentTemplate
+      ? this.summarizeProfile(
+          currentResolved!.profileCode,
+          currentTemplate,
+        )
+      : null;
+    const candidateSummary = this.summarizeProfile(
+      candidateProfileCode,
+      candidateTemplate,
+    );
+
+    const numericChanges: ProfileDiffNumericField[] = [
+      this.makeNumericDiff(
+        'reactivity_seconds',
+        currentSummary?.reactivitySeconds ?? null,
+        candidateSummary.reactivitySeconds,
+      ),
+      this.makeNumericDiff(
+        'max_escalation_seconds',
+        currentSummary?.maxEscalationSeconds ?? null,
+        candidateSummary.maxEscalationSeconds,
+      ),
+      this.makeNumericDiff(
+        'pattern_window_days',
+        currentSummary?.patternWindowDays ?? null,
+        candidateSummary.patternWindowDays,
+      ),
+      this.makeNumericDiff(
+        'pattern_min_events',
+        currentSummary?.patternMinEvents ?? null,
+        candidateSummary.patternMinEvents,
+      ),
+      this.makeNumericDiff(
+        'log_retention_days',
+        currentSummary?.logRetentionDays ?? null,
+        candidateSummary.logRetentionDays,
+      ),
+    ];
+
+    const enumChanges: ProfileDiffEnumField[] = [
+      this.makeEnumDiff(
+        'notification_scope',
+        currentSummary?.notificationScope ?? null,
+        candidateSummary.notificationScope,
+      ),
+      this.makeEnumDiff(
+        'pattern_sensitivity',
+        currentSummary?.patternSensitivity ?? null,
+        candidateSummary.patternSensitivity,
+      ),
+      this.makeEnumDiff(
+        'logging_level',
+        currentSummary?.loggingLevel ?? null,
+        candidateSummary.loggingLevel,
+      ),
+      this.makeEnumDiff(
+        'default_visibility',
+        currentSummary?.defaultVisibility ?? null,
+        candidateSummary.defaultVisibility,
+      ),
+      this.makeEnumDiff(
+        'default_priority',
+        currentSummary?.defaultPriority ?? null,
+        candidateSummary.defaultPriority,
+      ),
+    ];
+
+    return {
+      organizationId,
+      currentProfileCode: currentResolved?.profileCode ?? null,
+      candidateProfileCode,
+      currentProfileSummary: currentSummary,
+      candidateProfileSummary: candidateSummary,
+      numericChanges,
+      enumChanges,
+    };
+  }
+
+  private summarizeProfile(
+    profileCode: string,
+    template: ProfileTemplate,
+  ): ProfileSummary {
+    const defaultVisibility = this.normalizeVisibilityToken(
+      template.default_task_metadata.visibility,
+    );
+    const defaultPriority = this.normalizePriorityToken(
+      template.default_task_metadata.default_priority,
+    );
+
+    return {
+      profileCode,
+      description: template.description,
+      reactivitySeconds: template.reactivity_seconds,
+      maxEscalationSeconds: template.max_escalation_seconds,
+      notificationScope: template.notification_scope,
+      patternSensitivity: template.pattern_sensitivity,
+      patternWindowDays: template.pattern_window_days,
+      patternMinEvents: template.pattern_min_events,
+      loggingLevel: template.logging_level,
+      logRetentionDays: template.log_retention_days,
+      defaultVisibility,
+      defaultPriority,
+    };
+  }
+
+  private makeNumericDiff(
+    field: string,
+    from: number | null,
+    to: number,
+  ): ProfileDiffNumericField {
+    let direction: ProfileDiffNumericField['direction'] = 'same';
+    if (from == null) {
+      direction = 'increase';
+    } else if (to > from) {
+      direction = 'increase';
+    } else if (to < from) {
+      direction = 'decrease';
+    }
+
+    return { field, from, to, direction };
+  }
+
+  private makeEnumDiff(
+    field: string,
+    from: string | null,
+    to: string,
+  ): ProfileDiffEnumField {
+    return {
+      field,
+      from,
+      to,
+      changed: from == null ? true : from !== to,
+    };
+  }
+
+  /**
+   * Map lower‑case config values for priority to canonical TASK_PRIORITY tokens.
+   */
+  private normalizePriorityToken(priority: LowerPriority | string): TaskPriorityToken {
+    const value = String(priority).toLowerCase() as LowerPriority;
+
+    switch (value) {
+      case 'low':
+        return 'LOW';
+      case 'high':
+        return 'HIGH';
+      case 'critical':
+        return 'CRITICAL';
+      case 'medium':
+      default:
+        return 'MEDIUM';
+    }
+  }
+
+  /**
+   * Map lower‑case config values for visibility to canonical VISIBILITY tokens.
+   */
+  private normalizeVisibilityToken(
+    visibility: LowerVisibility | string,
+  ): VisibilityToken {
+    const value = String(visibility).toLowerCase() as LowerVisibility;
+
+    switch (value) {
+      case 'public':
+        return 'PUBLIC';
+      case 'restricted':
+        return 'RESTRICTED';
+      case 'anonymised':
+      case 'anonymized':
+        return 'ANONYMISED';
+      case 'internal':
+      default:
+        return 'INTERNAL';
+    }
+  }
+
+  /**
+   * Convert a number of seconds into an ISO‑8601 duration string, e.g. 3600 → "PT3600S".
+   */
+  private secondsToIsoDuration(seconds: number): string {
+    const safe = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+    return `PT${safe}S`;
+  }
+}
+
+

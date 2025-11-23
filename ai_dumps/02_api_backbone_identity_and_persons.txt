@@ -1,0 +1,1852 @@
+=== FILE 1/8: apps/api/src/orgo/backbone/identity/dto/link-user-person.dto.ts ===
+
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsUUID } from 'class-validator';
+
+/**
+ * Payload for linking an existing user account to an existing person profile.
+ *
+ * Invariants (enforced by the consuming service, not this DTO):
+ * - userId and personId must both exist.
+ * - Both records must belong to the same organization.
+ * - A user account should be linked to at most one person profile.
+ * - A person profile should be linked to at most one user account.
+ */
+export class LinkUserPersonDto {
+  @ApiProperty({
+    description:
+      'ID of the user account to link (user_accounts.id in the current organization).',
+    format: 'uuid',
+    example: '3b1f0c66-0272-4bf7-8f03-4620e2a7f8da',
+  })
+  @IsUUID('4')
+  @IsNotEmpty()
+  userId!: string;
+
+  @ApiProperty({
+    description:
+      'ID of the person profile to link (person_profiles.id in the current organization).',
+    format: 'uuid',
+    example: '5e8c3dda-38bb-4c64-a8b1-7ecaf0c2f3e4',
+  })
+  @IsUUID('4')
+  @IsNotEmpty()
+  personId!: string;
+}
+
+
+=== FILE 2/8: apps/api/src/orgo/backbone/identity/identity-link.controller.ts ===
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
+import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
+
+import { IdentityLinkService } from './identity-link.service';
+
+/**
+ * Standard result shape used across Core Services:
+ * { ok: true, data: ..., error: null } or
+ * { ok: false, data: null, error: { code, message, details? } }
+ *
+ * See Core Services spec for the canonical shape.
+ */
+export interface StandardResult<T> {
+  ok: boolean;
+  data: T | null;
+  error:
+    | null
+    | {
+        code: string;
+        message: string;
+        details?: Record<string, unknown>;
+      };
+}
+
+/**
+ * Logical view of a user–person link.
+ * Physically this is backed by person_profiles.linked_user_id,
+ * together with the shared organization_id invariant.
+ */
+export interface IdentityLinkView {
+  organizationId: string;
+  userId: string;
+  personId: string;
+}
+
+/**
+ * DTO for creating or updating a user–person link.
+ *
+ * The actual multi‑tenant enforcement is done in the service:
+ * - userId and personId must both belong to organizationId
+ * - person_profiles.linked_user_id is updated accordingly
+ */
+export class LinkUserToPersonDto {
+  @IsUUID('4')
+  userId!: string;
+
+  @IsUUID('4')
+  personId!: string;
+
+  /**
+   * If true, the service may break an existing link for the user or person
+   * in order to apply this new link. If false, conflicting links should
+   * cause a validation error.
+   */
+  @IsOptional()
+  @IsBoolean()
+  force?: boolean;
+}
+
+/**
+ * DTO for unlinking a user–person pair.
+ *
+ * At least one of userId or personId must be provided; the service will
+ * resolve the other from existing data (if any).
+ */
+export class UnlinkUserFromPersonDto {
+  @IsOptional()
+  @IsUUID('4')
+  userId?: string;
+
+  @IsOptional()
+  @IsUUID('4')
+  personId?: string;
+}
+
+/**
+ * IdentityLinkController
+ *
+ * Responsibility: thin HTTP layer over IdentityLinkService for linking and
+ * unlinking user accounts (user_accounts) and person profiles (person_profiles)
+ * within a single organization.
+ *
+ * Route base is kept narrow; the global Nest app prefix (e.g. /api/v3)
+ * is assumed to be configured at bootstrap level.
+ */
+@Controller('identity-link')
+export class IdentityLinkController {
+  constructor(private readonly identityLinkService: IdentityLinkService) {}
+
+  /**
+   * Create or update a link between a UserAccount and a PersonProfile.
+   *
+   * - organizationId is taken from the X-Organization-Id header.
+   * - userId and personId must both belong to that organization.
+   * - If force=true, the service may overwrite existing links.
+   *
+   * Example request:
+   *   POST /identity-link
+   *   Headers:
+   *     X-Organization-Id: <org-uuid>
+   *   Body:
+   *   {
+   *     "userId": "<user-uuid>",
+   *     "personId": "<person-uuid>",
+   *     "force": false
+   *   }
+   */
+  @Post()
+  @HttpCode(HttpStatus.OK)
+  async linkUserToPerson(
+    @Headers('x-organization-id') organizationId: string,
+    @Body() body: LinkUserToPersonDto,
+  ): Promise<StandardResult<IdentityLinkView>> {
+    const orgId = this.normalizeOrganizationId(organizationId);
+
+    return this.identityLinkService.linkUserToPerson({
+      organizationId: orgId,
+      userId: body.userId,
+      personId: body.personId,
+      force: body.force ?? false,
+    });
+  }
+
+  /**
+   * Remove a link between a UserAccount and a PersonProfile.
+   *
+   * At least one of userId or personId must be provided. The service will
+   * resolve the other side if a link exists and clear it.
+   *
+   * Example request:
+   *   DELETE /identity-link
+   *   Headers:
+   *     X-Organization-Id: <org-uuid>
+   *   Body:
+   *   {
+   *     "personId": "<person-uuid>"
+   *   }
+   *
+   * On success, data will typically be null (no active link remains).
+   */
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  async unlinkUserFromPerson(
+    @Headers('x-organization-id') organizationId: string,
+    @Body() body: UnlinkUserFromPersonDto,
+  ): Promise<StandardResult<IdentityLinkView | null>> {
+    const orgId = this.normalizeOrganizationId(organizationId);
+
+    if (!body.userId && !body.personId) {
+      throw new BadRequestException(
+        'At least one of userId or personId must be provided to unlink.',
+      );
+    }
+
+    return this.identityLinkService.unlinkUserFromPerson({
+      organizationId: orgId,
+      userId: body.userId,
+      personId: body.personId,
+    });
+  }
+
+  /**
+   * Fetch the current PersonProfile link for a given UserAccount.
+   *
+   * Example request:
+   *   GET /identity-link/user/<userId>
+   *   Headers:
+   *     X-Organization-Id: <org-uuid>
+   *
+   * If no link exists, ok=true with data=null is returned.
+   */
+  @Get('user/:userId')
+  async getLinkForUser(
+    @Headers('x-organization-id') organizationId: string,
+    @Param('userId') userId: string,
+  ): Promise<StandardResult<IdentityLinkView | null>> {
+    const orgId = this.normalizeOrganizationId(organizationId);
+
+    if (!userId) {
+      throw new BadRequestException('userId path parameter is required.');
+    }
+
+    return this.identityLinkService.getLinkByUserId({
+      organizationId: orgId,
+      userId,
+    });
+  }
+
+  /**
+   * Fetch the current UserAccount link for a given PersonProfile.
+   *
+   * Example request:
+   *   GET /identity-link/person/<personId>
+   *   Headers:
+   *     X-Organization-Id: <org-uuid>
+   *
+   * If no link exists, ok=true with data=null is returned.
+   */
+  @Get('person/:personId')
+  async getLinkForPerson(
+    @Headers('x-organization-id') organizationId: string,
+    @Param('personId') personId: string,
+  ): Promise<StandardResult<IdentityLinkView | null>> {
+    const orgId = this.normalizeOrganizationId(organizationId);
+
+    if (!personId) {
+      throw new BadRequestException('personId path parameter is required.');
+    }
+
+    return this.identityLinkService.getLinkByPersonId({
+      organizationId: orgId,
+      personId,
+    });
+  }
+
+  /**
+   * Normalize and validate the organization ID header.
+   *
+   * This keeps multi‑tenant invariants explicit at the controller boundary.
+   */
+  private normalizeOrganizationId(raw: string | undefined): string {
+    const value = (raw || '').trim();
+
+    if (!value) {
+      throw new BadRequestException(
+        'Missing X-Organization-Id header for multi-tenant operation.',
+      );
+    }
+
+    return value;
+  }
+}
+
+
+=== FILE 3/8: apps/api/src/orgo/backbone/identity/identity-link.module.ts ===
+
+import { Module } from '@nestjs/common';
+import { PersistenceModule } from '../../../persistence/persistence.module';
+import { PersonProfileModule } from '../persons/person-profile.module';
+import { IdentityLinkService } from './identity-link.service';
+import { IdentityLinkController } from './identity-link.controller';
+
+/**
+ * IdentityLinkModule
+ *
+ * Backbone module responsible for linking user accounts to person profiles
+ * in a multi-tenant-safe way, using the canonical Orgo identity model
+ * (user_accounts vs person_profiles) and the shared persistence layer.
+ *
+ * Exposes IdentityLinkService so other modules can establish or query links.
+ */
+@Module({
+  imports: [PersistenceModule, PersonProfileModule],
+  providers: [IdentityLinkService],
+  controllers: [IdentityLinkController],
+  exports: [IdentityLinkService],
+})
+export class IdentityLinkModule {}
+
+
+=== FILE 4/8: apps/api/src/orgo/backbone/identity/identity-link.service.ts ===
+
+// apps/api/src/orgo/backbone/identity/identity-link.service.ts
+
+import { Injectable, Logger } from '@nestjs/common';
+import { PersonProfile, UserAccount } from '@prisma/client';
+
+import { PrismaService } from '../../../persistence/prisma/prisma.service';
+import { FN_IDENTITY_LINK_USER_TO_PERSON } from '../../core/functional-ids';
+import type {
+  IdentityLinkView,
+  StandardResult,
+} from './identity-link.controller';
+
+/**
+ * Input for creating or updating a user–person link.
+ *
+ * Multi‑tenant invariants:
+ * - organizationId is required.
+ * - userId and personId must both belong to organizationId.
+ */
+export interface LinkUserToPersonInput {
+  organizationId: string;
+  userId: string;
+  personId: string;
+  /**
+   * When true, existing conflicting links may be broken in order to
+   * apply this new link. When false, conflicts cause a validation error.
+   */
+  force: boolean;
+}
+
+/**
+ * Input for unlinking a user–person pair.
+ *
+ * At least one of userId or personId must be provided.
+ */
+export interface UnlinkUserFromPersonInput {
+  organizationId: string;
+  userId?: string;
+  personId?: string;
+}
+
+/**
+ * Input for fetching the link for a given user.
+ */
+export interface GetLinkByUserIdInput {
+  organizationId: string;
+  userId: string;
+}
+
+/**
+ * Input for fetching the link for a given person.
+ */
+export interface GetLinkByPersonIdInput {
+  organizationId: string;
+  personId: string;
+}
+
+/**
+ * IdentityLinkService
+ *
+ * Responsibilities:
+ * - Enforce the logical one‑to‑one link between UserAccount and PersonProfile
+ *   within an organization via person_profiles.linked_user_id.
+ * - Provide primitives to link, unlink and query the current link.
+ * - Enforce multi‑tenant invariants explicitly via organizationId.
+ *
+ * All methods return the standard Core Services result shape:
+ *   { ok: true, data, error: null } or
+ *   { ok: false, data: null, error: { code, message, details? } }
+ */
+@Injectable()
+export class IdentityLinkService {
+  private readonly logger = new Logger(IdentityLinkService.name);
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Create or update a link between a UserAccount and a PersonProfile.
+   *
+   * Invariants:
+   * - organizationId, userId and personId are required.
+   * - User and person must belong to the same organization.
+   * - Each user should be linked to at most one person per organization.
+   * - Each person should be linked to at most one user.
+   *
+   * When `force === false`, any conflicting existing links produce
+   * an IDENTITY_LINK_CONFLICT error.
+   *
+   * When `force === true`, conflicting person_profiles rows for the
+   * target user are detached (linked_user_id set to null) before
+   * creating/updating the requested link.
+   */
+  async linkUserToPerson(
+    input: LinkUserToPersonInput,
+  ): Promise<StandardResult<IdentityLinkView>> {
+    const { organizationId, userId, personId, force } = input;
+
+    if (!organizationId || !userId || !personId) {
+      return this.fail<IdentityLinkView>('IDENTITY_LINK_VALIDATION_ERROR', {
+        message: 'organizationId, userId and personId are required.',
+        details: { organizationId, userId, personId, force },
+      });
+    }
+
+    this.logger.debug(
+      `[${FN_IDENTITY_LINK_USER_TO_PERSON}] linkUserToPerson org=${organizationId} user=${userId} person=${personId} force=${force}`,
+    );
+
+    try {
+      // Resolve user & person within the given organization.
+      const [user, person] = await Promise.all([
+        this.findUserInOrganization(organizationId, userId),
+        this.findPersonInOrganization(organizationId, personId),
+      ]);
+
+      if (!user) {
+        return this.fail<IdentityLinkView>('IDENTITY_LINK_USER_NOT_FOUND', {
+          message: 'User account not found in the specified organization.',
+          details: { organizationId, userId },
+        });
+      }
+
+      if (!person) {
+        return this.fail<IdentityLinkView>('IDENTITY_LINK_PERSON_NOT_FOUND', {
+          message: 'Person profile not found in the specified organization.',
+          details: { organizationId, personId },
+        });
+      }
+
+      // Find any existing links for this user within the organization.
+      const existingLinksForUser = await this.prisma.personProfile.findMany({
+        where: { organizationId, linkedUserId: user.id },
+      });
+
+      const personHasDifferentLinkedUser =
+        person.linkedUserId != null && person.linkedUserId !== user.id;
+
+      const otherPersonsLinkedToUser = existingLinksForUser.filter(
+        (p) => p.id !== person.id,
+      );
+
+      const hasConflict =
+        personHasDifferentLinkedUser || otherPersonsLinkedToUser.length > 0;
+
+      const isAlreadyLinked =
+        !hasConflict && person.linkedUserId != null && person.linkedUserId === user.id;
+
+      // No-op if the link already exists and there are no conflicts.
+      if (isAlreadyLinked) {
+        this.logger.debug(
+          `[${FN_IDENTITY_LINK_USER_TO_PERSON}] linkUserToPerson: link already in desired state.`,
+        );
+        return this.ok(this.toView(organizationId, person));
+      }
+
+      if (hasConflict && !force) {
+        return this.fail<IdentityLinkView>('IDENTITY_LINK_CONFLICT', {
+          message:
+            'Existing user–person link conflicts with requested link. Pass force=true to overwrite.',
+          details: {
+            organizationId,
+            userId: user.id,
+            personId: person.id,
+            personCurrentLinkedUserId: person.linkedUserId,
+            existingLinkedPersonIdsForUser: existingLinksForUser.map((p) => p.id),
+          },
+        });
+      }
+
+      // Apply changes in a transaction:
+      // - detach any other persons currently linked to this user (same org)
+      // - set linkedUserId on the requested person.
+      const updatedPerson = await this.prisma.$transaction(async (tx) => {
+        if (otherPersonsLinkedToUser.length > 0) {
+          const idsToClear = otherPersonsLinkedToUser.map((p) => p.id);
+
+          await tx.personProfile.updateMany({
+            where: {
+              organizationId,
+              id: { in: idsToClear },
+            },
+            data: {
+              linkedUserId: null,
+            },
+          });
+        }
+
+        const updated = await tx.personProfile.update({
+          where: { id: person.id },
+          data: {
+            linkedUserId: user.id,
+          },
+        });
+
+        return updated;
+      });
+
+      this.logger.debug(
+        `[${FN_IDENTITY_LINK_USER_TO_PERSON}] linkUserToPerson: link applied org=${organizationId} user=${user.id} person=${updatedPerson.id}`,
+      );
+
+      return this.ok(this.toView(organizationId, updatedPerson));
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : String(err ?? 'Unknown error');
+
+      this.logger.error(
+        `[${FN_IDENTITY_LINK_USER_TO_PERSON}] linkUserToPerson failed: ${errorMessage}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+
+      return this.fail<IdentityLinkView>('IDENTITY_LINK_PERSISTENCE_ERROR', {
+        message: 'Failed to persist user–person link.',
+        details: {
+          organizationId,
+          userId,
+          personId,
+          force,
+          error: errorMessage,
+        },
+      });
+    }
+  }
+
+  /**
+   * Remove any link between a UserAccount and PersonProfile within an org.
+   *
+   * Behaviour:
+   * - organizationId is required.
+   * - At least one of userId or personId must be provided.
+   * - If userId is provided and no such user exists in the org →
+   *   IDENTITY_LINK_USER_NOT_FOUND error.
+   * - If personId is provided and no such person exists in the org →
+   *   IDENTITY_LINK_PERSON_NOT_FOUND error.
+   * - All matching person_profiles rows for the given user and/or person
+   *   are updated with linked_user_id = null.
+   *
+   * On success, data is typically null (no active link remains).
+   */
+  async unlinkUserFromPerson(
+    input: UnlinkUserFromPersonInput,
+  ): Promise<StandardResult<IdentityLinkView | null>> {
+    const { organizationId, userId, personId } = input;
+
+    if (!organizationId) {
+      return this.fail<IdentityLinkView | null>(
+        'IDENTITY_LINK_VALIDATION_ERROR',
+        {
+          message: 'organizationId is required.',
+          details: { organizationId, userId, personId },
+        },
+      );
+    }
+
+    if (!userId && !personId) {
+      return this.fail<IdentityLinkView | null>(
+        'IDENTITY_LINK_VALIDATION_ERROR',
+        {
+          message: 'At least one of userId or personId must be provided.',
+          details: { organizationId, userId, personId },
+        },
+      );
+    }
+
+    this.logger.debug(
+      `[${FN_IDENTITY_LINK_USER_TO_PERSON}] unlinkUserFromPerson org=${organizationId} user=${userId ?? 'null'} person=${personId ?? 'null'}`,
+    );
+
+    try {
+      let user: UserAccount | null = null;
+      let personFromId: PersonProfile | null = null;
+
+      if (userId) {
+        user = await this.findUserInOrganization(organizationId, userId);
+        if (!user) {
+          return this.fail<IdentityLinkView | null>(
+            'IDENTITY_LINK_USER_NOT_FOUND',
+            {
+              message: 'User account not found in the specified organization.',
+              details: { organizationId, userId },
+            },
+          );
+        }
+      }
+
+      if (personId) {
+        personFromId = await this.findPersonInOrganization(
+          organizationId,
+          personId,
+        );
+        if (!personFromId) {
+          return this.fail<IdentityLinkView | null>(
+            'IDENTITY_LINK_PERSON_NOT_FOUND',
+            {
+              message:
+                'Person profile not found in the specified organization.',
+              details: { organizationId, personId },
+            },
+          );
+        }
+      }
+
+      // Collect all person profiles whose links should be cleared.
+      const personsToClear = new Map<string, PersonProfile>();
+
+      if (personFromId) {
+        personsToClear.set(personFromId.id, personFromId);
+      }
+
+      if (user) {
+        const linkedPersons = await this.prisma.personProfile.findMany({
+          where: {
+            organizationId,
+            linkedUserId: user.id,
+          },
+        });
+
+        for (const p of linkedPersons) {
+          personsToClear.set(p.id, p);
+        }
+      }
+
+      const personIdsToClear = Array.from(personsToClear.keys());
+
+      if (personIdsToClear.length === 0) {
+        // Nothing to unlink – treat as idempotent success.
+        this.logger.debug(
+          `[${FN_IDENTITY_LINK_USER_TO_PERSON}] unlinkUserFromPerson: no active links found to clear.`,
+        );
+        return this.ok<IdentityLinkView | null>(null);
+      }
+
+      await this.prisma.personProfile.updateMany({
+        where: {
+          organizationId,
+          id: { in: personIdsToClear },
+        },
+        data: {
+          linkedUserId: null,
+        },
+      });
+
+      this.logger.debug(
+        `[${FN_IDENTITY_LINK_USER_TO_PERSON}] unlinkUserFromPerson: cleared links for personIds=${personIdsToClear.join(
+          ',',
+        )}`,
+      );
+
+      // We intentionally return data=null to reflect "no active link remains".
+      return this.ok<IdentityLinkView | null>(null);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : String(err ?? 'Unknown error');
+
+      this.logger.error(
+        `[${FN_IDENTITY_LINK_USER_TO_PERSON}] unlinkUserFromPerson failed: ${errorMessage}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+
+      return this.fail<IdentityLinkView | null>(
+        'IDENTITY_LINK_PERSISTENCE_ERROR',
+        {
+          message: 'Failed to unlink user and person.',
+          details: {
+            organizationId,
+            userId,
+            personId,
+            error: errorMessage,
+          },
+        },
+      );
+    }
+  }
+
+  /**
+   * Fetch the current PersonProfile link for a given UserAccount.
+   *
+   * If the user exists but has no linked person, this returns
+   * { ok: true, data: null }.
+   */
+  async getLinkByUserId(
+    input: GetLinkByUserIdInput,
+  ): Promise<StandardResult<IdentityLinkView | null>> {
+    const { organizationId, userId } = input;
+
+    if (!organizationId || !userId) {
+      return this.fail<IdentityLinkView | null>(
+        'IDENTITY_LINK_VALIDATION_ERROR',
+        {
+          message: 'organizationId and userId are required.',
+          details: { organizationId, userId },
+        },
+      );
+    }
+
+    this.logger.debug(
+      `[${FN_IDENTITY_LINK_USER_TO_PERSON}] getLinkByUserId org=${organizationId} user=${userId}`,
+    );
+
+    try {
+      const user = await this.findUserInOrganization(organizationId, userId);
+
+      if (!user) {
+        return this.fail<IdentityLinkView | null>(
+          'IDENTITY_LINK_USER_NOT_FOUND',
+          {
+            message: 'User account not found in the specified organization.',
+            details: { organizationId, userId },
+          },
+        );
+      }
+
+      const persons = await this.prisma.personProfile.findMany({
+        where: {
+          organizationId,
+          linkedUserId: user.id,
+        },
+      });
+
+      if (persons.length === 0) {
+        return this.ok<IdentityLinkView | null>(null);
+      }
+
+      if (persons.length > 1) {
+        // Invariant violation: more than one person linked to the same user.
+        this.logger.error(
+          `[${FN_IDENTITY_LINK_USER_TO_PERSON}] Invariant violation: multiple person_profiles rows linked to user ${user.id} in org ${organizationId}. personIds=${persons
+            .map((p) => p.id)
+            .join(',')}`,
+        );
+      }
+
+      const person = persons[0];
+      return this.ok<IdentityLinkView | null>(
+        this.toView(organizationId, person),
+      );
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : String(err ?? 'Unknown error');
+
+      this.logger.error(
+        `[${FN_IDENTITY_LINK_USER_TO_PERSON}] getLinkByUserId failed: ${errorMessage}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+
+      return this.fail<IdentityLinkView | null>(
+        'IDENTITY_LINK_PERSISTENCE_ERROR',
+        {
+          message: 'Failed to fetch user–person link for user.',
+          details: { organizationId, userId, error: errorMessage },
+        },
+      );
+    }
+  }
+
+  /**
+   * Fetch the current UserAccount link for a given PersonProfile.
+   *
+   * If the person exists but has no linked user, this returns
+   * { ok: true, data: null }.
+   */
+  async getLinkByPersonId(
+    input: GetLinkByPersonIdInput,
+  ): Promise<StandardResult<IdentityLinkView | null>> {
+    const { organizationId, personId } = input;
+
+    if (!organizationId || !personId) {
+      return this.fail<IdentityLinkView | null>(
+        'IDENTITY_LINK_VALIDATION_ERROR',
+        {
+          message: 'organizationId and personId are required.',
+          details: { organizationId, personId },
+        },
+      );
+    }
+
+    this.logger.debug(
+      `[${FN_IDENTITY_LINK_USER_TO_PERSON}] getLinkByPersonId org=${organizationId} person=${personId}`,
+    );
+
+    try {
+      const person = await this.findPersonInOrganization(
+        organizationId,
+        personId,
+      );
+
+      if (!person) {
+        return this.fail<IdentityLinkView | null>(
+          'IDENTITY_LINK_PERSON_NOT_FOUND',
+          {
+            message: 'Person profile not found in the specified organization.',
+            details: { organizationId, personId },
+          },
+        );
+      }
+
+      if (!person.linkedUserId) {
+        return this.ok<IdentityLinkView | null>(null);
+      }
+
+      return this.ok<IdentityLinkView | null>(
+        this.toView(organizationId, person),
+      );
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : String(err ?? 'Unknown error');
+
+      this.logger.error(
+        `[${FN_IDENTITY_LINK_USER_TO_PERSON}] getLinkByPersonId failed: ${errorMessage}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+
+      return this.fail<IdentityLinkView | null>(
+        'IDENTITY_LINK_PERSISTENCE_ERROR',
+        {
+          message: 'Failed to fetch user–person link for person.',
+          details: { organizationId, personId, error: errorMessage },
+        },
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Internal helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Resolve a user within an organization.
+   * Returns null when no match is found.
+   */
+  private findUserInOrganization(
+    organizationId: string,
+    userId: string,
+  ): Promise<UserAccount | null> {
+    return this.prisma.userAccount.findFirst({
+      where: {
+        id: userId,
+        organizationId,
+      },
+    });
+  }
+
+  /**
+   * Resolve a person within an organization.
+   * Returns null when no match is found.
+   */
+  private findPersonInOrganization(
+    organizationId: string,
+    personId: string,
+  ): Promise<PersonProfile | null> {
+    return this.prisma.personProfile.findFirst({
+      where: {
+        id: personId,
+        organizationId,
+      },
+    });
+  }
+
+  /**
+   * Map a PersonProfile row into the IdentityLinkView shape.
+   * Assumes person.linkedUserId is non‑null.
+   */
+  private toView(
+    organizationId: string,
+    person: PersonProfile,
+  ): IdentityLinkView {
+    if (!person.linkedUserId) {
+      // This should never be called for an unlinked person.
+      throw new Error(
+        'Cannot build IdentityLinkView for a person without linkedUserId.',
+      );
+    }
+
+    return {
+      organizationId,
+      userId: person.linkedUserId,
+      personId: person.id,
+    };
+  }
+
+  /**
+   * Convenience helper for constructing a successful StandardResult.
+   */
+  private ok<T>(data: T | null): StandardResult<T> {
+    return {
+      ok: true,
+      data,
+      error: null,
+    };
+  }
+
+  /**
+   * Convenience helper for constructing a failed StandardResult.
+   */
+  private fail<T>(
+    code: string,
+    params:
+      | { message: string; details?: Record<string, unknown> }
+      | string,
+  ): StandardResult<T> {
+    const message =
+      typeof params === 'string' ? params : params.message ?? code;
+    const details =
+      typeof params === 'string' ? undefined : params.details ?? undefined;
+
+    return {
+      ok: false,
+      data: null,
+      error: {
+        code,
+        message,
+        ...(details ? { details } : {}),
+      },
+    };
+  }
+}
+
+
+=== FILE 5/8: apps/api/src/orgo/backbone/persons/dto/upsert-person-profile.dto.ts ===
+
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsUUID,
+  IsOptional,
+  IsString,
+  IsEmail,
+  IsEnum,
+  MaxLength,
+  IsDateString,
+} from 'class-validator';
+
+export enum PersonConfidentialityLevel {
+  Normal = 'normal',
+  Sensitive = 'sensitive',
+  HighlySensitive = 'highly_sensitive',
+}
+
+export class UpsertPersonProfileDto {
+  @ApiPropertyOptional({
+    description:
+      'Existing person profile ID. Omit when creating a new person; include when updating.',
+    format: 'uuid',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  id?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'ID of the linked user account in the same organization, if this person also has a login.',
+    format: 'uuid',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  linkedUserId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'External reference such as a student ID, employee number, or membership code.',
+    maxLength: 255,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  externalReference?: string;
+
+  @ApiProperty({
+    description: 'Full display name of the person.',
+    maxLength: 255,
+  })
+  @IsString()
+  @MaxLength(255)
+  fullName!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Date of birth in ISO format (YYYY-MM-DD). Must not be in the future (enforced in service layer).',
+    type: String,
+    format: 'date',
+  })
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @ApiPropertyOptional({
+    description: 'Primary contact email address for the person.',
+    maxLength: 320,
+  })
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(320)
+  primaryContactEmail?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Primary contact phone number for the person. Format is domain-specific and validated downstream.',
+    maxLength: 64,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  primaryContactPhone?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Confidentiality level used by visibility rules and guardrails for this person.',
+    enum: PersonConfidentialityLevel,
+    enumName: 'PersonConfidentialityLevel',
+  })
+  @IsOptional()
+  @IsEnum(PersonConfidentialityLevel)
+  confidentialityLevel?: PersonConfidentialityLevel;
+}
+
+
+=== FILE 6/8: apps/api/src/orgo/backbone/persons/person-profile.controller.ts ===
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Query,
+  Req,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiProperty,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  IsDateString,
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
+import { Request } from 'express';
+import { PersonProfileService } from './person-profile.service';
+
+interface RequestWithContext extends Request {
+  /**
+   * Organization (tenant) identifier injected by auth/multi-tenant middleware.
+   */
+  organizationId?: string;
+
+  /**
+   * Authenticated user identifier injected by auth middleware.
+   */
+  userId?: string;
+}
+
+/**
+ * Mirrors the `confidentiality_level` enum on `person_profiles`:
+ *   normal | sensitive | highly_sensitive
+ * :contentReference[oaicite:0]{index=0}
+ */
+export enum ConfidentialityLevel {
+  NORMAL = 'normal',
+  SENSITIVE = 'sensitive',
+  HIGHLY_SENSITIVE = 'highly_sensitive',
+}
+
+/**
+ * Canonical Person Profile representation at the API boundary.
+ * Shape is aligned to the `person_profiles` table and Insights dim_persons. 
+ */
+export class PersonProfileDto {
+  @ApiProperty({
+    format: 'uuid',
+    description: 'Stable person identifier (maps from person_profiles.id).',
+  })
+  person_id: string;
+
+  @ApiProperty({
+    format: 'uuid',
+    description: 'Owning organization (tenant) identifier.',
+  })
+  organization_id: string;
+
+  @ApiProperty({
+    required: false,
+    format: 'uuid',
+    nullable: true,
+    description:
+      'Linked user account (user_accounts.id) if the person also has a login account.',
+  })
+  linked_user_id: string | null;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: 'External reference, e.g. student ID or employee number.',
+  })
+  external_reference: string | null;
+
+  @ApiProperty({
+    maxLength: 512,
+    description: 'Full display name for the person.',
+  })
+  full_name: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    format: 'date',
+    description: 'Date of birth (YYYY-MM-DD), if known.',
+  })
+  date_of_birth: string | null;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: 'Primary contact email for this person.',
+  })
+  primary_contact_email: string | null;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: 'Primary contact phone number for this person.',
+  })
+  primary_contact_phone: string | null;
+
+  @ApiProperty({
+    enum: ConfidentialityLevel,
+    description:
+      'Confidentiality level; used by higher-level visibility and guardrail rules.',
+  })
+  confidentiality_level: ConfidentialityLevel;
+
+  @ApiProperty({
+    format: 'date-time',
+    description: 'Creation timestamp (UTC).',
+  })
+  created_at: string;
+
+  @ApiProperty({
+    format: 'date-time',
+    description: 'Last update timestamp (UTC).',
+  })
+  updated_at: string;
+}
+
+/**
+ * Payload for creating or updating (upserting) a person profile.
+ * `person_id` is optional; if provided, the corresponding person will be updated.
+ */
+export class UpsertPersonProfileDto {
+  @ApiProperty({
+    required: false,
+    format: 'uuid',
+    description:
+      'Person identifier. If provided, the profile is updated; if omitted, a new profile is created.',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  person_id?: string;
+
+  @ApiProperty({
+    maxLength: 512,
+    description: 'Full display name for the person.',
+  })
+  @IsString()
+  @MaxLength(512)
+  full_name: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: 'External reference, e.g. student ID or employee number.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  external_reference?: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    format: 'date',
+    description: 'Date of birth (YYYY-MM-DD), if known.',
+  })
+  @IsOptional()
+  @IsDateString()
+  date_of_birth?: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: 'Primary contact email for this person.',
+  })
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(320)
+  primary_contact_email?: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: 'Primary contact phone number for this person.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  primary_contact_phone?: string;
+
+  @ApiProperty({
+    required: false,
+    enum: ConfidentialityLevel,
+    default: ConfidentialityLevel.NORMAL,
+    description: 'Confidentiality level; defaults to normal if omitted.',
+  })
+  @IsOptional()
+  @IsEnum(ConfidentialityLevel)
+  confidentiality_level?: ConfidentialityLevel;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    format: 'uuid',
+    description:
+      'Linked user account (user_accounts.id) if the person also has a login account.',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  linked_user_id?: string;
+}
+
+/**
+ * Paginated list response for person profiles.
+ */
+export class PersonProfileListResponseDto {
+  @ApiProperty({ type: [PersonProfileDto] })
+  items: PersonProfileDto[];
+
+  @ApiProperty({
+    description: 'Total number of matching person profiles for the current filters.',
+  })
+  total: number;
+
+  @ApiProperty({
+    description: 'Maximum number of items returned in this page.',
+  })
+  limit: number;
+
+  @ApiProperty({
+    description: 'Number of items skipped from the start.',
+  })
+  offset: number;
+}
+
+@ApiTags('persons')
+@Controller('persons')
+export class PersonProfileController {
+  constructor(
+    private readonly personProfileService: PersonProfileService,
+  ) {}
+
+  @Get()
+  @ApiOperation({
+    summary: 'List person profiles for the current organization',
+    description:
+      'Returns a paginated list of person profiles scoped to the requesting organization. Supports optional search and linking filters.',
+  })
+  @ApiResponse({ status: 200, type: PersonProfileListResponseDto })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description:
+      'Free-text search across full_name, external_reference, primary_contact_email and primary_contact_phone.',
+  })
+  @ApiQuery({
+    name: 'external_reference',
+    required: false,
+    description: 'Filter by exact external reference (e.g. student ID, employee number).',
+  })
+  @ApiQuery({
+    name: 'linked_user_id',
+    required: false,
+    description: 'Filter by linked user account ID (user_accounts.id).',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Maximum number of items to return (default 50).',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    description: 'Number of items to skip from the start (default 0).',
+  })
+  async listPersonProfiles(
+    @Req() req: RequestWithContext,
+    @Query('search') search?: string,
+    @Query('external_reference') externalReference?: string,
+    @Query('linked_user_id') linkedUserId?: string,
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit = 50,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset = 0,
+  ): Promise<PersonProfileListResponseDto> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+
+    return this.personProfileService.listPersonProfiles(organizationId, {
+      search,
+      externalReference,
+      linkedUserId,
+      limit,
+      offset,
+    });
+  }
+
+  @Get(':personId')
+  @ApiOperation({
+    summary: 'Get a single person profile by ID',
+  })
+  @ApiResponse({ status: 200, type: PersonProfileDto })
+  async getPersonProfile(
+    @Req() req: RequestWithContext,
+    @Param('personId', new ParseUUIDPipe()) personId: string,
+  ): Promise<PersonProfileDto> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+    return this.personProfileService.getPersonProfile(organizationId, personId);
+  }
+
+  @Get('by-external-reference/:externalReference')
+  @ApiOperation({
+    summary: 'Look up a person profile by external reference',
+    description:
+      'Convenience endpoint to fetch a person profile by an external reference (e.g. student ID, employee number) within the current organization.',
+  })
+  @ApiResponse({ status: 200, type: PersonProfileDto })
+  async getPersonProfileByExternalReference(
+    @Req() req: RequestWithContext,
+    @Param('externalReference') externalReference: string,
+  ): Promise<PersonProfileDto> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+    return this.personProfileService.getPersonProfileByExternalReference(
+      organizationId,
+      externalReference,
+    );
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Create or update a person profile (upsert)',
+    description:
+      'If person_id is present in the payload, updates the existing profile (scoped to the current organization). If person_id is omitted, creates a new person profile.',
+  })
+  @ApiResponse({ status: 200, type: PersonProfileDto })
+  async upsertPersonProfile(
+    @Req() req: RequestWithContext,
+    @Body() payload: UpsertPersonProfileDto,
+  ): Promise<PersonProfileDto> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+    const actorUserId = this.getUserIdFromRequest(req);
+
+    return this.personProfileService.upsertPersonProfile(
+      organizationId,
+      payload,
+      actorUserId,
+    );
+  }
+
+  @Put(':personId')
+  @ApiOperation({
+    summary: 'Update an existing person profile',
+    description:
+      'Updates an existing person profile identified by the path parameter. The path ID takes precedence over any person_id provided in the body.',
+  })
+  @ApiResponse({ status: 200, type: PersonProfileDto })
+  async updatePersonProfile(
+    @Req() req: RequestWithContext,
+    @Param('personId', new ParseUUIDPipe()) personId: string,
+    @Body() payload: UpsertPersonProfileDto,
+  ): Promise<PersonProfileDto> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+    const actorUserId = this.getUserIdFromRequest(req);
+
+    const finalPayload: UpsertPersonProfileDto = {
+      ...payload,
+      person_id: personId,
+    };
+
+    return this.personProfileService.upsertPersonProfile(
+      organizationId,
+      finalPayload,
+      actorUserId,
+    );
+  }
+
+  @Delete(':personId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete or anonymise a person profile',
+    description:
+      'Deletes (or, depending on implementation, anonymises) a person profile within the current organization. Implementations should respect guardrails for sensitive data.',
+  })
+  @ApiResponse({ status: 204 })
+  async deletePersonProfile(
+    @Req() req: RequestWithContext,
+    @Param('personId', new ParseUUIDPipe()) personId: string,
+  ): Promise<void> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+    const actorUserId = this.getUserIdFromRequest(req);
+
+    await this.personProfileService.deletePersonProfile(
+      organizationId,
+      personId,
+      actorUserId,
+    );
+  }
+
+  /**
+   * Extracts the organization identifier from the request context.
+   * Throws a 400 error if the context is missing.
+   */
+  private getOrganizationIdFromRequest(req: RequestWithContext): string {
+    const organizationId = req.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Missing organization context on request.');
+    }
+    return organizationId;
+  }
+
+  /**
+   * Extracts the authenticated user identifier from the request context, if present.
+   */
+  private getUserIdFromRequest(req: RequestWithContext): string | undefined {
+    return req.userId;
+  }
+}
+
+
+=== FILE 7/8: apps/api/src/orgo/backbone/persons/person-profile.module.ts ===
+
+// apps/api/src/orgo/backbone/persons/person-profile.module.ts
+
+import { Module } from '@nestjs/common';
+import { PersistenceModule } from '../../../persistence/persistence.module';
+import { LoggerModule } from '../../core/logging/logger.module';
+import { PersonProfileService } from './person-profile.service';
+import { PersonProfileController } from './person-profile.controller';
+
+@Module({
+  imports: [
+    // Provides Prisma / DB access
+    PersistenceModule,
+    // Provides structured logging (LogService)
+    LoggerModule,
+  ],
+  controllers: [PersonProfileController],
+  providers: [PersonProfileService],
+  exports: [PersonProfileService],
+})
+export class PersonProfileModule {}
+
+
+=== FILE 8/8: apps/api/src/orgo/backbone/persons/person-profile.service.ts ===
+
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma, PersonProfile } from '@prisma/client';
+import { PrismaService } from '../../../persistence/prisma/prisma.service';
+import { FN_BACKBONE_PERSON_UPSERT } from '../../core/functional-ids';
+
+export type ConfidentialityLevel = 'normal' | 'sensitive' | 'highly_sensitive';
+
+export interface UpsertPersonProfileInput {
+  /**
+   * Tenant isolation key – required for all operations.
+   */
+  organizationId: string;
+
+  /**
+   * Optional person ID:
+   * - If provided → update this record (after org check).
+   * - If omitted → create a new record or reuse by (org, externalReference) if present.
+   */
+  personId?: string;
+
+  /**
+   * Optional link to a user account in the same org.
+   * Can be null to explicitly clear the link.
+   */
+  linkedUserId?: string | null;
+
+  /**
+   * Optional external reference (student ID, employee number, etc.).
+   * Used as a secondary key for “upsert by external id” when personId is not provided.
+   */
+  externalReference?: string | null;
+
+  /**
+   * Canonical full name for analytics (insights.dim_persons.full_name).
+   */
+  fullName: string;
+
+  /**
+   * Date of birth (ISO date string or Date). Nullable.
+   */
+  dateOfBirth?: string | Date | null;
+
+  /**
+   * Primary contact email. Nullable.
+   */
+  primaryContactEmail?: string | null;
+
+  /**
+   * Primary contact phone. Nullable.
+   */
+  primaryContactPhone?: string | null;
+
+  /**
+   * Confidentiality level, drives visibility/guardrails.
+   * Defaults to "normal" when omitted.
+   */
+  confidentialityLevel?: ConfidentialityLevel;
+}
+
+@Injectable()
+export class PersonProfileService {
+  private readonly logger = new Logger(PersonProfileService.name);
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Create or update a person profile within an organization.
+   *
+   * Resolution order:
+   * 1. If personId is provided → update that record (after verifying organizationId).
+   * 2. Else if externalReference is provided → try to find (organizationId, externalReference) and update it.
+   * 3. Else → create a new person profile.
+   */
+  async upsertPersonProfile(input: UpsertPersonProfileInput): Promise<PersonProfile> {
+    const { organizationId } = input;
+
+    if (!organizationId) {
+      throw new BadRequestException('organizationId is required.');
+    }
+
+    if (!input.fullName || !input.fullName.trim()) {
+      throw new BadRequestException('fullName is required.');
+    }
+
+    const confidentialityLevel: ConfidentialityLevel =
+      input.confidentialityLevel ?? 'normal';
+
+    if (!this.isValidConfidentialityLevel(confidentialityLevel)) {
+      throw new BadRequestException(
+        `Invalid confidentialityLevel "${confidentialityLevel}". Expected one of "normal" | "sensitive" | "highly_sensitive".`,
+      );
+    }
+
+    const dateOfBirth = this.parseDateOfBirth(input.dateOfBirth);
+
+    const basePayload = {
+      organizationId,
+      linkedUserId:
+        typeof input.linkedUserId === 'undefined' ? undefined : input.linkedUserId,
+      externalReference:
+        typeof input.externalReference === 'undefined'
+          ? undefined
+          : input.externalReference,
+      fullName: input.fullName.trim(),
+      dateOfBirth,
+      primaryContactEmail:
+        typeof input.primaryContactEmail === 'undefined'
+          ? undefined
+          : input.primaryContactEmail,
+      primaryContactPhone:
+        typeof input.primaryContactPhone === 'undefined'
+          ? undefined
+          : input.primaryContactPhone,
+      confidentialityLevel,
+    };
+
+    let targetId = input.personId;
+
+    // If no explicit ID, try to resolve by (organizationId, externalReference)
+    if (!targetId && input.externalReference) {
+      const existingByExternal = await this.prisma.personProfile.findFirst({
+        where: {
+          organizationId,
+          externalReference: input.externalReference,
+        },
+      });
+
+      if (existingByExternal) {
+        targetId = existingByExternal.id;
+      }
+    }
+
+    // Update existing record
+    if (targetId) {
+      const existing = await this.prisma.personProfile.findUnique({
+        where: { id: targetId },
+      });
+
+      if (!existing || existing.organizationId !== organizationId) {
+        throw new NotFoundException(
+          'PersonProfile not found for the specified organization.',
+        );
+      }
+
+      this.logger.debug(
+        `Updating person profile ${targetId} for org ${organizationId} [${FN_BACKBONE_PERSON_UPSERT}]`,
+      );
+
+      const updateData: Prisma.PersonProfileUpdateInput = {
+        // Never allow cross-tenant moves – enforce same org id
+        organizationId: existing.organizationId,
+        ...this.buildUpdatePayload(basePayload),
+      };
+
+      return this.prisma.personProfile.update({
+        where: { id: targetId },
+        data: updateData,
+      });
+    }
+
+    // Create new record
+    this.logger.debug(
+      `Creating person profile for org ${organizationId} (external_reference=${input.externalReference ?? 'null'}) [${FN_BACKBONE_PERSON_UPSERT}]`,
+    );
+
+    const createData: Prisma.PersonProfileCreateInput = {
+      ...this.buildCreatePayload(basePayload),
+    };
+
+    return this.prisma.personProfile.create({
+      data: createData,
+    });
+  }
+
+  /**
+   * Fetch a single person profile by ID within an organization.
+   * Enforces multi-tenant isolation via organizationId.
+   */
+  async getPersonProfileById(
+    organizationId: string,
+    personId: string,
+  ): Promise<PersonProfile> {
+    if (!organizationId) {
+      throw new BadRequestException('organizationId is required.');
+    }
+
+    if (!personId) {
+      throw new BadRequestException('personId is required.');
+    }
+
+    const profile = await this.prisma.personProfile.findFirst({
+      where: { id: personId, organizationId },
+    });
+
+    if (!profile) {
+      throw new NotFoundException('PersonProfile not found.');
+    }
+
+    return profile;
+  }
+
+  /**
+   * Fetch a person profile by (organizationId, externalReference).
+   * Returns null when no match is found.
+   */
+  async findPersonProfileByExternalReference(
+    organizationId: string,
+    externalReference: string,
+  ): Promise<PersonProfile | null> {
+    if (!organizationId) {
+      throw new BadRequestException('organizationId is required.');
+    }
+
+    if (!externalReference) {
+      throw new BadRequestException('externalReference is required.');
+    }
+
+    return this.prisma.personProfile.findFirst({
+      where: { organizationId, externalReference },
+    });
+  }
+
+  /**
+   * Lightweight search over person profiles within an organization.
+   * - query matches full_name, primary_contact_email, primary_contact_phone (case-insensitive).
+   * - externalReference filter optionally narrows the search.
+   */
+  async searchPersonProfiles(params: {
+    organizationId: string;
+    query?: string;
+    externalReference?: string;
+    limit?: number;
+  }): Promise<PersonProfile[]> {
+    const { organizationId, query, externalReference, limit = 25 } = params;
+
+    if (!organizationId) {
+      throw new BadRequestException('organizationId is required.');
+    }
+
+    const where: Prisma.PersonProfileWhereInput = {
+      organizationId,
+    };
+
+    if (externalReference) {
+      where.externalReference = {
+        contains: externalReference,
+        mode: 'insensitive',
+      };
+    }
+
+    if (query && query.trim().length > 0) {
+      const q = query.trim();
+      where.OR = [
+        { fullName: { contains: q, mode: 'insensitive' } },
+        { primaryContactEmail: { contains: q, mode: 'insensitive' } },
+        { primaryContactPhone: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    return this.prisma.personProfile.findMany({
+      where,
+      take: limit,
+      orderBy: { fullName: 'asc' },
+    });
+  }
+
+  private isValidConfidentialityLevel(
+    level: string,
+  ): level is ConfidentialityLevel {
+    return level === 'normal' || level === 'sensitive' || level === 'highly_sensitive';
+  }
+
+  private parseDateOfBirth(
+    value: string | Date | null | undefined,
+  ): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) {
+        throw new BadRequestException('dateOfBirth is invalid.');
+      }
+      return value;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException('dateOfBirth must be a valid ISO date string.');
+    }
+
+    return parsed;
+  }
+
+  /**
+   * Build payload for create operations.
+   * Explicitly sets nullable fields to null when not provided.
+   */
+  private buildCreatePayload(base: {
+    organizationId: string;
+    linkedUserId?: string | null;
+    externalReference?: string | null;
+    fullName: string;
+    dateOfBirth: Date | null;
+    primaryContactEmail?: string | null;
+    primaryContactPhone?: string | null;
+    confidentialityLevel: ConfidentialityLevel;
+  }): Prisma.PersonProfileCreateInput {
+    return {
+      organizationId: base.organizationId,
+      linkedUserId: base.linkedUserId ?? null,
+      externalReference: base.externalReference ?? null,
+      fullName: base.fullName,
+      dateOfBirth: base.dateOfBirth,
+      primaryContactEmail: base.primaryContactEmail ?? null,
+      primaryContactPhone: base.primaryContactPhone ?? null,
+      confidentialityLevel: base.confidentialityLevel,
+    };
+  }
+
+  /**
+   * Build payload for update operations.
+   * Uses the same semantics as create (fields not supplied are cleared to null),
+   * but does not attempt to change organizationId.
+   */
+  private buildUpdatePayload(base: {
+    organizationId: string;
+    linkedUserId?: string | null;
+    externalReference?: string | null;
+    fullName: string;
+    dateOfBirth: Date | null;
+    primaryContactEmail?: string | null;
+    primaryContactPhone?: string | null;
+    confidentialityLevel: ConfidentialityLevel;
+  }): Prisma.PersonProfileUpdateInput {
+    const data: Prisma.PersonProfileUpdateInput = {
+      fullName: base.fullName,
+      dateOfBirth: base.dateOfBirth,
+      confidentialityLevel: base.confidentialityLevel,
+    };
+
+    if (typeof base.linkedUserId !== 'undefined') {
+      data.linkedUserId = base.linkedUserId;
+    }
+
+    if (typeof base.externalReference !== 'undefined') {
+      data.externalReference = base.externalReference;
+    }
+
+    if (typeof base.primaryContactEmail !== 'undefined') {
+      data.primaryContactEmail = base.primaryContactEmail;
+    }
+
+    if (typeof base.primaryContactPhone !== 'undefined') {
+      data.primaryContactPhone = base.primaryContactPhone;
+    }
+
+    return data;
+  }
+}
+
+

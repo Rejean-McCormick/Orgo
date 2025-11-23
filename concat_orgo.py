@@ -1,332 +1,287 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-concat_orgo.py
+build_code_dump.py
 
-Concatène tous les fichiers texte/code du repo Orgo en un seul .txt, avec :
-  - TOC en tête (liste de tous les fichiers inclus, en chemin absolu)
-  - Blocs par fichier, encadrés par:
-        ===== BEGIN chemin/relatif =====
-        ... contenu ...
-        ===== END chemin/relatif =====
+Generate multiple “code dump” .txt files from the Orgo monorepo.
 
-Règles par défaut :
-  - Racine = dossier contenant ce script (mettez-le à la racine de C:\MyCode\Orgo)
-  - Exclut automatiquement les répertoires :
-        .git, .github, Documentation,
-        node_modules, .next, dist, build, out, coverage, .cache, .venv, venv, __pycache__, target, bin, obj
-  - Ignore les fichiers manifestement binaires
-  - Respecte une taille max par fichier (par défaut 2 Mo)
-  - N’écrase pas le fichier de sortie
+Rules:
+- Certain files (config, tests, lockfiles, etc.) are excluded globally.
+- package.json files are always included.
+- Remaining files are grouped into category dumps (4–10 files) based on
+  their parent folders (CATEGORIES below).
+- When every file in a folder and its subfolders is relevant for a category,
+  we concatenate all those files for that category.
+- Each dump .txt file starts each file section with an index header.
 
-Usage typique (depuis C:\MyCode\Orgo) :
-  python concat_orgo.py
-    -> crée Code_Orgo_<timestamp>.txt
-
-Options utiles :
-  python concat_orgo.py --out MyOrgoDump.txt
-  python concat_orgo.py --include "apps/api/**" --include "apps/web/**"
-  python concat_orgo.py --exclude "packages/ui/**"
+Run from repo root:
+    python build_code_dump.py
 """
 
 from __future__ import annotations
-import argparse
+
 import fnmatch
-import os
 from pathlib import Path
-from typing import Set, List, Optional
-from datetime import datetime
+from typing import Dict, List, Set
 
-# ====== Extensions et noms pris en charge ======
-DEFAULT_EXTS: Set[str] = {
-    ".txt", ".tx", ".md", ".markdown",
-    ".json", ".yaml", ".yml", ".xml", ".toml", ".ini", ".cfg", ".conf", ".properties",
-    ".html", ".htm", ".css", ".scss", ".less",
-    ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs",
-    ".py", ".pyi",
-    ".java", ".kt", ".swift", ".rb", ".php", ".go", ".rs",
-    ".c", ".h", ".cpp", ".cc", ".hpp", ".cs",
-    ".sql",
-    ".sh", ".bash", ".zsh", ".fish", ".ps1", ".bat",
-    ".graphql", ".gql",
-    ".gradle",
-    ".pl", ".lua", ".r",
+# ------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------
+
+ROOT = Path(__file__).resolve().parent
+
+# File extensions to consider by default
+ALLOWED_EXTENSIONS = {
+    ".ts",
+    ".tsx",
+    ".js",
+    ".json",
+    ".md",
+    ".yml",
+    ".yaml",
+    ".prisma",
+    ".css",
+    ".toml",
+    ".conf",
     ".env",
-    ".svg",
-    ".ndjson",
-}
-NAMES_WITHOUT_EXT: Set[str] = {
-    "Dockerfile", "Makefile", "CMakeLists.txt",
-    ".gitignore", ".gitattributes", ".editorconfig",
-    ".all-contributorsrc", ".prettierignore", ".releaserc", "LICENSE",
-    "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
-    "tsconfig.json", "eslint.config.js", "eslint.config.mjs", ".eslintrc",
-    ".prettierrc", "prettier.config.js", "postcss.config.js",
-    "routes.json",
+    ".tsv",
+    ".txt",
 }
 
-# ====== Exclusions ======
-DEFAULT_EXCLUDE_DIRS: Set[str] = {
-    # VCS / infra
-    ".git", ".github", ".hg", ".svn",
-    # Builds / caches
-    "node_modules", ".next",
-    "dist", "build", "out", "coverage", ".cache",
-    ".venv", "venv", "__pycache__",
-    "target", "bin", "obj",
-    # Orgo-specific
-    "Documentation",
-}
-
-BINARY_EXTS: Set[str] = {
-    ".zip", ".gz", ".bz2", ".xz", ".7z", ".rar",
-    ".png", ".jpg", ".jpeg", ".webp", ".ico", ".gif", ".pdf", ".ttf", ".woff", ".woff2"
-}
-
-# On évite de ré-intégrer des sorties précédentes
-OUT_EXCLUDES: List[str] = [
-    "Code_*.txt",
+# Glob-style patterns for files to exclude (applied on posix-style rel path)
+EXCLUDE_PATTERNS = [
+    # root / infra / plumbing
+    ".gitignore",
+    ".dockerignore",
+    "yarn.lock",
+    "turbo.json",
+    "docker-compose.yml",
+    "ai_bundle.md",
+    "concat_orgo.py",
+    "LICENSE",
+    # generic configs
+    "tsconfig.json",
+    "tsconfig.build.json",
+    "tsconfig*.json",
+    ".eslintrc.js",
+    ".prettierrc",
+    "jest.config.js",
+    "jest.setup.js",
+    "next-env.d.ts",
+    "next.config.js",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "webpack-hmr.config.js",
+    "nest-cli.json",
+    "Dockerfile",
+    # tests
+    "*.spec.ts",
+    "*.test.tsx",
+    "*e2e-spec.ts",
+    "test/jest-e2e.json",
+    # prisma migrations (keep schema.prisma separately)
+    "prisma/migrations/*/migration.sql",
+    "prisma/migrations/migration_lock.toml",
+    # misc / placeholders
+    ".gitkeep",
 ]
 
-# ====== CLI ======
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(
-        description="Concatène les fichiers texte/code du repo Orgo en un seul fichier texte structuré."
-    )
-    p.add_argument(
-        "-o", "--out", default=None,
-        help="Nom du fichier de sortie (par défaut: Code_<nom-dossier>_<timestamp>.txt)"
-    )
-    p.add_argument(
-        "--ext",
-        help="Extensions additionnelles ou personnalisées, CSV (par ex: js,ts,tsx,md)"
-    )
-    p.add_argument(
-        "--include", action="append", default=[],
-        help="Glob d'inclusion relatif (répétable). Si fourni, seul ce qui matche est pris."
-    )
-    p.add_argument(
-        "--exclude", action="append", default=[],
-        help="Glob d'exclusion relatif (répétable) en plus des exclusions par défaut."
-    )
-    p.add_argument(
-        "--max-size", type=int, default=2_000_000,
-        help="Taille max par fichier en octets (défaut: 2_000_000)."
-    )
-    p.add_argument(
-        "--no-headers", action="store_true",
-        help="Supprime les en-têtes BEGIN/END par fichier (seule la TOC reste)."
-    )
-    return p.parse_args()
+# Category → list of “roots” (directories or specific files)
+# A file is assigned to the first category that matches it.
+CATEGORIES: Dict[str, List[str]] = {
+    # 1
+    "00_root_and_monorepo_meta.txt": [
+        "package.json",            # repo root package.json
+        "package-scripts.js",
+        "README.md",               # only root README (others are excluded by rule)
+    ],
+    # 2
+    "01_api_bootstrap_and_persistence.txt": [
+        "apps/api/package.json",
+        "apps/api/src/main.ts",
+        "apps/api/src/app.module.ts",
+        "apps/api/src/app.controller.ts",
+        "apps/api/src/app.service.ts",
+        "apps/api/src/config",
+        "apps/api/src/persistence",
+        "apps/api/prisma/schema.prisma",
+    ],
+    # 3
+    "02_api_backbone_identity_and_persons.txt": [
+        "apps/api/src/orgo/backbone/identity",
+        "apps/api/src/orgo/backbone/persons",
+    ],
+    # 4
+    "03_api_backbone_organizations_and_rbac.txt": [
+        "apps/api/src/orgo/backbone/organizations",
+        "apps/api/src/orgo/backbone/rbac",
+    ],
+    # 5
+    "04_api_config_profiles_and_feature_flags.txt": [
+        "apps/api/src/orgo/config",
+    ],
+    # 6
+    "05_api_core_and_supporting_core.txt": [
+        "apps/api/src/orgo/core",
+    ],
+    # 7
+    "06_api_domain_insights_security_and_orgo_module.txt": [
+        "apps/api/src/orgo/domain",
+        "apps/api/src/orgo/insights",
+        "apps/api/src/orgo/security",
+        "apps/api/src/orgo/orgo.module.ts",
+    ],
+    # 8
+    "07_web_app_shell_pages_and_store.txt": [
+        "apps/web/package.json",
+        "apps/web/pages",
+        "apps/web/src/store",
+        "apps/web/src/styles/global.css",
+    ],
+    # 9
+    "08_web_orgo_frontend_types_screens_and_shared_ui.txt": [
+        "apps/web/src/orgo",
+        "apps/web/src/screens",
+        "packages/ui",
+        "packages/config/nginx.conf",
+        "packages/config/package.json",
+        "packages/tsconfig/package.json",
+    ],
+}
 
-def normalize_exts(exts_csv: Optional[str]) -> Set[str]:
-    if not exts_csv:
-        return set(DEFAULT_EXTS)
-    parts = [e.strip().lower() for e in exts_csv.split(",") if e.strip()]
-    out = set()
-    for e in parts:
-        if not e.startswith("."):
-            e = "." + e
-        out.add(e)
-    return out
+OUTPUT_DIR = ROOT / "ai_dumps"
 
-# ====== Heuristiques texte ======
-def is_probably_text(sample: bytes) -> bool:
-    if not sample:
-        return True
-    if b"\x00" in sample:
+
+# ------------------------------------------------------------
+# Helper functions
+# ------------------------------------------------------------
+
+def relpath(path: Path) -> str:
+    """Return posix-style relative path from ROOT."""
+    return path.relative_to(ROOT).as_posix()
+
+
+def is_package_json(path: Path) -> bool:
+    return path.name == "package.json"
+
+
+def is_allowed_file(path: Path) -> bool:
+    """Return True if the file is a candidate before exclusions."""
+    if not path.is_file():
         return False
-    try:
-        sample.decode("utf-8")
+    # Always allow package.json
+    if is_package_json(path):
         return True
-    except UnicodeDecodeError:
-        pass
-    ctrl = sum(1 for b in sample if b < 32 and b not in (9, 10, 13))
-    return (ctrl / max(1, len(sample))) < 0.01
+    return path.suffix.lower() in ALLOWED_EXTENSIONS
 
-def pick_encoding(path: Path) -> Optional[str]:
-    try:
-        with path.open("rb") as f:
-            sample = f.read(32768)
-    except Exception:
-        return None
-    if not is_probably_text(sample):
-        return None
-    for enc in ("utf-8", "utf-8-sig", "utf-16", "cp1252", "latin-1"):
-        try:
-            sample.decode(enc)
-            return enc
-        except UnicodeDecodeError:
+
+def is_excluded(path: Path) -> bool:
+    """Return True if the file should be excluded based on patterns and special rules."""
+    rel = relpath(path)
+
+    # Keep root README.md, exclude other READMEs
+    if path.name == "README.md":
+        if path.parent == ROOT:
+            return False
+        return True
+
+    for pattern in EXCLUDE_PATTERNS:
+        if fnmatch.fnmatch(rel, pattern):
+            return True
+
+    return False
+
+
+def collect_files_under(root_subpath: str) -> List[Path]:
+    """
+    Collect all candidate files under a given subpath.
+    If root_subpath is a file, return it if allowed+not-excluded.
+    """
+    root_path = (ROOT / root_subpath).resolve()
+    files: List[Path] = []
+
+    if root_path.is_file():
+        if is_allowed_file(root_path) and not is_excluded(root_path):
+            files.append(root_path)
+        return files
+
+    if not root_path.exists():
+        return files
+
+    for p in root_path.rglob("*"):
+        if not p.is_file():
             continue
-    return "latin-1"
+        if not is_allowed_file(p):
+            continue
+        if is_excluded(p):
+            continue
+        files.append(p)
 
-# ====== Utilitaires ======
-def relpath(base: Path, p: Path) -> str:
-    try:
-        r = p.relative_to(base)
-    except Exception:
-        r = p
-    return str(r).replace("\\", "/")
+    return files
 
-def should_include_file(
-    base: Path,
-    file_path: Path,
-    allowed_exts: Set[str],
-    include_globs: List[str],
-    exclude_globs: List[str],
-    max_size: int,
-    out_path: Path,
-) -> bool:
-    if not file_path.is_file():
-        return False
 
-    # Exclut les extensions manifestement binaires
-    if file_path.suffix.lower() in BINARY_EXTS:
-        return False
+def assign_files_to_categories() -> Dict[str, List[Path]]:
+    """
+    Walk over CATEGORIES and collect files from each root.
+    A file goes into the first category that mentions it.
+    No duplicates across categories.
+    """
+    assigned: Dict[str, List[Path]] = {name: [] for name in CATEGORIES}
+    already_taken: Set[Path] = set()
 
-    # Ne pas se reprendre soi-même
-    try:
-        if file_path.resolve() == out_path.resolve():
-            return False
-    except Exception:
-        pass
-
-    # Taille max
-    try:
-        if file_path.stat().st_size > max_size:
-            return False
-    except Exception:
-        return False
-
-    rel = relpath(base, file_path)
-
-    # Glob d'exclusion supplémentaires
-    for pat in exclude_globs:
-        if fnmatch.fnmatch(rel, pat):
-            return False
-
-    # Si on a des includes, on les respecte strictement
-    if include_globs:
-        ok = any(fnmatch.fnmatch(rel, pat) for pat in include_globs)
-        if not ok:
-            return False
-
-    # Extensions connues ou noms spéciaux
-    if file_path.suffix.lower() in allowed_exts or file_path.name in NAMES_WITHOUT_EXT:
-        return True
-
-    # Sinon, heuristique: texte probable ?
-    enc = pick_encoding(file_path)
-    return enc is not None
-
-def walk_select(
-    base_dir: Path,
-    allowed_exts: Set[str],
-    include_globs: List[str],
-    exclude_globs: List[str],
-    max_size: int,
-    out_path: Path,
-) -> List[Path]:
-    selected: List[Path] = []
-    for root, dirs, files in os.walk(base_dir, followlinks=False):
-        # Filtrage de répertoires par nom (DEFAULT_EXCLUDE_DIRS)
-        dirs[:] = [d for d in dirs if d not in DEFAULT_EXCLUDE_DIRS]
-
-        root_path = Path(root)
-        for name in files:
-            fp = root_path / name
-            try:
-                if fp.resolve() == out_path.resolve():
+    for out_name, roots in CATEGORIES.items():
+        for root_subpath in roots:
+            for f in collect_files_under(root_subpath):
+                if f in already_taken:
                     continue
-            except Exception:
-                pass
-            if should_include_file(
-                base_dir, fp, allowed_exts, include_globs, exclude_globs, max_size, out_path
-            ):
-                selected.append(fp)
+                assigned[out_name].append(f)
+                already_taken.add(f)
 
-    selected.sort(key=lambda p: relpath(base_dir, p).lower())
-    return selected
+    return assigned
 
-# ====== Écriture avec TOC ======
-def write_concat(
-    base_dir: Path,
-    files: List[Path],
-    out_path: Path,
-    no_headers: bool,
-) -> int:
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    abs_paths: List[str] = []
-    for p in files:
-        try:
-            abs_paths.append(str(p.resolve()))
-        except Exception:
-            abs_paths.append(str(p))
 
-    count = 0
-    with out_path.open("w", encoding="utf-8", newline="\n") as out:
-        # TOC
-        out.write(f"===== TOC ({len(files)} fichiers) =====\n")
-        for i, ap in enumerate(abs_paths, 1):
-            out.write(f"{i}. {ap}\n")
-        out.write("===== END TOC =====\n\n")
+def write_dump_file(output_path: Path, files: List[Path]) -> None:
+    """
+    Write a dump file with a file index at the beginning of each section.
 
-        # Contenus
-        for p in files:
-            enc = pick_encoding(p) or "utf-8"
-            rel = relpath(base_dir, p)
+    Format:
+        === FILE 1/NN: relative/path.ts ===
 
-            if not no_headers:
-                out.write(f"\n===== BEGIN {rel} =====\n")
+        <content>
+    """
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    files_sorted = sorted(files, key=lambda p: relpath(p))
+    total = len(files_sorted)
+
+    with output_path.open("w", encoding="utf-8") as out:
+        for idx, f in enumerate(files_sorted, start=1):
+            header = f"=== FILE {idx}/{total}: {relpath(f)} ===\n\n"
+            out.write(header)
 
             try:
-                with p.open("r", encoding=enc, errors="strict") as f:
-                    for line in f:
-                        out.write(line)
-            except UnicodeDecodeError:
-                # Fallback si encodage foireux
-                with p.open("r", encoding="latin-1", errors="replace") as f:
-                    for line in f:
-                        out.write(line)
+                content = f.read_text(encoding="utf-8", errors="ignore")
+            except Exception as e:
+                content = f"<<ERROR READING FILE: {e}>>"
 
-            if not no_headers:
-                out.write(f"\n===== END {rel} =====\n")
+            out.write(content.rstrip() + "\n\n\n")
 
-            out.write("\n")
-            count += 1
 
-    return count
-
-# ====== Exécution mono-fichier ======
-def run_single_output(base_dir: Path, args: argparse.Namespace) -> None:
-    if args.out:
-        out_path = (base_dir / args.out).resolve()
-    else:
-        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        out_name = f"Code_{base_dir.name}_{stamp}.txt"
-        out_path = (base_dir / out_name).resolve()
-
-    allowed_exts = normalize_exts(args.ext)
-    include_globs = list(args.include or [])
-    # Ajout des patterns d'exclusion de sorties générées
-    exclude_globs = list(args.exclude or []) + list(OUT_EXCLUDES)
-
-    files = walk_select(
-        base_dir,
-        allowed_exts,
-        include_globs,
-        exclude_globs,
-        args.max_size,
-        out_path,
-    )
-    n = write_concat(base_dir, files, out_path, args.no_headers)
-    print(f"{n} fichier(s) concaténé(s) -> {out_path.name}")
+# ------------------------------------------------------------
+# Main
+# ------------------------------------------------------------
 
 def main() -> None:
-    args = parse_args()
-    # Racine = dossier contenant ce script (mettez-le à C:\MyCode\Orgo)
-    base_dir = Path(__file__).resolve().parent
-    run_single_output(base_dir, args)
+    category_files = assign_files_to_categories()
+
+    for out_name, files in category_files.items():
+        if not files:
+            continue  # skip empty categories
+        out_path = OUTPUT_DIR / out_name
+        print(f"Writing {out_path} ({len(files)} files)...")
+        write_dump_file(out_path, files)
+
+    print("Done.")
+
 
 if __name__ == "__main__":
     main()

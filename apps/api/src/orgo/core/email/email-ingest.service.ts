@@ -283,15 +283,13 @@ export class EmailIngestService {
         };
       }
 
-      const batchResults: EmailIngestionBatchResult[] = [];
-
-      for (const config of configs) {
-        const batchResult = await this.ingestForAccountConfig(
-          config,
-          maxMessages,
-        );
-        batchResults.push(batchResult);
-      }
+      // Process accounts in parallel; each account is isolated at the mailbox
+      // and DB level, so this is safe and lowers end‑to‑end latency.
+      const batchResults = await Promise.all(
+        configs.map((config) =>
+          this.ingestForAccountConfig(config, maxMessages),
+        ),
+      );
 
       const anyFailed = batchResults.some(
         (result) => result.status === 'failed',
@@ -627,6 +625,15 @@ export class EmailIngestService {
           organizationId: config.organization_id,
           emailAccountConfigId: config.id,
         });
+
+        await this.createProcessingEvent(
+          emailMessageId,
+          'classification_succeeded',
+          {
+            batchId,
+            remoteId: rawEmail.remoteId,
+          },
+        );
       } catch (err: unknown) {
         const errorText =
           err instanceof Error ? err.message : String(err ?? 'unknown');
@@ -828,10 +835,14 @@ export class EmailIngestService {
       const checksum =
         attachment.checksum ?? this.computeChecksum(attachment.content);
 
-      await this.attachmentStorage.saveAttachment(storageKey, attachment.content, {
-        mimeType: attachment.mimeType,
-        sizeBytes: attachment.sizeBytes,
-      });
+      await this.attachmentStorage.saveAttachment(
+        storageKey,
+        attachment.content,
+        {
+          mimeType: attachment.mimeType,
+          sizeBytes: attachment.sizeBytes,
+        },
+      );
 
       await this.persistence.insertRecord('email_attachments', {
         email_message_id: emailMessageId,
@@ -846,18 +857,42 @@ export class EmailIngestService {
 
   /**
    * Writes an `email_processing_events` row for the given message.
+   * Failures here are logged but do not fail the caller.
    */
   private async createProcessingEvent(
     emailMessageId: string,
     eventType: EmailProcessingEventType,
     details: Record<string, unknown>,
   ): Promise<void> {
-    await this.persistence.insertRecord('email_processing_events', {
-      email_message_id: emailMessageId,
-      event_type: eventType,
-      details,
-      created_at: new Date(),
-    });
+    try {
+      await this.persistence.insertRecord('email_processing_events', {
+        email_message_id: emailMessageId,
+        event_type: eventType,
+        details,
+        created_at: new Date(),
+      });
+    } catch (err: unknown) {
+      const errorText =
+        err instanceof Error ? err.message : String(err ?? 'unknown');
+
+      this.logService.logEvent({
+        category: 'EMAIL',
+        logLevel: 'ERROR',
+        message: 'Failed to record email_processing_event',
+        identifier: `email_ingest:event:${emailMessageId}`,
+        metadata: {
+          emailMessageId,
+          eventType,
+          error: errorText,
+        },
+      });
+
+      this.logger.error(
+        `Failed to record email_processing_event (emailMessageId=${emailMessageId}, eventType=${eventType}): ${
+          err instanceof Error ? err.stack ?? err.message : String(err)
+        }`,
+      );
+    }
   }
 
   /**

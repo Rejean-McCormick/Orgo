@@ -1,0 +1,1979 @@
+=== FILE 1/11: apps/api/src/orgo/backbone/organizations/dto/create-organization.dto.ts ===
+
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+
+export const ORGANIZATION_STATUS_VALUES = ['active', 'suspended', 'archived'] as const;
+
+export type OrganizationStatus = (typeof ORGANIZATION_STATUS_VALUES)[number];
+
+export class CreateOrganizationDto {
+  @ApiProperty({
+    description:
+      'Short, URL-safe identifier for the organization (lowercase, hyphen-separated). Must be unique.',
+    example: 'northside-hospital',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(3)
+  @MaxLength(64)
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message:
+      'slug must contain only lowercase letters, digits and single hyphens between segments (e.g. "northside-hospital").',
+  })
+  slug!: string;
+
+  @ApiProperty({
+    description: 'Human-readable display name for the organization.',
+    example: 'Northside Hospital',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  display_name!: string;
+
+  @ApiPropertyOptional({
+    description: 'Registered legal name of the organization.',
+    example: 'Northside Hospital Foundation, Inc.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  legal_name?: string;
+
+  @ApiPropertyOptional({
+    description: 'Primary email/web domain used by this organization.',
+    example: 'northside.example.org',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @Matches(/^[a-z0-9.-]+\.[a-z]{2,}$/i, {
+    message: 'primary_domain must be a valid domain name (e.g. "orgo.example.org").',
+  })
+  primary_domain?: string;
+
+  @ApiProperty({
+    description: 'Default IANA timezone for this organization.',
+    example: 'America/New_York',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  timezone!: string;
+
+  @ApiProperty({
+    description: 'Default locale for this organization (IETF language tag, e.g. "en" or "fr-CA").',
+    example: 'en',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^[a-z]{2}(?:-[A-Z]{2})?$/, {
+    message: 'default_locale must look like "en" or "fr-CA".',
+  })
+  default_locale!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Behavioral profile key to attach to this organization (see profiles YAML, e.g. "default", "hospital"). If omitted, the system default profile is used.',
+    example: 'default',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(64)
+  @Matches(/^[a-z0-9_]+$/, {
+    message: 'profile_code must use lowercase letters, digits and underscores only.',
+  })
+  profile_code?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Initial status for the organization. If omitted, it defaults to "active" at the service/persistence layer.',
+    enum: ORGANIZATION_STATUS_VALUES,
+    example: 'active',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(ORGANIZATION_STATUS_VALUES)
+  status?: OrganizationStatus;
+}
+
+
+=== FILE 2/11: apps/api/src/orgo/backbone/organizations/dto/update-organization.dto.ts ===
+
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsEnum,
+  IsFQDN,
+  IsLocale,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+} from 'class-validator';
+
+/**
+ * JSON-facing representation of organization_status_enum.
+ *
+ * Canonical DB enum: organization_status_enum = 'active' | 'suspended' | 'archived'
+ * JSON uses the same lower-case tokens.
+ */
+export enum OrganizationStatus {
+  Active = 'active',
+  Suspended = 'suspended',
+  Archived = 'archived',
+}
+
+/**
+ * DTO for partially updating an Organization.
+ *
+ * All fields are optional; only provided fields will be updated.
+ * To clear nullable fields (legal_name, primary_domain), send them explicitly as null.
+ */
+export class UpdateOrganizationDto {
+  @ApiPropertyOptional({
+    description:
+      'Short, URL-safe slug used as the stable organization identifier (e.g. in URLs and config).',
+    example: 'northside-hospital',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message:
+      'slug must be lower-case, alphanumeric, and may contain single hyphens between segments',
+  })
+  @MaxLength(190)
+  slug?: string;
+
+  @ApiPropertyOptional({
+    description: 'Human-friendly display name for the organization.',
+    example: 'Northside Hospital',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  display_name?: string;
+
+  @ApiPropertyOptional({
+    description: 'Registered legal name for the organization (nullable).',
+    example: 'Northside Hospital Inc.',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  legal_name?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Primary email/web domain for the organization (nullable). Used for email routing and link generation.',
+    example: 'northside.example.org',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsFQDN()
+  @MaxLength(255)
+  primary_domain?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Operational status of the organization.',
+    enum: OrganizationStatus,
+    example: OrganizationStatus.Active,
+  })
+  @IsOptional()
+  @IsEnum(OrganizationStatus)
+  status?: OrganizationStatus;
+
+  @ApiPropertyOptional({
+    description: 'Default IANA timezone for the organization.',
+    example: 'America/New_York',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  timezone?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Default locale (BCP 47) for the organization, e.g. "en", "fr-CA".',
+    example: 'en',
+  })
+  @IsOptional()
+  @IsLocale()
+  @MaxLength(20)
+  default_locale?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Behavioral profile code linked to organization_profiles.profile_code (e.g. "default", "hospital", "friend_group").',
+    example: 'default',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  profile_code?: string;
+}
+
+
+=== FILE 3/11: apps/api/src/orgo/backbone/organizations/organization.controller.ts ===
+
+// apps/api/src/orgo/backbone/organizations/organization.controller.ts
+
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { OrganizationService } from './organization.service';
+import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { ListOrganizationsQueryDto } from './dto/list-organizations-query.dto';
+import { OrganizationResponseDto } from './dto/organization-response.dto';
+
+@ApiTags('organizations')
+@Controller('api/v3/organizations')
+export class OrganizationController {
+  constructor(private readonly organizationService: OrganizationService) {}
+
+  @Get()
+  @ApiOperation({
+    summary: 'List organizations',
+    description:
+      'Returns the list of organizations (tenants), optionally filtered by status or search term.',
+  })
+  @ApiOkResponse({
+    description: 'List of organizations.',
+    type: OrganizationResponseDto,
+    isArray: true,
+  })
+  async listOrganizations(
+    @Query() query: ListOrganizationsQueryDto,
+  ): Promise<OrganizationResponseDto[]> {
+    return this.organizationService.listOrganizations(query);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get a single organization',
+    description: 'Returns a single organization by its ID.',
+  })
+  @ApiOkResponse({
+    description: 'The organization matching the given ID.',
+    type: OrganizationResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Organization not found.',
+  })
+  async getOrganization(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<OrganizationResponseDto> {
+    return this.organizationService.getOrganizationByIdOrThrow(id);
+  }
+
+  @Post()
+  @ApiOperation({
+    summary: 'Create an organization',
+    description:
+      'Creates a new organization (tenant) with slug, display name, timezone, locale, status, and optional profile linkage.',
+  })
+  @ApiCreatedResponse({
+    description: 'Organization created successfully.',
+    type: OrganizationResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation error while creating the organization.',
+  })
+  async createOrganization(
+    @Body() dto: CreateOrganizationDto,
+  ): Promise<OrganizationResponseDto> {
+    return this.organizationService.createOrganization(dto);
+  }
+
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Update an organization',
+    description:
+      'Updates an existing organization (tenant). Typically used to change display name, status, timezone, locale, or primary domain.',
+  })
+  @ApiOkResponse({
+    description: 'Organization updated successfully.',
+    type: OrganizationResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Organization not found.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation error while updating the organization.',
+  })
+  async updateOrganization(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: UpdateOrganizationDto,
+  ): Promise<OrganizationResponseDto> {
+    return this.organizationService.updateOrganization(id, dto);
+  }
+}
+
+
+=== FILE 4/11: apps/api/src/orgo/backbone/organizations/organization.module.ts ===
+
+// apps/api/src/orgo/backbone/organizations/organization.module.ts
+
+import { Module } from '@nestjs/common';
+import { PersistenceModule } from '../../../persistence/persistence.module';
+import { LoggerModule } from '../../core/logging/logger.module';
+import { OrgoConfigModule } from '../../config/config.module';
+import { OrganizationService } from './organization.service';
+import { OrganizationController } from './organization.controller';
+
+/**
+ * OrganizationModule
+ *
+ * NestJS module for the multi-tenant backbone "organizations" slice.
+ * - Exposes OrganizationService and OrganizationController.
+ * - Depends on:
+ *   - PersistenceModule (Prisma access to `organizations`, `organization_profiles`, etc.)
+ *   - LoggerModule (structured logging / audit)
+ *   - OrgoConfigModule (organization profiles, feature flags, global config)
+ */
+@Module({
+  imports: [
+    PersistenceModule,
+    LoggerModule,
+    OrgoConfigModule,
+  ],
+  controllers: [OrganizationController],
+  providers: [OrganizationService],
+  exports: [OrganizationService],
+})
+export class OrganizationModule {}
+
+
+=== FILE 5/11: apps/api/src/orgo/backbone/organizations/organization.service.ts ===
+
+// apps/api/src/orgo/backbone/organizations/organization.service.ts
+
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { randomUUID } from 'crypto';
+
+import { PrismaService } from '../../../persistence/prisma/prisma.service';
+import { LogService } from '../../core/logging/log.service';
+
+export type OrganizationStatus = 'active' | 'suspended' | 'archived';
+
+export interface CreateOrganizationInput {
+  slug?: string;
+  displayName: string;
+  legalName?: string | null;
+  primaryDomain?: string | null;
+  timezone: string;
+  defaultLocale: string;
+  /**
+   * Profile code from profiles YAML (e.g. "default", "hospital", "advocacy_group").
+   * If omitted, defaults to "default".
+   */
+  profileCode?: string;
+  status?: OrganizationStatus;
+}
+
+export interface UpdateOrganizationInput {
+  slug?: string;
+  displayName?: string;
+  legalName?: string | null;
+  primaryDomain?: string | null;
+  timezone?: string;
+  defaultLocale?: string;
+  /**
+   * New profile code to attach to this org. If omitted, existing profile is kept.
+   * If explicitly set to null, existing profile is left unchanged (no delete here).
+   */
+  profileCode?: string | null;
+  status?: OrganizationStatus;
+}
+
+/**
+ * Canonical TS view of an Organization row with its linked profile_code.
+ * Maps directly from the `organizations` and `organization_profiles` tables. 
+ */
+export interface OrganizationWithProfile {
+  id: string;
+  slug: string;
+  displayName: string;
+  legalName: string | null;
+  primaryDomain: string | null;
+  status: OrganizationStatus;
+  timezone: string;
+  defaultLocale: string;
+  profileCode: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Internal shape that matches the DB row names (`snake_case`) plus optional `profile_code`
+ * when joined with `organization_profiles`. 
+ */
+interface DbOrganizationRow {
+  id: string;
+  slug: string;
+  display_name: string;
+  legal_name: string | null;
+  primary_domain: string | null;
+  status: OrganizationStatus;
+  timezone: string;
+  default_locale: string;
+  created_at: Date;
+  updated_at: Date;
+  profile_code?: string | null;
+}
+
+@Injectable()
+export class OrganizationService {
+  private readonly logger = new Logger(OrganizationService.name);
+
+  private static readonly ALLOWED_STATUSES: OrganizationStatus[] = [
+    'active',
+    'suspended',
+    'archived',
+  ];
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logService: LogService,
+  ) {}
+
+  /**
+   * Create a new organization (tenant) and attach a single active profile row. 
+   */
+  async createOrganization(
+    input: CreateOrganizationInput,
+  ): Promise<OrganizationWithProfile> {
+    const displayName = input.displayName?.trim();
+    if (!displayName) {
+      throw new BadRequestException('displayName is required');
+    }
+
+    const timezone = input.timezone?.trim();
+    if (!timezone) {
+      throw new BadRequestException('timezone is required');
+    }
+
+    const defaultLocale = input.defaultLocale?.trim();
+    if (!defaultLocale) {
+      throw new BadRequestException('defaultLocale is required');
+    }
+
+    const slug = this.normalizeSlug(input.slug ?? displayName);
+    if (!slug) {
+      throw new BadRequestException('Organization slug cannot be empty');
+    }
+
+    const status: OrganizationStatus = input.status ?? 'active';
+    this.ensureValidStatus(status);
+
+    const profileCode = input.profileCode ?? 'default';
+
+    const organization = await this.prisma.$transaction<OrganizationWithProfile>(
+      async (tx) => {
+        // Enforce unique slug
+        const existing = await tx.$queryRaw<Pick<DbOrganizationRow, 'id'>[]>`
+          SELECT id FROM organizations WHERE slug = ${slug} LIMIT 1
+        `;
+        if (existing.length > 0) {
+          throw new ConflictException(
+            `Organization slug "${slug}" is already in use`,
+          );
+        }
+
+        const orgId = randomUUID();
+        const profileId = randomUUID();
+
+        const [inserted] = await tx.$queryRaw<DbOrganizationRow[]>`
+          INSERT INTO organizations (
+            id,
+            slug,
+            display_name,
+            legal_name,
+            primary_domain,
+            status,
+            timezone,
+            default_locale
+          )
+          VALUES (
+            ${orgId},
+            ${slug},
+            ${displayName},
+            ${input.legalName ?? null},
+            ${input.primaryDomain ?? null},
+            ${status},
+            ${timezone},
+            ${defaultLocale}
+          )
+          RETURNING
+            id,
+            slug,
+            display_name,
+            legal_name,
+            primary_domain,
+            status,
+            timezone,
+            default_locale,
+            created_at,
+            updated_at
+        `;
+
+        // Create a single profile row for this org (one active profile per org). :contentReference[oaicite:3]{index=3}
+        await tx.$queryRaw`
+          INSERT INTO organization_profiles (
+            id,
+            organization_id,
+            profile_code,
+            reactivity_profile,
+            transparency_profile,
+            pattern_sensitivity_profile,
+            retention_profile,
+            version
+          )
+          VALUES (
+            ${profileId},
+            ${orgId},
+            ${profileCode},
+            '{}'::jsonb,
+            '{}'::jsonb,
+            '{}'::jsonb,
+            '{}'::jsonb,
+            1
+          )
+        `;
+
+        return this.mapOrganizationRow({
+          ...inserted,
+          profile_code: profileCode,
+        });
+      },
+    );
+
+    this.logService.logEvent({
+      category: 'SYSTEM',
+      logLevel: 'INFO',
+      message: 'Organization created',
+      identifier: `organization_id:${organization.id}`,
+      metadata: {
+        slug: organization.slug,
+        profileCode: organization.profileCode,
+      },
+    });
+
+    this.logger.log(`Created organization "${organization.slug}"`);
+
+    return organization;
+  }
+
+  /**
+   * Update an existing organization and optionally its attached profile_code. :contentReference[oaicite:4]{index=4}
+   */
+  async updateOrganization(
+    id: string,
+    input: UpdateOrganizationInput,
+  ): Promise<OrganizationWithProfile> {
+    if (!id) {
+      throw new BadRequestException('id is required');
+    }
+
+    const organization = await this.prisma.$transaction<OrganizationWithProfile>(
+      async (tx) => {
+        const rows = await tx.$queryRaw<DbOrganizationRow[]>`
+          SELECT
+            o.id,
+            o.slug,
+            o.display_name,
+            o.legal_name,
+            o.primary_domain,
+            o.status,
+            o.timezone,
+            o.default_locale,
+            o.created_at,
+            o.updated_at,
+            op.profile_code
+          FROM organizations o
+          LEFT JOIN organization_profiles op
+            ON op.organization_id = o.id
+          WHERE o.id = ${id}
+          LIMIT 1
+        `;
+
+        if (rows.length === 0) {
+          throw new NotFoundException(
+            `Organization with id "${id}" not found`,
+          );
+        }
+
+        const current = rows[0];
+
+        const newSlug =
+          input.slug !== undefined
+            ? this.normalizeSlug(input.slug)
+            : current.slug;
+
+        if (!newSlug) {
+          throw new BadRequestException('Organization slug cannot be empty');
+        }
+
+        let newStatus: OrganizationStatus = current.status;
+        if (input.status) {
+          this.ensureValidStatus(input.status);
+          newStatus = input.status;
+        }
+
+        const newDisplayName =
+          input.displayName?.trim() || current.display_name;
+        const newLegalName =
+          input.legalName !== undefined ? input.legalName : current.legal_name;
+        const newPrimaryDomain =
+          input.primaryDomain !== undefined
+            ? input.primaryDomain
+            : current.primary_domain;
+        const newTimezone =
+          input.timezone?.trim() || current.timezone;
+        const newDefaultLocale =
+          input.defaultLocale?.trim() || current.default_locale;
+
+        const newProfileCode =
+          input.profileCode !== undefined
+            ? input.profileCode
+            : current.profile_code ?? null;
+
+        // If slug changed, ensure it remains unique
+        if (newSlug !== current.slug) {
+          const existingSlug = await tx.$queryRaw<
+            Pick<DbOrganizationRow, 'id'>[]
+          >`
+            SELECT id
+            FROM organizations
+            WHERE slug = ${newSlug}
+              AND id <> ${id}
+            LIMIT 1
+          `;
+          if (existingSlug.length > 0) {
+            throw new ConflictException(
+              `Organization slug "${newSlug}" is already in use`,
+            );
+          }
+        }
+
+        const [updated] = await tx.$queryRaw<DbOrganizationRow[]>`
+          UPDATE organizations
+          SET
+            slug = ${newSlug},
+            display_name = ${newDisplayName},
+            legal_name = ${newLegalName},
+            primary_domain = ${newPrimaryDomain},
+            status = ${newStatus},
+            timezone = ${newTimezone},
+            default_locale = ${newDefaultLocale},
+            updated_at = NOW()
+          WHERE id = ${id}
+          RETURNING
+            id,
+            slug,
+            display_name,
+            legal_name,
+            primary_domain,
+            status,
+            timezone,
+            default_locale,
+            created_at,
+            updated_at
+        `;
+
+        if (newProfileCode) {
+          // Upsert the org's profile row; enforce single profile per org. :contentReference[oaicite:5]{index=5}
+          const existingProfile = await tx.$queryRaw<{ id: string }[]>`
+            SELECT id
+            FROM organization_profiles
+            WHERE organization_id = ${id}
+            LIMIT 1
+          `;
+
+          if (existingProfile.length === 0) {
+            const profileId = randomUUID();
+            await tx.$queryRaw`
+              INSERT INTO organization_profiles (
+                id,
+                organization_id,
+                profile_code,
+                reactivity_profile,
+                transparency_profile,
+                pattern_sensitivity_profile,
+                retention_profile,
+                version
+              )
+              VALUES (
+                ${profileId},
+                ${id},
+                ${newProfileCode},
+                '{}'::jsonb,
+                '{}'::jsonb,
+                '{}'::jsonb,
+                '{}'::jsonb,
+                1
+              )
+            `;
+          } else {
+            await tx.$queryRaw`
+              UPDATE organization_profiles
+              SET
+                profile_code = ${newProfileCode},
+                version = version + 1,
+                updated_at = NOW()
+              WHERE organization_id = ${id}
+            `;
+          }
+        }
+
+        return this.mapOrganizationRow({
+          ...updated,
+          profile_code: newProfileCode ?? current.profile_code ?? null,
+        });
+      },
+    );
+
+    this.logService.logEvent({
+      category: 'SYSTEM',
+      logLevel: 'INFO',
+      message: 'Organization updated',
+      identifier: `organization_id:${organization.id}`,
+      metadata: {
+        slug: organization.slug,
+        profileCode: organization.profileCode,
+      },
+    });
+
+    this.logger.log(`Updated organization "${organization.slug}"`);
+
+    return organization;
+  }
+
+  /**
+   * Fetch a single organization by id, including its profile_code.
+   */
+  async getOrganizationById(id: string): Promise<OrganizationWithProfile> {
+    if (!id) {
+      throw new BadRequestException('id is required');
+    }
+
+    const rows = await this.prisma.$queryRaw<DbOrganizationRow[]>`
+      SELECT
+        o.id,
+        o.slug,
+        o.display_name,
+        o.legal_name,
+        o.primary_domain,
+        o.status,
+        o.timezone,
+        o.default_locale,
+        o.created_at,
+        o.updated_at,
+        op.profile_code
+      FROM organizations o
+      LEFT JOIN organization_profiles op
+        ON op.organization_id = o.id
+      WHERE o.id = ${id}
+      LIMIT 1
+    `;
+
+    if (rows.length === 0) {
+      throw new NotFoundException(`Organization with id "${id}" not found`);
+    }
+
+    return this.mapOrganizationRow(rows[0]);
+  }
+
+  /**
+   * Fetch a single organization by slug, including its profile_code.
+   */
+  async getOrganizationBySlug(
+    slug: string,
+  ): Promise<OrganizationWithProfile> {
+    const normalizedSlug = this.normalizeSlug(slug);
+    if (!normalizedSlug) {
+      throw new BadRequestException('slug cannot be empty');
+    }
+
+    const rows = await this.prisma.$queryRaw<DbOrganizationRow[]>`
+      SELECT
+        o.id,
+        o.slug,
+        o.display_name,
+        o.legal_name,
+        o.primary_domain,
+        o.status,
+        o.timezone,
+        o.default_locale,
+        o.created_at,
+        o.updated_at,
+        op.profile_code
+      FROM organizations o
+      LEFT JOIN organization_profiles op
+        ON op.organization_id = o.id
+      WHERE o.slug = ${normalizedSlug}
+      LIMIT 1
+    `;
+
+    if (rows.length === 0) {
+      throw new NotFoundException(
+        `Organization with slug "${normalizedSlug}" not found`,
+      );
+    }
+
+    return this.mapOrganizationRow(rows[0]);
+  }
+
+  /**
+   * List all organizations with their attached profile_code, ordered by display_name.
+   */
+  async listOrganizations(): Promise<OrganizationWithProfile[]> {
+    const rows = await this.prisma.$queryRaw<DbOrganizationRow[]>`
+      SELECT
+        o.id,
+        o.slug,
+        o.display_name,
+        o.legal_name,
+        o.primary_domain,
+        o.status,
+        o.timezone,
+        o.default_locale,
+        o.created_at,
+        o.updated_at,
+        op.profile_code
+      FROM organizations o
+      LEFT JOIN organization_profiles op
+        ON op.organization_id = o.id
+      ORDER BY o.display_name ASC
+    `;
+
+    return rows.map((row) => this.mapOrganizationRow(row));
+  }
+
+  /**
+   * Ensure the status value is within `organization_status_enum`. :contentReference[oaicite:6]{index=6}
+   */
+  private ensureValidStatus(status: OrganizationStatus): void {
+    if (!OrganizationService.ALLOWED_STATUSES.includes(status)) {
+      throw new BadRequestException(
+        `Invalid organization status "${status}" (expected one of: ${OrganizationService.ALLOWED_STATUSES.join(
+          ', ',
+        )})`,
+      );
+    }
+  }
+
+  /**
+   * Normalize a human-entered slug or name into a stable org slug:
+   * - lower-case
+   * - non-alphanumeric → "-"
+   * - trim leading/trailing "-"
+   * - max length 63 chars (DNS-ish). :contentReference[oaicite:7]{index=7}
+   */
+  private normalizeSlug(source: string): string {
+    return source
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 63);
+  }
+
+  /**
+   * Map a DB row (snake_case) into the canonical TS view (camelCase + profileCode).
+   */
+  private mapOrganizationRow(row: DbOrganizationRow): OrganizationWithProfile {
+    return {
+      id: row.id,
+      slug: row.slug,
+      displayName: row.display_name,
+      legalName: row.legal_name,
+      primaryDomain: row.primary_domain,
+      status: row.status,
+      timezone: row.timezone,
+      defaultLocale: row.default_locale,
+      profileCode: row.profile_code ?? null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+}
+
+
+=== FILE 6/11: apps/api/src/orgo/backbone/rbac/dto/assign-permission.dto.ts ===
+
+import { ApiProperty } from '@nestjs/swagger';
+import { ArrayNotEmpty, IsArray, IsString } from 'class-validator';
+
+/**
+ * DTO for assigning one or more permissions to a role.
+ *
+ * Each entry is a canonical permission code from the `permissions` table,
+ * for example:
+ *   - "task.view_sensitive"
+ *   - "workflow.edit_rules"
+ *
+ * The target role is identified by the route parameter (:roleId); this DTO
+ * only carries the list of permission codes to attach.
+ */
+export class AssignPermissionsToRoleDto {
+  @ApiProperty({
+    description:
+      'List of permission codes to assign to the role. Each must correspond to an existing permission code.',
+    example: ['task.view_sensitive', 'workflow.edit_rules'],
+    type: [String],
+  })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  permissionCodes!: string[];
+}
+
+
+=== FILE 7/11: apps/api/src/orgo/backbone/rbac/dto/create-role.dto.ts ===
+
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsUUID,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  MaxLength,
+  Matches,
+} from 'class-validator';
+
+/**
+ * DTO for creating a new Role within an organization.
+ *
+ * Maps to the `roles` table (Doc 1):
+ *   - organization_id
+ *   - code
+ *   - display_name
+ *   - description
+ *   - is_system_role (implicitly false for API-created roles)
+ */
+export class CreateRoleDto {
+  @ApiProperty({
+    description:
+      'Organization that owns this role (tenant identifier). For tenant-defined roles this is required.',
+    format: 'uuid',
+  })
+  @IsUUID('4', { message: 'organizationId must be a valid UUID' })
+  organizationId: string;
+
+  @ApiProperty({
+    description:
+      'Stable code for the role, unique within the organization. Lower_snake_case; used in config, logs and routing rules.',
+    example: 'ops_maintenance_coordinator',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(128)
+  @Matches(/^[a-z0-9_]+$/, {
+    message:
+      'code must use lower_snake_case (lowercase letters, digits, and underscores only)',
+  })
+  code: string;
+
+  @ApiProperty({
+    description: 'Human-readable name for the role.',
+    example: 'Maintenance Coordinator',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  displayName: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Longer free-text description of what this role is responsible for.',
+    example: 'Coordinates all maintenance tasks for facilities and equipment.',
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(2048)
+  description?: string;
+}
+
+
+=== FILE 8/11: apps/api/src/orgo/backbone/rbac/permission.service.ts ===
+
+// apps/api/src/orgo/backbone/rbac/permission.service.ts
+
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { Permission, RolePermission } from '@prisma/client';
+import { PrismaService } from '../../../persistence/prisma/prisma.service';
+
+/**
+ * PermissionService
+ *
+ * Backbone RBAC helper for managing global permissions and their
+ * assignment to roles.
+ *
+ * Backed by:
+ *   - permissions
+ *   - roles
+ *   - role_permissions
+ *
+ * This service does NOT make authorization decisions itself; it
+ * maintains the Role ↔ Permission mapping used by higher‑level
+ * RBAC / auth guards.
+ */
+@Injectable()
+export class PermissionService {
+  private readonly logger = new Logger(PermissionService.name);
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Create (or upsert) a global permission code.
+   *
+   * Codes are stable identifiers like:
+   *   - "task.view_sensitive"
+   *   - "workflow.edit_rules"
+   */
+  async createPermission(
+    code: string,
+    description: string,
+  ): Promise<Permission> {
+    const normalizedCode = code?.trim();
+
+    if (!normalizedCode) {
+      throw new BadRequestException('Permission code is required');
+    }
+
+    return this.prisma.permission.upsert({
+      where: { code: normalizedCode },
+      update: {
+        // allow description updates over time
+        description: description?.trim() || normalizedCode,
+      },
+      create: {
+        code: normalizedCode,
+        description: description?.trim() || normalizedCode,
+      },
+    });
+  }
+
+  /**
+   * Fetch a permission by its global code.
+   * Returns null if not found.
+   */
+  async getPermissionByCode(code: string): Promise<Permission | null> {
+    const normalizedCode = code?.trim();
+    if (!normalizedCode) {
+      return null;
+    }
+
+    return this.prisma.permission.findUnique({
+      where: { code: normalizedCode },
+    });
+  }
+
+  /**
+   * List all permissions (global).
+   */
+  async listPermissions(): Promise<Permission[]> {
+    return this.prisma.permission.findMany({
+      orderBy: { code: 'asc' },
+    });
+  }
+
+  /**
+   * Assign a permission to a role (idempotent).
+   *
+   * - Validates that the role exists.
+   * - Validates that the permission code exists.
+   * - Creates or reuses a RolePermission row.
+   *
+   * Returns the assignment including the Permission row.
+   */
+  async assignPermission(params: {
+    roleId: string;
+    permissionCode: string;
+    grantedByUserId?: string | null;
+  }): Promise<RolePermission & { permission: Permission }> {
+    const { roleId, permissionCode, grantedByUserId } = params;
+
+    if (!roleId) {
+      throw new BadRequestException('roleId is required');
+    }
+    const normalizedCode = permissionCode?.trim();
+    if (!normalizedCode) {
+      throw new BadRequestException('permissionCode is required');
+    }
+
+    const role = await this.prisma.role.findUnique({
+      where: { id: roleId },
+    });
+
+    if (!role) {
+      throw new NotFoundException(`Role not found for id "${roleId}"`);
+    }
+
+    const permission = await this.prisma.permission.findUnique({
+      where: { code: normalizedCode },
+    });
+
+    if (!permission) {
+      throw new NotFoundException(
+        `Permission not found for code "${normalizedCode}"`,
+      );
+    }
+
+    // Idempotent: if already assigned, return existing mapping.
+    const existing = await this.prisma.rolePermission.findFirst({
+      where: {
+        roleId: role.id,
+        permissionId: permission.id,
+      },
+      include: {
+        permission: true,
+      },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    const assignment = await this.prisma.rolePermission.create({
+      data: {
+        roleId: role.id,
+        permissionId: permission.id,
+        grantedByUserId: grantedByUserId ?? null,
+        grantedAt: new Date(),
+      },
+      include: {
+        permission: true,
+      },
+    });
+
+    this.logger.log(
+      `Assigned permission "${permission.code}" to role "${role.code}" (${role.id})`,
+    );
+
+    return assignment;
+  }
+
+  /**
+   * Revoke a permission from a role (idempotent).
+   *
+   * Returns:
+   *   - true  → an assignment existed and was deleted
+   *   - false → nothing to revoke
+   */
+  async revokePermission(params: {
+    roleId: string;
+    permissionCode: string;
+  }): Promise<boolean> {
+    const { roleId, permissionCode } = params;
+
+    if (!roleId) {
+      throw new BadRequestException('roleId is required');
+    }
+    const normalizedCode = permissionCode?.trim();
+    if (!normalizedCode) {
+      throw new BadRequestException('permissionCode is required');
+    }
+
+    const permission = await this.prisma.permission.findUnique({
+      where: { code: normalizedCode },
+    });
+
+    if (!permission) {
+      // Nothing to revoke if the permission itself does not exist.
+      return false;
+    }
+
+    const existing = await this.prisma.rolePermission.findFirst({
+      where: {
+        roleId,
+        permissionId: permission.id,
+      },
+    });
+
+    if (!existing) {
+      return false;
+    }
+
+    await this.prisma.rolePermission.delete({
+      where: {
+        id: existing.id,
+      },
+    });
+
+    this.logger.log(
+      `Revoked permission "${permission.code}" from role "${roleId}"`,
+    );
+
+    return true;
+  }
+
+  /**
+   * Get Permission entities for a given role.
+   */
+  async getPermissionsForRole(roleId: string): Promise<Permission[]> {
+    if (!roleId) {
+      throw new BadRequestException('roleId is required');
+    }
+
+    const assignments = await this.prisma.rolePermission.findMany({
+      where: { roleId },
+      include: {
+        permission: true,
+      },
+      orderBy: {
+        // deterministic ordering; safe even without a composite index
+        createdAt: 'asc',
+      },
+    });
+
+    return assignments.map((rp) => rp.permission);
+  }
+
+  /**
+   * Convenience helper: get only permission codes for a role.
+   */
+  async getPermissionCodesForRole(roleId: string): Promise<string[]> {
+    const permissions = await this.getPermissionsForRole(roleId);
+    return permissions.map((p) => p.code);
+  }
+
+  /**
+   * Resolve effective permission codes for a user within an organization.
+   *
+   * This walks:
+   *   user_role_assignments → roles → role_permissions → permissions
+   *
+   * Returned codes are de‑duplicated.
+   */
+  async getEffectivePermissionCodesForUser(params: {
+    userId: string;
+    organizationId: string;
+  }): Promise<string[]> {
+    const { userId, organizationId } = params;
+
+    if (!userId) {
+      throw new BadRequestException('userId is required');
+    }
+    if (!organizationId) {
+      throw new BadRequestException('organizationId is required');
+    }
+
+    // Use a single SQL query via Prisma; relies only on table/column names
+    // defined in the Orgo DB schema.
+    const rows: Array<{ code: string }> = await this.prisma.$queryRawUnsafe(
+      `
+      SELECT DISTINCT p.code
+      FROM user_role_assignments ura
+      JOIN roles r ON ura.role_id = r.id
+      JOIN role_permissions rp ON rp.role_id = r.id
+      JOIN permissions p ON p.id = rp.permission_id
+      WHERE ura.user_id = $1
+        AND ura.organization_id = $2
+        AND ura.revoked_at IS NULL
+    `,
+      userId,
+      organizationId,
+    );
+
+    return rows.map((row) => row.code).sort();
+  }
+}
+
+
+=== FILE 9/11: apps/api/src/orgo/backbone/rbac/rbac.controller.ts ===
+
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Req,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
+import { AuthGuard } from '../../security/auth.guard';
+import { RbacService } from './rbac.service';
+
+/**
+ * Auth context attached by AuthGuard.validateAccessToken.
+ * See Doc 4 – Authentication & RBAC. :contentReference[oaicite:0]{index=0}
+ */
+interface AuthenticatedUserContext {
+  userId: string;
+  organizationId: string;
+  roles?: string[];
+  permissions?: string[];
+}
+
+/**
+ * Minimal request shape we rely on; transport (Express/Fastify) is abstracted.
+ */
+interface AuthenticatedRequest {
+  user: AuthenticatedUserContext;
+  // Allow other properties without tying to a specific HTTP framework.
+  [key: string]: unknown;
+}
+
+/**
+ * Standard result envelope (aligned with Core Services spec). :contentReference[oaicite:1]{index=1}
+ */
+export interface StandardResult<T = any> {
+  ok: boolean;
+  data: T | null;
+  error: { code: string; message: string; details?: any } | null;
+}
+
+/**
+ * DTOs
+ */
+
+export class CreateRoleDto {
+  @IsString()
+  @IsNotEmpty()
+  code!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  displayName!: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+}
+
+export class UpdateRoleDto {
+  @IsString()
+  @IsOptional()
+  displayName?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+}
+
+/**
+ * Atomic permission codes, e.g. "task.view_sensitive", "workflow.edit_rules". :contentReference[oaicite:2]{index=2}
+ */
+export class AssignPermissionsToRoleDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  permissionCodes!: string[];
+}
+
+/**
+ * User → Role assignments with optional scope (team, location, etc.). :contentReference[oaicite:3]{index=3}
+ */
+export class AssignRolesToUserDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsUUID('4', { each: true })
+  roleIds!: string[];
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['global', 'team', 'location', 'unit', 'custom'])
+  scopeType?: string;
+
+  @IsOptional()
+  @IsString()
+  scopeReference?: string;
+}
+
+/**
+ * Permission check payload: primarily by permission code, with optional
+ * resource/action context for audit/troubleshooting. :contentReference[oaicite:4]{index=4}
+ */
+export class CheckPermissionDto {
+  @IsString()
+  @IsNotEmpty()
+  permissionCode!: string;
+
+  @IsOptional()
+  @IsString()
+  resource?: string;
+
+  @IsOptional()
+  @IsString()
+  action?: string;
+}
+
+@Controller('rbac')
+@UseGuards(AuthGuard)
+export class RbacController {
+  constructor(private readonly rbacService: RbacService) {}
+
+  /**
+   * List roles available in the caller's organization (including any global/system roles
+   * that apply to this org). Roles map to the `roles` table in Doc 1. :contentReference[oaicite:5]{index=5}
+   */
+  @Get('roles')
+  async listRoles(@Req() req: AuthenticatedRequest): Promise<StandardResult> {
+    const { organizationId } = req.user;
+    const roles = await this.rbacService.listRolesForOrganization(organizationId);
+    return this.buildOkResult(roles);
+  }
+
+  /**
+   * Create a new org-scoped Role (roles.organization_id = caller org). :contentReference[oaicite:6]{index=6}
+   */
+  @Post('roles')
+  async createRole(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: CreateRoleDto,
+  ): Promise<StandardResult> {
+    const { organizationId, userId } = req.user;
+    const role = await this.rbacService.createRole(organizationId, body, userId);
+    return this.buildOkResult(role);
+  }
+
+  /**
+   * Fetch a single Role by id, scoped to the caller's organization (plus any
+   * applicable global/system role). :contentReference[oaicite:7]{index=7}
+   */
+  @Get('roles/:roleId')
+  async getRole(
+    @Req() req: AuthenticatedRequest,
+    @Param('roleId') roleId: string,
+  ): Promise<StandardResult> {
+    const { organizationId } = req.user;
+    const role = await this.rbacService.getRoleById(organizationId, roleId);
+    return this.buildOkResult(role);
+  }
+
+  /**
+   * Update an existing Role's display metadata. System roles and foreign-org
+   * roles must be protected inside RbacService. :contentReference[oaicite:8]{index=8}
+   */
+  @Patch('roles/:roleId')
+  async updateRole(
+    @Req() req: AuthenticatedRequest,
+    @Param('roleId') roleId: string,
+    @Body() body: UpdateRoleDto,
+  ): Promise<StandardResult> {
+    const { organizationId, userId } = req.user;
+    const role = await this.rbacService.updateRole(organizationId, roleId, body, userId);
+    return this.buildOkResult(role);
+  }
+
+  /**
+   * Optional hard-delete endpoint for roles. Implementations may treat this as
+   * a soft-delete or disallow deletion for system/built-in roles.
+   */
+  @Delete('roles/:roleId')
+  async deleteRole(
+    @Req() req: AuthenticatedRequest,
+    @Param('roleId') roleId: string,
+  ): Promise<StandardResult> {
+    const { organizationId, userId } = req.user;
+    const result = await this.rbacService.deleteRole(organizationId, roleId, userId);
+    return this.buildOkResult(result);
+  }
+
+  /**
+   * List all defined Permission codes (from the `permissions` table). :contentReference[oaicite:9]{index=9}
+   */
+  @Get('permissions')
+  async listPermissions(): Promise<StandardResult> {
+    const permissions = await this.rbacService.listPermissions();
+    return this.buildOkResult(permissions);
+  }
+
+  /**
+   * List Permission codes currently granted to a Role via role_permissions. :contentReference[oaicite:10]{index=10}
+   */
+  @Get('roles/:roleId/permissions')
+  async listRolePermissions(
+    @Req() req: AuthenticatedRequest,
+    @Param('roleId') roleId: string,
+  ): Promise<StandardResult> {
+    const { organizationId } = req.user;
+    const permissions = await this.rbacService.getPermissionsForRole(organizationId, roleId);
+    return this.buildOkResult(permissions);
+  }
+
+  /**
+   * Grant one or more Permission codes to a Role (insert into role_permissions). :contentReference[oaicite:11]{index=11}
+   */
+  @Post('roles/:roleId/permissions')
+  async assignPermissionsToRole(
+    @Req() req: AuthenticatedRequest,
+    @Param('roleId') roleId: string,
+    @Body() body: AssignPermissionsToRoleDto,
+  ): Promise<StandardResult> {
+    const { organizationId, userId } = req.user;
+    const result = await this.rbacService.assignPermissionsToRole(
+      organizationId,
+      roleId,
+      body.permissionCodes,
+      userId,
+    );
+    return this.buildOkResult(result);
+  }
+
+  /**
+   * Revoke a Permission from a Role by permission code.
+   */
+  @Delete('roles/:roleId/permissions/:permissionCode')
+  async revokePermissionFromRole(
+    @Req() req: AuthenticatedRequest,
+    @Param('roleId') roleId: string,
+    @Param('permissionCode') permissionCode: string,
+  ): Promise<StandardResult> {
+    const { organizationId, userId } = req.user;
+    const result = await this.rbacService.revokePermissionFromRole(
+      organizationId,
+      roleId,
+      permissionCode,
+      userId,
+    );
+    return this.buildOkResult(result);
+  }
+
+  /**
+   * List roles currently assigned to a user within the caller's organization,
+   * including scope information from user_role_assignments. :contentReference[oaicite:12]{index=12}
+   */
+  @Get('users/:userId/roles')
+  async listUserRoles(
+    @Req() req: AuthenticatedRequest,
+    @Param('userId') userId: string,
+  ): Promise<StandardResult> {
+    const { organizationId } = req.user;
+    const roles = await this.rbacService.getRolesForUser(organizationId, userId);
+    return this.buildOkResult(roles);
+  }
+
+  /**
+   * Assign one or more Roles to a user in the caller's organization, with an
+   * optional scope (team/location/unit/custom). :contentReference[oaicite:13]{index=13}
+   */
+  @Post('users/:userId/roles')
+  async assignRolesToUser(
+    @Req() req: AuthenticatedRequest,
+    @Param('userId') userId: string,
+    @Body() body: AssignRolesToUserDto,
+  ): Promise<StandardResult> {
+    const { organizationId, userId: actorUserId } = req.user;
+    const result = await this.rbacService.assignRolesToUser(
+      organizationId,
+      userId,
+      body.roleIds,
+      body.scopeType,
+      body.scopeReference,
+      actorUserId,
+    );
+    return this.buildOkResult(result);
+  }
+
+  /**
+   * Revoke a specific Role from a user in the caller's organization.
+   */
+  @Delete('users/:userId/roles/:roleId')
+  async revokeRoleFromUser(
+    @Req() req: AuthenticatedRequest,
+    @Param('userId') userId: string,
+    @Param('roleId') roleId: string,
+  ): Promise<StandardResult> {
+    const { organizationId, userId: actorUserId } = req.user;
+    const result = await this.rbacService.revokeRoleFromUser(
+      organizationId,
+      userId,
+      roleId,
+      actorUserId,
+    );
+    return this.buildOkResult(result);
+  }
+
+  /**
+   * Return the current caller's effective access profile: roles and permission
+   * codes derived from roles + scopes + org/profile guardrails. :contentReference[oaicite:14]{index=14}
+   */
+  @Get('me')
+  async getCurrentUserAccessProfile(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<StandardResult> {
+    const { organizationId, userId } = req.user;
+    const roles = await this.rbacService.getRolesForUser(organizationId, userId);
+    const permissions =
+      await this.rbacService.getEffectivePermissionsForUser(organizationId, userId);
+
+    return this.buildOkResult({
+      organization_id: organizationId,
+      user_id: userId,
+      roles,
+      permissions,
+    });
+  }
+
+  /**
+   * Check whether the current caller has a given permission. This is primarily
+   * an introspection endpoint; actual enforcement should happen inside guards
+   * and services via RbacService.checkPermission. :contentReference[oaicite:15]{index=15}
+   */
+  @Post('check')
+  @HttpCode(HttpStatus.OK)
+  async checkPermission(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: CheckPermissionDto,
+  ): Promise<StandardResult<{ allowed: boolean }>> {
+    const { organizationId, userId } = req.user;
+
+    const allowed = await this.rbacService.checkPermissionForUser({
+      organizationId,
+      userId,
+      permissionCode: body.permissionCode,
+      resource: body.resource,
+      action: body.action,
+    });
+
+    return this.buildOkResult({ allowed });
+  }
+
+  /**
+   * Helper to construct the standard { ok, data, error } envelope.
+   */
+  private buildOkResult<T>(data: T): StandardResult<T> {
+    return {
+      ok: true,
+      data,
+      error: null,
+    };
+  }
+}
+
+
+=== FILE 10/11: apps/api/src/orgo/backbone/rbac/rbac.module.ts ===
+
+import { Global, Module } from '@nestjs/common';
+import { RbacService } from './rbac.service';
+import { RoleService } from './role.service';
+import { PermissionService } from './permission.service';
+import { UserRoleAssignmentService } from './user-role-assignment.service';
+
+/**
+ * Orgo v3 RBAC backbone module.
+ *
+ * This module groups all RBAC-related services so they can be injected
+ * across the application:
+ *
+ * - RoleService: CRUD and management for roles (backed by `roles`).
+ * - PermissionService: CRUD and assignment helpers for permissions
+ *   (backed by `permissions` and `role_permissions`).
+ * - UserRoleAssignmentService: management of user-role bindings
+ *   (backed by `user_role_assignments`).
+ * - RbacService: cross-cutting permission checks used by guards and
+ *   other services (`RbacService.checkPermission`, etc.).
+ *
+ * It is marked as @Global so that importing RbacModule once (e.g. in
+ * AppModule or BackboneModule) makes these providers available
+ * everywhere without repeated imports.
+ */
+@Global()
+@Module({
+  providers: [
+    RbacService,
+    RoleService,
+    PermissionService,
+    UserRoleAssignmentService,
+  ],
+  exports: [
+    RbacService,
+    RoleService,
+    PermissionService,
+    UserRoleAssignmentService,
+  ],
+})
+export class RbacModule {}
+
+
+=== FILE 11/11: apps/api/src/orgo/backbone/rbac/role.service.ts ===
+
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Not, Repository } from 'typeorm';
+
+import { Role } from './role.entity';
+import { Permission } from './permission.entity';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+
+@Injectable()
+export class RoleService {
+  constructor(
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Permission)
+    private readonly permissionRepository: Repository<Permission>,
+  ) {}
+
+  /**
+   * Returns all roles, including their permissions, ordered by name.
+   */
+  async findAll(): Promise<Role[]> {
+    return this.roleRepository.find({
+      relations: { permissions: true },
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * Returns a single role by id or throws if it does not exist.
+   */
+  async findById(id: string): Promise<Role> {
+    return this.getRoleOrThrow(id);
+  }
+
+  /**
+   * Returns a single role by slug, or null if it does not exist.
+   */
+  async findBySlug(slug: string): Promise<Role | null> {
+    return this.roleRepository.findOne({
+      where: { slug },
+      relations: { permissions: true },
+    });
+  }
+
+  /**
+   * Creates a new role.
+   *
+   * - Ensures the slug is unique.
+   * - Optionally derives slug from the name if not provided.
+   * - Optionally attaches a set of permissions.
+   */
+  async create(input: CreateRoleDto): Promise<Role> {
+    const slug = input.slug
+      ? this.normalizeSlug(input.slug)
+      : this.slugify(input.name);
+
+    await this.ensureSlugIsUnique(slug);
+
+    const role = this.roleRepository.create({
+      name: input.name,
+      slug,
+      description: input.description ?? null,
+    });
+
+    await this.applyPermissions(role, input.permissionIds);
+
+    return this.roleRepository.save(role);
+  }
+
+  /**
+   * Updates an existing role.
+   *
+   * - Throws if the role does not exist.
+   * - Ensures new slug (if provided and changed) is unique.
+   * - Optionally updates permissions.
+   */
+  async update(id: string, input: UpdateRoleDto): Promise<Role> {
+    const role = await this.getRoleOrThrow(id);
+
+    if (typeof input.name === 'string') {
+      role.name = input.name;
+    }
+
+    if (typeof input.description === 'string' || input.description === null) {
+      role.description = input.description;
+    }
+
+    if (
+      typeof input.slug === 'string' &&
+      input.slug.trim() !== '' &&
+      input.slug !== role.slug
+    ) {
+      const slug = this.normalizeSlug(input.slug);
+      await this.ensureSlugIsUnique(slug, role.id);
+      role.slug = slug;
+    }
+
+    await this.applyPermissions(role, input.permissionIds);
+
+    return this.roleRepository.save(role);
+  }
+
+  /**
+   * Deletes a role permanently.
+   *
+   * Throws if the role does not exist.
+   */
+  async remove(id: string): Promise<void> {
+    const role = await this.getRoleOrThrow(id);
+    await this.roleRepository.remove(role);
+  }
+
+  /**
+   * Replaces the full permission set for a role.
+   *
+   * This is a convenience wrapper over `update` that only deals with permissions.
+   */
+  async updatePermissions(
+    roleId: string,
+    permissionIds: string[],
+  ): Promise<Role> {
+    const role = await this.getRoleOrThrow(roleId);
+    await this.applyPermissions(role, permissionIds);
+    return this.roleRepository.save(role);
+  }
+
+  /**
+   * Internal helper to fetch a role or throw a NotFoundException.
+   */
+  private async getRoleOrThrow(id: string): Promise<Role> {
+    const role = await this.roleRepository.findOne({
+      where: { id },
+      relations: { permissions: true },
+    });
+
+    if (!role) {
+      throw new NotFoundException(`Role with id "${id}" not found.`);
+    }
+
+    return role;
+  }
+
+  /**
+   * Ensures the slug is unique across all roles.
+   *
+   * If ignoreRoleId is provided, that role will be excluded from the uniqueness check
+   * (useful when updating an existing role).
+   */
+  private async ensureSlugIsUnique(
+    slug: string,
+    ignoreRoleId?: string,
+  ): Promise<void> {
+    const where = ignoreRoleId ? { slug, id: Not(ignoreRoleId) } : { slug };
+
+    const existing = await this.roleRepository.findOne({ where });
+
+    if (existing) {
+      throw new ConflictException(`Role with slug "${slug}" already exists.`);
+    }
+  }
+
+  /**
+   * Applies the given permission ids to the provided role instance.
+   *
+   * If permissionIds is:
+   * - undefined: do nothing (keep existing permissions).
+   * - []: clear all permissions.
+   * - non-empty array: replace with the given set, validating that all exist.
+   */
+  private async applyPermissions(
+    role: Role,
+    permissionIds?: string[] | null,
+  ): Promise<void> {
+    if (permissionIds === undefined) {
+      return;
+    }
+
+    if (!permissionIds || permissionIds.length === 0) {
+      role.permissions = [];
+      return;
+    }
+
+    const permissions = await this.permissionRepository.find({
+      where: { id: In(permissionIds) },
+    });
+
+    const foundIds = new Set(permissions.map((p) => p.id));
+    const missing = permissionIds.filter((id) => !foundIds.has(id));
+
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Unknown permission id(s): ${missing.join(', ')}`,
+      );
+    }
+
+    role.permissions = permissions;
+  }
+
+  /**
+   * Normalizes a user-provided slug string.
+   */
+  private normalizeSlug(slug: string): string {
+    const normalized = slug.trim().toLowerCase();
+    if (!normalized) {
+      throw new BadRequestException('Slug cannot be empty.');
+    }
+    return normalized.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  /**
+   * Generates a slug from a role name.
+   */
+  private slugify(name: string): string {
+    if (!name || !name.trim()) {
+      throw new BadRequestException(
+        'Role name is required to generate a slug.',
+      );
+    }
+
+    return name
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036F]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '-');
+  }
+}
+
+
