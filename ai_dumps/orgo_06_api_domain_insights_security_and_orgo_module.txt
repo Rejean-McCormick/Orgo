@@ -1,4 +1,1317 @@
-=== FILE 1/18: apps/api/src/orgo/domain/education/education.module.ts ===
+=== FILE 1/28: apps/api/src/orgo/domain/domain-task.factory.ts ===
+
+// apps/api/src/orgo/domain/domain-task.factory.ts
+
+import { Injectable } from '@nestjs/common';
+import {
+  TaskDto as CoreTaskDto,
+  TaskStatus,
+  TaskPriority,
+  TaskSeverity,
+  TaskVisibility,
+  TaskSource,
+} from '../core/tasks/task.service';
+
+/**
+ * DomainTask – domain-centric projection of a canonical Task.
+ *
+ * Shape and mapping rules are defined in Doc 3 (Domain Modules / DomainTask model).
+ * This interface is intentionally close to the Python sketch in the spec:
+ *
+ *   - domain      == Task.type
+ *   - category    == Task.category
+ *   - subtype     == Task.subtype
+ *   - label       == Task.label
+ *   - status      == Task.status
+ *   - priority    == Task.priority
+ *   - severity    == Task.severity
+ *   - visibility  == Task.visibility
+ *   - case_id     == Task.caseId
+ *
+ * NB : cette vue reste read-only vis-à-vis de la couche Core/DB.
+ */
+export interface DomainTask {
+  task_id: string;
+  organization_id: string;
+
+  domain: string; // Task.type
+  category: string; // Task.category
+  subtype: string | null; // Task.subtype
+
+  label: string; // Task.label
+
+  status: TaskStatus;
+  priority: TaskPriority;
+  severity: TaskSeverity;
+  visibility: TaskVisibility;
+  source: TaskSource;
+
+  title: string;
+  description: string;
+
+  case_id: string | null;
+
+  created_at: string;
+  updated_at: string;
+
+  /**
+   * Champs d’ownership / acteurs, alignés sur TaskDto (camelCase).
+   * Ces champs sont directement mappés depuis le Task canonique.
+   */
+  createdByUserId: string | null;
+  requesterPersonId: string | null;
+  ownerRoleId: string | null;
+  ownerUserId: string | null;
+  assigneeRole: string | null;
+
+  /**
+   * Champs SLA / échéances, alignés sur TaskDto (camelCase).
+   */
+  dueAt: string | null;
+  reactivityTime: string | null;
+  reactivityDeadlineAt: string | null;
+  escalationLevel: number;
+  closedAt: string | null;
+
+  /**
+   * Current + historical assignee user ids (where known).
+   * In this v3 implementation, this is primarily derived from:
+   *   - Task.ownerUserId (canonical owner)
+   * plus any explicit IDs provided by the caller from assignment history.
+   */
+  assignee_user_ids: string[];
+
+  /**
+   * Current + historical routing roles (human-readable, e.g. "Ops.Maintenance").
+   * In this v3 implementation, this is primarily derived from:
+   *   - Task.assigneeRole (denormalised routing role)
+   * plus any explicit roles provided by the caller.
+   */
+  assignee_roles: string[];
+
+  /**
+   * Classification labels (codes) attached to this Task, e.g.
+   *   ["self_harm_risk", "equipment_failure"].
+   * Populated from entity_labels / label_definitions by callers.
+   */
+  classification_labels: string[];
+
+  /**
+   * Domain-specific metadata view.
+   *
+   * The recommended flow (per Doc 3):
+   *   - Domain handler's get_domain_fields(...) computes a curated view
+   *     for the specific domain.
+   *   - That view is passed as metadataOverride to this factory.
+   *
+   * If no override is provided, the canonical Task.metadata is exposed.
+   */
+  metadata: Record<string, any>;
+}
+
+/**
+ * Input to DomainTaskFactory.createDomainTask.
+ *
+ * This keeps the factory focused on projection/mapping and leaves
+ * data access (tasks, assignments, labels, domain handler calls)
+ * to higher-level services.
+ */
+export interface DomainTaskFactoryInput {
+  /**
+   * Canonical Task DTO from TaskService.
+   * This is the logical Task view used by Core Services.
+   */
+  task: CoreTaskDto;
+
+  /**
+   * Optional list of assignee user IDs, typically assembled from:
+   *   - task_assignments history
+   *   - other domain-specific assignment sources
+   *
+   * If omitted, the factory will still include task.ownerUserId where present.
+   */
+  assigneeUserIds?: string[];
+
+  /**
+   * Optional list of assignee routing roles, typically assembled from:
+   *   - task_assignments history
+   *   - other domain-specific assignment sources
+   *
+   * If omitted, the factory will still include task.assigneeRole where present.
+   */
+  assigneeRoles?: string[];
+
+  /**
+   * Classification labels attached to this Task, usually loaded from
+   * entity_labels / label_definitions for the "task" entity type.
+   */
+  classificationLabels?: string[];
+
+  /**
+   * Curated domain-specific metadata view.
+   *
+   * Recommended source: domain handler's get_domain_fields(ctx, task_id).
+   * If omitted, Task.metadata will be used as-is.
+   */
+  metadataOverride?: Record<string, any>;
+}
+
+/**
+ * DomainTaskFactory
+ *
+ * Generic, DB-agnostic factory that turns a canonical Task DTO plus
+ * domain-specific context (assignments, labels, curated metadata)
+ * into a DomainTask view.
+ */
+@Injectable()
+export class DomainTaskFactory {
+  /**
+   * Construct a DomainTask projection from a canonical Task DTO and
+   * optional domain context.
+   */
+  createDomainTask(input: DomainTaskFactoryInput): DomainTask {
+    const {
+      task,
+      assigneeUserIds,
+      assigneeRoles,
+      classificationLabels,
+      metadataOverride,
+    } = input;
+
+    const assigneeUserIdSet = new Set<string>();
+    const assigneeRoleSet = new Set<string>();
+
+    // Seed from explicit inputs (e.g. from task_assignments).
+    if (Array.isArray(assigneeUserIds)) {
+      for (const id of assigneeUserIds) {
+        if (id) {
+          assigneeUserIdSet.add(String(id));
+        }
+      }
+    }
+
+    if (Array.isArray(assigneeRoles)) {
+      for (const role of assigneeRoles) {
+        const trimmed = typeof role === 'string' ? role.trim() : '';
+        if (trimmed) {
+          assigneeRoleSet.add(trimmed);
+        }
+      }
+    }
+
+    // Add current canonical owner/assignee from the Task itself.
+    if (task.ownerUserId) {
+      assigneeUserIdSet.add(String(task.ownerUserId));
+    }
+
+    if (task.assigneeRole) {
+      const trimmed = String(task.assigneeRole).trim();
+      if (trimmed) {
+        assigneeRoleSet.add(trimmed);
+      }
+    }
+
+    const classification = Array.isArray(classificationLabels)
+      ? Array.from(
+          new Set(
+            classificationLabels
+              .filter((label) => typeof label === 'string')
+              .map((label) => label.trim())
+              .filter((label) => label.length > 0),
+          ),
+        )
+      : [];
+
+    const metadata =
+      metadataOverride && typeof metadataOverride === 'object'
+        ? metadataOverride
+        : task.metadata ?? {};
+
+    return {
+      task_id: task.taskId,
+      organization_id: task.organizationId,
+
+      domain: task.type,
+      category: task.category,
+      subtype: task.subtype,
+
+      label: task.label,
+
+      status: task.status,
+      priority: task.priority,
+      severity: task.severity,
+      visibility: task.visibility,
+      source: task.source,
+
+      title: task.title,
+      description: task.description,
+
+      case_id: task.caseId,
+
+      created_at: task.createdAt,
+      updated_at: task.updatedAt,
+
+      createdByUserId: task.createdByUserId,
+      requesterPersonId: task.requesterPersonId,
+      ownerRoleId: task.ownerRoleId,
+      ownerUserId: task.ownerUserId,
+      assigneeRole: task.assigneeRole,
+
+      dueAt: task.dueAt,
+      reactivityTime: task.reactivityTime,
+      reactivityDeadlineAt: task.reactivityDeadlineAt,
+      escalationLevel: task.escalationLevel,
+      closedAt: task.closedAt,
+
+      assignee_user_ids: Array.from(assigneeUserIdSet),
+      assignee_roles: Array.from(assigneeRoleSet),
+      classification_labels: classification,
+      metadata,
+    };
+  }
+}
+
+
+=== FILE 2/28: apps/api/src/orgo/domain/domain-workflow.service.ts ===
+
+// apps/api/src/orgo/domain/domain-workflow.service.ts
+
+import {
+  Injectable,
+  Inject,
+  Logger,
+  Optional,
+} from '@nestjs/common';
+
+/**
+ * Injection token for the repository that persists workflow instances.
+ *
+ * Provide a concrete implementation in your module, e.g.:
+ * {
+ *   provide: DOMAIN_WORKFLOW_REPOSITORY,
+ *   useClass: PrismaDomainWorkflowRepository,
+ * }
+ */
+export const DOMAIN_WORKFLOW_REPOSITORY = Symbol('DOMAIN_WORKFLOW_REPOSITORY');
+
+/**
+ * Injection token for the map of workflow definitions (one per workflow type).
+ *
+ * Provide from your module, e.g.:
+ * {
+ *   provide: DOMAIN_WORKFLOW_DEFINITIONS,
+ *   useValue: myWorkflowDefinitions,
+ * }
+ */
+export const DOMAIN_WORKFLOW_DEFINITIONS = 'DOMAIN_WORKFLOW_DEFINITIONS';
+
+/**
+ * Injection token for an optional event publisher used to emit workflow events.
+ *
+ * Provide from your module, e.g.:
+ * {
+ *   provide: DOMAIN_WORKFLOW_EVENT_PUBLISHER,
+ *   useExisting: DomainEventBus,
+ * }
+ */
+export const DOMAIN_WORKFLOW_EVENT_PUBLISHER = 'DOMAIN_WORKFLOW_EVENT_PUBLISHER';
+
+export type DomainWorkflowId = string;
+export type DomainWorkflowType = string;
+export type DomainId = string;
+export type DomainWorkflowStateId = string;
+
+/**
+ * Base shape of workflow events emitted by the service.
+ * You can extend this for your own event bus or domain events.
+ */
+export interface DomainWorkflowEventBase {
+  readonly type: string; // e.g. 'domain_workflow.started', 'domain_workflow.transitioned'
+  readonly workflowId: DomainWorkflowId;
+  readonly domainId: DomainId;
+  readonly workflowType: DomainWorkflowType;
+  readonly payload?: Record<string, any>;
+  readonly occurredAt: Date;
+}
+
+/**
+ * Optional event publisher interface. Implement this if you want
+ * workflow events to be propagated into your domain event bus.
+ */
+export interface DomainWorkflowEventPublisher {
+  publish<T extends DomainWorkflowEventBase = DomainWorkflowEventBase>(
+    event: T,
+  ): Promise<void> | void;
+}
+
+/**
+ * History entry recorded for each state transition of a workflow instance.
+ */
+export interface DomainWorkflowHistoryEntry {
+  state: DomainWorkflowStateId;
+  action: string;
+  actorId?: string;
+  metadata?: Record<string, any>;
+  createdAt: Date;
+}
+
+/**
+ * Persisted workflow instance for a given domain.
+ *
+ * You are expected to map this shape to your actual persistence model
+ * (Prisma, TypeORM, etc.) in the concrete repository implementation.
+ */
+export interface DomainWorkflowInstance {
+  id: DomainWorkflowId;
+  domainId: DomainId;
+  type: DomainWorkflowType;
+  state: DomainWorkflowStateId;
+  isActive: boolean;
+  context: Record<string, any> | null;
+  createdAt: Date;
+  updatedAt: Date;
+  history: DomainWorkflowHistoryEntry[];
+}
+
+/**
+ * Input used when creating a new workflow instance.
+ * The repository will translate this into a persisted instance.
+ */
+export interface DomainWorkflowCreateInput {
+  domainId: DomainId;
+  type: DomainWorkflowType;
+  initialState: DomainWorkflowStateId;
+  context?: Record<string, any> | null;
+  initiatorId?: string;
+}
+
+/**
+ * Repository abstraction for workflow instances.
+ *
+ * Implement this interface using your chosen persistence technology and
+ * register it in your Nest module under the DOMAIN_WORKFLOW_REPOSITORY token.
+ */
+export interface DomainWorkflowRepository {
+  /**
+   * Creates and persists a new workflow instance with the given input.
+   */
+  create(input: DomainWorkflowCreateInput): Promise<DomainWorkflowInstance>;
+
+  /**
+   * Persists modifications to an existing workflow instance.
+   */
+  save(instance: DomainWorkflowInstance): Promise<DomainWorkflowInstance>;
+
+  /**
+   * Returns an active workflow for a given domain and type, if any.
+   */
+  findActiveByDomainAndType(
+    domainId: DomainId,
+    type: DomainWorkflowType,
+  ): Promise<DomainWorkflowInstance | null>;
+
+  /**
+   * Returns a workflow instance by its ID, or null if not found.
+   */
+  findById(id: DomainWorkflowId): Promise<DomainWorkflowInstance | null>;
+}
+
+/**
+ * Definition of a single state in a workflow.
+ */
+export interface DomainWorkflowStateDefinition {
+  id: DomainWorkflowStateId;
+  label?: string;
+  terminal?: boolean;
+}
+
+/**
+ * Definition of a single transition between states, triggered by an action.
+ */
+export interface DomainWorkflowTransitionDefinition {
+  from: DomainWorkflowStateId;
+  to: DomainWorkflowStateId;
+  action: string;
+}
+
+/**
+ * A full workflow definition for a given type.
+ *
+ * You should provide one of these per workflow type via
+ * the DOMAIN_WORKFLOW_DEFINITIONS injection token.
+ */
+export interface DomainWorkflowDefinition {
+  type: DomainWorkflowType;
+  initialState: DomainWorkflowStateId;
+  states: DomainWorkflowStateDefinition[];
+  transitions: DomainWorkflowTransitionDefinition[];
+}
+
+/**
+ * Map workflow type -> workflow definition.
+ */
+export type DomainWorkflowDefinitions = Record<
+  DomainWorkflowType,
+  DomainWorkflowDefinition
+>;
+
+/**
+ * Error codes for workflow-related failures.
+ */
+export enum DomainWorkflowErrorCode {
+  WORKFLOW_ALREADY_EXISTS = 'WORKFLOW_ALREADY_EXISTS',
+  WORKFLOW_NOT_FOUND = 'WORKFLOW_NOT_FOUND',
+  WORKFLOW_INACTIVE = 'WORKFLOW_INACTIVE',
+  INVALID_TRANSITION = 'INVALID_TRANSITION',
+  DEFINITION_NOT_FOUND = 'DEFINITION_NOT_FOUND',
+}
+
+/**
+ * Base error for workflow operations.
+ */
+export class DomainWorkflowError extends Error {
+  constructor(
+    message: string,
+    public readonly code: DomainWorkflowErrorCode,
+  ) {
+    super(message);
+    this.name = 'DomainWorkflowError';
+  }
+}
+
+/**
+ * Thrown when attempting to start a workflow that already exists and
+ * idempotency is not requested.
+ */
+export class DomainWorkflowAlreadyExistsError extends DomainWorkflowError {
+  constructor(domainId: DomainId, workflowType: DomainWorkflowType) {
+    super(
+      `Active workflow of type "${workflowType}" already exists for domain "${domainId}".`,
+      DomainWorkflowErrorCode.WORKFLOW_ALREADY_EXISTS,
+    );
+    this.name = 'DomainWorkflowAlreadyExistsError';
+  }
+}
+
+/**
+ * Thrown when the requested workflow instance does not exist.
+ */
+export class DomainWorkflowNotFoundError extends DomainWorkflowError {
+  constructor(id: DomainWorkflowId) {
+    super(
+      `Domain workflow instance "${id}" was not found.`,
+      DomainWorkflowErrorCode.WORKFLOW_NOT_FOUND,
+    );
+    this.name = 'DomainWorkflowNotFoundError';
+  }
+}
+
+/**
+ * Thrown when the requested workflow instance exists but is no longer active.
+ */
+export class DomainWorkflowInactiveError extends DomainWorkflowError {
+  constructor(id: DomainWorkflowId) {
+    super(
+      `Domain workflow instance "${id}" is not active.`,
+      DomainWorkflowErrorCode.WORKFLOW_INACTIVE,
+    );
+    this.name = 'DomainWorkflowInactiveError';
+  }
+}
+
+/**
+ * Thrown when an invalid transition is requested for a workflow instance.
+ */
+export class InvalidDomainWorkflowTransitionError extends DomainWorkflowError {
+  constructor(
+    workflowId: DomainWorkflowId,
+    action: string,
+    from: DomainWorkflowStateId,
+  ) {
+    super(
+      `Invalid transition "${action}" from state "${from}" for workflow "${workflowId}".`,
+      DomainWorkflowErrorCode.INVALID_TRANSITION,
+    );
+    this.name = 'InvalidDomainWorkflowTransitionError';
+  }
+}
+
+/**
+ * Thrown when a workflow type is used that has no configured definition.
+ */
+export class DomainWorkflowDefinitionNotFoundError extends DomainWorkflowError {
+  constructor(workflowType: DomainWorkflowType) {
+    super(
+      `No workflow definition configured for type "${workflowType}".`,
+      DomainWorkflowErrorCode.DEFINITION_NOT_FOUND,
+    );
+    this.name = 'DomainWorkflowDefinitionNotFoundError';
+  }
+}
+
+/**
+ * Options when starting a new workflow.
+ */
+export interface StartDomainWorkflowOptions {
+  context?: Record<string, any> | null;
+  initiatorId?: string;
+  /**
+   * If true, and an active workflow of the same type already exists for
+   * the domain, that instance will be returned instead of throwing.
+   */
+  idempotent?: boolean;
+}
+
+/**
+ * Options when advancing a workflow by one transition.
+ */
+export interface AdvanceDomainWorkflowOptions {
+  actorId?: string;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Options when cancelling a workflow.
+ */
+export interface CancelDomainWorkflowOptions {
+  actorId?: string;
+  reason?: string;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * A generic workflow service for domain-level workflows.
+ * It does not assume any particular domain model beyond a domain identifier.
+ *
+ * You must provide:
+ * - a DomainWorkflowRepository (persistence)
+ * - a set of DomainWorkflowDefinitions (one per workflow type)
+ *
+ * Optionally provide:
+ * - a DomainWorkflowEventPublisher to integrate with your event bus.
+ */
+@Injectable()
+export class DomainWorkflowService {
+  private readonly logger = new Logger(DomainWorkflowService.name);
+
+  constructor(
+    @Inject(DOMAIN_WORKFLOW_REPOSITORY)
+    private readonly repository: DomainWorkflowRepository,
+    @Inject(DOMAIN_WORKFLOW_DEFINITIONS)
+    private readonly definitions: DomainWorkflowDefinitions,
+    @Inject(DOMAIN_WORKFLOW_EVENT_PUBLISHER)
+    @Optional()
+    private readonly eventPublisher?: DomainWorkflowEventPublisher,
+  ) {}
+
+  /**
+   * Starts a new workflow instance for a domain.
+   *
+   * If options.idempotent is true and an active workflow of the same type
+   * already exists, that existing instance is returned.
+   */
+  async startWorkflow(
+    domainId: DomainId,
+    workflowType: DomainWorkflowType,
+    options: StartDomainWorkflowOptions = {},
+  ): Promise<DomainWorkflowInstance> {
+    const definition = this.getDefinitionOrThrow(workflowType);
+
+    const existing = await this.repository.findActiveByDomainAndType(
+      domainId,
+      workflowType,
+    );
+
+    if (existing) {
+      if (options.idempotent) {
+        this.logger.debug(
+          `startWorkflow: returning existing active workflow "${existing.id}" for domain "${domainId}", type "${workflowType}" (idempotent).`,
+        );
+        return existing;
+      }
+
+      throw new DomainWorkflowAlreadyExistsError(domainId, workflowType);
+    }
+
+    const instance = await this.repository.create({
+      domainId,
+      type: workflowType,
+      initialState: definition.initialState,
+      context: options.context ?? null,
+      initiatorId: options.initiatorId,
+    });
+
+    this.logger.log(
+      `Started workflow "${instance.id}" of type "${workflowType}" for domain "${domainId}" in state "${instance.state}".`,
+    );
+
+    await this.publishEventSafely({
+      type: 'domain_workflow.started',
+      workflowId: instance.id,
+      domainId: instance.domainId,
+      workflowType: instance.type,
+      occurredAt: new Date(),
+      payload: {
+        state: instance.state,
+        context: instance.context,
+        initiatorId: options.initiatorId,
+      },
+    });
+
+    return instance;
+  }
+
+  /**
+   * Returns the active workflow instance for a given domain and type, if any.
+   */
+  getActiveWorkflow(
+    domainId: DomainId,
+    workflowType: DomainWorkflowType,
+  ): Promise<DomainWorkflowInstance | null> {
+    return this.repository.findActiveByDomainAndType(domainId, workflowType);
+  }
+
+  /**
+   * Returns the workflow instance by ID, or throws if not found.
+   */
+  async getWorkflowOrThrow(
+    id: DomainWorkflowId,
+  ): Promise<DomainWorkflowInstance> {
+    const instance = await this.repository.findById(id);
+    if (!instance) {
+      throw new DomainWorkflowNotFoundError(id);
+    }
+    return instance;
+  }
+
+  /**
+   * Returns the list of allowed actions for the current state of a workflow instance.
+   */
+  async getAllowedActions(
+    workflowId: DomainWorkflowId,
+  ): Promise<string[]> {
+    const instance = await this.getWorkflowOrThrow(workflowId);
+    if (!instance.isActive) {
+      return [];
+    }
+
+    const definition = this.getDefinitionOrThrow(instance.type);
+    return definition.transitions
+      .filter((t) => t.from === instance.state)
+      .map((t) => t.action);
+  }
+
+  /**
+   * Advances the workflow to the next state using the provided action.
+   *
+   * Validates that the transition is allowed based on the configured definition.
+   */
+  async advance(
+    workflowId: DomainWorkflowId,
+    action: string,
+    options: AdvanceDomainWorkflowOptions = {},
+  ): Promise<DomainWorkflowInstance> {
+    const instance = await this.getWorkflowOrThrow(workflowId);
+
+    if (!instance.isActive) {
+      throw new DomainWorkflowInactiveError(workflowId);
+    }
+
+    const definition = this.getDefinitionOrThrow(instance.type);
+    const transition = definition.transitions.find(
+      (t) => t.from === instance.state && t.action === action,
+    );
+
+    if (!transition) {
+      throw new InvalidDomainWorkflowTransitionError(
+        workflowId,
+        action,
+        instance.state,
+      );
+    }
+
+    const now = new Date();
+
+    const nextStateDef = definition.states.find(
+      (s) => s.id === transition.to,
+    );
+    const terminal = nextStateDef?.terminal === true;
+
+    const updated: DomainWorkflowInstance = {
+      ...instance,
+      state: transition.to,
+      isActive: terminal ? false : instance.isActive,
+      updatedAt: now,
+      history: [
+        ...instance.history,
+        {
+          state: transition.to,
+          action,
+          actorId: options.actorId,
+          metadata: options.metadata,
+          createdAt: now,
+        },
+      ],
+    };
+
+    const saved = await this.repository.save(updated);
+
+    this.logger.log(
+      `Advanced workflow "${saved.id}" of type "${saved.type}" for domain "${saved.domainId}" via action "${action}" to state "${saved.state}".`,
+    );
+
+    await this.publishEventSafely({
+      type: 'domain_workflow.transitioned',
+      workflowId: saved.id,
+      domainId: saved.domainId,
+      workflowType: saved.type,
+      occurredAt: now,
+      payload: {
+        from: instance.state,
+        to: saved.state,
+        action,
+        actorId: options.actorId,
+        metadata: options.metadata,
+        terminal,
+      },
+    });
+
+    if (terminal) {
+      await this.publishEventSafely({
+        type: 'domain_workflow.completed',
+        workflowId: saved.id,
+        domainId: saved.domainId,
+        workflowType: saved.type,
+        occurredAt: now,
+        payload: {
+          finalState: saved.state,
+          actorId: options.actorId,
+        },
+      });
+    }
+
+    return saved;
+  }
+
+  /**
+   * Cancels an active workflow, marking it inactive and recording a history entry.
+   *
+   * This does not rely on an explicit transition definition; it is intended as
+   * an operational override.
+   */
+  async cancel(
+    workflowId: DomainWorkflowId,
+    options: CancelDomainWorkflowOptions = {},
+  ): Promise<DomainWorkflowInstance> {
+    const instance = await this.getWorkflowOrThrow(workflowId);
+
+    if (!instance.isActive) {
+      throw new DomainWorkflowInactiveError(workflowId);
+    }
+
+    const now = new Date();
+
+    const updated: DomainWorkflowInstance = {
+      ...instance,
+      isActive: false,
+      updatedAt: now,
+      state: instance.state, // state remains the same; only isActive is flipped
+      history: [
+        ...instance.history,
+        {
+          state: instance.state,
+          action: 'cancel',
+          actorId: options.actorId,
+          metadata: {
+            ...(options.metadata ?? {}),
+            reason: options.reason,
+          },
+          createdAt: now,
+        },
+      ],
+    };
+
+    const saved = await this.repository.save(updated);
+
+    this.logger.warn(
+      `Cancelled workflow "${saved.id}" of type "${saved.type}" for domain "${saved.domainId}". Reason: "${options.reason ?? 'n/a'}".`,
+    );
+
+    await this.publishEventSafely({
+      type: 'domain_workflow.cancelled',
+      workflowId: saved.id,
+      domainId: saved.domainId,
+      workflowType: saved.type,
+      occurredAt: now,
+      payload: {
+        actorId: options.actorId,
+        reason: options.reason,
+        metadata: options.metadata,
+      },
+    });
+
+    return saved;
+  }
+
+  /**
+   * Returns the workflow definition for the given type or throws if missing.
+   */
+  private getDefinitionOrThrow(
+    workflowType: DomainWorkflowType,
+  ): DomainWorkflowDefinition {
+    const definition = this.definitions?.[workflowType];
+    if (!definition) {
+      throw new DomainWorkflowDefinitionNotFoundError(workflowType);
+    }
+    return definition;
+  }
+
+  /**
+   * Publishes a workflow event using the optional event publisher, if present.
+   * Errors are logged but do not fail the workflow operation itself.
+   */
+  private async publishEventSafely(
+    event: DomainWorkflowEventBase,
+  ): Promise<void> {
+    if (!this.eventPublisher) {
+      return;
+    }
+
+    try {
+      await this.eventPublisher.publish(event);
+    } catch (err) {
+      this.logger.error(
+        `Failed to publish workflow event "${event.type}" for workflow "${event.workflowId}": ${
+          (err as Error).message
+        }`,
+        (err as Error).stack,
+      );
+    }
+  }
+}
+
+
+=== FILE 3/28: apps/api/src/orgo/domain/education/education.controller.ts ===
+
+// apps/api/src/orgo/domain/education/education.controller.ts
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Get,
+  HttpCode,
+  HttpStatus,
+  ParseIntPipe,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiProperty,
+  ApiPropertyOptional,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
+import { Request } from 'express';
+
+import {
+  TaskCategory,
+  TaskPriority,
+  TaskSeverity,
+  TaskVisibility,
+  TaskSource,
+} from '../../core/tasks/dto/create-task.dto';
+import { EducationModuleService } from './education-module.service';
+
+/**
+ * Request type of the Nest app: auth / multi‑tenant middleware
+ * injects organizationId and userId.
+ *
+ * This mirrors the pattern used in PersonProfileController.
+ */
+interface RequestWithContext extends Request {
+  organizationId?: string;
+  userId?: string;
+}
+
+/**
+ * Request body for registering a student / classroom incident
+ * in the Education domain.
+ *
+ * This is a thin wrapper over the canonical Task create payload,
+ * with additional education‑specific context fields.
+ */
+export class RegisterStudentIncidentDto {
+  @ApiProperty({
+    description:
+      'Canonical information label for this incident (e.g. "100.94.Education.Safety").',
+    example: '100.94.Education.Safety',
+  })
+  @IsString()
+  @IsNotEmpty()
+  label!: string;
+
+  @ApiProperty({
+    description: 'Short human‑readable title of the incident.',
+    maxLength: 512,
+    example: 'Verbal conflict during math class',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(512)
+  title!: string;
+
+  @ApiProperty({
+    description: 'Detailed description of what happened.',
+    example:
+      'Two students had a verbal conflict during the lesson; no physical violence reported.',
+  })
+  @IsString()
+  @IsNotEmpty()
+  description!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Global task category; typically "incident" for education incidents.',
+    enum: TaskCategory,
+    example: TaskCategory.INCIDENT,
+    default: TaskCategory.INCIDENT,
+  })
+  @IsOptional()
+  @IsEnum(TaskCategory)
+  category?: TaskCategory;
+
+  @ApiPropertyOptional({
+    description: 'Priority of the incident. JSON uses lower‑case tokens.',
+    enum: TaskPriority,
+    example: TaskPriority.MEDIUM,
+    default: TaskPriority.MEDIUM,
+  })
+  @IsOptional()
+  @IsEnum(TaskPriority)
+  priority?: TaskPriority;
+
+  @ApiPropertyOptional({
+    description: 'Severity of the incident. JSON uses lower‑case tokens.',
+    enum: TaskSeverity,
+    example: TaskSeverity.MINOR,
+    default: TaskSeverity.MINOR,
+  })
+  @IsOptional()
+  @IsEnum(TaskSeverity)
+  severity?: TaskSeverity;
+
+  @ApiPropertyOptional({
+    description:
+      'Visibility of the incident within the organization. Drives who can see it by default.',
+    enum: TaskVisibility,
+    example: TaskVisibility.INTERNAL,
+    default: TaskVisibility.INTERNAL,
+  })
+  @IsOptional()
+  @IsEnum(TaskVisibility)
+  visibility?: TaskVisibility;
+
+  @ApiPropertyOptional({
+    description:
+      'Source through which the incident was recorded (email, api, manual, sync).',
+    enum: TaskSource,
+    example: TaskSource.MANUAL,
+    default: TaskSource.MANUAL,
+  })
+  @IsOptional()
+  @IsEnum(TaskSource)
+  source?: TaskSource;
+
+  @ApiPropertyOptional({
+    description:
+      'Learning group providing context for the incident (class, team, study group).',
+    format: 'uuid',
+    nullable: true,
+    example: '5f65b1f8-2b2a-4e6f-9634-2f2b1b5e12ab',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  learning_group_id?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Primary person the incident is about (e.g. student). Maps to person_profiles.id.',
+    format: 'uuid',
+    nullable: true,
+    example: '3b1f0c66-0272-4bf7-8f03-4620e2a7f8da',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  person_id?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Free‑text context note such as "attendance", "performance", or "conflict".',
+    maxLength: 1024,
+    nullable: true,
+    example: 'conflict',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1024)
+  context_note?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Optional due date for follow‑up action related to this incident (ISO‑8601 timestamp, UTC).',
+    type: String,
+    format: 'date-time',
+    nullable: true,
+    example: '2025-01-10T12:00:00Z',
+  })
+  @IsOptional()
+  @IsDateString()
+  due_at?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Arbitrary domain‑specific metadata attached to the task (must not duplicate core Task fields).',
+    type: 'object',
+    nullable: true,
+    example: { location: 'Room 204', period: 3 },
+  })
+  @IsOptional()
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Education incident view returned by the domain API.
+ *
+ * For now this wraps the canonical Task JSON plus education context.
+ * The concrete shape of `task` follows the Task JSON schema (Doc 8).
+ */
+export class EducationIncidentDto {
+  @ApiProperty({
+    description:
+      'Canonical Task representation for the incident (see Task JSON schema).',
+    type: 'object',
+  })
+  // Use a loose type here to avoid tight coupling to the TaskController DTO.
+  // Callers should treat this as the standard Task JSON envelope.
+  task!: Record<string, unknown>;
+
+  @ApiPropertyOptional({
+    description:
+      'Learning group associated with this incident, if any (learning_groups.id).',
+    format: 'uuid',
+    nullable: true,
+  })
+  learning_group_id?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Person the incident is primarily about, if any (person_profiles.id).',
+    format: 'uuid',
+    nullable: true,
+  })
+  person_id?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Domain‑level context note (e.g. "attendance", "performance", "conflict").',
+    nullable: true,
+  })
+  context_note?: string | null;
+}
+
+/**
+ * Paginated list response for classroom incidents.
+ */
+export class EducationIncidentListResponseDto {
+  @ApiProperty({ type: [EducationIncidentDto] })
+  items!: EducationIncidentDto[];
+
+  @ApiProperty({
+    description: 'Total number of matching incidents for the current filters.',
+    example: 42,
+  })
+  total!: number;
+
+  @ApiProperty({
+    description: 'Current page number (1‑based).',
+    example: 1,
+  })
+  page!: number;
+
+  @ApiProperty({
+    description: 'Page size (number of items per page).',
+    example: 25,
+  })
+  pageSize!: number;
+}
+
+/**
+ * Education domain API controller.
+ *
+ * Route base is kept narrow; the global Nest app prefix (e.g. /api/v3)
+ * is assumed to be configured at bootstrap level.
+ *
+ * External paths (with a global /api/v3 prefix) will look like:
+ *   POST /api/v3/domain/education/incidents
+ *   GET  /api/v3/domain/education/incidents
+ */
+@ApiTags('domain-education')
+@ApiBearerAuth()
+@Controller('domain/education')
+export class EducationController {
+  constructor(
+    private readonly educationService: EducationModuleService,
+  ) {}
+
+  @Post('incidents')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Register a student / classroom incident',
+    description:
+      'Wraps Task creation for education incidents, attaching learning group and person context metadata on top of the canonical Task model.',
+  })
+  @ApiResponse({
+    status: 201,
+    type: EducationIncidentDto,
+    description: 'Incident created successfully.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error or missing organization context.',
+  })
+  async registerStudentIncident(
+    @Req() req: RequestWithContext,
+    @Body() payload: RegisterStudentIncidentDto,
+  ): Promise<EducationIncidentDto> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+    const actorUserId = this.getUserIdFromRequest(req);
+
+    // Delegate to the domain service. The service is responsible for:
+    // - Constructing the canonical Task (type = "education_support")
+    // - Applying domain/workflow overrides
+    // - Creating the EducationTaskLink row with group/person context
+    return this.educationService.registerStudentIncident(
+      organizationId,
+      payload,
+      actorUserId,
+    );
+  }
+
+  @Get('incidents')
+  @ApiOperation({
+    summary: 'List classroom incidents for the current organization',
+    description:
+      'Returns a paginated list of education‑scoped incidents (Task + education context), filtered by group/person/status/severity as needed.',
+  })
+  @ApiResponse({
+    status: 200,
+    type: EducationIncidentListResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid query parameters.',
+  })
+  @ApiQuery({
+    name: 'learning_group_id',
+    required: false,
+    description:
+      'Filter by learning group (class/team) identifier (learning_groups.id).',
+  })
+  @ApiQuery({
+    name: 'person_id',
+    required: false,
+    description:
+      'Filter by primary person the incident is about (person_profiles.id).',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description:
+      'Optional Task status filter (PENDING, IN_PROGRESS, COMPLETED, etc.).',
+  })
+  @ApiQuery({
+    name: 'severity',
+    required: false,
+    description:
+      'Optional severity filter (MINOR, MODERATE, MAJOR, CRITICAL). Uses DB enum tokens.',
+    enum: TaskSeverity,
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description:
+      'Free‑text search over label, title and description for incidents in this organization.',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (1‑based). Defaults to 1.',
+  })
+  @ApiQuery({
+    name: 'page_size',
+    required: false,
+    description: 'Page size (items per page). Defaults to 25.',
+  })
+  async listIncidents(
+    @Req() req: RequestWithContext,
+    @Query('learning_group_id') learningGroupId?: string,
+    @Query('person_id') personId?: string,
+    @Query('status') status?: string,
+    @Query('severity') severity?: TaskSeverity,
+    @Query('search') search?: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
+    @Query('page_size', new DefaultValuePipe(25), ParseIntPipe) pageSize = 25,
+  ): Promise<EducationIncidentListResponseDto> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+
+    return this.educationService.listIncidents(organizationId, {
+      learningGroupId,
+      personId,
+      status,
+      severity,
+      search,
+      page,
+      pageSize,
+    });
+  }
+
+  /**
+   * Extracts the organization identifier from the request context.
+   * Throws a 400 error if the context is missing.
+   */
+  private getOrganizationIdFromRequest(req: RequestWithContext): string {
+    const organizationId = req.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Missing organization context on request.');
+    }
+    return organizationId;
+  }
+
+  /**
+   * Extracts the authenticated user identifier from the request context, if present.
+   */
+  private getUserIdFromRequest(req: RequestWithContext): string | undefined {
+    return req.userId;
+  }
+}
+
+
+=== FILE 4/28: apps/api/src/orgo/domain/education/education.module.ts ===
 
 import { Module } from '@nestjs/common';
 import { EducationModuleService } from './education-module.service';
@@ -12,7 +1325,1051 @@ import { EducationController } from './education.controller';
 export class EducationModule {}
 
 
-=== FILE 2/18: apps/api/src/orgo/domain/hr/hr.module.ts ===
+=== FILE 5/28: apps/api/src/orgo/domain/education/education.service.ts ===
+
+// apps/api/src/orgo/domain/education/education.service.ts
+
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma, PrismaClient } from '@prisma/client';
+
+/**
+ * Canonical enums aligned with Doc 1 / Doc 2 / Doc 8.
+ * These are intentionally duplicated here (like in HrModuleService) so that
+ * the Education domain module can stay decoupled from core service types.
+ */
+
+export type TaskStatus =
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'ON_HOLD'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'ESCALATED'
+  | 'CANCELLED';
+
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type TaskSeverity = 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL';
+
+export type Visibility = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
+
+export type TaskSource = 'email' | 'api' | 'manual' | 'sync';
+
+export type TaskCategory =
+  | 'request'
+  | 'incident'
+  | 'update'
+  | 'report'
+  | 'distribution';
+
+/**
+ * Canonical domain type for education Tasks.
+ * This must match Task.type in the DB and all docs.
+ */
+export const EDUCATION_DOMAIN_TYPE = 'education_support';
+
+/**
+ * Minimal Task row shape for raw SQL usage in this module.
+ * Field names mirror the `tasks` table in Doc 1.
+ */
+export interface TaskRow {
+  id: string;
+  organization_id: string;
+  case_id: string | null;
+  type: string;
+  category: TaskCategory;
+  subtype: string | null;
+  label: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  severity: TaskSeverity;
+  visibility: Visibility;
+  source: TaskSource;
+  created_by_user_id: string | null;
+  requester_person_id: string | null;
+  owner_role_id: string | null;
+  owner_user_id: string | null;
+  assignee_role: string | null;
+  due_at: Date | null;
+  reactivity_deadline_at: Date | null;
+  escalation_level: number;
+  closed_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
+ * education_task_links row shape (Module 12 – Education & Groups).
+ */
+export interface EducationTaskLinkRow {
+  id: string;
+  task_id: string;
+  learning_group_id: string | null;
+  person_id: string | null;
+  context_note: string | null;
+}
+
+/**
+ * Optional learning group projection used in list results.
+ */
+export interface LearningGroupSummary {
+  learningGroupId: string;
+  code: string;
+  name: string;
+  category: string | null;
+}
+
+/**
+ * Optional student / person projection used in list results.
+ */
+export interface StudentSummary {
+  personId: string;
+  fullName: string;
+  externalReference: string | null;
+}
+
+/**
+ * Service-level DTO for registering a student incident.
+ * Controller-level DTOs should validate and map into this shape.
+ */
+export interface RegisterStudentIncidentInput {
+  /**
+   * Tenant isolation key – required for all operations.
+   */
+  organizationId: string;
+
+  /**
+   * Human-facing title and description of the incident.
+   */
+  title: string;
+  description: string;
+
+  /**
+   * Task classification.
+   * Category defaults to "incident" for classroom incidents.
+   */
+  category?: TaskCategory;
+  subtype?: string | null; // e.g. "attendance" | "performance" | "conflict"
+
+  /**
+   * Canonical enums (JSON inputs may be lower-case; normalization happens here).
+   */
+  severity?: TaskSeverity | string;
+  priority?: TaskPriority | string;
+  visibility?: Visibility | string;
+
+  /**
+   * Canonical information label.
+   * If omitted, a sane education default is used.
+   * Example: "100.94.Education.Support"
+   */
+  label?: string;
+
+  /**
+   * Signal/source metadata (aligned with task_source_enum).
+   */
+  sourceType?: TaskSource | string;
+  sourceReference?: string | null;
+
+  /**
+   * Ownership / routing hints.
+   */
+  ownerRoleId?: string | null;
+  ownerUserId?: string | null;
+  assigneeRole?: string | null;
+
+  /**
+   * Student / group context.
+   * Either or both may be provided.
+   */
+  studentPersonId?: string | null;
+  learningGroupId?: string | null;
+  contextNote?: string | null; // e.g. "attendance", "performance", "conflict"
+
+  /**
+   * Due date for the incident follow-up task.
+   */
+  dueAt?: string | Date | null;
+
+  /**
+   * Actor who is creating the incident (user account).
+   */
+  createdByUserId?: string | null;
+
+  /**
+   * Additional domain-specific task metadata.
+   * This will be merged with the standard education domain metadata.
+   */
+  taskMetadata?: Record<string, unknown> | null;
+}
+
+/**
+ * Options for listing classroom incidents.
+ * These are service-level options; controller DTOs can adapt query params.
+ */
+export interface ListEducationIncidentsOptions {
+  organizationId: string;
+  status?: TaskStatus | TaskStatus[];
+  learningGroupId?: string;
+  studentPersonId?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Single incident view returned by listIncidents.
+ * This is a Task plus education context and lightweight person/group info.
+ */
+export interface EducationIncidentSummary {
+  taskId: string;
+  organizationId: string;
+  caseId: string | null;
+
+  type: string;
+  category: TaskCategory;
+  subtype: string | null;
+  label: string;
+
+  title: string;
+  description: string;
+
+  status: TaskStatus;
+  priority: TaskPriority;
+  severity: TaskSeverity;
+  visibility: Visibility;
+  source: TaskSource;
+
+  createdByUserId: string | null;
+  requesterPersonId: string | null;
+  ownerRoleId: string | null;
+  ownerUserId: string | null;
+  assigneeRole: string | null;
+
+  dueAt: string | null;
+  reactivityDeadlineAt: string | null;
+  escalationLevel: number;
+  closedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+
+  /**
+   * Education context (group + student).
+   * Any of these may be null when not applicable.
+   */
+  learningGroup?: LearningGroupSummary | null;
+  student?: StudentSummary | null;
+  contextNote?: string | null;
+}
+
+/**
+ * Paginated list wrapper for classroom incidents.
+ */
+export interface PaginatedEducationIncidentSummary {
+  items: EducationIncidentSummary[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * TxClient alias for use inside Prisma transactions.
+ */
+type TxClient = Prisma.TransactionClient;
+
+/**
+ * EducationModuleService
+ *
+ * Responsibilities:
+ * - registerStudentIncident: wraps Task creation for education incidents
+ *   (`type = "education_support"`) and inserts an entry in education_task_links.
+ * - listIncidents: returns Tasks scoped to the education domain, enriched with
+ *   learning group / person context for dashboards and reviews.
+ * - findIncidentById: returns a single education incident with full context.
+ * - deleteIncident: deletes an education incident and its link rows.
+ */
+@Injectable()
+export class EducationModuleService {
+  /**
+   * Default canonical label for education incidents.
+   * This is aligned with the label taxonomy examples (Doc 8).
+   */
+  private static readonly DEFAULT_EDUCATION_LABEL = '100.94.Education.Support';
+
+  private readonly prisma: PrismaClient;
+
+  constructor() {
+    // Note: if a shared PrismaService / PersistenceModule is in place,
+    // this can be refactored to inject that instead.
+    this.prisma = new PrismaClient();
+  }
+
+  /**
+   * Register a new student incident:
+   * - Creates a Task (`tasks`) with type = "education_support"
+   * - Inserts a row in `education_task_links` with group/person context
+   */
+  async registerStudentIncident(
+    input: RegisterStudentIncidentInput,
+  ): Promise<{
+    task: EducationIncidentSummary;
+    link: EducationTaskLinkRow | null;
+  }> {
+    this.ensureRequiredFields(input);
+
+    const organizationId = input.organizationId.trim();
+
+    const severity = this.normalizeSeverity(input.severity);
+    const priority = this.normalizePriority(input.priority);
+    const visibility = this.normalizeVisibility(input.visibility);
+    const category = this.normalizeCategory(input.category);
+    const sourceType = this.normalizeSource(input.sourceType);
+    const label =
+      input.label && input.label.trim().length > 0
+        ? input.label.trim()
+        : EducationModuleService.DEFAULT_EDUCATION_LABEL;
+
+    const dueAt = this.normalizeOptionalDate(input.dueAt);
+
+    const taskMetadataJson = JSON.stringify({
+      ...(input.taskMetadata ?? {}),
+      domain: EDUCATION_DOMAIN_TYPE,
+      context: {
+        learning_group_id: input.learningGroupId ?? null,
+        student_person_id: input.studentPersonId ?? null,
+        context_note: input.contextNote ?? null,
+      },
+      source_reference: input.sourceReference ?? null,
+    });
+
+    const result = await this.prisma.$transaction(
+      async (tx: TxClient): Promise<{
+        taskRow: TaskRow;
+        linkRow: EducationTaskLinkRow | null;
+      }> => {
+        // 1. Insert Task
+        const [taskRow] = await tx.$queryRaw<TaskRow[]>`
+          INSERT INTO tasks (
+            organization_id,
+            case_id,
+            type,
+            category,
+            subtype,
+            label,
+            title,
+            description,
+            status,
+            priority,
+            severity,
+            visibility,
+            source,
+            created_by_user_id,
+            requester_person_id,
+            owner_role_id,
+            owner_user_id,
+            assignee_role,
+            due_at,
+            reactivity_time,
+            reactivity_deadline_at,
+            escalation_level,
+            closed_at,
+            metadata
+          ) VALUES (
+            ${organizationId},
+            ${null},
+            ${EDUCATION_DOMAIN_TYPE},
+            ${category},
+            ${input.subtype ?? null},
+            ${label},
+            ${input.title.trim()},
+            ${input.description.trim()},
+            ${'PENDING'},
+            ${priority},
+            ${severity},
+            ${visibility},
+            ${sourceType},
+            ${input.createdByUserId ?? null},
+            ${input.studentPersonId ?? null},
+            ${input.ownerRoleId ?? null},
+            ${input.ownerUserId ?? null},
+            ${input.assigneeRole ?? null},
+            ${dueAt},
+            ${null},
+            ${null},
+            ${0},
+            ${null},
+            ${taskMetadataJson}::jsonb
+          )
+          RETURNING
+            id,
+            organization_id,
+            case_id,
+            type,
+            category,
+            subtype,
+            label,
+            title,
+            description,
+            status,
+            priority,
+            severity,
+            visibility,
+            source,
+            created_by_user_id,
+            requester_person_id,
+            owner_role_id,
+            owner_user_id,
+            assignee_role,
+            due_at,
+            reactivity_deadline_at,
+            escalation_level,
+            closed_at,
+            created_at,
+            updated_at
+        `;
+
+        if (!taskRow) {
+          throw new Error('Failed to create Task for education incident');
+        }
+
+        // 2. Insert education_task_links row when there is context to link
+        let linkRow: EducationTaskLinkRow | null = null;
+
+        if (
+          input.learningGroupId ||
+          input.studentPersonId ||
+          input.contextNote
+        ) {
+          const [link] = await tx.$queryRaw<EducationTaskLinkRow[]>`
+            INSERT INTO education_task_links (
+              task_id,
+              learning_group_id,
+              person_id,
+              context_note
+            ) VALUES (
+              ${taskRow.id},
+              ${input.learningGroupId ?? null},
+              ${input.studentPersonId ?? null},
+              ${input.contextNote ?? null}
+            )
+            RETURNING
+              id,
+              task_id,
+              learning_group_id,
+              person_id,
+              context_note
+          `;
+          linkRow = link ?? null;
+        }
+
+        return { taskRow, linkRow };
+      },
+    );
+
+    const summary: EducationIncidentSummary = this.mapRowToIncidentSummary({
+      taskRow: result.taskRow,
+      linkRow: result.linkRow,
+      learningGroup: null,
+      student: null,
+    });
+
+    return {
+      task: summary,
+      link: result.linkRow,
+    };
+  }
+
+  /**
+   * List classroom incidents for an organization, optionally filtered by
+   * status, learning group, student, and search text.
+   *
+   * Results are ordered by Task.created_at DESC.
+   */
+  async listIncidents(
+    options: ListEducationIncidentsOptions,
+  ): Promise<PaginatedEducationIncidentSummary> {
+    const { organizationId } = options;
+
+    if (!organizationId || !organizationId.trim()) {
+      throw new BadRequestException('organizationId is required');
+    }
+
+    const orgId = organizationId.trim();
+    const statuses = this.normalizeStatusFilter(options.status);
+    const search = options.search?.trim() || null;
+
+    const limit = this.normalizeLimit(options.limit);
+    const offset = this.normalizeOffset(options.offset);
+
+    const statusCondition: Prisma.Sql = statuses.length
+      ? Prisma.sql`AND t.status = ANY(${statuses})`
+      : Prisma.sql``;
+
+    const groupCondition: Prisma.Sql = options.learningGroupId
+      ? Prisma.sql`AND etl.learning_group_id = ${options.learningGroupId}`
+      : Prisma.sql``;
+
+    const studentCondition: Prisma.Sql = options.studentPersonId
+      ? Prisma.sql`AND etl.person_id = ${options.studentPersonId}`
+      : Prisma.sql``;
+
+    const searchCondition: Prisma.Sql = search
+      ? Prisma.sql`AND (
+          t.title ILIKE ${`%${search}%`}
+          OR t.description ILIKE ${`%${search}%`}
+          OR lg.name ILIKE ${`%${search}%`}
+          OR lg.code ILIKE ${`%${search}%`}
+          OR pp.full_name ILIKE ${`%${search}%`}
+          OR pp.external_reference ILIKE ${`%${search}%`}
+        )`
+      : Prisma.sql``;
+
+    const rows = await this.prisma.$queryRaw<
+      Array<
+        TaskRow & {
+          education_link_id: string | null;
+          learning_group_id: string | null;
+          learning_group_code: string | null;
+          learning_group_name: string | null;
+          learning_group_category: string | null;
+          student_person_id: string | null;
+          student_full_name: string | null;
+          student_external_reference: string | null;
+          context_note: string | null;
+        }
+      >
+    >`
+      SELECT
+        t.id,
+        t.organization_id,
+        t.case_id,
+        t.type,
+        t.category,
+        t.subtype,
+        t.label,
+        t.title,
+        t.description,
+        t.status,
+        t.priority,
+        t.severity,
+        t.visibility,
+        t.source,
+        t.created_by_user_id,
+        t.requester_person_id,
+        t.owner_role_id,
+        t.owner_user_id,
+        t.assignee_role,
+        t.due_at,
+        t.reactivity_deadline_at,
+        t.escalation_level,
+        t.closed_at,
+        t.created_at,
+        t.updated_at,
+        etl.id AS education_link_id,
+        etl.learning_group_id,
+        etl.person_id AS student_person_id,
+        etl.context_note,
+        lg.code AS learning_group_code,
+        lg.name AS learning_group_name,
+        lg.category AS learning_group_category,
+        pp.full_name AS student_full_name,
+        pp.external_reference AS student_external_reference
+      FROM tasks t
+      LEFT JOIN education_task_links etl
+        ON etl.task_id = t.id
+      LEFT JOIN learning_groups lg
+        ON etl.learning_group_id = lg.id
+      LEFT JOIN person_profiles pp
+        ON etl.person_id = pp.id
+      WHERE t.organization_id = ${orgId}
+        AND t.type = ${EDUCATION_DOMAIN_TYPE}
+        ${statusCondition}
+        ${groupCondition}
+        ${studentCondition}
+        ${searchCondition}
+      ORDER BY t.created_at DESC
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `;
+
+    const [countRow] = await this.prisma.$queryRaw<{ total: bigint }[]>`
+      SELECT COUNT(*)::bigint AS total
+      FROM tasks t
+      LEFT JOIN education_task_links etl
+        ON etl.task_id = t.id
+      LEFT JOIN learning_groups lg
+        ON etl.learning_group_id = lg.id
+      LEFT JOIN person_profiles pp
+        ON etl.person_id = pp.id
+      WHERE t.organization_id = ${orgId}
+        AND t.type = ${EDUCATION_DOMAIN_TYPE}
+        ${statusCondition}
+        ${groupCondition}
+        ${studentCondition}
+        ${searchCondition}
+    `;
+
+    const total = countRow ? Number(countRow.total) : 0;
+
+    const items: EducationIncidentSummary[] = rows.map((row) => {
+      const learningGroup: LearningGroupSummary | null =
+        row.learning_group_id &&
+        row.learning_group_code &&
+        row.learning_group_name
+          ? {
+              learningGroupId: row.learning_group_id,
+              code: row.learning_group_code,
+              name: row.learning_group_name,
+              category: row.learning_group_category,
+            }
+          : null;
+
+      const student: StudentSummary | null =
+        row.student_person_id && row.student_full_name
+          ? {
+              personId: row.student_person_id,
+              fullName: row.student_full_name,
+              externalReference: row.student_external_reference,
+            }
+          : null;
+
+      return this.mapRowToIncidentSummary({
+        taskRow: row,
+        linkRow: row.education_link_id
+          ? {
+              id: row.education_link_id,
+              task_id: row.id,
+              learning_group_id: row.learning_group_id,
+              person_id: row.student_person_id,
+              context_note: row.context_note,
+            }
+          : null,
+        learningGroup,
+        student,
+      });
+    });
+
+    return {
+      items,
+      total,
+      limit,
+      offset,
+    };
+  }
+
+  /**
+   * Fetch a single education incident by task id and organization,
+   * enriched with learning group and student projections.
+   */
+  async findIncidentById(
+    organizationId: string,
+    taskId: string,
+  ): Promise<EducationIncidentSummary> {
+    if (!organizationId || !organizationId.trim()) {
+      throw new BadRequestException('organizationId is required');
+    }
+    if (!taskId || !taskId.trim()) {
+      throw new BadRequestException('taskId is required');
+    }
+
+    const orgId = organizationId.trim();
+
+    const rows = await this.prisma.$queryRaw<
+      Array<
+        TaskRow & {
+          education_link_id: string | null;
+          learning_group_id: string | null;
+          learning_group_code: string | null;
+          learning_group_name: string | null;
+          learning_group_category: string | null;
+          student_person_id: string | null;
+          student_full_name: string | null;
+          student_external_reference: string | null;
+          context_note: string | null;
+        }
+      >
+    >`
+      SELECT
+        t.id,
+        t.organization_id,
+        t.case_id,
+        t.type,
+        t.category,
+        t.subtype,
+        t.label,
+        t.title,
+        t.description,
+        t.status,
+        t.priority,
+        t.severity,
+        t.visibility,
+        t.source,
+        t.created_by_user_id,
+        t.requester_person_id,
+        t.owner_role_id,
+        t.owner_user_id,
+        t.assignee_role,
+        t.due_at,
+        t.reactivity_deadline_at,
+        t.escalation_level,
+        t.closed_at,
+        t.created_at,
+        t.updated_at,
+        etl.id AS education_link_id,
+        etl.learning_group_id,
+        etl.person_id AS student_person_id,
+        etl.context_note,
+        lg.code AS learning_group_code,
+        lg.name AS learning_group_name,
+        lg.category AS learning_group_category,
+        pp.full_name AS student_full_name,
+        pp.external_reference AS student_external_reference
+      FROM tasks t
+      LEFT JOIN education_task_links etl
+        ON etl.task_id = t.id
+      LEFT JOIN learning_groups lg
+        ON etl.learning_group_id = lg.id
+      LEFT JOIN person_profiles pp
+        ON etl.person_id = pp.id
+      WHERE t.organization_id = ${orgId}
+        AND t.id = ${taskId}
+        AND t.type = ${EDUCATION_DOMAIN_TYPE}
+      LIMIT 1
+    `;
+
+    const row = rows[0];
+
+    if (!row) {
+      throw new NotFoundException(
+        `Education incident with id "${taskId}" not found`,
+      );
+    }
+
+    const learningGroup: LearningGroupSummary | null =
+      row.learning_group_id && row.learning_group_code && row.learning_group_name
+        ? {
+            learningGroupId: row.learning_group_id,
+            code: row.learning_group_code,
+            name: row.learning_group_name,
+            category: row.learning_group_category,
+          }
+        : null;
+
+    const student: StudentSummary | null =
+      row.student_person_id && row.student_full_name
+        ? {
+            personId: row.student_person_id,
+            fullName: row.student_full_name,
+            externalReference: row.student_external_reference,
+          }
+        : null;
+
+    return this.mapRowToIncidentSummary({
+      taskRow: row,
+      linkRow: row.education_link_id
+        ? {
+            id: row.education_link_id,
+            task_id: row.id,
+            learning_group_id: row.learning_group_id,
+            person_id: row.student_person_id,
+            context_note: row.context_note,
+          }
+        : null,
+      learningGroup,
+      student,
+    });
+  }
+
+  /**
+   * Delete an education incident (Task + link rows) for a given organization.
+   * Throws NotFoundException if the incident does not exist or is not scoped
+   * to the given organization.
+   */
+  async deleteIncident(
+    organizationId: string,
+    taskId: string,
+  ): Promise<void> {
+    if (!organizationId || !organizationId.trim()) {
+      throw new BadRequestException('organizationId is required');
+    }
+    if (!taskId || !taskId.trim()) {
+      throw new BadRequestException('taskId is required');
+    }
+
+    const orgId = organizationId.trim();
+
+    await this.prisma.$transaction(async (tx: TxClient) => {
+      // Remove any education_task_links first
+      await tx.$executeRaw`
+        DELETE FROM education_task_links
+        WHERE task_id = ${taskId}
+      `;
+
+      // Then delete the task itself, scoped to organization and domain type
+      const [deleted] = await tx.$queryRaw<{ id: string }[]>`
+        DELETE FROM tasks
+        WHERE id = ${taskId}
+          AND organization_id = ${orgId}
+          AND type = ${EDUCATION_DOMAIN_TYPE}
+        RETURNING id
+      `;
+
+      if (!deleted) {
+        throw new NotFoundException(
+          `Education incident with id "${taskId}" not found`,
+        );
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  private ensureRequiredFields(input: RegisterStudentIncidentInput): void {
+    if (!input.organizationId || !input.organizationId.trim()) {
+      throw new BadRequestException('organizationId is required');
+    }
+    if (!input.title || !input.title.trim()) {
+      throw new BadRequestException('title is required');
+    }
+    if (!input.description || !input.description.trim()) {
+      throw new BadRequestException('description is required');
+    }
+  }
+
+  private normalizeSeverity(severity?: TaskSeverity | string): TaskSeverity {
+    if (!severity) {
+      return 'MODERATE';
+    }
+    const raw = severity.toString().trim();
+    const upper = raw.toUpperCase();
+
+    if (upper === 'INFO') {
+      // Historical mapping: treat "info" as MINOR
+      return 'MINOR';
+    }
+
+    const allowed: TaskSeverity[] = ['MINOR', 'MODERATE', 'MAJOR', 'CRITICAL'];
+
+    if (!allowed.includes(upper as TaskSeverity)) {
+      throw new BadRequestException(
+        `Invalid severity "${severity}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return upper as TaskSeverity;
+  }
+
+  private normalizePriority(priority?: TaskPriority | string): TaskPriority {
+    if (!priority) {
+      return 'MEDIUM';
+    }
+    const upper = priority.toString().trim().toUpperCase();
+    const allowed: TaskPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+
+    if (!allowed.includes(upper as TaskPriority)) {
+      throw new BadRequestException(
+        `Invalid priority "${priority}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return upper as TaskPriority;
+  }
+
+  private normalizeVisibility(visibility?: Visibility | string): Visibility {
+    if (!visibility) {
+      return 'INTERNAL';
+    }
+    const upper = visibility.toString().trim().toUpperCase();
+    const allowed: Visibility[] = [
+      'PUBLIC',
+      'INTERNAL',
+      'RESTRICTED',
+      'ANONYMISED',
+    ];
+
+    if (!allowed.includes(upper as Visibility)) {
+      throw new BadRequestException(
+        `Invalid visibility "${visibility}". Expected one of: ${allowed.join(
+          ', ',
+        )}`,
+      );
+    }
+
+    return upper as Visibility;
+  }
+
+  private normalizeSource(source?: TaskSource | string): TaskSource {
+    if (!source) {
+      return 'manual';
+    }
+    const lower = source.toString().trim().toLowerCase();
+    const allowed: TaskSource[] = ['email', 'api', 'manual', 'sync'];
+
+    if (!allowed.includes(lower as TaskSource)) {
+      throw new BadRequestException(
+        `Invalid sourceType "${source}". Expected one of: ${allowed.join(
+          ', ',
+        )}`,
+      );
+    }
+
+    return lower as TaskSource;
+  }
+
+  private normalizeCategory(category?: TaskCategory): TaskCategory {
+    const allowed: TaskCategory[] = [
+      'request',
+      'incident',
+      'update',
+      'report',
+      'distribution',
+    ];
+
+    if (!category) {
+      return 'incident';
+    }
+
+    if (!allowed.includes(category)) {
+      throw new BadRequestException(
+        `Invalid category "${category}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return category;
+  }
+
+  private normalizeOptionalDate(date?: string | Date | null): Date | null {
+    if (!date) {
+      return null;
+    }
+
+    if (date instanceof Date) {
+      return date;
+    }
+
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException(
+        `Invalid dueAt "${date}". Expected ISO-8601 string or Date.`,
+      );
+    }
+
+    return parsed;
+  }
+
+  private normalizeStatusFilter(status?: TaskStatus | TaskStatus[]): TaskStatus[] {
+    const allowed: TaskStatus[] = [
+      'PENDING',
+      'IN_PROGRESS',
+      'ON_HOLD',
+      'COMPLETED',
+      'FAILED',
+      'ESCALATED',
+      'CANCELLED',
+    ];
+
+    if (!status) {
+      // Default "open" view: only unresolved tasks.
+      return ['PENDING', 'IN_PROGRESS', 'ON_HOLD', 'ESCALATED'];
+    }
+
+    const list = Array.isArray(status) ? status : [status];
+    const normalized: TaskStatus[] = [];
+
+    for (const raw of list) {
+      const upper = raw.toString().trim().toUpperCase() as TaskStatus;
+      if (!allowed.includes(upper)) {
+        throw new BadRequestException(
+          `Invalid status "${raw}". Expected one of: ${allowed.join(', ')}`,
+        );
+      }
+      if (!normalized.includes(upper)) {
+        normalized.push(upper);
+      }
+    }
+
+    return normalized;
+  }
+
+  private normalizeLimit(limit?: number): number {
+    if (!Number.isFinite(limit as number) || (limit as number) <= 0) {
+      return 50;
+    }
+    const value = Math.floor(limit as number);
+    return value > 500 ? 500 : value;
+  }
+
+  private normalizeOffset(offset?: number): number {
+    if (!Number.isFinite(offset as number) || (offset as number) < 0) {
+      return 0;
+    }
+    return Math.floor(offset as number);
+  }
+
+  private mapRowToIncidentSummary(args: {
+    taskRow: TaskRow;
+    linkRow: EducationTaskLinkRow | null;
+    learningGroup: LearningGroupSummary | null;
+    student: StudentSummary | null;
+  }): EducationIncidentSummary {
+    const { taskRow, linkRow, learningGroup, student } = args;
+
+    return {
+      taskId: taskRow.id,
+      organizationId: taskRow.organization_id,
+      caseId: taskRow.case_id,
+
+      type: taskRow.type,
+      category: taskRow.category,
+      subtype: taskRow.subtype,
+      label: taskRow.label,
+
+      title: taskRow.title,
+      description: taskRow.description,
+
+      status: taskRow.status,
+      priority: taskRow.priority,
+      severity: taskRow.severity,
+      visibility: taskRow.visibility,
+      source: taskRow.source,
+
+      createdByUserId: taskRow.created_by_user_id,
+      requesterPersonId: taskRow.requester_person_id,
+      ownerRoleId: taskRow.owner_role_id,
+      ownerUserId: taskRow.owner_user_id,
+      assigneeRole: taskRow.assignee_role,
+
+      dueAt: taskRow.due_at ? taskRow.due_at.toISOString() : null,
+      reactivityDeadlineAt: taskRow.reactivity_deadline_at
+        ? taskRow.reactivity_deadline_at.toISOString()
+        : null,
+      escalationLevel: taskRow.escalation_level,
+      closedAt: taskRow.closed_at ? taskRow.closed_at.toISOString() : null,
+      createdAt: taskRow.created_at.toISOString(),
+      updatedAt: taskRow.updated_at.toISOString(),
+
+      learningGroup: learningGroup ?? null,
+      student: student ?? null,
+      contextNote: linkRow?.context_note ?? null,
+    };
+  }
+}
+
+
+=== FILE 6/28: apps/api/src/orgo/domain/hr/hr.controller.ts ===
+
+
+
+
+=== FILE 7/28: apps/api/src/orgo/domain/hr/hr.module.ts ===
 
 import { Module } from '@nestjs/common';
 import { HrModuleService } from './hr.service';
@@ -33,13 +2390,16 @@ export const HR_DOMAIN_TYPE = 'hr_case';
 export class HrModule {}
 
 
-=== FILE 3/18: apps/api/src/orgo/domain/hr/hr.service.ts ===
+=== FILE 8/28: apps/api/src/orgo/domain/hr/hr.service.ts ===
+
+// apps/api/src/orgo/domain/hr/hr.service.ts
 
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 /**
- * Canonical enums (aligned with Doc 2 / Doc 8)
+ * Canonical enums (aligned with Docs 1, 2, 5, 8).
+ * JSON inputs may be lower‑case; normalization happens in this service.
  */
 export type TaskStatus =
   | 'PENDING'
@@ -58,10 +2418,19 @@ export type Visibility = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
 
 export type TaskSource = 'email' | 'api' | 'manual' | 'sync';
 
+/**
+ * Canonical HR case status enum (Doc 1 / HR module spec).
+ */
 export type HrCaseStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
 
+/**
+ * HR confidentiality levels (Doc 1 – HR module).
+ */
 export type HrCaseConfidentialityLevel = 'sensitive' | 'highly_sensitive';
 
+/**
+ * HR case participant roles (Doc 1 – HR module).
+ */
 export type HrCaseParticipantRole =
   | 'complainant'
   | 'respondent'
@@ -70,7 +2439,23 @@ export type HrCaseParticipantRole =
   | 'other';
 
 /**
- * Minimal row shapes used for mapping raw SQL results.
+ * Base task category enum for tasks (Doc 1 / Doc 5).
+ * HR domain uses a subset of these.
+ */
+export type TaskCategory =
+  | 'request'
+  | 'incident'
+  | 'update'
+  | 'report'
+  | 'distribution';
+
+/**
+ * HR‑specific task categories (Doc 3 – hr_case module config).
+ */
+export type HrTaskCategory = 'request' | 'update' | 'report';
+
+/**
+ * Minimal row shapes for raw SQL mappings.
  * These reflect the Doc 1 schema (key columns only).
  */
 export interface CaseRow {
@@ -81,6 +2466,7 @@ export interface CaseRow {
   description: string;
   status: 'open' | 'in_progress' | 'resolved' | 'archived';
   severity: TaskSeverity;
+  reactivity_time: string | null;
   origin_vertical_level: number | null;
   origin_role: string | null;
   created_at: Date;
@@ -108,7 +2494,7 @@ export interface TaskRow {
   organization_id: string;
   case_id: string | null;
   type: string;
-  category: 'request' | 'incident' | 'update' | 'report' | 'distribution';
+  category: TaskCategory;
   subtype: string | null;
   label: string;
   title: string;
@@ -139,29 +2525,30 @@ export interface HrCaseParticipantRow {
 
 /**
  * Input DTO for registering a new HR report.
- * This is a service-level DTO; controller-level DTOs can extend/validate this shape.
+ * This is a service‑level DTO; controller‑level DTOs can extend/validate this shape.
  */
 export interface RegisterHrReportInput {
   organizationId: string;
 
   /**
-   * Human-facing title and description of the report.
+   * Human‑facing title and description of the report (user‑facing).
    */
   title: string;
   description: string;
 
   /**
-   * Canonical enums (JSON inputs may be lower-case; normalization happens in service).
+   * Canonical enums (JSON inputs may be lower‑case; normalization happens in service).
    */
   severity?: TaskSeverity | string;
   priority?: TaskPriority | string;
   visibility?: Visibility | string;
 
   /**
-   * Task category & subtype (domain-specific for HR).
-   * Category must be one of: request | incident | update | report | distribution.
+   * Task category & subtype (domain‑specific for HR).
+   * Category must be one of: request | update | report.
+   * (Other task categories are reserved for non‑HR domains.)
    */
-  category?: 'request' | 'incident' | 'update' | 'report' | 'distribution';
+  category?: HrTaskCategory;
   subtype?: string; // e.g. "onboarding" | "offboarding" | "harassment" | "policy_question"
 
   /**
@@ -173,7 +2560,7 @@ export interface RegisterHrReportInput {
   /**
    * Signal/source metadata (aligned with task_source_enum / cases.source_type).
    */
-  sourceType?: TaskSource;
+  sourceType?: TaskSource | string;
   sourceReference?: string | null;
 
   /**
@@ -197,12 +2584,14 @@ export interface RegisterHrReportInput {
    * Additional context.
    */
   tags?: string[];
+  // Arbitrary structured location (Org unit / physical site, etc.)
+  // Stored as JSONB in cases.location.
   location?: unknown;
   caseMetadata?: Record<string, unknown> | null;
   taskMetadata?: Record<string, unknown> | null;
 
   /**
-   * Explicit confidentiality hint (in addition to severity/subtype-based derivation).
+   * Explicit confidentiality hint (in addition to severity/subtype‑based derivation).
    */
   requiresHighConfidentiality?: boolean;
 
@@ -217,7 +2606,8 @@ export interface RegisterHrReportInput {
   createdByUserId?: string | null;
 
   /**
-   * Optional HR-specific title/description overrides for the HR case record.
+   * Optional HR‑specific title/description overrides for the HR case record.
+   * These can differ from the generic Case title/description (e.g. for anonymisation).
    */
   hrTitleOverride?: string | null;
   hrDescriptionOverride?: string | null;
@@ -301,21 +2691,31 @@ export class HrModuleService {
    * - Creates a primary Task (`tasks`) of type "hr_case"
    * - Creates hr_case_participants for reporter/respondent/others
    * - Creates a primary hr_case_task_links entry
+   *
+   * All writes are scoped to the given organization_id (multi‑tenant safety).
    */
   async registerReport(input: RegisterHrReportInput): Promise<HrCaseWithPrimaryTask> {
     this.ensureRequiredFields(input);
 
     const severity = this.normalizeSeverity(input.severity);
-    const priority = this.normalizePriority(input.priority ?? this.derivePriorityFromSeverity(severity));
-    const visibility = this.normalizeVisibility(input.visibility ?? 'RESTRICTED');
-    const sourceType: TaskSource = (input.sourceType ?? 'manual') as TaskSource;
-    const category: 'request' | 'incident' | 'update' | 'report' | 'distribution' =
-      input.category ?? 'request';
+    const priority = this.normalizePriority(
+      input.priority ?? this.derivePriorityFromSeverity(severity),
+    );
+
+    // Default visibility for HR is RESTRICTED; harassment subtypes may default to ANONYMISED.
+    const baseVisibility: Visibility | string =
+      input.visibility ??
+      (input.subtype && input.subtype.toLowerCase().trim() === 'harassment'
+        ? 'ANONYMISED'
+        : 'RESTRICTED');
+    const visibility = this.normalizeVisibility(baseVisibility);
+
+    const sourceType = this.normalizeSource(input.sourceType);
+    const category: HrTaskCategory = this.normalizeHrCategory(input.category);
 
     const label = input.label?.trim() || HrModuleService.DEFAULT_HR_LABEL;
     const { verticalBase, horizontalRole } = this.parseLabel(label);
 
-    const now = new Date();
     const organizationId = input.organizationId;
     const originVerticalLevel = verticalBase;
     const originRole = horizontalRole;
@@ -340,8 +2740,11 @@ export class HrModuleService {
       },
     );
 
+    const hrTitle = input.hrTitleOverride?.trim() || input.title;
+    const hrDescription = input.hrDescriptionOverride?.trim() || input.description;
+
     return this.prisma.$transaction(async (tx: TxClient) => {
-      // 1. Insert into cases
+      // 1. Insert into cases (generic Case container, canonical lifecycle)
       const [caseRow] = await tx.$queryRaw<CaseRow[]>`
         INSERT INTO cases (
           organization_id,
@@ -371,8 +2774,8 @@ export class HrModuleService {
           ${originVerticalLevel},
           ${originRole},
           ${tags},
-          ${locationJson}::jsonb,
-          ${caseMetadataJson}::jsonb
+          ${Prisma.sql`${Prisma.raw(locationJson)}::jsonb`},
+          ${Prisma.sql`${Prisma.raw(caseMetadataJson)}::jsonb`}
         )
         RETURNING
           id,
@@ -382,6 +2785,7 @@ export class HrModuleService {
           description,
           status,
           severity,
+          reactivity_time,
           origin_vertical_level,
           origin_role,
           created_at,
@@ -389,16 +2793,13 @@ export class HrModuleService {
       `;
 
       if (!caseRow) {
-        throw new Error('Failed to create Case for HR report');
+        throw new BadRequestException('Failed to create Case for HR report');
       }
 
-      // 2. Generate a human-readable HR case code (e.g. HR-2025-0001)
-      const caseCode = await this.generateCaseCode(tx, organizationId, now);
+      const openedAt = caseRow.created_at;
+      const caseCode = await this.generateCaseCode(tx, organizationId, openedAt);
 
-      // 3. Insert into hr_cases
-      const hrTitle = input.hrTitleOverride?.trim() || input.title;
-      const hrDescription = input.hrDescriptionOverride?.trim() || input.description;
-
+      // 2. Insert into hr_cases (HR domain extension of the Case)
       const [hrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
         INSERT INTO hr_cases (
           organization_id,
@@ -424,7 +2825,7 @@ export class HrModuleService {
           ${input.caseOwnerRoleId ?? null},
           ${input.caseOwnerUserId ?? null},
           ${null},
-          ${now},
+          ${openedAt},
           ${null}
         )
         RETURNING
@@ -444,10 +2845,10 @@ export class HrModuleService {
       `;
 
       if (!hrCaseRow) {
-        throw new Error('Failed to create HrCase for HR report');
+        throw new BadRequestException('Failed to create HR Case for report');
       }
 
-      // 4. Insert primary Task
+      // 3. Insert primary Task (task.type = "hr_case")
       const [taskRow] = await tx.$queryRaw<TaskRow[]>`
         INSERT INTO tasks (
           organization_id,
@@ -469,7 +2870,6 @@ export class HrModuleService {
           owner_user_id,
           assignee_role,
           due_at,
-          reactivity_time,
           reactivity_deadline_at,
           escalation_level,
           closed_at,
@@ -481,7 +2881,7 @@ export class HrModuleService {
           ${category},
           ${input.subtype ?? null},
           ${label},
-          ${`HR case: ${hrTitle}`},
+          ${hrTitle},
           ${hrDescription},
           ${'PENDING'},
           ${priority},
@@ -492,13 +2892,12 @@ export class HrModuleService {
           ${input.reporterPersonId ?? null},
           ${input.caseOwnerRoleId ?? null},
           ${input.caseOwnerUserId ?? null},
-          ${input.assigneeRole ?? 'HR.CaseOfficer'},
+          ${input.assigneeRole ?? horizontalRole ?? null},
           ${dueAt},
-          ${null},
           ${null},
           ${0},
           ${null},
-          ${taskMetadataJson}::jsonb
+          ${Prisma.sql`${Prisma.raw(taskMetadataJson)}::jsonb`}
         )
         RETURNING
           id,
@@ -527,11 +2926,11 @@ export class HrModuleService {
       `;
 
       if (!taskRow) {
-        throw new Error('Failed to create primary Task for HR report');
+        throw new BadRequestException('Failed to create primary HR Task for report');
       }
 
-      // 5. Update HrCase with primary_task_id
-      const [updatedHrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
+      // 4. Update hr_cases.primary_task_id
+      const [finalHrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
         UPDATE hr_cases
         SET primary_task_id = ${taskRow.id}
         WHERE id = ${hrCaseRow.id}
@@ -551,9 +2950,11 @@ export class HrModuleService {
           closed_at
       `;
 
-      const finalHrCaseRow = updatedHrCaseRow ?? hrCaseRow;
+      if (!finalHrCaseRow) {
+        throw new BadRequestException('Failed to link HR Case to primary Task');
+      }
 
-      // 6. Insert hr_case_participants rows
+      // 5. Insert participants into hr_case_participants
       const participants: HrCaseParticipantRow[] = [];
 
       if (input.reporterPersonId) {
@@ -636,7 +3037,7 @@ export class HrModuleService {
         }
       }
 
-      // 7. Link HrCase and Task in hr_case_task_links (link_type "primary")
+      // 6. Link HrCase and Task in hr_case_task_links (link_type "primary")
       await tx.$queryRaw`
         INSERT INTO hr_case_task_links (
           hr_case_id,
@@ -660,6 +3061,7 @@ export class HrModuleService {
 
   /**
    * List HR cases for an organization with basic filtering and pagination.
+   * Filters by hr_cases.status, optional free‑text search, and org‑scoped only.
    */
   async listCases(options: ListHrCasesOptions): Promise<PaginatedHrCaseSummary> {
     const { organizationId } = options;
@@ -823,6 +3225,59 @@ export class HrModuleService {
     return upper as Visibility;
   }
 
+  /**
+   * Normalizes task source to the canonical task_source_enum, mapping
+   * historical values as described in the DB schema docs.
+   */
+  private normalizeSource(source?: TaskSource | string): TaskSource {
+    if (!source) {
+      return 'manual';
+    }
+    const lower = source.toString().trim().toLowerCase();
+
+    // Historical mapping: map legacy values to canonical sources
+    if (lower === 'ui') {
+      return 'manual';
+    }
+    if (lower === 'import') {
+      return 'sync';
+    }
+    if (lower === 'insight') {
+      return 'api';
+    }
+
+    const allowed: TaskSource[] = ['email', 'api', 'manual', 'sync'];
+
+    if (!allowed.includes(lower as TaskSource)) {
+      throw new BadRequestException(
+        `Invalid sourceType "${source}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return lower as TaskSource;
+  }
+
+  /**
+   * Normalizes HR task category according to the hr_case domain module config.
+   */
+  private normalizeHrCategory(category?: HrTaskCategory | string | null): HrTaskCategory {
+    const allowed: HrTaskCategory[] = ['request', 'update', 'report'];
+
+    if (!category) {
+      return 'request';
+    }
+
+    const lower = category.toString().trim().toLowerCase() as HrTaskCategory;
+
+    if (!allowed.includes(lower)) {
+      throw new BadRequestException(
+        `Invalid HR task category "${category}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return lower;
+  }
+
   private derivePriorityFromSeverity(severity: TaskSeverity): TaskPriority {
     switch (severity) {
       case 'CRITICAL':
@@ -876,7 +3331,14 @@ export class HrModuleService {
     return d;
   }
 
-  private parseLabel(label: string): { verticalBase: number | null; horizontalRole: string | null } {
+  /**
+   * Parses a canonical label `<BASE>.<CATEGORY><SUBCATEGORY>.<HORIZONTAL_ROLE?>`
+   * into vertical base and horizontal role.
+   */
+  private parseLabel(label: string): {
+    verticalBase: number | null;
+    horizontalRole: string | null;
+  } {
     const trimmed = label.trim();
     if (!trimmed) {
       return { verticalBase: null, horizontalRole: null };
@@ -896,6 +3358,9 @@ export class HrModuleService {
     };
   }
 
+  /**
+   * Generates a human‑friendly HR case code `HR-<YEAR>-<NNNN>` scoped by org.
+   */
   private async generateCaseCode(
     tx: TxClient,
     organizationId: string,
@@ -961,7 +3426,287 @@ export class HrModuleService {
 }
 
 
-=== FILE 4/18: apps/api/src/orgo/insights/cache/insights-cache-warmup.service.ts ===
+=== FILE 9/28: apps/api/src/orgo/domain/maintenance/maintenance.controller.ts ===
+
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+
+import { MaintenanceService } from './maintenance.service';
+import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
+import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
+import { MaintenanceFiltersDto } from './dto/maintenance-filters.dto';
+import { ChangeMaintenanceStatusDto } from './dto/change-maintenance-status.dto';
+import { MaintenanceDto } from './dto/maintenance.dto';
+
+@ApiTags('maintenance')
+@Controller('maintenance')
+export class MaintenanceController {
+  constructor(private readonly maintenanceService: MaintenanceService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create a maintenance item' })
+  @ApiCreatedResponse({ type: MaintenanceDto })
+  create(
+    @Body() createMaintenanceDto: CreateMaintenanceDto,
+  ): Promise<MaintenanceDto> {
+    return this.maintenanceService.create(createMaintenanceDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List maintenance items with optional filters' })
+  @ApiOkResponse({ type: MaintenanceDto, isArray: true })
+  findAll(
+    @Query() filters: MaintenanceFiltersDto,
+  ): Promise<MaintenanceDto[]> {
+    return this.maintenanceService.findAll(filters);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a single maintenance item by id' })
+  @ApiOkResponse({ type: MaintenanceDto })
+  findOne(@Param('id') id: string): Promise<MaintenanceDto> {
+    return this.maintenanceService.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a maintenance item' })
+  @ApiOkResponse({ type: MaintenanceDto })
+  update(
+    @Param('id') id: string,
+    @Body() updateMaintenanceDto: UpdateMaintenanceDto,
+  ): Promise<MaintenanceDto> {
+    return this.maintenanceService.update(id, updateMaintenanceDto);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Change status of a maintenance item' })
+  @ApiOkResponse({ type: MaintenanceDto })
+  changeStatus(
+    @Param('id') id: string,
+    @Body() changeStatusDto: ChangeMaintenanceStatusDto,
+  ): Promise<MaintenanceDto> {
+    return this.maintenanceService.changeStatus(id, changeStatusDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a maintenance item' })
+  @ApiNoContentResponse()
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.maintenanceService.remove(id);
+  }
+}
+
+
+=== FILE 10/28: apps/api/src/orgo/domain/maintenance/maintenance.module.ts ===
+
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiProperty,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { Request } from 'express';
+
+import { MaintenanceService } from './maintenance.service';
+import { Maintenance } from './entities/maintenance.entity';
+import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
+import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
+import { MaintenanceQueryDto } from './dto/maintenance-query.dto';
+import { CompleteMaintenanceDto } from './dto/complete-maintenance.dto';
+import { ReassignMaintenanceDto } from './dto/reassign-maintenance.dto';
+
+interface AuthenticatedUser {
+  id?: string;
+  userId?: string;
+  orgId?: string;
+  organizationId?: string;
+  [key: string]: unknown;
+}
+
+interface AuthenticatedRequest extends Request {
+  user?: AuthenticatedUser;
+}
+
+class PagedMaintenanceResponseDto {
+  @ApiProperty({ type: () => Maintenance, isArray: true })
+  items: Maintenance[];
+
+  @ApiProperty()
+  total: number;
+
+  @ApiProperty()
+  page: number;
+
+  @ApiProperty()
+  limit: number;
+}
+
+@ApiTags('Maintenance')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
+@Controller('maintenance')
+export class MaintenanceController {
+  constructor(
+    private readonly maintenanceService: MaintenanceService,
+  ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'List maintenance tasks' })
+  @ApiOkResponse({ type: PagedMaintenanceResponseDto })
+  @ApiUnauthorizedResponse()
+  async findAll(
+    @Req() req: AuthenticatedRequest,
+    @Query() query: MaintenanceQueryDto,
+  ): Promise<PagedMaintenanceResponseDto> {
+    const orgId = this.getOrgId(req);
+    return this.maintenanceService.findAll(orgId, query);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a maintenance task by id' })
+  @ApiParam({ name: 'id', description: 'Maintenance id' })
+  @ApiOkResponse({ type: Maintenance })
+  @ApiUnauthorizedResponse()
+  async findOne(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<Maintenance> {
+    const orgId = this.getOrgId(req);
+    return this.maintenanceService.findOne(orgId, id);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new maintenance task' })
+  @ApiCreatedResponse({ type: Maintenance })
+  @ApiUnauthorizedResponse()
+  async create(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateMaintenanceDto,
+  ): Promise<Maintenance> {
+    const orgId = this.getOrgId(req);
+    const userId = this.getUserId(req);
+    return this.maintenanceService.create(orgId, userId, dto);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update an existing maintenance task' })
+  @ApiParam({ name: 'id', description: 'Maintenance id' })
+  @ApiOkResponse({ type: Maintenance })
+  @ApiUnauthorizedResponse()
+  async update(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: UpdateMaintenanceDto,
+  ): Promise<Maintenance> {
+    const orgId = this.getOrgId(req);
+    return this.maintenanceService.update(orgId, id, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a maintenance task' })
+  @ApiParam({ name: 'id', description: 'Maintenance id' })
+  @ApiNoContentResponse()
+  @ApiUnauthorizedResponse()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<void> {
+    const orgId = this.getOrgId(req);
+    await this.maintenanceService.remove(orgId, id);
+  }
+
+  @Post(':id/complete')
+  @ApiOperation({ summary: 'Mark a maintenance task as completed' })
+  @ApiParam({ name: 'id', description: 'Maintenance id' })
+  @ApiOkResponse({ type: Maintenance })
+  @ApiUnauthorizedResponse()
+  async complete(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: CompleteMaintenanceDto,
+  ): Promise<Maintenance> {
+    const orgId = this.getOrgId(req);
+    return this.maintenanceService.complete(orgId, id, dto);
+  }
+
+  @Post(':id/reassign')
+  @ApiOperation({ summary: 'Reassign a maintenance task to another user' })
+  @ApiParam({ name: 'id', description: 'Maintenance id' })
+  @ApiOkResponse({ type: Maintenance })
+  @ApiUnauthorizedResponse()
+  async reassign(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: ReassignMaintenanceDto,
+  ): Promise<Maintenance> {
+    const orgId = this.getOrgId(req);
+    return this.maintenanceService.reassign(orgId, id, dto);
+  }
+
+  private getOrgId(req: AuthenticatedRequest): string {
+    const orgId = req.user?.orgId ?? req.user?.organizationId;
+    if (!orgId) {
+      throw new UnauthorizedException('Organization id not found on user');
+    }
+    return String(orgId);
+  }
+
+  private getUserId(req: AuthenticatedRequest): string {
+    const userId = req.user?.id ?? req.user?.userId;
+    if (!userId) {
+      throw new UnauthorizedException('User id not found on user');
+    }
+    return String(userId);
+  }
+}
+
+
+=== FILE 11/28: apps/api/src/orgo/domain/maintenance/maintenance.service.ts ===
+
+
+
+
+=== FILE 12/28: apps/api/src/orgo/insights/cache/insights-cache-warmup.service.ts ===
 
 // apps/api/src/orgo/insights/cache/insights-cache-warmup.service.ts
 
@@ -1203,7 +3948,7 @@ export class InsightsCacheWarmupService {
 }
 
 
-=== FILE 5/18: apps/api/src/orgo/insights/export/analytics-export.service.ts ===
+=== FILE 13/28: apps/api/src/orgo/insights/export/analytics-export.service.ts ===
 
 import {
   BadRequestException,
@@ -1623,7 +4368,322 @@ export class AnalyticsExportService {
 }
 
 
-=== FILE 6/18: apps/api/src/orgo/insights/insights.module.ts ===
+=== FILE 14/28: apps/api/src/orgo/insights/insights-cache-warmup.service.ts ===
+
+// apps/api/src/orgo/insights/insights-cache-warmup.service.ts
+
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { ReportsService } from './reports.service';
+
+export const INSIGHTS_CACHE_WARMUP_JOB_ID =
+  'orgo.insights.cache-warmup-dashboards';
+
+/**
+ * Options for a cache warmup run.
+ *
+ * In most cases callers will just invoke `warmDashboards()` with no arguments
+ * and let this service derive organization IDs and dashboards from configuration.
+ * Passing explicit organization IDs or dashboard subsets is useful for targeted
+ * warmups in tests or operations tooling.
+ */
+export interface InsightsCacheWarmupOptions {
+  /**
+   * One or more organization IDs whose dashboards should be pre‑warmed.
+   * If omitted, the service will try to read `INSIGHTS_CACHE_WARMUP_ORG_IDS`
+   * (comma‑separated UUIDs) from configuration.
+   */
+  organizationIds?: string[];
+
+  /**
+   * Optional subset of dashboards to warm. If omitted, the service uses
+   * configuration (INSIGHTS_CACHE_WARMUP_DASHBOARDS / insights.cache.warmup_dashboards)
+   * and falls back to all high‑traffic dashboards.
+   */
+  dashboards?: Array<'taskVolume' | 'slaBreaches' | 'profileScore'>;
+}
+
+/**
+ * Pre‑warms Redis caches for high‑traffic insights dashboards by issuing the
+ * same queries the UI uses, letting the reporting layer cache the results
+ * using the TTLs defined in the insights configuration.
+ *
+ * This service is typically invoked by a scheduled worker tied to the
+ * `orgo.insights.cache-warmup-dashboards` queue/job ID.
+ */
+@Injectable()
+export class InsightsCacheWarmupService {
+  private readonly logger = new Logger(InsightsCacheWarmupService.name);
+
+  // Only staging + prod are configured to run this job by default.
+  private static readonly ENABLED_ENVIRONMENTS = new Set(['staging', 'prod']);
+
+  constructor(
+    private readonly reportsService: ReportsService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  /**
+   * Entry point used by the background job handler.
+   *
+   * Behaviour:
+   * - Skips execution entirely when INSIGHTS_ENV is not one of
+   *   ["staging", "prod"] or when it resolves to "offline".
+   * - Determines the set of organizations to warm from the options or from
+   *   `INSIGHTS_CACHE_WARMUP_ORG_IDS` (comma‑separated UUIDs).
+   * - Determines which dashboards to warm from options or config.
+   * - For each organization, calls the main high‑traffic reporting endpoints
+   *   so that their results are cached for upcoming dashboard requests.
+   */
+  async warmDashboards(
+    options: InsightsCacheWarmupOptions = {},
+  ): Promise<void> {
+    const env = this.getInsightsEnvironment();
+
+    // Offline is always treated as a no‑op for Insights jobs.
+    if (env === 'offline') {
+      this.logger.debug('Insights cache warmup skipped: offline environment');
+      return;
+    }
+
+    if (!InsightsCacheWarmupService.ENABLED_ENVIRONMENTS.has(env)) {
+      this.logger.debug(
+        `Insights cache warmup skipped: INSIGHTS_ENV=${env} is not in enabled environments ${Array.from(
+          InsightsCacheWarmupService.ENABLED_ENVIRONMENTS,
+        ).join(', ')}`,
+      );
+      return;
+    }
+
+    const organizationIds =
+      (options.organizationIds && options.organizationIds.length > 0
+        ? options.organizationIds
+        : this.getConfiguredOrganizationIds()) || [];
+
+    if (organizationIds.length === 0) {
+      this.logger.warn(
+        'Insights cache warmup skipped: no organization IDs provided and INSIGHTS_CACHE_WARMUP_ORG_IDS is not configured',
+      );
+      return;
+    }
+
+    const configuredDashboards = this.getConfiguredDashboards();
+    const dashboards =
+      options.dashboards && options.dashboards.length > 0
+        ? options.dashboards
+        : configuredDashboards.length > 0
+        ? configuredDashboards
+        : (['taskVolume', 'slaBreaches', 'profileScore'] as const);
+
+    if (dashboards.length === 0) {
+      this.logger.warn(
+        'Insights cache warmup skipped: resolved dashboard list is empty after applying options and configuration',
+      );
+      return;
+    }
+
+    this.logger.log(
+      `Starting insights cache warmup (env=${env}, orgs=${organizationIds.length}, dashboards=${dashboards.join(
+        ', ',
+      )})`,
+    );
+
+    const startedAt = Date.now();
+
+    const results = await Promise.allSettled(
+      organizationIds.map((organizationId) =>
+        this.warmDashboardsForOrganization(organizationId, dashboards),
+      ),
+    );
+
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    const durationMs = Date.now() - startedAt;
+
+    if (failed > 0) {
+      this.logger.warn(
+        `Insights cache warmup finished with ${failed} failures out of ${organizationIds.length} organizations in ${durationMs} ms`,
+      );
+    } else {
+      this.logger.log(
+        `Insights cache warmup finished successfully for ${organizationIds.length} organizations in ${durationMs} ms`,
+      );
+    }
+  }
+
+  /**
+   * Warm the configured set of dashboards for a single organization.
+   *
+   * This delegates to the reporting service, which is responsible for:
+   * - honouring analytics cache TTLs from the insights config;
+   * - applying access‑control and visibility rules;
+   * - performing any internal caching through Redis.
+   *
+   * Errors are logged per‑dashboard so that a failure in one dashboard does
+   * not abort the entire warmup run for the organization.
+   */
+  private async warmDashboardsForOrganization(
+    organizationId: string,
+    dashboards: Array<'taskVolume' | 'slaBreaches' | 'profileScore'>,
+  ): Promise<void> {
+    this.logger.debug(
+      `Warming insights dashboards for organization ${organizationId} (${dashboards.join(
+        ', ',
+      )})`,
+    );
+
+    const tasks: Promise<unknown>[] = [];
+
+    if (dashboards.includes('taskVolume')) {
+      tasks.push(
+        this.reportsService
+          // Typical dashboards show "recent activity" for an org; the reporting
+          // service can interpret an organization‑only payload as "default range"
+          // and apply its own default lookback window.
+          .getTaskVolumeReport({ organizationId })
+          .catch((error) =>
+            this.logDashboardError(
+              organizationId,
+              'taskVolume',
+              error as Error,
+            ),
+          ),
+      );
+    }
+
+    if (dashboards.includes('slaBreaches')) {
+      tasks.push(
+        this.reportsService
+          // Thresholds and detailed filters are derived inside the reporting
+          // service based on profiles / config; the warmup only needs to hit
+          // the endpoint so that the cached aggregations are populated.
+          .getSlaBreaches({ organizationId } as any)
+          .catch((error) =>
+            this.logDashboardError(
+              organizationId,
+              'slaBreaches',
+              error as Error,
+            ),
+          ),
+      );
+    }
+
+    if (dashboards.includes('profileScore')) {
+      tasks.push(
+        this.reportsService
+          .getProfileScore({ organizationId } as any)
+          .catch((error) =>
+            this.logDashboardError(
+              organizationId,
+              'profileScore',
+              error as Error,
+            ),
+          ),
+      );
+    }
+
+    // Run all dashboard warmups for this org in parallel; errors are handled
+    // per‑dashboard above so we do not reject the entire org on a single failure.
+    await Promise.all(tasks);
+  }
+
+  /**
+   * Derives the current insights environment.
+   *
+   * Prefers the explicit INSIGHTS_ENV (as defined in the insights module
+   * config) and falls back to the global ENVIRONMENT when not set.
+   */
+  private getInsightsEnvironment(): string {
+    const fromInsightsEnv =
+      this.configService.get<string>('INSIGHTS_ENV') ||
+      this.configService.get<string>('insights.environment');
+    const fromGlobalEnv =
+      this.configService.get<string>('ENVIRONMENT') ||
+      this.configService.get<string>('environment');
+
+    return (fromInsightsEnv || fromGlobalEnv || 'dev').toLowerCase();
+  }
+
+  /**
+   * Reads the default set of organization IDs to warm from configuration.
+   *
+   * By convention this is supplied via the environment variable
+   * `INSIGHTS_CACHE_WARMUP_ORG_IDS` as a comma‑separated list of UUIDs, e.g.:
+   *
+   *   INSIGHTS_CACHE_WARMUP_ORG_IDS=org-uuid-1,org-uuid-2
+   */
+  private getConfiguredOrganizationIds(): string[] {
+    const raw =
+      this.configService.get<string>('INSIGHTS_CACHE_WARMUP_ORG_IDS') || '';
+
+    return raw
+      .split(',')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+  }
+
+  /**
+   * Reads a configured subset of dashboards to warm, if any.
+   *
+   * Supported sources:
+   * - ENV:  INSIGHTS_CACHE_WARMUP_DASHBOARDS=taskVolume,slaBreaches,profileScore
+   * - YAML: insights.cache.warmup_dashboards: ["taskVolume", "profileScore"]
+   *
+   * Unknown values are ignored with a warning.
+   */
+  private getConfiguredDashboards(): Array<
+    'taskVolume' | 'slaBreaches' | 'profileScore'
+  > {
+    const allowed = new Set(['taskVolume', 'slaBreaches', 'profileScore']);
+
+    const fromYaml = this.configService.get<string | string[]>(
+      'insights.cache.warmup_dashboards',
+    );
+    const fromEnv =
+      this.configService.get<string>('INSIGHTS_CACHE_WARMUP_DASHBOARDS') || '';
+
+    let rawValues: string[] = [];
+
+    if (Array.isArray(fromYaml)) {
+      rawValues = fromYaml.map((v) => String(v));
+    } else if (typeof fromYaml === 'string' && fromYaml.trim().length > 0) {
+      rawValues = fromYaml.split(',');
+    } else if (fromEnv.trim().length > 0) {
+      rawValues = fromEnv.split(',');
+    }
+
+    const dashboards: Array<'taskVolume' | 'slaBreaches' | 'profileScore'> = [];
+    const seen = new Set<string>();
+
+    for (const raw of rawValues) {
+      const value = raw.trim();
+      if (!value || seen.has(value)) continue;
+      if (allowed.has(value)) {
+        dashboards.push(value as any);
+        seen.add(value);
+      } else {
+        this.logger.warn(
+          `Ignoring unknown dashboard identifier "${value}" in INSIGHTS_CACHE_WARMUP_DASHBOARDS / insights.cache.warmup_dashboards`,
+        );
+      }
+    }
+
+    return dashboards;
+  }
+
+  private logDashboardError(
+    organizationId: string,
+    dashboard: string,
+    error: Error,
+  ): void {
+    this.logger.error(
+      `Failed to warm insights dashboard "${dashboard}" for organization ${organizationId}: ${error.message}`,
+      error.stack,
+    );
+  }
+}
+
+
+=== FILE 15/28: apps/api/src/orgo/insights/insights.module.ts ===
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -1669,353 +4729,835 @@ import { InsightsCacheWarmupService } from './insights-cache-warmup.service';
 export class InsightsModule {}
 
 
-=== FILE 7/18: apps/api/src/orgo/insights/patterns/pattern-detection.service.ts ===
+=== FILE 16/28: apps/api/src/orgo/insights/pattern-detection.service.ts ===
 
-// apps/api/src/orgo/insights/patterns/pattern-detection.service.ts
+
+
+
+=== FILE 17/28: apps/api/src/orgo/insights/patterns/pattern-detection.service.ts ===
+
+// apps/api/src/orgo/insights/pattern-detection.service.ts
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
+import { ModuleRef } from '@nestjs/core';
 
-/**
- * Stable job IDs for pattern detection, aligned with Doc 4 – Functional
- * Code‑Name Inventory and the Insights config (Doc 6).
- */
-export const INSIGHTS_WEEKLY_PATTERN_REVIEW_JOB_ID =
-  'orgo.insights.weekly-pattern-review';
+import { OrgProfileService } from '../config/org-profile.service';
+import { OrgoConfigService } from '../config/config.service';
+import type { Environment } from '../core/metrics/metrics.service';
+import { CaseService } from '../core/cases/case.service';
 
-export const INSIGHTS_MONTHLY_TREND_REPORT_JOB_ID =
-  'orgo.insights.monthly-trend-report';
-
-export const INSIGHTS_YEARLY_SYSTEMIC_REVIEW_JOB_ID =
-  'orgo.insights.yearly-systemic-review';
-
-/**
- * Logical pattern detection frequencies supported by this service.
- */
 export type PatternDetectionKind = 'weekly' | 'monthly' | 'yearly';
 
-/**
- * Options for triggering a pattern detection run.
- *
- * In most scheduled runs, callers will simply invoke the relevant
- * method with no arguments and let this service derive organization
- * IDs and thresholds from configuration. Explicit organization IDs
- * are useful for targeted runs in tests or operations tooling.
- */
 export interface PatternDetectionRunOptions {
   /**
-   * One or more organization IDs to run pattern detection for.
-   *
-   * If omitted, this service will attempt to derive a default set
-   * from configuration:
-   *
-   *   - INSIGHTS_PATTERN_ORG_IDS
-   *   - or, as a fallback, INSIGHTS_CACHE_WARMUP_ORG_IDS
-   *
-   * Both are expected to be comma‑separated UUID lists.
+   * Optional fixed list of organization IDs to run against.
+   * When omitted, falls back to INSIGHTS_PATTERN_ORG_IDS or
+   * INSIGHTS_CACHE_WARMUP_ORG_IDS.
    */
   organizationIds?: string[];
-
   /**
-   * When true, the service only logs what it would do without actually
-   * triggering any external work. This is primarily intended for dry‑run
-   * tooling and operational debugging.
+   * Optional domain hint (e.g. "safety", "hr") that can be used by
+   * downstream pattern logic or Airflow DAGs for scoping.
+   */
+  domainHint?: string;
+  /**
+   * Reference date for the pattern window. Defaults to "today" (UTC).
+   */
+  referenceDate?: Date | string;
+  /**
+   * When true, the service only logs which Cases would be created
+   * instead of mutating state.
    */
   dryRun?: boolean;
-
-  /**
-   * Optional correlation identifier (trace ID, job run ID, etc.) that
-   * will be included in log messages for easier tracing across systems.
-   */
-  correlationId?: string;
 }
 
-/**
- * PatternDetectionService
- *
- * Thin orchestration layer for weekly / monthly / yearly pattern detection
- * jobs in the Insights / Analytics slice.
- *
- * Responsibilities:
- *  - Derive the effective Insights environment (dev/staging/prod/offline).
- *  - Apply job‑level environment constraints from the Insights config:
- *      * weekly_pattern_review → staging + prod
- *      * monthly_trend_report → staging + prod
- *      * yearly_systemic_review → prod only
- *      * offline → always treated as no‑op
- *  - Resolve which organizations should be included in a run.
- *  - Emit structured logs that can be picked up by workers / job runners
- *    that actually implement the analytics / ETL work.
- *
- * The heavy‑weight pattern detection logic (clustering incidents, computing
- * thresholds, populating pattern tables, and creating review Cases) is
- * implemented in the analytics / ETL stack (Python + Airflow + Postgres)
- * described in the Insights documentation (Docs 6–8). Integration with
- * that stack (queue publish, HTTP call, etc.) should be wired into the
- * `runForOrganization` method.
- */
+export interface PatternDetectionRunParams extends PatternDetectionRunOptions {
+  jobId: string;
+}
+
+interface ResolvedPatternWindowConfig {
+  kind: PatternDetectionKind;
+  windowDays: number;
+  incidentFrequencyMinEvents: number;
+  crossDepartmentMinEvents: number;
+  crossDepartmentMinDistinctBases: number;
+  highRiskMinEvents: number;
+}
+
+type PatternType =
+  | 'incident_frequency'
+  | 'cross_department_trends'
+  | 'high_risk_indicator';
+
+interface DetectedPattern {
+  organizationId: string;
+  patternType: PatternType;
+  label: string | null;
+  categoryCode?: string | null;
+  severity?: string | null;
+  incidentCount: number;
+  distinctBases?: number;
+  windowStartDateKey: string;
+  windowEndDateKey: string;
+}
+
 @Injectable()
 export class PatternDetectionService {
   private readonly logger = new Logger(PatternDetectionService.name);
 
-  // Environment gating follows Doc 6 §4.2:
-  // - weekly_pattern_review: staging + prod
-  // - monthly_trend_report:  staging + prod
-  // - yearly_systemic_review: prod only
-  // - offline: always no‑op
-  private static readonly WEEKLY_ENABLED_ENVIRONMENTS = new Set([
-    'staging',
-    'prod',
-  ]);
-  private static readonly MONTHLY_ENABLED_ENVIRONMENTS = new Set([
-    'staging',
-    'prod',
-  ]);
-  private static readonly YEARLY_ENABLED_ENVIRONMENTS = new Set(['prod']);
-
-  constructor(private readonly configService: ConfigService) {}
-
   /**
-   * Run the weekly pattern review job across one or more organizations.
-   *
-   * This corresponds to the `weekly_pattern_review` DAG /
-   * `orgo.insights.weekly-pattern-review` job in the Insights stack.
+   * Only these environments will actually execute pattern detection.
+   * Others will short-circuit to avoid hammering production data
+   * from dev shells.
    */
-  async runWeekly(
-    options: PatternDetectionRunOptions = {},
-  ): Promise<void> {
-    await this.run(
-      'weekly',
-      INSIGHTS_WEEKLY_PATTERN_REVIEW_JOB_ID,
-      options,
-    );
+  private readonly enabledEnvironments: ReadonlySet<Environment> =
+    new Set<Environment>(['staging', 'prod']);
+
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly dataSource: DataSource,
+    private readonly orgProfileService: OrgProfileService,
+    private readonly orgoConfigService: OrgoConfigService,
+    private readonly moduleRef: ModuleRef,
+  ) {}
+
+  /* ------------------------------------------------------------------------ */
+  /*  Public entrypoints – scheduled by workers / Airflow                     */
+  /* ------------------------------------------------------------------------ */
+
+  async runWeekly(options: PatternDetectionRunOptions = {}): Promise<void> {
+    const params: PatternDetectionRunParams = {
+      ...options,
+      jobId: 'orgo.insights.weekly-pattern-review',
+    };
+    await this.run('weekly', params);
   }
 
-  /**
-   * Run the monthly trend report job across one or more organizations.
-   *
-   * This corresponds to the `monthly_trend_report` DAG /
-   * `orgo.insights.monthly-trend-report` job.
-   */
-  async runMonthly(
-    options: PatternDetectionRunOptions = {},
-  ): Promise<void> {
-    await this.run(
-      'monthly',
-      INSIGHTS_MONTHLY_TREND_REPORT_JOB_ID,
-      options,
-    );
+  async runMonthly(options: PatternDetectionRunOptions = {}): Promise<void> {
+    const params: PatternDetectionRunParams = {
+      ...options,
+      jobId: 'orgo.insights.monthly-trend-report',
+    };
+    await this.run('monthly', params);
   }
 
-  /**
-   * Run the yearly systemic review job across one or more organizations.
-   *
-   * This corresponds to the `yearly_systemic_review` DAG /
-   * `orgo.insights.yearly-systemic-review` job.
-   */
-  async runYearly(
-    options: PatternDetectionRunOptions = {},
-  ): Promise<void> {
-    await this.run(
-      'yearly',
-      INSIGHTS_YEARLY_SYSTEMIC_REVIEW_JOB_ID,
-      options,
-    );
+  async runYearly(options: PatternDetectionRunOptions = {}): Promise<void> {
+    const params: PatternDetectionRunParams = {
+      ...options,
+      jobId: 'orgo.insights.yearly-systemic-review',
+    };
+    await this.run('yearly', params);
   }
 
-  /**
-   * Shared implementation for weekly/monthly/yearly runs.
-   */
+  /* ------------------------------------------------------------------------ */
+  /*  Orchestration                                                           */
+  /* ------------------------------------------------------------------------ */
+
   private async run(
     kind: PatternDetectionKind,
-    jobId: string,
-    options: PatternDetectionRunOptions,
+    params: PatternDetectionRunParams,
   ): Promise<void> {
     const environment = this.getInsightsEnvironment();
 
-    if (!this.isEnvironmentEnabled(kind, environment)) {
-      this.logger.debug(
-        `Skipping ${kind} pattern detection (${jobId}) in environment "${environment}" – job disabled for this environment.`,
+    if (!this.enabledEnvironments.has(environment)) {
+      this.logger.warn(
+        `Pattern detection (${kind}) skipped – environment "${environment}" is not enabled.`,
       );
       return;
     }
 
-    const organizationIds =
-      options.organizationIds && options.organizationIds.length > 0
-        ? this.normalizeOrganizationIds(options.organizationIds)
-        : this.getConfiguredOrganizationIds();
-
+    const organizationIds = this.resolveOrganizationIds(params);
     if (organizationIds.length === 0) {
       this.logger.warn(
-        `No organization IDs resolved for ${kind} pattern detection (${jobId}); nothing to do.`,
+        `Pattern detection (${kind}) skipped – no organization IDs configured.`,
       );
       return;
     }
 
-    const prefix = options.dryRun ? '[DRY RUN] ' : '';
-    const correlationSuffix = options.correlationId
-      ? `, correlationId=${options.correlationId}`
-      : '';
-
-    this.logger.log(
-      `${prefix}Starting ${kind} pattern detection (${jobId}) for ${organizationIds.length} organization(s) in environment "${environment}"${correlationSuffix}.`,
-    );
+    const referenceDate = this.normalizeReferenceDate(params.referenceDate);
 
     for (const organizationId of organizationIds) {
-      await this.runForOrganization(
-        kind,
-        jobId,
-        environment,
+      await this.runForOrganization(kind, {
+        ...params,
         organizationId,
-        options,
+        environment,
+        referenceDate,
+      });
+    }
+  }
+
+  private async runForOrganization(
+    kind: PatternDetectionKind,
+    params: PatternDetectionRunParams & {
+      organizationId: string;
+      environment: Environment;
+      referenceDate: Date;
+    },
+  ): Promise<void> {
+    const { organizationId, environment, jobId, dryRun, domainHint } = params;
+
+    // Load Insights config (patterns section) and behaviour profile.
+    const insightsConfigWrapper = this.orgoConfigService.getInsightsConfig(
+      false,
+    ) as any;
+    const insightsRoot = insightsConfigWrapper?.insights ?? null;
+    const patternsConfig = insightsRoot?.patterns ?? null;
+
+    let profileTemplate: any | null = null;
+    try {
+      const resolvedProfile = await this.orgProfileService.loadProfile(
+        organizationId,
+      );
+      profileTemplate = resolvedProfile?.template ?? null;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error ?? '');
+      this.logger.warn(
+        `Pattern detection (${kind}) – failed to load behaviour profile for org "${organizationId}": ${message}. Continuing with Insights config only.`,
       );
     }
 
+    const windowConfig = this.resolveWindowConfig(
+      kind,
+      profileTemplate,
+      patternsConfig,
+    );
+
+    const { fromDateKey, toDateKey } = this.computeWindowDateKeys(
+      windowConfig.windowDays,
+      params.referenceDate,
+    );
+
     this.logger.log(
-      `${prefix}Finished ${kind} pattern detection (${jobId}) for ${organizationIds.length} organization(s) in environment "${environment}"${correlationSuffix}.`,
+      `Pattern detection (${kind}) started for org="${organizationId}" [env=${environment}, window=${fromDateKey}..${toDateKey}, dryRun=${!!dryRun}]`,
+    );
+
+    const patterns: DetectedPattern[] = [];
+
+    // 1) Incident frequency (short-window clusters)
+    const incidentPatterns = await this.detectIncidentFrequencyPatterns({
+      organizationId,
+      fromDateKey,
+      toDateKey,
+      windowConfig,
+    });
+    patterns.push(...incidentPatterns);
+
+    // 2) Cross-department trends (horizontal spread across bases)
+    const crossDeptEnabled =
+      profileTemplate?.cyclic_overview?.threshold_triggers
+        ?.cross_departmental_trends ?? true;
+
+    if (crossDeptEnabled) {
+      const crossDepartmentPatterns = await this.detectCrossDepartmentTrends({
+        organizationId,
+        fromDateKey,
+        toDateKey,
+        windowConfig,
+      });
+      patterns.push(...crossDepartmentPatterns);
+    }
+
+    // 3) High-risk indicators (safety / HR / clinical)
+    const highRiskEnabled =
+      profileTemplate?.cyclic_overview?.threshold_triggers
+        ?.high_risk_indicators ?? true;
+
+    if (highRiskEnabled) {
+      const highRiskPatterns = await this.detectHighRiskIndicators({
+        organizationId,
+        fromDateKey,
+        toDateKey,
+        windowConfig,
+      });
+      patterns.push(...highRiskPatterns);
+    }
+
+    if (patterns.length === 0) {
+      this.logger.log(
+        `Pattern detection (${kind}) finished for org="${organizationId}" – no patterns above thresholds in window ${fromDateKey}..${toDateKey}.`,
+      );
+      return;
+    }
+
+    await this.materialisePatterns(
+      kind,
+      {
+        organizationId,
+        environment,
+        jobId,
+        dryRun: !!dryRun,
+        domainHint,
+      },
+      patterns,
+    );
+
+    this.logger.log(
+      `Pattern detection (${kind}) finished for org="${organizationId}" – ${patterns.length} pattern(s) detected in window ${fromDateKey}..${toDateKey}.`,
     );
   }
 
-  /**
-   * Orchestrates pattern detection for a single organization.
-   *
-   * In the current NestJS implementation this method is intentionally
-   * conservative and only performs structured logging. The actual
-   * implementation of pattern detection is expected to be handled by
-   * the analytics / ETL workers (e.g. via a queue, scheduler, or
-   * Airflow trigger) that integrate with this orchestration layer.
-   *
-   * When wiring in a concrete integration, this is the place to:
-   *  - Enqueue a job for the ETL worker.
-   *  - Call an HTTP endpoint on the analytics service.
-   *  - Publish a message to a queue/topic that ETL listens on.
-   */
-  private async runForOrganization(
+  /* ------------------------------------------------------------------------ */
+  /*  Detection primitives (SQL over insights.fact_* tables)                  */
+  /* ------------------------------------------------------------------------ */
+
+  private async detectIncidentFrequencyPatterns(args: {
+    organizationId: string;
+    fromDateKey: string;
+    toDateKey: string;
+    windowConfig: ResolvedPatternWindowConfig;
+  }): Promise<DetectedPattern[]> {
+    const { organizationId, fromDateKey, toDateKey, windowConfig } = args;
+    const minEvents = windowConfig.incidentFrequencyMinEvents;
+
+    if (!Number.isFinite(minEvents) || minEvents <= 0) {
+      return [];
+    }
+
+    const sql = `
+      SELECT
+        dc.label AS label,
+        dc.severity AS severity,
+        COUNT(*)::int AS incident_count,
+        COUNT(DISTINCT split_part(dc.label, '.', 1))::int AS distinct_bases
+      FROM insights.fact_cases fc
+      JOIN insights.dim_cases dc
+        ON fc.case_id = dc.case_id
+      WHERE fc.organization_id = $1
+        AND fc.opened_date_key >= $2
+        AND fc.opened_date_key <= $3
+      GROUP BY dc.label, dc.severity
+      HAVING COUNT(*) >= $4
+      ORDER BY incident_count DESC
+      LIMIT 100;
+    `;
+
+    const rows =
+      (await this.dataSource.query(sql, [
+        organizationId,
+        fromDateKey,
+        toDateKey,
+        minEvents,
+      ])) ?? [];
+
+    return rows.map(
+      (row: any): DetectedPattern => ({
+        organizationId,
+        patternType: 'incident_frequency',
+        label: row.label ?? null,
+        severity: row.severity ?? null,
+        incidentCount: Number(row.incident_count ?? 0),
+        distinctBases:
+          row.distinct_bases !== undefined && row.distinct_bases !== null
+            ? Number(row.distinct_bases)
+            : undefined,
+        windowStartDateKey: fromDateKey,
+        windowEndDateKey: toDateKey,
+      }),
+    );
+  }
+
+  private async detectCrossDepartmentTrends(args: {
+    organizationId: string;
+    fromDateKey: string;
+    toDateKey: string;
+    windowConfig: ResolvedPatternWindowConfig;
+  }): Promise<DetectedPattern[]> {
+    const { organizationId, fromDateKey, toDateKey, windowConfig } = args;
+    const minEvents = windowConfig.crossDepartmentMinEvents;
+    const minDistinctBases = windowConfig.crossDepartmentMinDistinctBases;
+
+    if (
+      !Number.isFinite(minEvents) ||
+      minEvents <= 0 ||
+      !Number.isFinite(minDistinctBases) ||
+      minDistinctBases <= 1
+    ) {
+      return [];
+    }
+
+    const sql = `
+      SELECT
+        split_part(dc.label, '.', 2) AS category_code,
+        COUNT(*)::int AS incident_count,
+        COUNT(DISTINCT split_part(dc.label, '.', 1))::int AS distinct_bases
+      FROM insights.fact_cases fc
+      JOIN insights.dim_cases dc
+        ON fc.case_id = dc.case_id
+      WHERE fc.organization_id = $1
+        AND fc.opened_date_key >= $2
+        AND fc.opened_date_key <= $3
+      GROUP BY split_part(dc.label, '.', 2)
+      HAVING COUNT(*) >= $4
+         AND COUNT(DISTINCT split_part(dc.label, '.', 1)) >= $5
+      ORDER BY incident_count DESC
+      LIMIT 100;
+    `;
+
+    const rows =
+      (await this.dataSource.query(sql, [
+        organizationId,
+        fromDateKey,
+        toDateKey,
+        minEvents,
+        minDistinctBases,
+      ])) ?? [];
+
+    return rows.map(
+      (row: any): DetectedPattern => ({
+        organizationId,
+        patternType: 'cross_department_trends',
+        label:
+          row.category_code != null
+            ? `*.${row.category_code}.*`
+            : null,
+        categoryCode: row.category_code ?? null,
+        incidentCount: Number(row.incident_count ?? 0),
+        distinctBases:
+          row.distinct_bases !== undefined && row.distinct_bases !== null
+            ? Number(row.distinct_bases)
+            : undefined,
+        windowStartDateKey: fromDateKey,
+        windowEndDateKey: toDateKey,
+      }),
+    );
+  }
+
+  private async detectHighRiskIndicators(args: {
+    organizationId: string;
+    fromDateKey: string;
+    toDateKey: string;
+    windowConfig: ResolvedPatternWindowConfig;
+  }): Promise<DetectedPattern[]> {
+    const { organizationId, fromDateKey, toDateKey, windowConfig } = args;
+    const minEvents = windowConfig.highRiskMinEvents;
+
+    if (!Number.isFinite(minEvents) || minEvents <= 0) {
+      return [];
+    }
+
+    const sql = `
+      SELECT
+        dc.label AS label,
+        dc.severity AS severity,
+        COUNT(*)::int AS incident_count,
+        COUNT(DISTINCT split_part(dc.label, '.', 1))::int AS distinct_bases
+      FROM insights.fact_cases fc
+      JOIN insights.dim_cases dc
+        ON fc.case_id = dc.case_id
+      WHERE fc.organization_id = $1
+        AND fc.opened_date_key >= $2
+        AND fc.opened_date_key <= $3
+        AND dc.severity IN ('MAJOR', 'CRITICAL')
+      GROUP BY dc.label, dc.severity
+      HAVING COUNT(*) >= $4
+      ORDER BY incident_count DESC
+      LIMIT 100;
+    `;
+
+    const rows =
+      (await this.dataSource.query(sql, [
+        organizationId,
+        fromDateKey,
+        toDateKey,
+        minEvents,
+      ])) ?? [];
+
+    return rows.map(
+      (row: any): DetectedPattern => ({
+        organizationId,
+        patternType: 'high_risk_indicator',
+        label: row.label ?? null,
+        severity: row.severity ?? null,
+        incidentCount: Number(row.incident_count ?? 0),
+        distinctBases:
+          row.distinct_bases !== undefined && row.distinct_bases !== null
+            ? Number(row.distinct_bases)
+            : undefined,
+        windowStartDateKey: fromDateKey,
+        windowEndDateKey: toDateKey,
+      }),
+    );
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /*  Materialisation – turn patterns into work (Cases)                       */
+  /* ------------------------------------------------------------------------ */
+
+  private async materialisePatterns(
     kind: PatternDetectionKind,
-    jobId: string,
-    environment: string,
-    organizationId: string,
-    options: PatternDetectionRunOptions,
+    context: {
+      organizationId: string;
+      environment: Environment;
+      jobId: string;
+      dryRun?: boolean;
+      domainHint?: string;
+    },
+    patterns: DetectedPattern[],
   ): Promise<void> {
-    const prefix = options.dryRun ? '[DRY RUN] ' : '';
-    const correlationSuffix = options.correlationId
-      ? `, correlationId=${options.correlationId}`
-      : '';
+    if (!patterns.length) {
+      return;
+    }
 
-    this.logger.debug(
-      `${prefix}Triggering ${kind} pattern detection (${jobId}) for organization=${organizationId} in env=${environment}${correlationSuffix}.`,
+    const { organizationId, environment, jobId, dryRun, domainHint } = context;
+
+    let caseService: CaseService | null = null;
+    try {
+      caseService = this.moduleRef.get(CaseService, { strict: false });
+    } catch {
+      caseService = null;
+    }
+
+    const isDryRun = !!dryRun || !caseService;
+
+    for (const pattern of patterns) {
+      const title = this.buildCaseTitle(kind, pattern);
+      const description = this.buildCaseDescription(kind, pattern, {
+        environment,
+        jobId,
+        domainHint,
+      });
+
+      if (!isDryRun && caseService) {
+        try {
+          // We deliberately pass "insight" as the source type; the CaseService
+          // normalises this to the canonical TASK_SOURCE internally.
+          const result = await (caseService as any).createCaseFromSignal({
+            organizationId,
+            sourceType: 'insight',
+            label: this.buildCaseLabel(pattern),
+            title,
+            description,
+            severity:
+              pattern.severity ??
+              this.inferCaseSeverity(
+                pattern.patternType,
+                pattern.incidentCount,
+              ),
+            metadata: {
+              patternType: pattern.patternType,
+              incidentCount: pattern.incidentCount,
+              distinctBases: pattern.distinctBases ?? null,
+              windowStartDateKey: pattern.windowStartDateKey,
+              windowEndDateKey: pattern.windowEndDateKey,
+              categoryCode: pattern.categoryCode ?? null,
+              jobId,
+              environment,
+              domainHint: domainHint ?? null,
+            },
+          });
+
+          if (!result || result.ok === false) {
+            const errorCode = result?.error?.code ?? 'unknown';
+            const errorMessage = result?.error?.message ?? 'Unknown error';
+            this.logger.warn(
+              `Pattern detection (${kind}) failed to create Case for pattern ${pattern.patternType} (label=${pattern.label ?? pattern.categoryCode ?? 'n/a'}): ${errorCode} – ${errorMessage}`,
+            );
+          }
+        } catch (err) {
+          const error = err as Error;
+          this.logger.error(
+            `Pattern detection (${kind}) threw while creating Case for pattern ${pattern.patternType}: ${error.message}`,
+            error.stack,
+          );
+        }
+      } else {
+        this.logger.log(
+          `[DRY RUN] Pattern detection (${kind}) would create Case for ${pattern.patternType} (org=${organizationId}, label=${pattern.label ?? pattern.categoryCode ?? 'n/a'}, incidents=${pattern.incidentCount}).`,
+        );
+      }
+    }
+  }
+
+  private buildCaseTitle(
+    kind: PatternDetectionKind,
+    pattern: DetectedPattern,
+  ): string {
+    const labelOrCategory = pattern.label ?? pattern.categoryCode ?? 'pattern';
+
+    switch (pattern.patternType) {
+      case 'incident_frequency':
+        return `[${kind}] Incident frequency pattern for ${labelOrCategory}`;
+      case 'cross_department_trends':
+        return `[${kind}] Cross-department trend for category ${labelOrCategory}`;
+      case 'high_risk_indicator':
+        return `[${kind}] High-risk pattern for ${labelOrCategory}`;
+      default:
+        return `[${kind}] Pattern detected for ${labelOrCategory}`;
+    }
+  }
+
+  private buildCaseDescription(
+    kind: PatternDetectionKind,
+    pattern: DetectedPattern,
+    context: { environment: Environment; jobId: string; domainHint?: string },
+  ): string {
+    const parts: string[] = [
+      `Pattern type: ${pattern.patternType}`,
+      `Organization: ${pattern.organizationId}`,
+      `Window: ${pattern.windowStartDateKey} to ${pattern.windowEndDateKey}`,
+      `Incidents in window: ${pattern.incidentCount}`,
+    ];
+
+    if (pattern.distinctBases != null) {
+      parts.push(`Distinct bases: ${pattern.distinctBases}`);
+    }
+    if (pattern.label) {
+      parts.push(`Source label: ${pattern.label}`);
+    }
+    if (pattern.categoryCode) {
+      parts.push(`Category code: ${pattern.categoryCode}`);
+    }
+    if (pattern.severity) {
+      parts.push(`Representative severity: ${pattern.severity}`);
+    }
+
+    parts.push(
+      `Run kind: ${kind}`,
+      `Environment: ${context.environment}`,
+      `Job: ${context.jobId}`,
     );
 
-    // NOTE:
-    //  - The heavy lifting (reading from insights.fact_* tables, applying
-    //    pattern windows and thresholds from patterns.yaml / profiles, and
-    //    writing to pattern tables or creating review Cases) is performed
-    //    by the analytics / ETL layer.
-    //  - To avoid coupling this NestJS service to a particular ETL mechanism,
-    //    we only handle orchestration concerns here. Integrations should be
-    //    implemented by extending this method with queue/HTTP calls as needed.
-  }
-
-  /**
-   * Derives the current Insights environment.
-   *
-   * Prefers the explicit INSIGHTS_ENV (as defined in the Insights module
-   * config) and falls back to the global ENVIRONMENT when not set.
-   */
-  private getInsightsEnvironment(): string {
-    const fromInsightsEnv =
-      this.configService.get<string>('INSIGHTS_ENV') ||
-      this.configService.get<string>('insights.environment');
-    const fromGlobalEnv =
-      this.configService.get<string>('ENVIRONMENT') ||
-      this.configService.get<string>('environment');
-
-    return (fromInsightsEnv || fromGlobalEnv || 'dev').toLowerCase();
-  }
-
-  /**
-   * Determines whether a given pattern detection kind is allowed to run
-   * in the specified environment.
-   */
-  private isEnvironmentEnabled(
-    kind: PatternDetectionKind,
-    environment: string,
-  ): boolean {
-    const env = (environment || 'dev').toLowerCase();
-
-    // Offline is always treated as no‑op for Insights jobs.
-    if (env === 'offline') {
-      return false;
+    if (context.domainHint) {
+      parts.push(`Domain hint: ${context.domainHint}`);
     }
 
-    switch (kind) {
-      case 'weekly':
-        return PatternDetectionService.WEEKLY_ENABLED_ENVIRONMENTS.has(
-          env,
-        );
-      case 'monthly':
-        return PatternDetectionService.MONTHLY_ENABLED_ENVIRONMENTS.has(
-          env,
-        );
-      case 'yearly':
-        return PatternDetectionService.YEARLY_ENABLED_ENVIRONMENTS.has(
-          env,
-        );
+    return parts.join('\n');
+  }
+
+  private buildCaseLabel(pattern: DetectedPattern): string {
+    const rawLabel = pattern.label ?? '';
+    const parts = rawLabel.split('.').filter((p) => p.length > 0);
+    const categoryFromLabel =
+      parts.length > 1 ? parts[1] : pattern.categoryCode ?? '94';
+    const horizontalFromLabel =
+      parts.length > 2 ? parts.slice(2).join('.') : 'Operations.Safety';
+
+    switch (pattern.patternType) {
+      case 'incident_frequency':
+        // Department-level "audit" case for recurring incidents.
+        return `11.${categoryFromLabel}.${horizontalFromLabel}.Audit`;
+      case 'cross_department_trends':
+        // Leadership-level review case capturing cross-department spread.
+        return `2.${categoryFromLabel}.Leadership.Review`;
+      case 'high_risk_indicator':
+        // High-risk patterns escalate to leadership with review semantics.
+        return `2.${categoryFromLabel}.${horizontalFromLabel}.Review`;
       default:
-        return false;
+        return rawLabel || `11.${categoryFromLabel}.Patterns.CyclicOverview`;
     }
   }
 
-  /**
-   * Normalises a user‑provided list of organization IDs:
-   *  - trims whitespace
-   *  - drops empty entries
-   *  - de‑duplicates while preserving order
-   */
-  private normalizeOrganizationIds(
-    organizationIds: string[],
+  private inferCaseSeverity(
+    patternType: PatternType,
+    incidentCount: number,
+  ): string {
+    switch (patternType) {
+      case 'high_risk_indicator':
+        return incidentCount >= 2 ? 'CRITICAL' : 'MAJOR';
+      case 'cross_department_trends':
+        return 'MAJOR';
+      case 'incident_frequency':
+      default:
+        return incidentCount >= 10 ? 'MAJOR' : 'MODERATE';
+    }
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /*  Configuration helpers                                                   */
+  /* ------------------------------------------------------------------------ */
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private resolveWindowConfig(
+    kind: PatternDetectionKind,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    profileTemplate: any | null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    patternsConfig: any | null,
+  ): ResolvedPatternWindowConfig {
+    // Config-backed defaults from insights.config.yaml
+    const baseCfg = patternsConfig?.[kind] ?? {};
+    const baseWindowDays: number =
+      typeof baseCfg.window_days === 'number'
+        ? baseCfg.window_days
+        : kind === 'weekly'
+        ? 28
+        : kind === 'monthly'
+        ? 180
+        : 730;
+
+    const baseMinEvents: number =
+      typeof baseCfg.min_events === 'number'
+        ? baseCfg.min_events
+        : kind === 'weekly'
+        ? 3
+        : kind === 'monthly'
+        ? 5
+        : 10;
+
+    const baseMinDistinctSources: number =
+      typeof baseCfg.min_distinct_sources === 'number'
+        ? baseCfg.min_distinct_sources
+        : kind === 'weekly'
+        ? 1
+        : kind === 'monthly'
+        ? 2
+        : 3;
+
+    const incidentCfg =
+      profileTemplate?.cyclic_overview?.threshold_triggers?.incident_frequency;
+
+    const profileWindowDays: number | undefined =
+      typeof incidentCfg?.window_days === 'number'
+        ? incidentCfg.window_days
+        : typeof profileTemplate?.pattern_window_days === 'number'
+        ? profileTemplate.pattern_window_days
+        : undefined;
+
+    const profileMinEvents: number | undefined =
+      typeof incidentCfg?.min_events === 'number'
+        ? incidentCfg.min_events
+        : typeof profileTemplate?.pattern_min_events === 'number'
+        ? profileTemplate.pattern_min_events
+        : undefined;
+
+    const windowDays = profileWindowDays ?? baseWindowDays;
+    const incidentFrequencyMinEvents = profileMinEvents ?? baseMinEvents;
+
+    const crossDepartmentMinEvents = incidentFrequencyMinEvents;
+    const crossDepartmentMinDistinctBases = baseMinDistinctSources;
+
+    const highRiskMinEvents = Math.max(
+      1,
+      Math.min(incidentFrequencyMinEvents, 3),
+    );
+
+    return {
+      kind,
+      windowDays,
+      incidentFrequencyMinEvents,
+      crossDepartmentMinEvents,
+      crossDepartmentMinDistinctBases,
+      highRiskMinEvents,
+    };
+  }
+
+  private normalizeReferenceDate(input?: Date | string): Date {
+    if (!input) {
+      const now = new Date();
+      now.setUTCHours(0, 0, 0, 0);
+      return now;
+    }
+
+    if (input instanceof Date) {
+      const copy = new Date(input);
+      copy.setUTCHours(0, 0, 0, 0);
+      return copy;
+    }
+
+    const parsed = new Date(input);
+    if (Number.isNaN(parsed.getTime())) {
+      const fallback = new Date();
+      fallback.setUTCHours(0, 0, 0, 0);
+      return fallback;
+    }
+
+    parsed.setUTCHours(0, 0, 0, 0);
+    return parsed;
+  }
+
+  private computeWindowDateKeys(
+    windowDays: number,
+    referenceDate?: Date | string,
+  ): { fromDateKey: string; toDateKey: string } {
+    const end = this.normalizeReferenceDate(referenceDate);
+    const start = new Date(end);
+    start.setUTCDate(end.getUTCDate() - Math.max(windowDays - 1, 0));
+
+    return {
+      fromDateKey: this.formatDateKey(start),
+      toDateKey: this.formatDateKey(end),
+    };
+  }
+
+  private formatDateKey(date: Date): string {
+    const year = date.getUTCFullYear();
+    const month = `${date.getUTCMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getUTCDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private getInsightsEnvironment(): Environment {
+    const explicitEnv =
+      this.configService.get<string>('INSIGHTS_ENV') ??
+      this.configService.get<string>('INSIGHTS_ENVIRONMENT');
+    const globalEnv =
+      this.configService.get<string>('ENVIRONMENT') ??
+      this.configService.get<string>('NODE_ENV');
+
+    const raw = (explicitEnv || globalEnv || 'dev').toLowerCase();
+
+    if (raw === 'production' || raw === 'prod') {
+      return 'prod';
+    }
+
+    if (raw === 'staging' || raw === 'stage') {
+      return 'staging';
+    }
+
+    if (raw === 'offline') {
+      return 'offline';
+    }
+
+    return 'dev';
+  }
+
+  private resolveOrganizationIds(
+    options: PatternDetectionRunOptions,
   ): string[] {
-    const seen = new Set<string>();
-    const result: string[] = [];
-
-    for (const raw of organizationIds) {
-      const value = (raw ?? '').trim();
-      if (!value || seen.has(value)) {
-        continue;
-      }
-      seen.add(value);
-      result.push(value);
+    if (options.organizationIds && options.organizationIds.length > 0) {
+      return this.normalizeOrganizationIds(options.organizationIds);
     }
 
-    return result;
+    return this.getConfiguredOrganizationIds();
   }
 
-  /**
-   * Reads the default set of organization IDs to run pattern detection for.
-   *
-   * By convention this is supplied via:
-   *   - INSIGHTS_PATTERN_ORG_IDS
-   *   - or, if not set, INSIGHTS_CACHE_WARMUP_ORG_IDS
-   *
-   * Both are expected to be comma‑separated lists of UUIDs.
-   */
-  private getConfiguredOrganizationIds(): string[] {
-    const raw =
-      this.configService.get<string>('INSIGHTS_PATTERN_ORG_IDS') ||
-      process.env.INSIGHTS_PATTERN_ORG_IDS ||
-      this.configService.get<string>('INSIGHTS_CACHE_WARMUP_ORG_IDS') ||
-      process.env.INSIGHTS_CACHE_WARMUP_ORG_IDS ||
-      '';
+  private normalizeOrganizationIds(ids: string[]): string[] {
+    const result = new Set<string>();
 
-    return raw
-      .split(',')
-      .map((value) => value.trim())
-      .filter((value) => value.length > 0);
+    for (const id of ids) {
+      const trimmed = (id ?? '').trim();
+      if (trimmed.length > 0) {
+        result.add(trimmed);
+      }
+    }
+
+    return Array.from(result);
+  }
+
+  private getConfiguredOrganizationIds(): string[] {
+    const explicit = this.configService.get<string>('INSIGHTS_PATTERN_ORG_IDS');
+
+    if (explicit && explicit.trim().length > 0) {
+      return this.normalizeOrganizationIds(explicit.split(','));
+    }
+
+    const warmup = this.configService.get<string>(
+      'INSIGHTS_CACHE_WARMUP_ORG_IDS',
+    );
+
+    if (warmup && warmup.trim().length > 0) {
+      return this.normalizeOrganizationIds(warmup.split(','));
+    }
+
+    return [];
   }
 }
 
 
-=== FILE 8/18: apps/api/src/orgo/insights/reports/reports.controller.ts ===
+=== FILE 18/28: apps/api/src/orgo/insights/reports/reports.controller.ts ===
 
 import { Controller, Get, Query } from '@nestjs/common';
 import { Type } from 'class-transformer';
@@ -2287,18 +5829,19 @@ export class ReportsController {
 }
 
 
-=== FILE 9/18: apps/api/src/orgo/insights/reports/reports.service.ts ===
+=== FILE 19/28: apps/api/src/orgo/insights/reports/reports.service.ts ===
 
 // apps/api/src/orgo/insights/reports/reports.service.ts
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 /**
- * Canonical task enums (string unions) aligned with Doc 2 / TASK_STATUS,
- * TASK_PRIORITY and TASK_SEVERITY. These mirror the DB enums and JSON
- * contracts but are kept local to the reports service so it can type
- * its responses without importing additional dependencies.
+ * Canonical task status tokens mirrored from Doc 2 / Doc 6.
+ * These must match both the operational enums and the analytics schema.
  */
 export type TaskStatus =
   | 'PENDING'
@@ -2309,22 +5852,35 @@ export type TaskStatus =
   | 'ESCALATED'
   | 'CANCELLED';
 
+/**
+ * Canonical task priority tokens.
+ */
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
+/**
+ * Canonical task severity tokens.
+ */
 export type TaskSeverity = 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL';
 
 /**
  * Parameters for the task volume report.
- * All date values are interpreted as UTC and truncated to a date key
- * (YYYY-MM-DD) to match insights.dim_dates / insights.fact_tasks.
+ *
+ * organizationId and the date window are required at the semantic level,
+ * but the date window may be omitted in which case a default lookback is used.
  */
 export interface TaskVolumeReportParams {
   organizationId: string;
+  /**
+   * Inclusive start of the window. If omitted together with toDate,
+   * a default rolling window is used.
+   */
   fromDate?: Date | string;
+  /**
+   * Inclusive end of the window. If omitted, defaults to "today" (UTC).
+   */
   toDate?: Date | string;
   /**
-   * Optional filter for current_status (TASK_STATUS).
-   * If omitted, all statuses are included.
+   * Optional filter for Task.status; interpreted against ft.current_status.
    */
   status?: TaskStatus[];
   /**
@@ -2369,6 +5925,16 @@ export interface SlaBreachesParams {
    * Optional filter for Task.type / domain.
    */
   type?: string;
+  /**
+   * Optional profile code (profileKey) used by callers to indicate
+   * which behavioural profile’s SLA expectations were applied
+   * (e.g. "hospital", "default").
+   *
+   * The reporting service itself does not currently alter aggregation
+   * logic based on this field, but it is accepted so that API
+   * contracts can pass it through and logging can include it.
+   */
+  profileKey?: string;
 }
 
 /**
@@ -2464,12 +6030,22 @@ const DEFAULT_LOOKBACK_DAYS = 30;
  * analytics database that hosts the `insights` schema. If the same
  * Postgres instance is used for OLTP and analytics, this service can
  * use the default application DataSource.
+ *
+ * This service also honours caching guidance from the Insights config
+ * (Doc 6 – analytics.cache.ttl_seconds.*) when a CacheManager is
+ * available, so that dashboard traffic can be served from Redis.
  */
 @Injectable()
 export class ReportsService {
   private readonly logger = new Logger(ReportsService.name);
 
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
+    @Optional()
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager?: Cache,
+  ) {}
 
   /**
    * Returns task volume buckets grouped by created_date_key and
@@ -2488,71 +6064,90 @@ export class ReportsService {
       params.toDate,
     );
 
-    const conditions: string[] = [];
-    const values: any[] = [];
+    const cacheKey = this.buildCacheKey('taskVolume', {
+      organizationId,
+      fromDate: fromKey,
+      toDate: toKey,
+      status: status ?? [],
+      type: type ?? null,
+    });
 
-    // 1) organization_id filter
-    values.push(organizationId);
-    let paramIndex = 1;
-    conditions.push(`ft.organization_id = $${paramIndex++}`);
+    const compute = async (): Promise<TaskVolumeBucket[]> => {
+      const conditions: string[] = [];
+      const values: any[] = [];
 
-    // 2) date window (created_date_key is a DATE)
-    values.push(fromKey);
-    conditions.push(`ft.created_date_key >= $${paramIndex++}`);
+      // 1) organization_id filter
+      values.push(organizationId);
+      let paramIndex = 1;
+      conditions.push(`ft.organization_id = $${paramIndex++}`);
 
-    values.push(toKey);
-    conditions.push(`ft.created_date_key <= $${paramIndex++}`);
+      // 2) date window (created_date_key is a DATE)
+      values.push(fromKey);
+      conditions.push(`ft.created_date_key >= $${paramIndex++}`);
 
-    // 3) optional status filter
-    if (status && status.length > 0) {
-      values.push(status);
-      conditions.push(`ft.current_status = ANY($${paramIndex++})`);
-    }
+      values.push(toKey);
+      conditions.push(`ft.created_date_key <= $${paramIndex++}`);
 
-    // 4) optional domain type filter (requires dim_tasks join)
-    if (type) {
-      values.push(type);
-      conditions.push(`dt.type = $${paramIndex++}`);
-    }
+      // 3) optional status filter
+      if (status && status.length > 0) {
+        values.push(status);
+        conditions.push(`ft.current_status = ANY($${paramIndex++})`);
+      }
 
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+      // 4) optional domain type filter (requires dim_tasks join)
+      if (type) {
+        values.push(type);
+        conditions.push(`dt.type = $${paramIndex++}`);
+      }
 
-    const sql = `
-      SELECT
-        ft.created_date_key AS date,
-        ft.current_status AS status,
-        COUNT(*)::int AS count
-      FROM insights.fact_tasks ft
-      LEFT JOIN insights.dim_tasks dt
-        ON dt.task_id = ft.task_id
-      ${whereClause}
-      GROUP BY ft.created_date_key, ft.current_status
-      ORDER BY ft.created_date_key ASC, ft.current_status ASC;
-    `;
+      const whereClause =
+        conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    try {
-      const rows: Array<{
-        date: string | Date;
-        status: TaskStatus;
-        count: string | number;
-      }> = await this.dataSource.query(sql, values);
+      const sql = `
+        SELECT
+          ft.created_date_key AS date,
+          ft.current_status AS status,
+          COUNT(*)::int AS count
+        FROM insights.fact_tasks ft
+        LEFT JOIN insights.dim_tasks dt
+          ON dt.task_id = ft.task_id
+        ${whereClause}
+        GROUP BY ft.created_date_key, ft.current_status
+        ORDER BY ft.created_date_key ASC, ft.current_status ASC;
+      `;
 
-      return rows.map((row) => ({
-        date:
-          row.date instanceof Date
-            ? row.date.toISOString().slice(0, 10)
-            : String(row.date),
-        status: row.status,
-        count: typeof row.count === 'string' ? parseInt(row.count, 10) : row.count,
-      }));
-    } catch (error) {
-      this.logger.error(
-        `Failed to compute task volume report for org=${organizationId}`,
-        (error as Error).stack ?? String(error),
-      );
-      throw error;
-    }
+      try {
+        const rows: Array<{
+          date: string | Date;
+          status: TaskStatus;
+          count: string | number;
+        }> = await this.dataSource.query(sql, values);
+
+        return rows.map((row) => ({
+          date:
+            row.date instanceof Date
+              ? row.date.toISOString().slice(0, 10)
+              : String(row.date),
+          status: row.status,
+          count:
+            typeof row.count === 'string'
+              ? parseInt(row.count, 10)
+              : row.count,
+        }));
+      } catch (error) {
+        this.logger.error(
+          `Failed to compute task volume report for org=${organizationId}`,
+          (error as Error).stack ?? String(error),
+        );
+        throw error;
+      }
+    };
+
+    return this.withCache<TaskVolumeBucket[]>(
+      cacheKey,
+      'analytics.cache.ttl_seconds.dashboard_default',
+      compute,
+    );
   }
 
   /**
@@ -2573,6 +6168,7 @@ export class ReportsService {
       reactivitySecondsThreshold,
       completionSecondsThreshold,
       type,
+      profileKey,
     } = params;
 
     const { fromKey, toKey } = this.normalizeDateRange(
@@ -2598,89 +6194,107 @@ export class ReportsService {
       );
     }
 
-    const conditions: string[] = [];
-    const values: any[] = [];
+    const cacheKey = this.buildCacheKey('slaBreaches', {
+      organizationId,
+      fromDate: fromKey,
+      toDate: toKey,
+      type: type ?? null,
+      profileKey: profileKey ?? null,
+      reactivitySecondsThreshold,
+      completionSecondsThreshold,
+    });
 
-    // 1) organization filter (from fact_tasks)
-    values.push(organizationId);
-    let paramIndex = 1;
-    conditions.push(`ft.organization_id = $${paramIndex++}`);
+    const compute = async (): Promise<SlaBreachRow[]> => {
+      const conditions: string[] = [];
+      const values: any[] = [];
 
-    // 2) date window
-    values.push(fromKey);
-    conditions.push(`ft.created_date_key >= $${paramIndex++}`);
+      // 1) organization filter (from fact_tasks)
+      values.push(organizationId);
+      let paramIndex = 1;
+      conditions.push(`ft.organization_id = $${paramIndex++}`);
 
-    values.push(toKey);
-    conditions.push(`ft.created_date_key <= $${paramIndex++}`);
+      // 2) date window
+      values.push(fromKey);
+      conditions.push(`ft.created_date_key >= $${paramIndex++}`);
 
-    // 3) optional type filter (dim_tasks.type)
-    if (type) {
-      values.push(type);
-      conditions.push(`dt.type = $${paramIndex++}`);
-    }
+      values.push(toKey);
+      conditions.push(`ft.created_date_key <= $${paramIndex++}`);
 
-    // 4) SLA thresholds – added as parameters used in FILTER clause
-    const reactivityIndex = paramIndex++;
-    const completionIndex = paramIndex++;
+      // 3) optional type filter (dim_tasks.type)
+      if (type) {
+        values.push(type);
+        conditions.push(`dt.type = $${paramIndex++}`);
+      }
 
-    values.push(reactivitySecondsThreshold);
-    values.push(completionSecondsThreshold);
+      // 4) SLA thresholds – added as parameters used in FILTER clause
+      const reactivityIndex = paramIndex++;
+      const completionIndex = paramIndex++;
 
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+      values.push(reactivitySecondsThreshold);
+      values.push(completionSecondsThreshold);
 
-    const sql = `
-      SELECT
-        dt.type AS domain_type,
-        COUNT(*)::int AS total_tasks,
-        COUNT(*) FILTER (
-          WHERE
-            (ft.time_to_first_response_seconds IS NOT NULL
-             AND ft.time_to_first_response_seconds > $${reactivityIndex})
-            OR
-            (ft.time_to_completion_seconds IS NOT NULL
-             AND ft.time_to_completion_seconds > $${completionIndex})
-        )::int AS breached_tasks
-      FROM insights.fact_tasks ft
-      JOIN insights.dim_tasks dt
-        ON dt.task_id = ft.task_id
-      ${whereClause}
-      GROUP BY dt.type
-      ORDER BY dt.type;
-    `;
+      const whereClause =
+        conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    try {
-      const rows: Array<{
-        domain_type: string;
-        total_tasks: string | number;
-        breached_tasks: string | number;
-      }> = await this.dataSource.query(sql, values);
+      const sql = `
+        SELECT
+          dt.type AS domain_type,
+          COUNT(*)::int AS total_tasks,
+          COUNT(*) FILTER (
+            WHERE
+              (ft.time_to_first_response_seconds IS NOT NULL
+               AND ft.time_to_first_response_seconds > $${reactivityIndex})
+              OR
+              (ft.time_to_completion_seconds IS NOT NULL
+               AND ft.time_to_completion_seconds > $${completionIndex})
+          )::int AS breached_tasks
+        FROM insights.fact_tasks ft
+        JOIN insights.dim_tasks dt
+          ON dt.task_id = ft.task_id
+        ${whereClause}
+        GROUP BY dt.type
+        ORDER BY dt.type;
+      `;
 
-      return rows.map((row) => {
-        const total =
-          typeof row.total_tasks === 'string'
-            ? parseInt(row.total_tasks, 10)
-            : row.total_tasks;
-        const breached =
-          typeof row.breached_tasks === 'string'
-            ? parseInt(row.breached_tasks, 10)
-            : row.breached_tasks;
-        const breachRate = total > 0 ? breached / total : 0;
+      try {
+        const rows: Array<{
+          domain_type: string;
+          total_tasks: string | number;
+          breached_tasks: string | number;
+        }> = await this.dataSource.query(sql, values);
 
-        return {
-          domainType: row.domain_type,
-          totalTasks: total,
-          breachedTasks: breached,
-          breachRate,
-        };
-      });
-    } catch (error) {
-      this.logger.error(
-        `Failed to compute SLA breaches for org=${organizationId}`,
-        (error as Error).stack ?? String(error),
-      );
-      throw error;
-    }
+        return rows.map((row) => {
+          const total =
+            typeof row.total_tasks === 'string'
+              ? parseInt(row.total_tasks, 10)
+              : row.total_tasks;
+          const breached =
+            typeof row.breached_tasks === 'string'
+              ? parseInt(row.breached_tasks, 10)
+              : row.breached_tasks;
+          const breachRate = total > 0 ? breached / total : 0;
+
+          return {
+            domainType: row.domain_type,
+            totalTasks: total,
+            breachedTasks: breached,
+            breachRate,
+          };
+        });
+      } catch (error) {
+        this.logger.error(
+          `Failed to compute SLA breaches for org=${organizationId}, profileKey=${profileKey ?? 'n/a'}`,
+          (error as Error).stack ?? String(error),
+        );
+        throw error;
+      }
+    };
+
+    return this.withCache<SlaBreachRow[]>(
+      cacheKey,
+      'analytics.cache.ttl_seconds.dashboard_default',
+      compute,
+    );
   }
 
   /**
@@ -2698,48 +6312,66 @@ export class ReportsService {
    * focuses purely on analytics aggregation.
    */
   async getProfileScore(params: ProfileScoreParams): Promise<ProfileScore> {
-    const { organizationId } = params;
+    const { organizationId, profileKey } = params;
     const { fromKey, toKey } = this.normalizeDateRange(
       params.fromDate,
       params.toDate,
     );
 
-    try {
-      const perDomain = await this.getSlaBreaches({
-        ...params,
-        fromDate: fromKey,
-        toDate: toKey,
-      });
+    const cacheKey = this.buildCacheKey('profileScore', {
+      organizationId,
+      fromDate: fromKey,
+      toDate: toKey,
+      type: params.type ?? null,
+      profileKey: profileKey ?? null,
+      reactivitySecondsThreshold: params.reactivitySecondsThreshold,
+      completionSecondsThreshold: params.completionSecondsThreshold,
+    });
 
-      const overallTasks = perDomain.reduce(
-        (sum, row) => sum + row.totalTasks,
-        0,
-      );
-      const overallBreachedTasks = perDomain.reduce(
-        (sum, row) => sum + row.breachedTasks,
-        0,
-      );
+    const compute = async (): Promise<ProfileScore> => {
+      try {
+        const perDomain = await this.getSlaBreaches({
+          ...params,
+          fromDate: fromKey,
+          toDate: toKey,
+        });
 
-      const breachRate =
-        overallTasks > 0 ? overallBreachedTasks / overallTasks : 0;
-      const overallScore = Math.round((1 - breachRate) * 100);
+        const overallTasks = perDomain.reduce(
+          (sum, row) => sum + row.totalTasks,
+          0,
+        );
+        const overallBreachedTasks = perDomain.reduce(
+          (sum, row) => sum + row.breachedTasks,
+          0,
+        );
 
-      return {
-        organizationId,
-        fromDate: fromKey,
-        toDate: toKey,
-        overallTasks,
-        overallBreachedTasks,
-        overallScore,
-        perDomain,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Failed to compute profile score for org=${organizationId}`,
-        (error as Error).stack ?? String(error),
-      );
-      throw error;
-    }
+        const breachRate =
+          overallTasks > 0 ? overallBreachedTasks / overallTasks : 0;
+        const overallScore = Math.round((1 - breachRate) * 100);
+
+        return {
+          organizationId,
+          fromDate: fromKey,
+          toDate: toKey,
+          overallTasks,
+          overallBreachedTasks,
+          overallScore,
+          perDomain,
+        };
+      } catch (error) {
+        this.logger.error(
+          `Failed to compute profile score for org=${organizationId}, profileKey=${profileKey ?? 'n/a'}`,
+          (error as Error).stack ?? String(error),
+        );
+        throw error;
+      }
+    };
+
+    return this.withCache<ProfileScore>(
+      cacheKey,
+      'analytics.cache.ttl_seconds.dashboard_default',
+      compute,
+    );
   }
 
   /**
@@ -2769,10 +6401,103 @@ export class ReportsService {
 
     return { fromKey: from, toKey: to };
   }
+
+  /**
+   * Thin wrapper around the cache manager that:
+   * - builds on config-driven TTLs (Doc 6 – analytics.cache.ttl_seconds.*);
+   * - degrades gracefully when caching is not configured or fails.
+   */
+  private async withCache<T>(
+    key: string,
+    ttlConfigKey: string,
+    compute: () => Promise<T>,
+  ): Promise<T> {
+    // No cache configured – just compute.
+    if (!this.cacheManager) {
+      return compute();
+    }
+
+    try {
+      const cached = await this.cacheManager.get<T>(key);
+      if (cached !== undefined && cached !== null) {
+        return cached;
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Cache get failed for key=${key}: ${String(error)}`,
+      );
+      // Continue to compute fresh result.
+    }
+
+    const result = await compute();
+
+    try {
+      const ttlValue = this.configService.get<number | string | undefined>(
+        ttlConfigKey,
+      );
+      let ttlSeconds: number | undefined;
+
+      if (typeof ttlValue === 'number') {
+        ttlSeconds = ttlValue;
+      } else if (typeof ttlValue === 'string') {
+        const parsed = Number(ttlValue);
+        ttlSeconds = Number.isNaN(parsed) ? undefined : parsed;
+      }
+
+      if (ttlSeconds && ttlSeconds > 0) {
+        await this.cacheManager.set(key, result, { ttl: ttlSeconds });
+      } else {
+        // Fall back to cache manager default TTL if any.
+        await this.cacheManager.set(key, result);
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Cache set failed for key=${key}: ${String(error)}`,
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Builds a stable cache key for a given dashboard/report prefix and a set
+   * of parameters. This is designed to keep the number of keys per dashboard
+   * within the bounds configured in analytics.cache.max_keys_per_dashboard.
+   */
+  private buildCacheKey(
+    prefix: string,
+    parts: Record<string, unknown>,
+  ): string {
+    const serializedParts = Object.entries(parts)
+      .filter(([, value]) => value !== undefined)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) {
+          return `${key}=[${value
+            .map((v) => this.serializeCachePart(v))
+            .join(',')}]`;
+        }
+        return `${key}=${this.serializeCachePart(value)}`;
+      })
+      .sort();
+
+    return `insights:${prefix}:${serializedParts.join('|')}`;
+  }
+
+  private serializeCachePart(value: unknown): string {
+    if (value === null) return 'null';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    return JSON.stringify(value);
+  }
 }
 
 
-=== FILE 10/18: apps/api/src/orgo/orgo.module.ts ===
+=== FILE 20/28: apps/api/src/orgo/orgo.module.ts ===
 
 // apps/api/src/orgo/orgo.module.ts
 
@@ -2829,7 +6554,7 @@ import { OrgoConfigModule } from './config/config.module';
 export class OrgoModule {}
 
 
-=== FILE 11/18: apps/api/src/orgo/security/audit/audit-trail.service.ts ===
+=== FILE 21/28: apps/api/src/orgo/security/audit/audit-trail.service.ts ===
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -3092,7 +6817,7 @@ export class AuditTrailService {
 }
 
 
-=== FILE 12/18: apps/api/src/orgo/security/auth/auth.guard.ts ===
+=== FILE 22/28: apps/api/src/orgo/security/auth/auth.guard.ts ===
 
 // apps/api/src/orgo/security/auth/auth.guard.ts
 
@@ -3347,7 +7072,7 @@ export class AuthGuard implements CanActivate {
 }
 
 
-=== FILE 13/18: apps/api/src/orgo/security/auth/auth.module.ts ===
+=== FILE 23/28: apps/api/src/orgo/security/auth/auth.module.ts ===
 
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -3428,7 +7153,7 @@ import { AuthGuard } from './auth.guard';
 export class AuthModule {}
 
 
-=== FILE 14/18: apps/api/src/orgo/security/auth/auth.service.ts ===
+=== FILE 24/28: apps/api/src/orgo/security/auth/auth.service.ts ===
 
 import {
   BadRequestException,
@@ -3967,7 +7692,7 @@ export class AuthService {
 }
 
 
-=== FILE 15/18: apps/api/src/orgo/security/compliance/compliance-export.service.ts ===
+=== FILE 25/28: apps/api/src/orgo/security/compliance/compliance-export.service.ts ===
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
@@ -4437,7 +8162,7 @@ export class ComplianceExportService {
 }
 
 
-=== FILE 16/18: apps/api/src/orgo/security/logging/log-query.service.ts ===
+=== FILE 26/28: apps/api/src/orgo/security/logging/log-query.service.ts ===
 
 // apps/api/src/orgo/security/logging/log-query.service.ts
 
@@ -4959,7 +8684,7 @@ export class LogQueryService {
 }
 
 
-=== FILE 17/18: apps/api/src/orgo/security/privacy/privacy.service.ts ===
+=== FILE 27/28: apps/api/src/orgo/security/privacy/privacy.service.ts ===
 
 import { Injectable } from '@nestjs/common';
 
@@ -5355,7 +9080,7 @@ export class PrivacyService {
 }
 
 
-=== FILE 18/18: apps/api/src/orgo/security/rbac/rbac.service.ts ===
+=== FILE 28/28: apps/api/src/orgo/security/rbac/rbac.service.ts ===
 
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../../core/database/database.service';

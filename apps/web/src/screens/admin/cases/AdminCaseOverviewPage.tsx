@@ -1,554 +1,782 @@
-import React from "react";
-import { useAdminCaseOverviewQuery } from "../../../store/services/orgoApi";
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-type CaseStatus = "open" | "in_progress" | "resolved" | "archived";
+type CaseStatus =
+  | 'OPEN'
+  | 'IN_PROGRESS'
+  | 'ON_HOLD'
+  | 'RESOLVED'
+  | 'CLOSED'
+  | 'CANCELLED';
 
-type CaseSeverity = "minor" | "moderate" | "major" | "critical";
+type CasePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
-type TimeFilter = "all" | "7d" | "30d" | "90d" | "180d" | "365d";
+interface CaseUser {
+  id: string;
+  name: string;
+  email?: string | null;
+  avatarUrl?: string | null;
+}
 
-export interface AdminCaseOverviewCase {
-  case_id: string;
-  organization_id: string;
+interface CaseNote {
+  id: string;
+  body: string;
+  createdAt: string;
+  author?: CaseUser | null;
+  isInternal?: boolean;
+}
+
+interface CaseActivity {
+  id: string;
+  type:
+    | 'status_change'
+    | 'field_change'
+    | 'comment'
+    | 'note'
+    | 'attachment'
+    | 'system'
+    | 'other';
+  createdAt: string;
+  actor?: CaseUser | null;
+  message: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface CaseAttachment {
+  id: string;
+  fileName: string;
+  url: string;
+  fileSize?: number | null;
+  contentType?: string | null;
+  uploadedAt: string;
+  uploadedBy?: CaseUser | null;
+}
+
+interface AdminCaseOverview {
+  id: string;
+  externalId?: string | null;
   title: string;
+  summary?: string | null;
   description?: string | null;
-  label: string;
   status: CaseStatus;
-  severity: CaseSeverity;
-  source_type: "email" | "api" | "manual" | "sync";
-  reactivity_time?: string | null;
-  reactivity_deadline_at?: string | null;
-  created_at: string;
-  updated_at: string;
-  open_tasks_count?: number;
-  overdue_tasks_count?: number;
-  profile_key?: string;
+  priority: CasePriority;
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string | null;
+  slaDueAt?: string | null;
+  tags?: string[];
+  requester?: CaseUser | null;
+  assignee?: CaseUser | null;
+  teamName?: string | null;
+  channel?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
+  activities?: CaseActivity[];
+  notes?: CaseNote[];
+  attachments?: CaseAttachment[];
 }
 
-export interface AdminCaseOverviewResponse {
-  cases: AdminCaseOverviewCase[];
-  totalCount: number;
+type ActiveTab = 'summary' | 'activity' | 'notes' | 'attachments';
+
+interface AdminCaseOverviewPageProps {
+  /**
+   * Optional caseId prop. If not provided, the component will
+   * try to read `caseId` from the router params.
+   */
+  caseId?: string;
 }
 
-export interface AdminCaseOverviewQueryArgs {
-  status?: CaseStatus;
-  severity?: CaseSeverity;
-  search?: string;
-  profileKey?: string;
-  windowDays?: number;
+type LoadingState = 'idle' | 'loading' | 'success' | 'error' | 'not_found';
+
+interface PageState {
+  status: LoadingState;
+  data: AdminCaseOverview | null;
+  error: string | null;
 }
 
-interface SummaryCounts {
-  total: number;
-  unresolved: number;
-  overdue: number;
-  critical: number;
+const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
+  caseId: caseIdProp,
+}) => {
+  const { caseId: caseIdFromParams } = useParams<{ caseId: string }>();
+  const navigate = useNavigate();
+
+  const caseId = caseIdProp ?? caseIdFromParams ?? '';
+
+  const [state, setState] = useState<PageState>({
+    status: caseId ? 'loading' : 'idle',
+    data: null,
+    error: null,
+  });
+  const [activeTab, setActiveTab] = useState<ActiveTab>('summary');
+  const [reloadToken, setReloadToken] = useState<number>(0);
+
+  useEffect(() => {
+    if (!caseId) {
+      setState({
+        status: 'error',
+        data: null,
+        error: 'Missing case id.',
+      });
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const fetchCase = async () => {
+      setState((prev) => ({
+        ...prev,
+        status: 'loading',
+        error: null,
+      }));
+
+      try {
+        // Adjust this endpoint and query parameters to match your backend.
+        const response = await fetch(
+          `/api/admin/cases/${encodeURIComponent(caseId)}?include=overview`,
+          { signal: controller.signal },
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        if (response.status === 404) {
+          setState({
+            status: 'not_found',
+            data: null,
+            error: 'Case not found.',
+          });
+          return;
+        }
+
+        if (response.status === 403) {
+          throw new Error('You do not have permission to view this case.');
+        }
+
+        if (!response.ok) {
+          throw new Error('Unable to load case overview.');
+        }
+
+        const body = (await response.json()) as AdminCaseOverview;
+
+        setState({
+          status: 'success',
+          data: body,
+          error: null,
+        });
+      } catch (err) {
+        if (cancelled || (err as any)?.name === 'AbortError') {
+          return;
+        }
+
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Unexpected error while loading case.';
+        setState({
+          status: 'error',
+          data: null,
+          error: message,
+        });
+      }
+    };
+
+    fetchCase();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [caseId, reloadToken]);
+
+  const { status, data, error } = state;
+  const isLoading = status === 'idle' || status === 'loading';
+
+  const handleRetry = () => {
+    setReloadToken((value) => value + 1);
+  };
+
+  const handleBack = () => {
+    // Adjust destination path to match your routing.
+    navigate('/admin/cases');
+  };
+
+  const handleTabChange = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    // If you persist tab selection to the URL, integrate it here.
+  };
+
+  const title =
+    data?.title || (caseId ? `Case ${caseId}` : 'Case overview');
+
+  return (
+    <div className="AdminCaseOverviewPage">
+      <header className="AdminCaseOverviewPage__header">
+        <div className="AdminCaseOverviewPage__headerTop">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="AdminCaseOverviewPage__backButton"
+          >
+            ← Back to cases
+          </button>
+        </div>
+
+        <div className="AdminCaseOverviewPage__headerMain">
+          <div>
+            <h1 className="AdminCaseOverviewPage__title">{title}</h1>
+            {data && (
+              <div className="AdminCaseOverviewPage__metaRow">
+                <StatusBadge status={data.status} />
+                <PriorityBadge priority={data.priority} />
+                <span className="AdminCaseOverviewPage__id">#{data.id}</span>
+              </div>
+            )}
+          </div>
+
+          {data && (
+            <div className="AdminCaseOverviewPage__headerRight">
+              <HeaderMeta
+                label="Created"
+                value={formatDateTime(data.createdAt)}
+              />
+              <HeaderMeta
+                label="Updated"
+                value={formatDateTime(data.updatedAt)}
+              />
+              {data.slaDueAt && (
+                <HeaderMeta
+                  label="SLA due"
+                  value={formatDateTime(data.slaDueAt)}
+                />
+              )}
+              {data.closedAt && (
+                <HeaderMeta
+                  label="Closed"
+                  value={formatDateTime(data.closedAt)}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </header>
+
+      {isLoading && (
+        <div className="AdminCaseOverviewPage__state AdminCaseOverviewPage__state--loading">
+          Loading case…
+        </div>
+      )}
+
+      {!isLoading && status === 'not_found' && (
+        <div className="AdminCaseOverviewPage__state AdminCaseOverviewPage__state--empty">
+          <p>Case not found.</p>
+          <div className="AdminCaseOverviewPage__stateActions">
+            <button type="button" onClick={handleBack}>
+              Back to cases
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && status === 'error' && error && (
+        <div className="AdminCaseOverviewPage__state AdminCaseOverviewPage__state--error">
+          <p>{error}</p>
+          <div className="AdminCaseOverviewPage__stateActions">
+            <button type="button" onClick={handleRetry}>
+              Try again
+            </button>
+            <button type="button" onClick={handleBack}>
+              Back to cases
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && status === 'success' && data && (
+        <main className="AdminCaseOverviewPage__main">
+          <section className="AdminCaseOverviewPage__topGrid">
+            <SectionCard title="Case details">
+              <p className="AdminCaseOverviewPage__summary">
+                {data.summary || data.description || 'No summary provided.'}
+              </p>
+              <dl className="AdminCaseOverviewPage__detailsList">
+                <KeyValueRow
+                  label="External ID"
+                  value={data.externalId || '—'}
+                />
+                <KeyValueRow
+                  label="Category"
+                  value={data.category || '—'}
+                />
+                <KeyValueRow
+                  label="Subcategory"
+                  value={data.subcategory || '—'}
+                />
+                <KeyValueRow
+                  label="Channel"
+                  value={data.channel || '—'}
+                />
+                {data.tags && data.tags.length > 0 && (
+                  <div className="AdminCaseOverviewPage__detailsRow">
+                    <dt>Tags</dt>
+                    <dd>
+                      <div className="AdminCaseOverviewPage__tags">
+                        {data.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="AdminCaseOverviewPage__tag"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </SectionCard>
+
+            <SectionCard title="People">
+              <div className="AdminCaseOverviewPage__people">
+                <PersonRow label="Requester" user={data.requester} />
+                <PersonRow label="Assignee" user={data.assignee} />
+                <KeyValueRow
+                  label="Team"
+                  value={data.teamName || '—'}
+                />
+              </div>
+            </SectionCard>
+          </section>
+
+          <section className="AdminCaseOverviewPage__tabsSection">
+            <nav
+              className="AdminCaseOverviewPage__tabs"
+              aria-label="Case overview sections"
+              role="tablist"
+            >
+              <TabButton
+                label="Overview"
+                isActive={activeTab === 'summary'}
+                onClick={() => handleTabChange('summary')}
+              />
+              <TabButton
+                label="Activity"
+                isActive={activeTab === 'activity'}
+                onClick={() => handleTabChange('activity')}
+              />
+              <TabButton
+                label="Notes"
+                isActive={activeTab === 'notes'}
+                onClick={() => handleTabChange('notes')}
+              />
+              <TabButton
+                label="Attachments"
+                isActive={activeTab === 'attachments'}
+                onClick={() => handleTabChange('attachments')}
+              />
+            </nav>
+
+            <div className="AdminCaseOverviewPage__tabContent">
+              {activeTab === 'summary' && (
+                <SectionCard title="Overview">
+                  <p>
+                    {data.description ||
+                      data.summary ||
+                      'No additional information.'}
+                  </p>
+                  <dl className="AdminCaseOverviewPage__detailsList AdminCaseOverviewPage__detailsList--twoColumn">
+                    <KeyValueRow
+                      label="Status"
+                      value={formatStatus(data.status)}
+                    />
+                    <KeyValueRow
+                      label="Priority"
+                      value={formatPriority(data.priority)}
+                    />
+                    <KeyValueRow
+                      label="Created"
+                      value={formatDateTime(data.createdAt)}
+                    />
+                    <KeyValueRow
+                      label="Updated"
+                      value={formatDateTime(data.updatedAt)}
+                    />
+                    <KeyValueRow
+                      label="SLA due"
+                      value={formatDateTime(data.slaDueAt)}
+                    />
+                    <KeyValueRow
+                      label="Closed"
+                      value={formatDateTime(data.closedAt)}
+                    />
+                  </dl>
+                </SectionCard>
+              )}
+
+              {activeTab === 'activity' && (
+                <SectionCard title="Activity">
+                  <ActivityList activities={data.activities || []} />
+                </SectionCard>
+              )}
+
+              {activeTab === 'notes' && (
+                <SectionCard title="Notes">
+                  <NotesList notes={data.notes || []} />
+                  {/* Hook up your note composer / editor component here */}
+                </SectionCard>
+              )}
+
+              {activeTab === 'attachments' && (
+                <SectionCard title="Attachments">
+                  <AttachmentsList
+                    attachments={data.attachments || []}
+                  />
+                </SectionCard>
+              )}
+            </div>
+          </section>
+        </main>
+      )}
+    </div>
+  );
+};
+
+interface StatusBadgeProps {
+  status: CaseStatus;
 }
 
-const unresolvedStatuses: CaseStatus[] = [
-  "open",
-  "in_progress",
-];
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+  return (
+    <span
+      className={`AdminCaseOverviewPage__status AdminCaseOverviewPage__status--${status}`}
+    >
+      {formatStatus(status)}
+    </span>
+  );
+};
 
-function timeFilterToDays(value: TimeFilter): number | undefined {
-  switch (value) {
-    case "7d":
-      return 7;
-    case "30d":
-      return 30;
-    case "90d":
-      return 90;
-    case "180d":
-      return 180;
-    case "365d":
-      return 365;
-    case "all":
-    default:
-      return undefined;
+interface PriorityBadgeProps {
+  priority: CasePriority;
+}
+
+const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
+  return (
+    <span
+      className={`AdminCaseOverviewPage__priority AdminCaseOverviewPage__priority--${priority}`}
+    >
+      {formatPriority(priority)}
+    </span>
+  );
+};
+
+interface HeaderMetaProps {
+  label: string;
+  value: string;
+}
+
+const HeaderMeta: React.FC<HeaderMetaProps> = ({ label, value }) => (
+  <div className="AdminCaseOverviewPage__headerMeta">
+    <div className="AdminCaseOverviewPage__headerMetaLabel">{label}</div>
+    <div className="AdminCaseOverviewPage__headerMetaValue">{value}</div>
+  </div>
+);
+
+interface SectionCardProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+const SectionCard: React.FC<SectionCardProps> = ({ title, children }) => (
+  <section className="AdminCaseOverviewPage__card">
+    <h2 className="AdminCaseOverviewPage__cardTitle">{title}</h2>
+    <div className="AdminCaseOverviewPage__cardBody">{children}</div>
+  </section>
+);
+
+interface KeyValueRowProps {
+  label: string;
+  value: string;
+}
+
+const KeyValueRow: React.FC<KeyValueRowProps> = ({ label, value }) => (
+  <div className="AdminCaseOverviewPage__detailsRow">
+    <dt>{label}</dt>
+    <dd>{value}</dd>
+  </div>
+);
+
+interface PersonRowProps {
+  label: string;
+  user?: CaseUser | null;
+}
+
+const PersonRow: React.FC<PersonRowProps> = ({ label, user }) => (
+  <div className="AdminCaseOverviewPage__personRow">
+    <div className="AdminCaseOverviewPage__personLabel">{label}</div>
+    {user ? (
+      <div className="AdminCaseOverviewPage__person">
+        <Avatar name={user.name} avatarUrl={user.avatarUrl} />
+        <div className="AdminCaseOverviewPage__personInfo">
+          <div className="AdminCaseOverviewPage__personName">
+            {user.name}
+          </div>
+          {user.email && (
+            <div className="AdminCaseOverviewPage__personEmail">
+              {user.email}
+            </div>
+          )}
+        </div>
+      </div>
+    ) : (
+      <div className="AdminCaseOverviewPage__personEmpty">
+        Unassigned
+      </div>
+    )}
+  </div>
+);
+
+interface AvatarProps {
+  name: string;
+  avatarUrl?: string | null;
+}
+
+const Avatar: React.FC<AvatarProps> = ({ name, avatarUrl }) => {
+  const initial = name?.trim()?.charAt(0).toUpperCase() || '?';
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className="AdminCaseOverviewPage__avatar"
+      />
+    );
   }
+
+  return (
+    <div className="AdminCaseOverviewPage__avatar AdminCaseOverviewPage__avatar--fallback">
+      {initial}
+    </div>
+  );
+};
+
+interface TabButtonProps {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
 }
 
-function formatDate(dateString?: string | null): string {
-  if (!dateString) {
-    return "—";
+const TabButton: React.FC<TabButtonProps> = ({
+  label,
+  isActive,
+  onClick,
+}) => (
+  <button
+    type="button"
+    className={`AdminCaseOverviewPage__tabButton${
+      isActive ? ' AdminCaseOverviewPage__tabButton--active' : ''
+    }`}
+    onClick={onClick}
+    role="tab"
+    aria-selected={isActive}
+  >
+    {label}
+  </button>
+);
+
+interface NotesListProps {
+  notes: CaseNote[];
+}
+
+const NotesList: React.FC<NotesListProps> = ({ notes }) => {
+  if (!notes.length) {
+    return (
+      <div className="AdminCaseOverviewPage__emptyState">
+        No notes yet.
+      </div>
+    );
   }
-  const date = new Date(dateString);
+
+  return (
+    <ul className="AdminCaseOverviewPage__notesList">
+      {notes.map((note) => (
+        <li key={note.id} className="AdminCaseOverviewPage__noteItem">
+          <div className="AdminCaseOverviewPage__noteHeader">
+            <div className="AdminCaseOverviewPage__noteAuthor">
+              {note.author ? (
+                <>
+                  <Avatar
+                    name={note.author.name}
+                    avatarUrl={note.author.avatarUrl}
+                  />
+                  <span className="AdminCaseOverviewPage__noteAuthorName">
+                    {note.author.name}
+                  </span>
+                </>
+              ) : (
+                <span className="AdminCaseOverviewPage__noteAuthorName">
+                  System
+                </span>
+              )}
+            </div>
+            <div className="AdminCaseOverviewPage__noteMeta">
+              <span className="AdminCaseOverviewPage__noteTimestamp">
+                {formatDateTime(note.createdAt)}
+              </span>
+              {note.isInternal && (
+                <span className="AdminCaseOverviewPage__noteInternalTag">
+                  Internal
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="AdminCaseOverviewPage__noteBody">
+            {note.body}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+interface ActivityListProps {
+  activities: CaseActivity[];
+}
+
+const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
+  if (!activities.length) {
+    return (
+      <div className="AdminCaseOverviewPage__emptyState">
+        No activity yet.
+      </div>
+    );
+  }
+
+  return (
+    <ul className="AdminCaseOverviewPage__activityList">
+      {activities.map((activity) => (
+        <li
+          key={activity.id}
+          className="AdminCaseOverviewPage__activityItem"
+        >
+          <div className="AdminCaseOverviewPage__activityHeader">
+            <div className="AdminCaseOverviewPage__activityActor">
+              {activity.actor ? (
+                <>
+                  <Avatar
+                    name={activity.actor.name}
+                    avatarUrl={activity.actor.avatarUrl}
+                  />
+                  <span className="AdminCaseOverviewPage__activityActorName">
+                    {activity.actor.name}
+                  </span>
+                </>
+              ) : (
+                <span className="AdminCaseOverviewPage__activityActorName">
+                  System
+                </span>
+              )}
+            </div>
+            <span className="AdminCaseOverviewPage__activityTimestamp">
+              {formatDateTime(activity.createdAt)}
+            </span>
+          </div>
+          <div className="AdminCaseOverviewPage__activityMessage">
+            {activity.message}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+interface AttachmentsListProps {
+  attachments: CaseAttachment[];
+}
+
+const AttachmentsList: React.FC<AttachmentsListProps> = ({
+  attachments,
+}) => {
+  if (!attachments.length) {
+    return (
+      <div className="AdminCaseOverviewPage__emptyState">
+        No attachments.
+      </div>
+    );
+  }
+
+  return (
+    <ul className="AdminCaseOverviewPage__attachmentsList">
+      {attachments.map((attachment) => (
+        <li
+          key={attachment.id}
+          className="AdminCaseOverviewPage__attachmentItem"
+        >
+          <div className="AdminCaseOverviewPage__attachmentMain">
+            <a
+              href={attachment.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="AdminCaseOverviewPage__attachmentName"
+            >
+              {attachment.fileName}
+            </a>
+            <div className="AdminCaseOverviewPage__attachmentMeta">
+              {attachment.fileSize != null && (
+                <span>{formatBytes(attachment.fileSize)}</span>
+              )}
+              {attachment.contentType && (
+                <span className="AdminCaseOverviewPage__attachmentContentType">
+                  {attachment.contentType}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="AdminCaseOverviewPage__attachmentFooter">
+            <span>{formatDateTime(attachment.uploadedAt)}</span>
+            {attachment.uploadedBy && (
+              <span className="AdminCaseOverviewPage__attachmentUploader">
+                by {attachment.uploadedBy.name}
+              </span>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+function formatStatus(status: CaseStatus): string {
+  return status
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function formatPriority(priority: CasePriority): string {
+  const label = priority.toLowerCase();
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function formatDateTime(value?: string | null): string {
+  if (!value) {
+    return '—';
+  }
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return dateString;
+    return value;
   }
   return date.toLocaleString();
 }
 
-function formatStatusLabel(status: CaseStatus): string {
-  if (status === "in_progress") {
-    return "in progress";
-  }
-  return status;
-}
-
-function getStatusBadgeClasses(status: CaseStatus): string {
-  switch (status) {
-    case "open":
-      return "bg-yellow-100 text-yellow-800";
-    case "in_progress":
-      return "bg-blue-100 text-blue-800";
-    case "resolved":
-      return "bg-green-100 text-green-800";
-    case "archived":
-      return "bg-gray-100 text-gray-700";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
-
-function getSeverityBadgeClasses(severity: CaseSeverity): string {
-  switch (severity) {
-    case "critical":
-      return "bg-red-100 text-red-800";
-    case "major":
-      return "bg-orange-100 text-orange-800";
-    case "moderate":
-      return "bg-yellow-100 text-yellow-800";
-    case "minor":
-    default:
-      return "bg-blue-100 text-blue-800";
-  }
-}
-
-type TableCellProps = React.PropsWithChildren<{ className?: string }>;
-
-function Th({ children, className = "" }: TableCellProps) {
-  return (
-    <th
-      scope="col"
-      className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 ${className}`}
-    >
-      {children}
-    </th>
-  );
-}
-
-function Td({ children, className = "" }: TableCellProps) {
-  return (
-    <td className={`px-4 py-3 align-top text-sm text-gray-900 ${className}`}>
-      {children}
-    </td>
-  );
-}
-
-const Badge: React.FC<{ className?: string }> = ({
-  className = "",
-  children,
-}) => (
-  <span
-    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}
-  >
-    {children}
-  </span>
-);
-
-function buildSummary(cases: AdminCaseOverviewCase[]): SummaryCounts {
-  const now = Date.now();
-
-  let total = 0;
-  let unresolved = 0;
-  let overdue = 0;
-  let critical = 0;
-
-  for (const c of cases) {
-    total += 1;
-
-    const isUnresolved = unresolvedStatuses.includes(c.status);
-    if (isUnresolved) {
-      unresolved += 1;
-    }
-
-    if (c.severity === "critical") {
-      critical += 1;
-    }
-
-    if (isUnresolved && c.reactivity_deadline_at) {
-      const deadline = new Date(c.reactivity_deadline_at).getTime();
-      if (!Number.isNaN(deadline) && deadline < now) {
-        overdue += 1;
-      }
-    }
-  }
-
-  return { total, unresolved, overdue, critical };
-}
-
-export function AdminCaseOverviewPage() {
-  const [statusFilter, setStatusFilter] = React.useState<
-    "all" | CaseStatus
-  >("open");
-  const [severityFilter, setSeverityFilter] = React.useState<
-    "all" | CaseSeverity
-  >("all");
-  const [timeFilter, setTimeFilter] =
-    React.useState<TimeFilter>("30d");
-  const [searchTerm, setSearchTerm] = React.useState("");
-
-  const queryArgs: AdminCaseOverviewQueryArgs =
-    React.useMemo(() => {
-      const args: AdminCaseOverviewQueryArgs = {};
-
-      if (statusFilter !== "all") {
-        args.status = statusFilter;
-      }
-
-      if (severityFilter !== "all") {
-        args.severity = severityFilter;
-      }
-
-      const trimmedSearch = searchTerm.trim();
-      if (trimmedSearch.length > 0) {
-        args.search = trimmedSearch;
-      }
-
-      const windowDays = timeFilterToDays(timeFilter);
-      if (typeof windowDays === "number") {
-        args.windowDays = windowDays;
-      }
-
-      return args;
-    }, [statusFilter, severityFilter, timeFilter, searchTerm]);
-
-  const { data, isLoading, isFetching, isError, refetch } =
-    useAdminCaseOverviewQuery(queryArgs);
-
-  const cases: AdminCaseOverviewCase[] = (
-    data?.cases ?? []
-  ) as AdminCaseOverviewCase[];
-
-  const summary = React.useMemo(
-    () => buildSummary(cases),
-    [cases]
-  );
-
-  const totalCount =
-    typeof data?.totalCount === "number"
-      ? data.totalCount
-      : cases.length;
-
-  return (
-    <div className="px-6 py-4">
-      <header className="mb-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Case overview
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            High-level view of Cases for cyclic reviews and
-            systemic follow-up.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50"
-        >
-          Refresh
-        </button>
-      </header>
-
-      <section
-        aria-label="Case overview summary"
-        className="mb-4 grid gap-3 md:grid-cols-4"
-      >
-        <div className="rounded-md border border-gray-200 bg-white p-4">
-          <div className="text-xs font-medium uppercase text-gray-500">
-            Total cases
-          </div>
-          <div className="mt-1 text-2xl font-semibold text-gray-900">
-            {summary.total}
-          </div>
-          <div className="mt-1 text-xs text-gray-500">
-            Across all profiles and labels
-          </div>
-        </div>
-        <div className="rounded-md border border-yellow-100 bg-yellow-50 p-4">
-          <div className="text-xs font-medium uppercase text-yellow-800">
-            Unresolved
-          </div>
-          <div className="mt-1 text-2xl font-semibold text-yellow-900">
-            {summary.unresolved}
-          </div>
-          <div className="mt-1 text-xs text-yellow-900">
-            Open or in progress
-          </div>
-        </div>
-        <div className="rounded-md border border-red-100 bg-red-50 p-4">
-          <div className="text-xs font-medium uppercase text-red-800">
-            Overdue (by reactivity)
-          </div>
-          <div className="mt-1 text-2xl font-semibold text-red-900">
-            {summary.overdue}
-          </div>
-          <div className="mt-1 text-xs text-red-900">
-            Past reactivity deadline and unresolved
-          </div>
-        </div>
-        <div className="rounded-md border border-gray-200 bg-white p-4">
-          <div className="text-xs font-medium uppercase text-gray-500">
-            Critical severity
-          </div>
-          <div className="mt-1 text-2xl font-semibold text-gray-900">
-            {summary.critical}
-          </div>
-          <div className="mt-1 text-xs text-gray-500">
-            Cases marked as critical
-          </div>
-        </div>
-      </section>
-
-      <section
-        aria-label="Filters"
-        className="mb-4 grid gap-3 rounded-md border border-gray-200 bg-white p-4 md:grid-cols-4"
-      >
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="case-search"
-            className="text-xs font-medium text-gray-700"
-          >
-            Search
-          </label>
-          <input
-            id="case-search"
-            type="search"
-            placeholder="Title, label, ID…"
-            value={searchTerm}
-            onChange={(event) =>
-              setSearchTerm(event.target.value)
-            }
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="case-status-filter"
-            className="text-xs font-medium text-gray-700"
-          >
-            Status
-          </label>
-          <select
-            id="case-status-filter"
-            value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(
-                event.target
-                  .value as "all" | CaseStatus
-              )
-            }
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            <option value="all">All statuses</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="archived">Archived</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="case-severity-filter"
-            className="text-xs font-medium text-gray-700"
-          >
-            Severity
-          </label>
-          <select
-            id="case-severity-filter"
-            value={severityFilter}
-            onChange={(event) =>
-              setSeverityFilter(
-                event.target
-                  .value as "all" | CaseSeverity
-              )
-            }
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            <option value="all">All severities</option>
-            <option value="minor">Minor</option>
-            <option value="moderate">Moderate</option>
-            <option value="major">Major</option>
-            <option value="critical">Critical</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="case-window-filter"
-            className="text-xs font-medium text-gray-700"
-          >
-            Time window
-          </label>
-          <select
-            id="case-window-filter"
-            value={timeFilter}
-            onChange={(event) =>
-              setTimeFilter(
-                event.target.value as TimeFilter
-              )
-            }
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          >
-            <option value="30d">
-              Last 30 days
-            </option>
-            <option value="7d">Last 7 days</option>
-            <option value="90d">
-              Last 90 days
-            </option>
-            <option value="180d">
-              Last 180 days
-            </option>
-            <option value="365d">
-              Last 365 days
-            </option>
-            <option value="all">All time</option>
-          </select>
-        </div>
-      </section>
-
-      <section className="overflow-hidden rounded-md border border-gray-200 bg-white">
-        {isLoading ? (
-          <div className="p-6 text-sm text-gray-600">
-            Loading cases…
-          </div>
-        ) : isError ? (
-          <div className="flex items-center justify-between gap-4 p-6 text-sm text-red-700">
-            <span>
-              Unable to load cases. Please try again.
-            </span>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium hover:bg-red-50"
-            >
-              Retry
-            </button>
-          </div>
-        ) : cases.length === 0 ? (
-          <div className="p-6 text-sm text-gray-600">
-            No cases match your filters.
-          </div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2 text-xs text-gray-600">
-              <span>
-                Showing{" "}
-                <span className="font-medium">
-                  {cases.length}
-                </span>{" "}
-                of{" "}
-                <span className="font-medium">
-                  {totalCount}
-                </span>{" "}
-                cases
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <Th>Case</Th>
-                    <Th>Label</Th>
-                    <Th>Status</Th>
-                    <Th>Severity</Th>
-                    <Th>Open / overdue tasks</Th>
-                    <Th>Created</Th>
-                    <Th>Last updated</Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {cases.map((c) => (
-                    <tr key={c.case_id}>
-                      <Td className="max-w-xs">
-                        <div className="flex flex-col">
-                          <span className="truncate text-sm font-medium text-gray-900">
-                            {c.title}
-                          </span>
-                          <span className="mt-0.5 text-xs text-gray-500">
-                            #{c.case_id.slice(0, 8)} ·{" "}
-                            {c.source_type}
-                          </span>
-                        </div>
-                      </Td>
-                      <Td className="max-w-xs">
-                        <div className="flex flex-col">
-                          <span className="truncate text-xs text-gray-700">
-                            {c.label}
-                          </span>
-                          {c.profile_key && (
-                            <span className="mt-0.5 text-xs text-gray-400">
-                              Profile: {c.profile_key}
-                            </span>
-                          )}
-                        </div>
-                      </Td>
-                      <Td>
-                        <Badge
-                          className={getStatusBadgeClasses(
-                            c.status
-                          )}
-                        >
-                          {formatStatusLabel(c.status)}
-                        </Badge>
-                      </Td>
-                      <Td>
-                        <Badge
-                          className={getSeverityBadgeClasses(
-                            c.severity
-                          )}
-                        >
-                          {c.severity}
-                        </Badge>
-                      </Td>
-                      <Td>
-                        <div className="flex flex-col text-xs">
-                          <span>
-                            Open:{" "}
-                            {typeof c.open_tasks_count ===
-                            "number"
-                              ? c.open_tasks_count
-                              : "—"}
-                          </span>
-                          <span>
-                            Overdue:{" "}
-                            {typeof c.overdue_tasks_count ===
-                            "number"
-                              ? c.overdue_tasks_count
-                              : "—"}
-                          </span>
-                        </div>
-                      </Td>
-                      <Td>
-                        <span className="text-xs text-gray-700">
-                          {formatDate(c.created_at)}
-                        </span>
-                      </Td>
-                      <Td>
-                        <span className="text-xs text-gray-700">
-                          {formatDate(c.updated_at)}
-                        </span>
-                      </Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-        {isFetching && !isLoading && (
-          <div className="border-t border-gray-100 bg-gray-50 px-4 py-2 text-xs text-gray-500">
-            Updating…
-          </div>
-        )}
-      </section>
-    </div>
-  );
+function formatBytes(size: number): string {
+  if (size === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const exponent = Math.floor(Math.log(size) / Math.log(1024));
+  const value = size / Math.pow(1024, exponent);
+  return `${value.toFixed(1)} ${units[exponent]}`;
 }
 
 export default AdminCaseOverviewPage;

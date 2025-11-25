@@ -276,7 +276,11 @@ def main() -> None:
     for out_name, files in category_files.items():
         if not files:
             continue  # skip empty categories
-        out_path = OUTPUT_DIR / out_name
+
+        # Ajout du préfixe "orgo_" au nom de chaque fichier généré
+        out_filename = f"orgo_{out_name}" if not out_name.startswith("orgo_") else out_name
+        out_path = OUTPUT_DIR / out_filename
+
         print(f"Writing {out_path} ({len(files)} files)...")
         write_dump_file(out_path, files)
 

@@ -1,14 +1,30 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+// apps/api/src/orgo/core/tasks/task.controller.ts
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { Request } from 'express';
+
 import { TaskService } from './task.service';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 
 /**
- * Canonical Task enums (DB-level tokens).
+ * Canonical Task enums (DB / Core-service level).
+ * JSON contracts may use lower-case; service accepts both and normalizes.
  */
 export type TaskStatus =
   | 'PENDING'
@@ -23,14 +39,13 @@ export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
 export type TaskSeverity = 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL';
 
-export type TaskVisibility =
-  | 'PUBLIC'
-  | 'INTERNAL'
-  | 'RESTRICTED'
-  | 'ANONYMISED';
+export type TaskVisibility = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
 
 export type TaskSource = 'email' | 'api' | 'manual' | 'sync';
 
+/**
+ * Task category codes (Doc 5 – Task logical view).
+ */
 export type TaskCategory =
   | 'request'
   | 'incident'
@@ -39,7 +54,7 @@ export type TaskCategory =
   | 'distribution';
 
 /**
- * JSON-facing variants (allowing lower-case tokens as per docs).
+ * JSON-level variants for canonical enums (upper + lower-case tokens).
  */
 export type TaskStatusJson = TaskStatus | Lowercase<TaskStatus>;
 export type TaskPriorityJson = TaskPriority | Lowercase<TaskPriority>;
@@ -138,27 +153,27 @@ export class ListTasksQueryDto {
   type?: string;
 
   /**
-   * Filter by current assignee routing role (e.g. "Ops.Maintenance").
+   * Denormalised routing role label, aligned with label system (e.g. "Ops.Maintenance").
    */
   assignee_role?: string;
 
   /**
-   * Filter by severity (MINOR/MODERATE/MAJOR/CRITICAL or lower-case JSON form).
+   * Severity filter using JSON-level tokens (minor/moderate/major/critical).
    */
   severity?: TaskSeverityJson;
 
   /**
-   * Filter by visibility (PUBLIC/INTERNAL/RESTRICTED/ANONYMISED or lower-case JSON form).
+   * Visibility filter using JSON-level tokens (public/internal/restricted/anonymised).
    */
   visibility?: TaskVisibilityJson;
 
   /**
-   * Optional priority filter (LOW/MEDIUM/HIGH/CRITICAL or lower-case JSON form).
+   * Priority filter using JSON-level tokens (low/medium/high/critical).
    */
   priority?: TaskPriorityJson;
 
   /**
-   * 1-based page index for pagination.
+   * Page number for pagination (1-based).
    */
   page?: number;
 
@@ -201,9 +216,10 @@ export class CreateTaskRequestDto {
  * TaskController – Public API interface for Tasks.
  *
  * Routes (locked by functional inventory):
- *  - GET  /api/v3/tasks        → listTasks
- *  - GET  /api/v3/tasks/:id    → getTask
- *  - POST /api/v3/tasks        → createTask
+ *  - GET    /api/v3/tasks           → listTasks
+ *  - GET    /api/v3/tasks/:id       → getTask
+ *  - POST   /api/v3/tasks           → createTask
+ *  - PATCH  /api/v3/tasks/:id/status → updateTaskStatus
  */
 @ApiTags('tasks')
 @Controller('api/v3/tasks')
@@ -223,7 +239,9 @@ export class TaskController {
   async listTasks(
     @Query() query: ListTasksQueryDto,
   ): Promise<OrgoResult<TaskDto[]>> {
-    return this.taskService.listTasks(query);
+    // Existing behaviour: delegate directly to TaskService.
+    // Service is responsible for mapping query → internal filters and JSON DTOs.
+    return this.taskService.listTasks(query as any);
   }
 
   @Get(':id')
@@ -237,7 +255,7 @@ export class TaskController {
     type: Object,
   })
   async getTask(@Param('id') taskId: string): Promise<OrgoResult<TaskDto>> {
-    return this.taskService.getTask(taskId);
+    return this.taskService.getTask(taskId as any);
   }
 
   @Post()
@@ -253,6 +271,70 @@ export class TaskController {
   async createTask(
     @Body() body: CreateTaskRequestDto,
   ): Promise<OrgoResult<TaskDto>> {
-    return this.taskService.createTask(body);
+    return this.taskService.createTask(body as any);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({
+    summary: 'Update Task status',
+    description:
+      'Updates the status of a Task using the canonical TASK_STATUS enum and enforces lifecycle rules and tenant isolation.',
+  })
+  @ApiOkResponse({
+    description: 'Updated Task wrapped in the standard ok/data/error envelope.',
+    type: Object,
+  })
+  async updateTaskStatus(
+    @Param('id') taskId: string,
+    @Body() body: UpdateTaskStatusDto,
+    @Req() req: Request,
+  ): Promise<OrgoResult<TaskDto>> {
+    const organizationId = this.getOrganizationIdFromRequest(req);
+
+    // Derive actorUserId from auth context when available.
+    const userFromReq = (req as any).user as { userId?: string } | undefined;
+    const actorUserId =
+      (req as any).userId ??
+      (userFromReq && typeof userFromReq.userId === 'string'
+        ? userFromReq.userId
+        : undefined);
+
+    return this.taskService.updateTaskStatus({
+      organizationId,
+      taskId,
+      newStatus: body.status,
+      reason: body.reason,
+      actorUserId,
+    } as any);
+  }
+
+  /**
+   * Resolve the current organization identifier from the request.
+   *
+   * Priority:
+   *  - request.user.organizationId (AuthGuard / JWT context)
+   *  - request.organizationId (legacy context)
+   *  - X-Org-Id / X-Organization-Id headers
+   */
+  private getOrganizationIdFromRequest(req: Request): string {
+    const user = (req as any).user as { organizationId?: string } | undefined;
+    const orgFromUser = user?.organizationId;
+
+    const orgFromReq = (req as any).organizationId as string | undefined;
+
+    const headerRaw =
+      (req.headers['x-org-id'] as string | undefined) ||
+      (req.headers['x-organization-id'] as string | undefined);
+    const orgFromHeader = headerRaw?.trim() || undefined;
+
+    const organizationId = orgFromUser ?? orgFromReq ?? orgFromHeader;
+
+    if (!organizationId) {
+      throw new BadRequestException(
+        'Missing organization identifier (expected auth context or X-Org-Id / X-Organization-Id header).',
+      );
+    }
+
+    return organizationId;
   }
 }

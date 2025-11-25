@@ -1,4 +1,6 @@
-import { useMemo, useState, ChangeEvent } from "react";
+// apps/web/src/screens/admin/tasks/AdminTaskOverviewPage.tsx
+
+import { useMemo, useState, useEffect, ChangeEvent } from "react";
 import { useAdminTaskOverviewQuery } from "../../../store/services/orgoApi";
 
 type TaskStatus =
@@ -21,6 +23,9 @@ type FilterPriorityOption = TaskPriority | "ALL";
 type FilterSeverityOption = TaskSeverity | "ALL";
 type FilterCategoryOption = TaskCategory | "ALL";
 
+type SortField = "created_at" | "reactivity_deadline_at" | "priority";
+type SortDirection = "asc" | "desc";
+
 interface AdminTaskOverviewFilters {
   status: FilterStatusOption;
   priority: FilterPriorityOption;
@@ -28,9 +33,13 @@ interface AdminTaskOverviewFilters {
   category: FilterCategoryOption;
   type: string; // domain type, e.g. "maintenance", "hr_case"
   role: string; // assignee/owner role label
-  labelSearch: string; // free‑text search over label/title
+  labelSearch: string; // free-text search over label/title
 }
 
+/**
+ * Canonical lightweight task shape for the admin overview table.
+ * This mirrors the /api/v3/tasks admin listing payload.
+ */
 interface AdminTaskOverviewTask {
   task_id: string;
   organization_id: string;
@@ -100,6 +109,13 @@ const CATEGORY_OPTIONS: FilterCategoryOption[] = [
   "report",
   "distribution",
 ];
+
+const PRIORITY_RANK: Record<TaskPriority, number> = {
+  LOW: 0,
+  MEDIUM: 1,
+  HIGH: 2,
+  CRITICAL: 3,
+};
 
 function getStatusBadgeClasses(status: TaskStatus): string {
   switch (status) {
@@ -176,6 +192,40 @@ function truncateLabel(label: string, max = 40): string {
   return `${label.slice(0, max - 1)}…`;
 }
 
+/**
+ * Small generic debounce hook so the backend is not hammered
+ * while the user types in free-text filters.
+ */
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebounced(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handle);
+    };
+  }, [value, delay]);
+
+  return debounced;
+}
+
+function getNextSort(
+  currentField: SortField,
+  currentDirection: SortDirection,
+  clickedField: SortField,
+): { field: SortField; direction: SortDirection } {
+  if (currentField !== clickedField) {
+    return { field: clickedField, direction: "desc" };
+  }
+  return {
+    field: clickedField,
+    direction: currentDirection === "desc" ? "asc" : "desc",
+  };
+}
+
 const AdminTaskOverviewPage = () => {
   const [filters, setFilters] = useState<AdminTaskOverviewFilters>({
     status: "ALL",
@@ -188,6 +238,15 @@ const AdminTaskOverviewPage = () => {
   });
 
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<{ field: SortField; direction: SortDirection }>({
+    field: "created_at",
+    direction: "desc",
+  });
+
+  // Debounce text-based filters only
+  const debouncedType = useDebouncedValue(filters.type, 300);
+  const debouncedRole = useDebouncedValue(filters.role, 300);
+  const debouncedLabelSearch = useDebouncedValue(filters.labelSearch, 300);
 
   const queryArgs: AdminTaskOverviewQueryArgs = useMemo(() => {
     const args: AdminTaskOverviewQueryArgs = {
@@ -211,30 +270,35 @@ const AdminTaskOverviewPage = () => {
       args.category = filters.category;
     }
 
-    if (filters.type.trim()) {
-      args.type = filters.type.trim();
+    if (debouncedType.trim()) {
+      args.type = debouncedType.trim();
     }
 
-    if (filters.role.trim()) {
-      args.role = filters.role.trim();
+    if (debouncedRole.trim()) {
+      args.role = debouncedRole.trim();
     }
 
-    if (filters.labelSearch.trim()) {
-      args.labelSearch = filters.labelSearch.trim();
+    if (debouncedLabelSearch.trim()) {
+      args.labelSearch = debouncedLabelSearch.trim();
     }
 
     return args;
-  }, [filters, page]);
+  }, [
+    page,
+    filters.status,
+    filters.priority,
+    filters.severity,
+    filters.category,
+    debouncedType,
+    debouncedRole,
+    debouncedLabelSearch,
+  ]);
 
   // Cast to the expected response type for local usage; the orgoApi slice
   // should be implemented so that this cast matches the real response.
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-    isFetching,
-  } = useAdminTaskOverviewQuery(queryArgs) as {
+  const { data, isLoading, isError, refetch, isFetching } = useAdminTaskOverviewQuery(
+    queryArgs,
+  ) as {
     data?: AdminTaskOverviewResponse;
     isLoading: boolean;
     isError: boolean;
@@ -246,6 +310,39 @@ const AdminTaskOverviewPage = () => {
   const total = data?.total ?? 0;
   const pageSize = data?.pageSize ?? DEFAULT_PAGE_SIZE;
   const totalPages = total > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+
+  const sortedTasks = useMemo(() => {
+    if (!tasks.length) return [];
+
+    const copy = [...tasks];
+
+    copy.sort((a, b) => {
+      let aValue: number;
+      let bValue: number;
+
+      if (sort.field === "priority") {
+        aValue = PRIORITY_RANK[a.priority];
+        bValue = PRIORITY_RANK[b.priority];
+      } else {
+        const aDate = a[sort.field];
+        const bDate = b[sort.field];
+
+        const aTime = aDate ? new Date(aDate).getTime() : 0;
+        const bTime = bDate ? new Date(bDate).getTime() : 0;
+
+        aValue = Number.isNaN(aTime) ? 0 : aTime;
+        bValue = Number.isNaN(bTime) ? 0 : bTime;
+      }
+
+      if (aValue === bValue) return 0;
+      if (sort.direction === "desc") {
+        return aValue > bValue ? -1 : 1;
+      }
+      return aValue < bValue ? -1 : 1;
+    });
+
+    return copy;
+  }, [tasks, sort.field, sort.direction]);
 
   const { openCount, overdueCount } = useMemo(() => {
     let open = 0;
@@ -283,8 +380,49 @@ const AdminTaskOverviewPage = () => {
       }));
     };
 
+  const handleClearFilters = () => {
+    setFilters({
+      status: "ALL",
+      priority: "ALL",
+      severity: "ALL",
+      category: "ALL",
+      type: "",
+      role: "",
+      labelSearch: "",
+    });
+    setPage(1);
+  };
+
+  const handleSortClick = (field: SortField) => {
+    setSort((current) => getNextSort(current.field, current.direction, field));
+  };
+
   const canGoPrev = page > 1;
   const canGoNext = page < totalPages;
+
+  const hasActiveFilters =
+    filters.status !== "ALL" ||
+    filters.priority !== "ALL" ||
+    filters.severity !== "ALL" ||
+    filters.category !== "ALL" ||
+    Boolean(filters.type.trim()) ||
+    Boolean(filters.role.trim()) ||
+    Boolean(filters.labelSearch.trim());
+
+  const renderSortIndicator = (field: SortField) => {
+    if (sort.field !== field) {
+      return (
+        <span className="ml-1 text-xs text-gray-400" aria-hidden="true">
+          ↕
+        </span>
+      );
+    }
+    return (
+      <span className="ml-1 text-xs text-gray-600" aria-hidden="true">
+        {sort.direction === "desc" ? "↓" : "↑"}
+      </span>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
@@ -296,13 +434,24 @@ const AdminTaskOverviewPage = () => {
             severity.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-        >
-          {isFetching ? "Refreshing…" : "Refresh"}
-        </button>
+        <div className="flex items-center gap-2">
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
+            >
+              Clear filters
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+          >
+            {isFetching ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
       </div>
 
       <div className="mb-4 grid gap-3 md:grid-cols-3 lg:grid-cols-6">
@@ -404,7 +553,15 @@ const AdminTaskOverviewPage = () => {
             placeholder="role or label fragment"
             className="block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             value={filters.labelSearch}
-            onChange={handleInputChange("labelSearch")}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+              const value = event.target.value;
+              setPage(1);
+              setFilters((prev) => ({
+                ...prev,
+                role: value,
+                labelSearch: value,
+              }));
+            }}
           />
         </div>
       </div>
@@ -434,14 +591,41 @@ const AdminTaskOverviewPage = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 font-medium text-gray-700">Status</th>
-              <th className="px-4 py-3 font-medium text-gray-700">Priority</th>
+              <th className="px-4 py-3 font-medium text-gray-700" scope="col">
+                <button
+                  type="button"
+                  className="inline-flex items-center"
+                  onClick={() => handleSortClick("priority")}
+                >
+                  Priority
+                  {renderSortIndicator("priority")}
+                </button>
+              </th>
               <th className="px-4 py-3 font-medium text-gray-700">Severity</th>
               <th className="px-4 py-3 font-medium text-gray-700">Title</th>
               <th className="px-4 py-3 font-medium text-gray-700">Type / Category</th>
               <th className="px-4 py-3 font-medium text-gray-700">Label</th>
               <th className="px-4 py-3 font-medium text-gray-700">Assignee role</th>
-              <th className="px-4 py-3 font-medium text-gray-700">React. deadline</th>
-              <th className="px-4 py-3 font-medium text-gray-700">Created</th>
+              <th className="px-4 py-3 font-medium text-gray-700" scope="col">
+                <button
+                  type="button"
+                  className="inline-flex items-center"
+                  onClick={() => handleSortClick("reactivity_deadline_at")}
+                >
+                  React. deadline
+                  {renderSortIndicator("reactivity_deadline_at")}
+                </button>
+              </th>
+              <th className="px-4 py-3 font-medium text-gray-700" scope="col">
+                <button
+                  type="button"
+                  className="inline-flex items-center"
+                  onClick={() => handleSortClick("created_at")}
+                >
+                  Created
+                  {renderSortIndicator("created_at")}
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
@@ -451,21 +635,21 @@ const AdminTaskOverviewPage = () => {
                   Loading tasks…
                 </td>
               </tr>
-            ) : tasks.length === 0 ? (
+            ) : sortedTasks.length === 0 ? (
               <tr>
                 <td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={9}>
                   No tasks match the current filters.
                 </td>
               </tr>
             ) : (
-              tasks.map((task) => {
+              sortedTasks.map((task) => {
                 const overdue = isOverdue(task);
                 return (
                   <tr key={task.task_id} className={overdue ? "bg-red-50" : undefined}>
                     <td className="whitespace-nowrap px-4 py-3">
                       <span
                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadgeClasses(
-                          task.status
+                          task.status,
                         )}`}
                       >
                         {task.status.replace("_", " ")}
@@ -474,7 +658,7 @@ const AdminTaskOverviewPage = () => {
                     <td className="whitespace-nowrap px-4 py-3">
                       <span
                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getPriorityBadgeClasses(
-                          task.priority
+                          task.priority,
                         )}`}
                       >
                         {task.priority}
@@ -483,7 +667,7 @@ const AdminTaskOverviewPage = () => {
                     <td className="whitespace-nowrap px-4 py-3">
                       <span
                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getSeverityBadgeClasses(
-                          task.severity
+                          task.severity,
                         )}`}
                       >
                         {task.severity}
@@ -537,8 +721,7 @@ const AdminTaskOverviewPage = () => {
           </span>
           {total > 0 && (
             <span className="ml-2 text-gray-500">
-              • Showing {(page - 1) * pageSize + 1}–
-              {Math.min(page * pageSize, total)} of {total}
+              • Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
             </span>
           )}
         </div>

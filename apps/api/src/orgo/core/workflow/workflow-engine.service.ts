@@ -1,19 +1,35 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+// apps/api/src/orgo/core/workflow/workflow-engine.service.ts
+
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 
+import { LogCategory, LogLevel, LogService } from '../logging/log.service';
+import {
+  FN_WORKFLOW_EXECUTE,
+  FN_WORKFLOW_SIMULATE,
+  FN_WORKFLOW_VALIDATE_RULES,
+} from '../functional-ids';
+import { FeatureFlagService } from '../../config/feature-flag.service';
+
 const fsPromises = fs.promises;
 
-const TASK_CATEGORIES = ['request', 'incident', 'update', 'report', 'distribution'] as const;
+const TASK_CATEGORIES = [
+  'request',
+  'incident',
+  'update',
+  'report',
+  'distribution',
+] as const;
 type TaskCategory = (typeof TASK_CATEGORIES)[number];
 
 const TASK_SEVERITIES = ['MINOR', 'MODERATE', 'MAJOR', 'CRITICAL'] as const;
 type TaskSeverity = (typeof TASK_SEVERITIES)[number];
 
 const WORKFLOW_EVENT_SOURCES = ['EMAIL', 'API', 'SYSTEM', 'TIMER'] as const;
-type WorkflowEventSource = (typeof WORKFLOW_EVENT_SOURCES)[number];
+export type WorkflowEventSource = (typeof WORKFLOW_EVENT_SOURCES)[number];
 
 const WORKFLOW_ACTION_TYPES = [
   'CREATE_TASK',
@@ -25,6 +41,30 @@ const WORKFLOW_ACTION_TYPES = [
   'NOTIFY',
 ] as const;
 type WorkflowActionType = (typeof WORKFLOW_ACTION_TYPES)[number];
+
+export type WorkflowExecutionMode = 'execute' | 'simulate';
+
+/**
+ * Public execute context used by the WorkflowController.
+ * The controller's DTO is structurally compatible with this interface.
+ *
+ * This is intentionally minimal; domain-specific context lives under `context`.
+ */
+export interface WorkflowExecuteContext {
+  workflowId: string;
+  organizationId: string;
+  source: WorkflowEventSource;
+  /**
+   * Arbitrary domain context (task/case/signal/email, hints, etc.).
+   * The engine will derive a canonical WorkflowContext from this.
+   */
+  context?: Record<string, unknown>;
+  /**
+   * Optional hint; when true callers should prefer `simulate()`.
+   * Kept for structural compatibility with controller DTOs.
+   */
+  dryRun?: boolean;
+}
 
 export interface WorkflowMatchCriteria {
   source?: WorkflowEventSource;
@@ -95,6 +135,10 @@ export interface WorkflowRule {
   sourceFile?: string;
 }
 
+/**
+ * Canonical, flattened view of a workflow context used for rule matching.
+ * This is derived from Signals, Tasks/Cases, Emails or generic API payloads.
+ */
 export interface WorkflowContext {
   organizationId: string;
   /**
@@ -161,10 +205,50 @@ export interface ResolvedWorkflowAction {
   action: WorkflowAction;
 }
 
+/**
+ * Metadata describing how a particular workflow evaluation was performed.
+ * This is optional and can be safely ignored by existing callers.
+ */
+export interface WorkflowExecutionMetadata {
+  /**
+   * Optional workflow identifier from the caller (WorkflowExecuteContext.workflowId).
+   */
+  workflowId?: string;
+  /**
+   * execute | simulate
+   */
+  mode?: WorkflowExecutionMode;
+  /**
+   * When the ruleset was loaded (approximate "ruleset version").
+   */
+  rulesLoadedAt?: string;
+  /**
+   * Whether the workflow feature flag was enabled for this org (if evaluated).
+   */
+  featureFlagEnabled?: boolean;
+  /**
+   * Evaluation duration in milliseconds.
+   */
+  durationMs?: number;
+  /**
+   * Number of rules currently loaded and how many matched this context.
+   */
+  totalRuleCount?: number;
+  matchedRuleCount?: number;
+  /**
+   * Number of actions emitted.
+   */
+  actionCount?: number;
+}
+
 export interface WorkflowExecutionResultData {
   context: WorkflowContext;
   matchedRules: WorkflowRule[];
   actions: ResolvedWorkflowAction[];
+  /**
+   * Optional execution metadata for observability and API clients.
+   */
+  metadata?: WorkflowExecutionMetadata;
 }
 
 export interface WorkflowRuleValidationError {
@@ -183,6 +267,9 @@ export interface WorkflowEngineError {
   details?: Record<string, unknown>;
 }
 
+/**
+ * Standard result shape (ok / data / error), aligned with Doc 5 §2.4.
+ */
 export interface WorkflowEngineResult<T> {
   ok: boolean;
   data: T | null;
@@ -190,7 +277,7 @@ export interface WorkflowEngineResult<T> {
 }
 
 /**
- * WorkflowEngineService
+ * WorkflowEngineService (workflow_engine)
  *
  * Core service that:
  * - Loads workflow rule definitions from the filesystem.
@@ -198,7 +285,7 @@ export interface WorkflowEngineResult<T> {
  * - Evaluates rules against a WorkflowContext and emits an ordered list of actions.
  *
  * Side effects (creating tasks, routing, notifications, etc.) are performed by callers
- * using the returned actions; this service is intentionally pure in that sense.
+ * using the returned actions; this service is intentionally pure and idempotent.
  */
 @Injectable()
 export class WorkflowEngineService implements OnModuleInit {
@@ -208,13 +295,26 @@ export class WorkflowEngineService implements OnModuleInit {
   private rules: WorkflowRule[] = [];
   private loadedAt: Date | null = null;
 
-  constructor(private readonly configService: ConfigService) {
+  private static readonly WORKFLOW_FLAG_CODE = 'orgo.workflow.new_router';
+
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly logService: LogService,
+    @Optional()
+    private readonly featureFlagService?: FeatureFlagService,
+  ) {
     // Allow override via env; default to ../../config/workflows relative to apps/api
     const envDir =
       this.configService.get<string>('WORKFLOW_RULES_DIR') ??
       this.configService.get<string>('ORGO_WORKFLOW_RULES_DIR');
 
-    const defaultDir = path.resolve(process.cwd(), '..', '..', 'config', 'workflows');
+    const defaultDir = path.resolve(
+      process.cwd(),
+      '..',
+      '..',
+      'config',
+      'workflows',
+    );
 
     this.rulesDirectory = envDir || defaultDir;
   }
@@ -264,11 +364,147 @@ export class WorkflowEngineService implements OnModuleInit {
   }
 
   /**
-   * Execute workflow rules for a given context and return the resolved actions.
+   * Public execution entrypoint for legacy callers (signals, email router, etc.)
+   * that already build a canonical WorkflowContext.
    */
   async executeWorkflow(
     context: WorkflowContext,
+  ): Promise<WorkflowEngineResult<WorkflowExecutionResultData>>;
+
+  /**
+   * Public execution entrypoint for API/controller callers that send a
+   * WorkflowExecuteContext (Doc 5 §6.4).
+   */
+  async executeWorkflow(
+    executeContext: WorkflowExecuteContext,
+  ): Promise<WorkflowEngineResult<WorkflowExecutionResultData>>;
+
+  async executeWorkflow(
+    input: WorkflowContext | WorkflowExecuteContext,
   ): Promise<WorkflowEngineResult<WorkflowExecutionResultData>> {
+    const isExecuteContext = this.isExecuteContext(input);
+    const workflowId = isExecuteContext ? input.workflowId : undefined;
+    const context = this.toWorkflowContext(input);
+
+    return this.evaluateRules(context, {
+      mode: 'execute',
+      workflowId,
+      rawContext: isExecuteContext ? input.context ?? {} : undefined,
+    });
+  }
+
+  /**
+   * Simulation / dry-run entrypoint (Doc 5 §6.3).
+   *
+   * This uses the same rule evaluation semantics as executeWorkflow but is
+   * explicitly marked as mode="simulate" in the result metadata and logs.
+   * No side effects are performed by this service; callers must ensure they
+   * do not apply downstream actions in a simulation.
+   */
+  async simulate(
+    executeContext: WorkflowExecuteContext,
+  ): Promise<WorkflowEngineResult<WorkflowExecutionResultData>> {
+    const context = this.toWorkflowContext(executeContext);
+
+    return this.evaluateRules(context, {
+      mode: 'simulate',
+      workflowId: executeContext.workflowId,
+      rawContext: executeContext.context ?? {},
+    });
+  }
+
+  /**
+   * Validate currently loaded rules and return structured errors.
+   * Does not reload from disk by itself.
+   */
+  async validateWorkflowRules(): Promise<
+    WorkflowEngineResult<{
+      valid: boolean;
+      ruleErrors: WorkflowRuleValidationError[];
+    }>
+  > {
+    try {
+      if (!this.loadedAt) {
+        await this.reloadRules();
+      }
+
+      const validation = this.internalValidateRules(this.rules);
+
+      await this.logWorkflowEvent(
+        LogLevel.INFO,
+        FN_WORKFLOW_VALIDATE_RULES,
+        'Workflow rule validation completed',
+        {
+          ruleCount: this.rules.length,
+          errorCount: validation.ruleErrors.length,
+          valid: validation.valid,
+        },
+      );
+
+      return {
+        ok: true,
+        data: validation,
+        error: null,
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `Workflow rule validation failed: ${error?.message ?? error}`,
+        error?.stack,
+      );
+
+      await this.logWorkflowEvent(
+        LogLevel.ERROR,
+        FN_WORKFLOW_VALIDATE_RULES,
+        'Workflow rule validation failed',
+        {
+          error:
+            error instanceof Error
+              ? { name: error.name, message: error.message }
+              : String(error),
+        },
+      );
+
+      return {
+        ok: false,
+        data: null,
+        error: {
+          code: 'WORKFLOW_VALIDATION_ERROR',
+          message: 'Workflow rule validation failed',
+          details: {
+            error: String(error?.message ?? error),
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Alias matching Doc 5 notation; kept thin over validateWorkflowRules.
+   */
+  async validateWorkflow(): Promise<
+    WorkflowEngineResult<{
+      valid: boolean;
+      ruleErrors: WorkflowRuleValidationError[];
+    }>
+  > {
+    return this.validateWorkflowRules();
+  }
+
+  /**
+   * Core evaluation routine shared by executeWorkflow and simulate.
+   * This is a pure rules engine: it does not perform side effects.
+   */
+  private async evaluateRules(
+    context: WorkflowContext,
+    options: {
+      mode: WorkflowExecutionMode;
+      workflowId?: string;
+      rawContext?: Record<string, unknown>;
+    },
+  ): Promise<WorkflowEngineResult<WorkflowExecutionResultData>> {
+    const startedAt = Date.now();
+    const { mode, workflowId } = options;
+
     try {
       if (!this.loadedAt) {
         await this.reloadRules();
@@ -297,10 +533,47 @@ export class WorkflowEngineService implements OnModuleInit {
         });
       }
 
-      this.logger.debug(
-        `Workflow executed for org=${context.organizationId}, source=${context.source}. ` +
-          `Matched ${matchedRules.length} rule(s), produced ${resolvedActions.length} action(s).`,
+      const durationMs = Date.now() - startedAt;
+      const featureFlagEnabled = await this.isWorkflowFlagEnabled(
+        context.organizationId,
       );
+
+      this.logger.debug(
+        `Workflow ${mode} for org=${context.organizationId}, source=${
+          context.source
+        }` +
+          ` matched ${matchedRules.length} rule(s), produced ${
+            resolvedActions.length
+          } action(s) in ${durationMs}ms.`,
+      );
+
+      await this.logWorkflowEvent(
+        LogLevel.INFO,
+        mode === 'simulate' ? FN_WORKFLOW_SIMULATE : FN_WORKFLOW_EXECUTE,
+        mode === 'simulate'
+          ? 'Workflow simulation completed'
+          : 'Workflow execution completed',
+        {
+          workflowId: workflowId ?? null,
+          organizationId: context.organizationId,
+          source: context.source,
+          matchedRuleCount: matchedRules.length,
+          actionCount: resolvedActions.length,
+          durationMs,
+          featureFlagEnabled,
+        },
+      );
+
+      const metadata: WorkflowExecutionMetadata = {
+        workflowId,
+        mode,
+        rulesLoadedAt: this.loadedAt?.toISOString(),
+        featureFlagEnabled,
+        durationMs,
+        totalRuleCount: this.rules.length,
+        matchedRuleCount: matchedRules.length,
+        actionCount: resolvedActions.length,
+      };
 
       return {
         ok: true,
@@ -308,64 +581,47 @@ export class WorkflowEngineService implements OnModuleInit {
           context,
           matchedRules,
           actions: resolvedActions,
+          metadata,
         },
         error: null,
       };
     } catch (error: any) {
       this.logger.error(
-        `Workflow execution failed: ${error?.message ?? error}`,
+        `Workflow ${mode} failed: ${error?.message ?? error}`,
         error?.stack,
+      );
+
+      await this.logWorkflowEvent(
+        LogLevel.ERROR,
+        mode === 'simulate' ? FN_WORKFLOW_SIMULATE : FN_WORKFLOW_EXECUTE,
+        mode === 'simulate'
+          ? 'Workflow simulation failed'
+          : 'Workflow execution failed',
+        {
+          workflowId: workflowId ?? null,
+          organizationId: context.organizationId,
+          source: context.source,
+          error:
+            error instanceof Error
+              ? { name: error.name, message: error.message }
+              : String(error),
+        },
       );
 
       return {
         ok: false,
         data: null,
         error: {
-          code: 'WORKFLOW_EXECUTION_ERROR',
-          message: 'Workflow execution failed',
+          code:
+            mode === 'simulate'
+              ? 'WORKFLOW_SIMULATION_ERROR'
+              : 'WORKFLOW_EXECUTION_ERROR',
+          message:
+            mode === 'simulate'
+              ? 'Workflow simulation failed'
+              : 'Workflow execution failed',
           details: {
-            error: String(error?.message ?? error),
-          },
-        },
-      };
-    }
-  }
-
-  /**
-   * Validate currently loaded rules and return structured errors.
-   * Does not reload from disk by itself.
-   */
-  async validateWorkflowRules(): Promise<
-    WorkflowEngineResult<{
-      valid: boolean;
-      ruleErrors: WorkflowRuleValidationError[];
-    }>
-  > {
-    try {
-      if (!this.loadedAt) {
-        await this.reloadRules();
-      }
-
-      const validation = this.internalValidateRules(this.rules);
-
-      return {
-        ok: true,
-        data: validation,
-        error: null,
-      };
-    } catch (error: any) {
-      this.logger.error(
-        `Workflow rule validation failed: ${error?.message ?? error}`,
-        error?.stack,
-      );
-
-      return {
-        ok: false,
-        data: null,
-        error: {
-          code: 'WORKFLOW_VALIDATION_ERROR',
-          message: 'Workflow rule validation failed',
-          details: {
+            workflowId: workflowId ?? null,
             error: String(error?.message ?? error),
           },
         },
@@ -468,8 +724,7 @@ export class WorkflowEngineService implements OnModuleInit {
     const description =
       typeof raw.description === 'string' ? raw.description.trim() : undefined;
 
-    const enabled =
-      typeof raw.enabled === 'boolean' ? raw.enabled : true;
+    const enabled = typeof raw.enabled === 'boolean' ? raw.enabled : true;
 
     const rawMatch = (raw.match ?? {}) as Record<string, unknown>;
     const match = this.normaliseMatchCriteria(rawMatch);
@@ -790,7 +1045,10 @@ export class WorkflowEngineService implements OnModuleInit {
         });
       }
 
-      if (rule.match.source && !WORKFLOW_EVENT_SOURCES.includes(rule.match.source)) {
+      if (
+        rule.match.source &&
+        !WORKFLOW_EVENT_SOURCES.includes(rule.match.source)
+      ) {
         errors.push({
           ruleId: rule.id,
           sourceFile: rule.sourceFile,
@@ -816,7 +1074,8 @@ export class WorkflowEngineService implements OnModuleInit {
             errors.push({
               ruleId: rule.id,
               sourceFile: rule.sourceFile,
-              message: 'CREATE_TASK action must have a non-empty "set" object',
+              message:
+                'CREATE_TASK action must have a non-empty "set" object',
               path: `actions[${index}].set`,
             });
           }
@@ -854,5 +1113,185 @@ export class WorkflowEngineService implements OnModuleInit {
       valid: errors.length === 0,
       ruleErrors: errors,
     };
+  }
+
+  /**
+   * Detect whether the input is a WorkflowExecuteContext (controller-style) or
+   * a canonical WorkflowContext (internal callers).
+   */
+  private isExecuteContext(
+    input: WorkflowContext | WorkflowExecuteContext,
+  ): input is WorkflowExecuteContext {
+    return (input as WorkflowExecuteContext).workflowId !== undefined;
+  }
+
+  /**
+   * Convert either a WorkflowContext (pass-through) or a WorkflowExecuteContext
+   * (controller DTO) into a canonical WorkflowContext for rule evaluation.
+   *
+   * This performs best-effort extraction of type/category/severity/label/title
+   * from the nested context, following the Case/Task/Signal schemas in Docs 1–3.
+   */
+  private toWorkflowContext(
+    input: WorkflowContext | WorkflowExecuteContext,
+  ): WorkflowContext {
+    if (!this.isExecuteContext(input)) {
+      // Already a canonical WorkflowContext (used by SignalIngestService, EmailRouter, etc.).
+      return input;
+    }
+
+    const exec = input;
+    const context: WorkflowContext = {
+      organizationId: exec.organizationId,
+      source: exec.source,
+    };
+
+    const raw = exec.context ?? {};
+    if (raw && typeof raw === 'object') {
+      const anyCtx = raw as Record<string, any>;
+
+      const primaryCandidate =
+        (anyCtx.task && typeof anyCtx.task === 'object'
+          ? (anyCtx.task as Record<string, any>)
+          : null) ??
+        (anyCtx.case && typeof anyCtx.case === 'object'
+          ? (anyCtx.case as Record<string, any>)
+          : null) ??
+        (anyCtx.signal && typeof anyCtx.signal === 'object'
+          ? (anyCtx.signal as Record<string, any>)
+          : null) ??
+        null;
+
+      const from = (obj: Record<string, any> | null, key: string): string | undefined => {
+        if (!obj) {
+          return undefined;
+        }
+        const value = obj[key];
+        if (value == null) {
+          return undefined;
+        }
+        const asString =
+          typeof value === 'string' || typeof value === 'number'
+            ? String(value)
+            : undefined;
+        return asString && asString.trim().length > 0 ? asString : undefined;
+      };
+
+      const fromCtx = (key: string): string | undefined =>
+        from(anyCtx, key) ?? undefined;
+
+      context.type =
+        fromCtx('type') ?? from(primaryCandidate, 'type') ?? context.type;
+
+      context.category =
+        fromCtx('category') ??
+        from(primaryCandidate, 'category') ??
+        context.category;
+
+      context.severity =
+        fromCtx('severity') ??
+        from(primaryCandidate, 'severity') ??
+        context.severity;
+
+      context.label =
+        fromCtx('label') ?? from(primaryCandidate, 'label') ?? context.label;
+
+      context.title =
+        fromCtx('title') ?? from(primaryCandidate, 'title') ?? context.title;
+
+      context.description =
+        fromCtx('description') ??
+        from(primaryCandidate, 'description') ??
+        context.description;
+
+      // Email-specific hints
+      context.emailSubject =
+        fromCtx('emailSubject') ??
+        fromCtx('subject') ??
+        from(primaryCandidate, 'subject') ??
+        context.emailSubject;
+
+      context.emailTextBody =
+        fromCtx('emailTextBody') ??
+        fromCtx('textBody') ??
+        fromCtx('body') ??
+        context.emailTextBody;
+
+      const metadataRaw =
+        anyCtx.metadata && typeof anyCtx.metadata === 'object'
+          ? (anyCtx.metadata as Record<string, unknown>)
+          : undefined;
+
+      context.metadata = metadataRaw;
+      context.payload = {
+        ...(anyCtx as Record<string, unknown>),
+      };
+    }
+
+    return context;
+  }
+
+  /**
+   * Evaluate the workflow feature flag for the given organization, if
+   * FeatureFlagService is available. Fail-open to `true` on errors.
+   */
+  private async isWorkflowFlagEnabled(organizationId: string): Promise<boolean> {
+    if (!this.featureFlagService) {
+      // If feature flags are not wired, keep engine enabled.
+      return true;
+    }
+
+    try {
+      return await this.featureFlagService.isFeatureEnabled(
+        WorkflowEngineService.WORKFLOW_FLAG_CODE,
+        {
+          organizationId,
+          context: {
+            service: 'workflow_engine',
+          },
+        },
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Feature flag evaluation failed for org=${organizationId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      // Fail-open: do not block workflows because of feature flag issues.
+      return true;
+    }
+  }
+
+  /**
+   * Safe wrapper around LogService.logEvent to avoid cascading failures.
+   */
+  private async logWorkflowEvent(
+    level: LogLevel,
+    functionId: string,
+    message: string,
+    metadata: Record<string, unknown>,
+  ): Promise<void> {
+    if (!this.logService) {
+      return;
+    }
+
+    try {
+      await this.logService.logEvent({
+        category: LogCategory.WORKFLOW,
+        level,
+        message,
+        identifier: functionId,
+        metadata: {
+          functionId,
+          ...metadata,
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to emit workflow log event: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 }

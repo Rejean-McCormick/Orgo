@@ -1,11 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../persistence/prisma/prisma.service';
+import { PrismaService } from './././persistence/prisma/prisma.service';
+import {
+  OrgProfileService,
+  ApplyDefaultsResult,
+} from './././config/org-profile.service';
 
 /**
- * Canonical enums (logical view)
- * These mirror the enums described in the Orgo v3 spec (Docs 2, 5, 8).
+ * Canonical Task enums (DB / Core-service level).
+ * JSON contracts may use lower-case; service accepts both and normalizes.
  */
-
 export type TaskStatus =
   | 'PENDING'
   | 'IN_PROGRESS'
@@ -23,6 +26,9 @@ export type TaskVisibility = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED'
 
 export type TaskSource = 'email' | 'api' | 'manual' | 'sync';
 
+/**
+ * Task category codes (Doc 5 – Task logical view).
+ */
 export type TaskCategory =
   | 'request'
   | 'incident'
@@ -36,86 +42,122 @@ export type TaskCommentVisibility =
   | 'org_wide';
 
 /**
- * Input types accepted by the TaskService.
- * These are internal TS types, designed to map cleanly to the canonical
- * Task JSON contract and the underlying Prisma models.
+ * Internal input types used by TaskService.
+ * These are mapped from API DTOs and workflow actions.
  */
 
-type StatusInput = TaskStatus | Lowercase<TaskStatus>;
-type PriorityInput = TaskPriority | Lowercase<TaskPriority>;
-type SeverityInput = TaskSeverity | Lowercase<TaskSeverity>;
-type VisibilityInput = TaskVisibility | Lowercase<TaskVisibility>;
-type SourceInput = TaskSource | Lowercase<TaskSource>;
+type PriorityInput = TaskPriority | string | null | undefined;
+type SeverityInput = TaskSeverity | string | null | undefined;
+type VisibilityInput = TaskVisibility | string | null | undefined;
+type SourceInput = TaskSource | string | null | undefined;
 
 export interface CreateTaskInput {
   organizationId: string;
+
+  // Optional linkage to a Case (Doc 5 §8 – Task <-> Case).
+  caseId?: string | null;
+
+  // Classification
   type: string;
   category: TaskCategory;
+  subtype?: string | null;
+  label: string;
+
+  // Core details
   title: string;
   description: string;
-  priority: PriorityInput;
-  severity: SeverityInput;
-  visibility: VisibilityInput;
-  label: string;
+
+  // State / SLA inputs – may be partially overridden by OrgProfileService.
+  priority?: PriorityInput;
+  severity?: SeverityInput;
+  visibility?: VisibilityInput;
   source: SourceInput;
 
-  caseId?: string | null;
-  subtype?: string | null;
-  dueAt?: string | Date | null;
+  // Actors / routing
   createdByUserId?: string | null;
   requesterPersonId?: string | null;
   ownerRoleId?: string | null;
   ownerUserId?: string | null;
   assigneeRole?: string | null;
-  metadata?: Record<string, any> | null;
+
+  // SLA / scheduling
+  dueAt?: string | Date | null;
 
   /**
-   * Reactivity configuration.
-   * In a later iteration this should be derived from OrgProfileService +
-   * workflow rules. For now we support direct overrides plus a default.
+   * Optional SLA inputs. In most flows, the active organization profile
+   * provides reactivity defaults. These fields act as overrides:
+   *
+   * - reactivitySeconds → explicit SLA in seconds
+   * - reactivityTimeIso → ISO 8601 duration ("P1DT4H", "PT3600S")
+   * - reactivityDeadlineAt → absolute override (wins over other fields)
    */
   reactivitySeconds?: number | null;
   reactivityTimeIso?: string | null;
   reactivityDeadlineAt?: string | Date | null;
+
+  /**
+   * Free-form metadata, normalized by MetadataService. Must not contain any of
+   * the canonical Task fields (Doc 5 §9, Metadata rules).
+   */
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface UpdateTaskStatusInput {
   organizationId: string;
   taskId: string;
-  newStatus: StatusInput;
-  reason?: string;
+  newStatus: TaskStatus | string;
+  reason?: string | null;
   actorUserId?: string | null;
 }
 
 export interface EscalateTaskInput {
   organizationId: string;
   taskId: string;
-  reason: string;
   actorUserId?: string | null;
+  escalationReason?: string | null;
 }
 
 export interface AssignTaskInput {
   organizationId: string;
   taskId: string;
   assigneeRole?: string | null;
-  assigneeUserId?: string | null;
+  ownerUserId?: string | null;
+  ownerRoleId?: string | null;
   actorUserId?: string | null;
+  reason?: string | null;
 }
 
 export interface AddTaskCommentInput {
   organizationId: string;
   taskId: string;
-  comment: string;
-  authorUserId: string;
-  visibility?: TaskCommentVisibility;
+  authorUserId?: string | null;
+  visibility: TaskCommentVisibility;
+  body: string;
 }
 
 /**
- * DTOs returned by the service.
- * These are camelCase for internal TS usage; controllers can remap to
- * snake_case / canonical JSON property names as needed.
+ * ListTasksInput – internal filter for multi-tenant Task listing.
+ * Maps cleanly from ListTasksQueryDto (API) and web AdminTaskOverview filters.
  */
+export interface ListTasksInput {
+  organizationId: string;
 
+  status?: string | string[]; // TaskStatus | "all" | lowercase
+  label?: string; // canonical label code
+  type?: string;
+  assigneeRole?: string;
+  severity?: string | string[];
+  visibility?: string | string[];
+  priority?: string | string[];
+
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Canonical Task DTO used by Core Services and domain modules.
+ * JSON contracts map this to snake_case (apps/web/src/orgo/types/task.ts).
+ */
 export interface TaskDto {
   taskId: string;
   organizationId: string;
@@ -143,11 +185,19 @@ export interface TaskDto {
   assigneeRole: string | null;
 
   dueAt: string | null;
+
+  /**
+   * Canonical SLA fields.
+   * - reactivityTime: ISO 8601 duration (Doc 5 §8.5 & Doc 8 JSON schema)
+   * - reactivityDeadlineAt: derived deadline in org-local time (UTC timestamp)
+   */
+  reactivityTime: string | null;
   reactivityDeadlineAt: string | null;
+
   escalationLevel: number;
   closedAt: string | null;
 
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 
   createdAt: string;
   updatedAt: string;
@@ -157,23 +207,34 @@ export interface TaskCommentDto {
   id: string;
   taskId: string;
   organizationId: string;
-  authorUserId: string;
+  authorUserId: string | null;
   visibility: TaskCommentVisibility;
-  comment: string;
+  body: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 /**
- * Standard result shape for all Core Services:
- *
- *   { ok: true, data, error: null }
- *   { ok: false, data: null, error: { code, message, details? } }
+ * ListTasksResult – internal service-level list response,
+ * mapped by controllers to the web ListTasksResponse / AdminTaskOverviewResponse.
  */
+export interface ListTasksResult {
+  items: TaskDto[];
+  total: number;
+  /**
+   * Optional cursor for offline/sync scenarios. For now we use a simple
+   * page-based cursor encoded as a string; controllers can surface this as-is.
+   */
+  nextCursor: string | null;
+}
 
+/**
+ * Standard result shape used across Core Services.
+ */
 export interface ServiceError {
   code: string;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface ServiceResult<T> {
@@ -183,140 +244,301 @@ export interface ServiceResult<T> {
 }
 
 /**
- * Internal helpers and constants.
+ * Task lifecycle and allowed transitions (Doc 5 §8.5.2 – Task Status Lifecycle).
  */
-
 const TASK_STATE_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
   PENDING: ['IN_PROGRESS', 'CANCELLED'],
   IN_PROGRESS: ['ON_HOLD', 'COMPLETED', 'FAILED', 'ESCALATED'],
   ON_HOLD: ['IN_PROGRESS', 'CANCELLED'],
-  ESCALATED: ['IN_PROGRESS', 'COMPLETED', 'FAILED'],
   COMPLETED: [],
   FAILED: [],
+  ESCALATED: ['IN_PROGRESS', 'COMPLETED', 'FAILED'],
   CANCELLED: [],
 };
 
-const TERMINAL_STATUSES: ReadonlySet<TaskStatus> = new Set([
+const TERMINAL_STATUSES: Set<TaskStatus> = new Set([
   'COMPLETED',
   'FAILED',
   'CANCELLED',
 ]);
 
-const ALLOWED_CATEGORIES: ReadonlySet<TaskCategory> = new Set([
-  'request',
-  'incident',
-  'update',
-  'report',
-  'distribution',
-]);
-
-const DEFAULT_REACTIVITY_SECONDS = 43_200; // 12h, aligned with default profile
-
-
-type TaskEventType =
-  | 'task_created'
-  | 'task_status_changed'
-  | 'task_escalated'
-  | 'task_assigned'
-  | 'task_comment_added';
+/**
+ * Fallback SLA in seconds when neither the org-profile nor the caller
+ * provides a reactivity window. 43 200s = 12h (Doc 5 §8.5.3).
+ */
+const DEFAULT_REACTIVITY_SECONDS = 43_200;
 
 @Injectable()
 export class TaskService {
   private readonly logger = new Logger(TaskService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly orgProfileService: OrgProfileService,
+  ) {}
 
   /**
-   * Create Task from event / workflow / API input.
+   * Multi-tenant Task listing with simple filters and page-based pagination.
+   * Controllers adapt this to the public JSON ListTasksResponse shape.
    */
-  async createTask(input: CreateTaskInput): Promise<ServiceResult<TaskDto>> {
-    const validationError = this.validateCreateTaskInput(input);
-    if (validationError) {
-      return this.fail<TaskDto>(validationError);
+  async listTasks(input: ListTasksInput): Promise<ServiceResult<ListTasksResult>> {
+    if (!input.organizationId) {
+      return this.fail<ListTasksResult>({
+        code: 'TASK_VALIDATION_ERROR',
+        message: 'organizationId is required to list tasks.',
+      });
+    }
+
+    const page = input.page && input.page > 0 ? input.page : 1;
+    const pageSizeRaw =
+      input.pageSize && input.pageSize > 0 ? input.pageSize : 50;
+    const pageSize = Math.min(pageSizeRaw, 500);
+    const skip = (page - 1) * pageSize;
+
+    const where: Record<string, any> = {
+      organization_id: input.organizationId,
+    };
+
+    const normalizeFilterValues = <T>(
+      raw: string | string[] | undefined,
+      normalizer: (value: string) => T | null,
+    ): T[] | null => {
+      if (!raw) return null;
+      const values = Array.isArray(raw) ? raw : [raw];
+      const normalized: T[] = [];
+
+      for (const value of values) {
+        if (!value) continue;
+        if (value === 'all') {
+          // "all" means no filter; handled by skipping assigning predicate.
+          return null;
+        }
+        const v = normalizer(String(value));
+        if (v) {
+          normalized.push(v);
+        }
+      }
+
+      return normalized.length ? normalized : null;
+    };
+
+    const statusValues = normalizeFilterValues<TaskStatus>(
+      input.status,
+      (token) => this.normalizeStatus(token),
+    );
+    if (statusValues) {
+      where.status = { in: statusValues };
+    }
+
+    const priorityValues = normalizeFilterValues<TaskPriority>(
+      input.priority,
+      (token) => this.normalizePriority(token),
+    );
+    if (priorityValues) {
+      where.priority = { in: priorityValues };
+    }
+
+    const severityValues = normalizeFilterValues<TaskSeverity>(
+      input.severity,
+      (token) => this.normalizeSeverity(token),
+    );
+    if (severityValues) {
+      where.severity = { in: severityValues };
+    }
+
+    const visibilityValues = normalizeFilterValues<TaskVisibility>(
+      input.visibility,
+      (token) => this.normalizeVisibility(token),
+    );
+    if (visibilityValues) {
+      where.visibility = { in: visibilityValues };
+    }
+
+    if (input.label) {
+      // Filter by canonical label code (exact match; prefix logic lives in Case listing).
+      where.label = input.label;
+    }
+
+    if (input.type) {
+      where.type = input.type;
+    }
+
+    if (input.assigneeRole) {
+      where.assignee_role = input.assigneeRole;
     }
 
     try {
-      const now = new Date();
-      const reactivityDeadline = this.computeReactivityDeadline(now, input);
-      const status: TaskStatus = 'PENDING';
+      const prismaAny = this.prisma as any;
 
-      const data: any = {
-        // identity / linkage
-        organization_id: input.organizationId,
-        case_id: input.caseId ?? null,
+      const [rows, total] = await Promise.all([
+        prismaAny.task.findMany({
+          where,
+          orderBy: { created_at: 'desc' },
+          skip,
+          take: pageSize,
+        }),
+        prismaAny.task.count({ where }),
+      ]);
 
-        // classification
-        type: input.type,
-        category: input.category,
-        subtype: input.subtype ?? null,
-        label: input.label,
+      const items = rows.map((row: any) => this.mapTaskModelToDto(row));
+      const reachedEnd = skip + items.length >= total;
+      const nextCursor = reachedEnd ? null : String(page + 1);
 
-        // content
-        title: input.title,
-        description: input.description,
-
-        // enums
-        status,
-        priority: this.normalizePriority(input.priority),
-        severity: this.normalizeSeverity(input.severity),
-        visibility: this.normalizeVisibility(input.visibility),
-        source: this.normalizeSource(input.source),
-
-        // actors
-        created_by_user_id: input.createdByUserId ?? null,
-        requester_person_id: input.requesterPersonId ?? null,
-        owner_role_id: input.ownerRoleId ?? null,
-        owner_user_id: input.ownerUserId ?? null,
-        assignee_role: input.assigneeRole ?? null,
-
-        // timing
-        due_at: input.dueAt ? new Date(input.dueAt) : null,
-        reactivity_deadline_at: reactivityDeadline,
-        escalation_level: 0,
-        closed_at: null,
-
-        // metadata
-        metadata: input.metadata ?? {},
-
-        // audit columns (these may be handled by DB defaults; we set them defensively)
-        created_at: now,
-        updated_at: now,
-      };
-
-      // Note: we cast prisma to any here to decouple from the current Prisma schema.
-      // Once the `Task` model is added to schema.prisma, this can be made fully typed.
-      const created = await (this.prisma as any).task.create({ data });
-      const dto = this.mapTaskModelToDto(created);
-
-      await this.recordTaskEvent('task_created', dto.taskId, dto.organizationId, {
-        status: dto.status,
-        priority: dto.priority,
-        severity: dto.severity,
+      return this.ok<ListTasksResult>({
+        items,
+        total,
+        nextCursor,
       });
-
-      return this.ok(dto);
-    } catch (err: any) {
-      this.logger.error('Failed to create task', err?.stack || err?.message);
-      return this.fail<TaskDto>({
-        code: 'TASK_CREATION_FAILED',
-        message: 'Failed to create task',
-        details: { cause: err?.message },
+    } catch (error) {
+      this.logger.error(
+        `Failed to list tasks for organization ${input.organizationId}: ${String(
+          error,
+        )}`,
+      );
+      return this.fail<ListTasksResult>({
+        code: 'TASK_LIST_FAILED',
+        message: 'Failed to list tasks.',
+        details: { organizationId: input.organizationId },
       });
     }
   }
 
   /**
-   * Update Task status (enforces canonical state machine).
+   * Convenience wrapper for API layer. In Core Services and domain modules,
+   * prefer getTaskById(organizationId, taskId) to keep explicit tenancy.
+   *
+   * The API layer is expected to enforce organization scoping before calling.
    */
+  async getTask(taskId: string): Promise<ServiceResult<TaskDto>> {
+    if (!taskId) {
+      return this.fail<TaskDto>({
+        code: 'TASK_VALIDATION_ERROR',
+        message: 'taskId is required.',
+      });
+    }
+
+    try {
+      const prismaAny = this.prisma as any;
+      const model = await prismaAny.task.findUnique({
+        where: { id: taskId },
+      });
+
+      if (!model) {
+        return this.fail<TaskDto>({
+          code: 'TASK_NOT_FOUND',
+          message: `Task with id ${taskId} not found.`,
+        });
+      }
+
+      const dto = this.mapTaskModelToDto(model);
+      return this.ok(dto);
+    } catch (error) {
+      this.logger.error(`Failed to fetch task ${taskId}: ${String(error)}`);
+      return this.fail<TaskDto>({
+        code: 'TASK_FETCH_FAILED',
+        message: 'Failed to fetch task.',
+        details: { taskId },
+      });
+    }
+  }
+
+  /**
+   * Task creation entry point used by API, workflows, email router and domain modules.
+   * Enforces Task spec and uses OrgProfileService for SLA defaults where available.
+   */
+  async createTask(input: CreateTaskInput): Promise<ServiceResult<TaskDto>> {
+    const validationError = this.validateCreateTaskInput(input);
+    if (validationError) {
+      return this.fail<TaskDto>({
+        code: 'TASK_VALIDATION_ERROR',
+        message: validationError,
+      });
+    }
+
+    const now = new Date();
+
+    try {
+      const {
+        priority,
+        visibility,
+        severity,
+        reactivitySeconds,
+        reactivityTimeIso,
+        reactivityDeadlineAt,
+      } = await this.computeSlaAndClassificationForCreate(input, now);
+
+      const prismaAny = this.prisma as any;
+
+      const created = await prismaAny.task.create({
+        data: {
+          organization_id: input.organizationId,
+          case_id: input.caseId ?? null,
+
+          type: input.type,
+          category: input.category,
+          subtype: input.subtype ?? null,
+
+          label: input.label,
+          title: input.title,
+          description: input.description,
+
+          status: 'PENDING',
+          priority,
+          severity,
+          visibility,
+          source: this.normalizeSource(input.source) ?? 'manual',
+
+          created_by_user_id: input.createdByUserId ?? null,
+          requester_person_id: input.requesterPersonId ?? null,
+          owner_role_id: input.ownerRoleId ?? null,
+          owner_user_id: input.ownerUserId ?? null,
+          assignee_role: input.assigneeRole ?? null,
+
+          due_at: input.dueAt ? new Date(input.dueAt) : null,
+
+          reactivity_time: reactivityTimeIso ?? null,
+          reactivity_deadline_at: reactivityDeadlineAt,
+          escalation_level: 0,
+          closed_at: null,
+
+          metadata: input.metadata ?? {},
+        },
+      });
+
+      const dto = this.mapTaskModelToDto(created);
+      await this.recordTaskEvent('task_created', dto.taskId, dto.organizationId, {
+        category: dto.category,
+        label: dto.label,
+        priority: dto.priority,
+        severity: dto.severity,
+      });
+
+      return this.ok(dto);
+    } catch (error) {
+      this.logger.error(
+        `Failed to create task for organization ${input.organizationId}: ${String(
+          error,
+        )}`,
+      );
+      return this.fail<TaskDto>({
+        code: 'TASK_CREATE_FAILED',
+        message: 'Failed to create task.',
+        details: { organizationId: input.organizationId },
+      });
+    }
+  }
+
   async updateTaskStatus(
     input: UpdateTaskStatusInput,
   ): Promise<ServiceResult<TaskDto>> {
-    const normalizedStatus = this.normalizeStatus(input.newStatus);
-    if (!normalizedStatus) {
+    const newStatusNormalized = this.normalizeStatus(
+      input.newStatus as string,
+    );
+
+    if (!newStatusNormalized) {
       return this.fail<TaskDto>({
         code: 'TASK_VALIDATION_ERROR',
-        message: `Invalid status value: ${input.newStatus}`,
-        details: { field: 'newStatus' },
+        message: `Invalid new task status: ${input.newStatus}`,
       });
     }
 
@@ -329,53 +551,48 @@ export class TaskService {
       if (!taskModel) {
         return this.fail<TaskDto>({
           code: 'TASK_NOT_FOUND',
-          message: 'Task not found',
-          details: {
-            taskId: input.taskId,
-            organizationId: input.organizationId,
-          },
+          message: `Task with id ${input.taskId} not found in organization ${input.organizationId}.`,
         });
       }
 
-      const currentStatus = this.normalizeStatus(taskModel.status);
-      if (!currentStatus) {
-        return this.fail<TaskDto>({
-          code: 'TASK_STATE_CORRUPTED',
-          message: 'Task has invalid current status',
-          details: { taskId: input.taskId, status: taskModel.status },
-        });
+      const currentStatus =
+        this.normalizeStatus(taskModel.status) ?? 'PENDING';
+
+      if (currentStatus === newStatusNormalized) {
+        const dto = this.mapTaskModelToDto(taskModel);
+        return this.ok(dto);
       }
 
-      if (!this.isTransitionAllowed(currentStatus, normalizedStatus)) {
+      if (!this.isTransitionAllowed(currentStatus, newStatusNormalized)) {
         return this.fail<TaskDto>({
-          code: 'INVALID_TASK_STATE_TRANSITION',
-          message: `Transition ${currentStatus} → ${normalizedStatus} is not allowed`,
+          code: 'TASK_INVALID_TRANSITION',
+          message: `Transition from ${currentStatus} to ${newStatusNormalized} is not allowed.`,
           details: {
             from: currentStatus,
-            to: normalizedStatus,
-            taskId: input.taskId,
+            to: newStatusNormalized,
           },
         });
       }
 
       const now = new Date();
-
-      const updateData: any = {
-        status: normalizedStatus,
+      const data: any = {
+        status: newStatusNormalized,
         updated_at: now,
       };
 
-      if (TERMINAL_STATUSES.has(normalizedStatus)) {
-        updateData.closed_at = now;
-      } else if (TERMINAL_STATUSES.has(currentStatus)) {
-        // Moving from terminal to non‑terminal should not normally happen,
-        // but if it does, closed_at must be cleared.
-        updateData.closed_at = null;
+      const wasTerminal = TERMINAL_STATUSES.has(currentStatus);
+      const isNowTerminal = TERMINAL_STATUSES.has(newStatusNormalized);
+
+      if (!wasTerminal && isNowTerminal) {
+        data.closed_at = now;
+      } else if (wasTerminal && !isNowTerminal) {
+        data.closed_at = null;
       }
 
-      const updated = await (this.prisma as any).task.update({
-        where: { id: taskModel.id },
-        data: updateData,
+      const prismaAny = this.prisma as any;
+      const updated = await prismaAny.task.update({
+        where: { id: input.taskId },
+        data,
       });
 
       const dto = this.mapTaskModelToDto(updated);
@@ -385,28 +602,29 @@ export class TaskService {
         dto.taskId,
         dto.organizationId,
         {
-          from: currentStatus,
-          to: normalizedStatus,
+          previousStatus: currentStatus,
+          nextStatus: newStatusNormalized,
           reason: input.reason,
           actorUserId: input.actorUserId,
         },
       );
 
       return this.ok(dto);
-    } catch (err: any) {
-      this.logger.error('Failed to update task status', err?.stack || err?.message);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update status for task ${input.taskId}: ${String(error)}`,
+      );
       return this.fail<TaskDto>({
         code: 'TASK_STATUS_UPDATE_FAILED',
-        message: 'Failed to update task status',
-        details: { cause: err?.message },
+        message: 'Failed to update task status.',
+        details: {
+          taskId: input.taskId,
+          organizationId: input.organizationId,
+        },
       });
     }
   }
 
-  /**
-   * Escalate a Task: increments escalation_level and sets status = ESCALATED.
-   * This enforces that the current status allows an ESCALATED transition.
-   */
   async escalateTask(
     input: EscalateTaskInput,
   ): Promise<ServiceResult<TaskDto>> {
@@ -419,42 +637,36 @@ export class TaskService {
       if (!taskModel) {
         return this.fail<TaskDto>({
           code: 'TASK_NOT_FOUND',
-          message: 'Task not found',
-          details: {
-            taskId: input.taskId,
-            organizationId: input.organizationId,
-          },
+          message: `Task with id ${input.taskId} not found in organization ${input.organizationId}.`,
         });
       }
 
-      const currentStatus = this.normalizeStatus(taskModel.status);
-      if (!currentStatus) {
-        return this.fail<TaskDto>({
-          code: 'TASK_STATE_CORRUPTED',
-          message: 'Task has invalid current status',
-          details: { taskId: input.taskId, status: taskModel.status },
-        });
-      }
+      const currentStatus =
+        this.normalizeStatus(taskModel.status) ?? 'PENDING';
 
-      if (!this.isTransitionAllowed(currentStatus, 'ESCALATED')) {
+      if (
+        !['PENDING', 'IN_PROGRESS', 'ON_HOLD', 'ESCALATED'].includes(
+          currentStatus,
+        )
+      ) {
         return this.fail<TaskDto>({
-          code: 'TASK_ESCALATION_INVALID_STATE',
-          message: `Cannot escalate task from state ${currentStatus}`,
-          details: { taskId: input.taskId },
+          code: 'TASK_CANNOT_ESCALATE',
+          message: `Task in status ${currentStatus} cannot be escalated.`,
         });
       }
 
       const now = new Date();
-      const currentLevel =
+      const nextEscalationLevel =
         typeof taskModel.escalation_level === 'number'
-          ? taskModel.escalation_level
-          : 0;
+          ? taskModel.escalation_level + 1
+          : 1;
 
-      const updated = await (this.prisma as any).task.update({
-        where: { id: taskModel.id },
+      const prismaAny = this.prisma as any;
+      const updated = await prismaAny.task.update({
+        where: { id: input.taskId },
         data: {
           status: 'ESCALATED',
-          escalation_level: currentLevel + 1,
+          escalation_level: nextEscalationLevel,
           updated_at: now,
         },
       });
@@ -462,39 +674,31 @@ export class TaskService {
       const dto = this.mapTaskModelToDto(updated);
 
       await this.recordTaskEvent('task_escalated', dto.taskId, dto.organizationId, {
-        from: currentStatus,
-        to: 'ESCALATED',
-        previousEscalationLevel: currentLevel,
-        newEscalationLevel: currentLevel + 1,
-        reason: input.reason,
+        previousStatus: currentStatus,
+        nextStatus: 'ESCALATED',
+        previousEscalationLevel: taskModel.escalation_level ?? 0,
+        newEscalationLevel: nextEscalationLevel,
+        reason: input.escalationReason,
         actorUserId: input.actorUserId,
       });
 
       return this.ok(dto);
-    } catch (err: any) {
-      this.logger.error('Failed to escalate task', err?.stack || err?.message);
+    } catch (error) {
+      this.logger.error(
+        `Failed to escalate task ${input.taskId}: ${String(error)}`,
+      );
       return this.fail<TaskDto>({
         code: 'TASK_ESCALATION_FAILED',
-        message: 'Failed to escalate task',
-        details: { cause: err?.message },
+        message: 'Failed to escalate task.',
+        details: {
+          taskId: input.taskId,
+          organizationId: input.organizationId,
+        },
       });
     }
   }
 
-  /**
-   * Assign / reassign a Task to a role and/or user.
-   */
-  async assignTask(
-    input: AssignTaskInput,
-  ): Promise<ServiceResult<TaskDto>> {
-    if (!input.assigneeRole && !input.assigneeUserId) {
-      return this.fail<TaskDto>({
-        code: 'TASK_VALIDATION_ERROR',
-        message: 'Either assigneeRole or assigneeUserId must be provided',
-        details: { field: 'assigneeRole/assigneeUserId' },
-      });
-    }
-
+  async assignTask(input: AssignTaskInput): Promise<ServiceResult<TaskDto>> {
     try {
       const taskModel = await this.getTaskModelForOrg(
         input.organizationId,
@@ -504,70 +708,75 @@ export class TaskService {
       if (!taskModel) {
         return this.fail<TaskDto>({
           code: 'TASK_NOT_FOUND',
-          message: 'Task not found',
-          details: {
-            taskId: input.taskId,
-            organizationId: input.organizationId,
-          },
+          message: `Task with id ${input.taskId} not found in organization ${input.organizationId}.`,
         });
       }
 
-      const now = new Date();
-
-      const data: any = {
-        updated_at: now,
-      };
-
-      if (input.assigneeRole !== undefined) {
-        data.assignee_role = input.assigneeRole;
-      }
-
-      // For now we only update routing-level fields in tasks;
-      // per spec, full assignment history would be stored in a separate table.
-      if (input.assigneeUserId !== undefined) {
-        data.owner_user_id = input.assigneeUserId;
-      }
-
-      const updated = await (this.prisma as any).task.update({
-        where: { id: taskModel.id },
-        data,
+      const prismaAny = this.prisma as any;
+      const updated = await prismaAny.task.update({
+        where: { id: input.taskId },
+        data: {
+          assignee_role: input.assigneeRole ?? null,
+          owner_user_id: input.ownerUserId ?? null,
+          owner_role_id: input.ownerRoleId ?? null,
+          updated_at: new Date(),
+        },
       });
 
       const dto = this.mapTaskModelToDto(updated);
 
-      await this.recordTaskEvent('task_assigned', dto.taskId, dto.organizationId, {
-        assigneeRole: dto.assigneeRole,
-        assigneeUserId: input.assigneeUserId,
-        actorUserId: input.actorUserId,
-      });
+      await this.recordTaskEvent(
+        'task_ownership_changed',
+        dto.taskId,
+        dto.organizationId,
+        {
+          previousOwnerUserId: taskModel.owner_user_id ?? null,
+          newOwnerUserId: input.ownerUserId ?? null,
+          previousOwnerRoleId: taskModel.owner_role_id ?? null,
+          newOwnerRoleId: input.ownerRoleId ?? null,
+          previousAssigneeRole: taskModel.assignee_role ?? null,
+          newAssigneeRole: input.assigneeRole ?? null,
+          actorUserId: input.actorUserId,
+          reason: input.reason,
+        },
+      );
 
       return this.ok(dto);
-    } catch (err: any) {
-      this.logger.error('Failed to assign task', err?.stack || err?.message);
+    } catch (error) {
+      this.logger.error(
+        `Failed to assign task ${input.taskId}: ${String(error)}`,
+      );
       return this.fail<TaskDto>({
-        code: 'TASK_ASSIGNMENT_FAILED',
-        message: 'Failed to assign task',
-        details: { cause: err?.message },
+        code: 'TASK_ASSIGN_FAILED',
+        message: 'Failed to assign task.',
+        details: {
+          taskId: input.taskId,
+          organizationId: input.organizationId,
+        },
       });
     }
   }
 
-  /**
-   * Add a comment to a Task.
-   */
   async addComment(
     input: AddTaskCommentInput,
   ): Promise<ServiceResult<TaskCommentDto>> {
-    if (!input.comment || !input.comment.trim()) {
+    if (!input.body || !input.body.trim()) {
       return this.fail<TaskCommentDto>({
         code: 'TASK_VALIDATION_ERROR',
-        message: 'Comment must not be empty',
-        details: { field: 'comment' },
+        message: 'Comment body must not be empty.',
       });
     }
 
-    const visibility: TaskCommentVisibility =
-      input.visibility ?? 'internal_only';
+    if (
+      !['internal_only', 'requester_visible', 'org_wide'].includes(
+        input.visibility,
+      )
+    ) {
+      return this.fail<TaskCommentDto>({
+        code: 'TASK_VALIDATION_ERROR',
+        message: `Invalid comment visibility: ${input.visibility}`,
+      });
+    }
 
     try {
       const taskModel = await this.getTaskModelForOrg(
@@ -578,37 +787,29 @@ export class TaskService {
       if (!taskModel) {
         return this.fail<TaskCommentDto>({
           code: 'TASK_NOT_FOUND',
-          message: 'Task not found',
-          details: {
-            taskId: input.taskId,
-            organizationId: input.organizationId,
-          },
+          message: `Task with id ${input.taskId} not found in organization ${input.organizationId}.`,
         });
       }
 
-      const now = new Date();
-
-      const commentModel = await (this.prisma as any).taskComment.create({
+      const prismaAny = this.prisma as any;
+      const created = await prismaAny.task_comment.create({
         data: {
-          organization_id: input.organizationId,
-          task_id: taskModel.id,
-          author_user_id: input.authorUserId,
-          visibility,
-          comment: input.comment,
-          created_at: now,
+          task_id: input.taskId,
+          author_user_id: input.authorUserId ?? null,
+          visibility: input.visibility,
+          body: input.body.trim(),
         },
       });
 
       const dto: TaskCommentDto = {
-        id: String(commentModel.id),
-        taskId: String(commentModel.task_id ?? taskModel.id),
-        organizationId: String(
-          commentModel.organization_id ?? input.organizationId,
-        ),
-        authorUserId: String(commentModel.author_user_id),
-        visibility: commentModel.visibility as TaskCommentVisibility,
-        comment: String(commentModel.comment),
-        createdAt: (commentModel.created_at ?? now).toISOString(),
+        id: String(created.id),
+        taskId: String(created.task_id),
+        organizationId: String(taskModel.organization_id),
+        authorUserId: created.author_user_id ?? null,
+        visibility: created.visibility,
+        body: created.body,
+        createdAt: created.created_at.toISOString(),
+        updatedAt: created.updated_at.toISOString(),
       };
 
       await this.recordTaskEvent(
@@ -616,174 +817,154 @@ export class TaskService {
         dto.taskId,
         dto.organizationId,
         {
-          authorUserId: dto.authorUserId,
+          commentId: dto.id,
           visibility: dto.visibility,
+          authorUserId: dto.authorUserId,
         },
       );
 
       return this.ok(dto);
-    } catch (err: any) {
-      this.logger.error('Failed to add task comment', err?.stack || err?.message);
+    } catch (error) {
+      this.logger.error(
+        `Failed to add comment to task ${input.taskId}: ${String(error)}`,
+      );
       return this.fail<TaskCommentDto>({
         code: 'TASK_COMMENT_FAILED',
-        message: 'Failed to add comment to task',
-        details: { cause: err?.message },
+        message: 'Failed to add comment to task.',
+        details: {
+          taskId: input.taskId,
+          organizationId: input.organizationId,
+        },
       });
     }
   }
 
   /**
-   * Fetch Task details by id for a given organization.
+   * Multi-tenant Task fetch used by domain modules and workflows.
    */
   async getTaskById(
     organizationId: string,
     taskId: string,
   ): Promise<ServiceResult<TaskDto>> {
     try {
-      const taskModel = await this.getTaskModelForOrg(organizationId, taskId);
+      const model = await this.getTaskModelForOrg(organizationId, taskId);
 
-      if (!taskModel) {
+      if (!model) {
         return this.fail<TaskDto>({
           code: 'TASK_NOT_FOUND',
-          message: 'Task not found',
-          details: { organizationId, taskId },
+          message: `Task with id ${taskId} not found in organization ${organizationId}.`,
         });
       }
 
-      const dto = this.mapTaskModelToDto(taskModel);
+      const dto = this.mapTaskModelToDto(model);
       return this.ok(dto);
-    } catch (err: any) {
-      this.logger.error('Failed to fetch task by id', err?.stack || err?.message);
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch task ${taskId} for organization ${organizationId}: ${String(
+          error,
+        )}`,
+      );
       return this.fail<TaskDto>({
         code: 'TASK_FETCH_FAILED',
-        message: 'Failed to fetch task',
-        details: { cause: err?.message },
+        message: 'Failed to fetch task.',
+        details: { taskId, organizationId },
       });
     }
   }
 
   // ---------------------------------------------------------------------------
-  // Internal helpers
+  // SLA / Org profile integration helpers
   // ---------------------------------------------------------------------------
 
-  private validateCreateTaskInput(
+  private async computeSlaAndClassificationForCreate(
     input: CreateTaskInput,
-  ): ServiceError | null {
-    const requiredStringFields: Array<keyof CreateTaskInput> = [
-      'organizationId',
-      'type',
-      'category',
-      'title',
-      'description',
-      'priority',
-      'severity',
-      'visibility',
-      'label',
-      'source',
-    ];
+    now: Date,
+  ): Promise<{
+    priority: TaskPriority;
+    severity: TaskSeverity;
+    visibility: TaskVisibility;
+    reactivitySeconds: number | null;
+    reactivityTimeIso: string | null;
+    reactivityDeadlineAt: Date | null;
+  }> {
+    const normalizedPriority = this.normalizePriority(input.priority);
+    const normalizedVisibility = this.normalizeVisibility(input.visibility);
+    const normalizedSeverity =
+      this.normalizeSeverity(input.severity) ?? 'MINOR';
 
-    for (const field of requiredStringFields) {
-      const value = input[field] as any;
-      if (
-        value === undefined ||
-        value === null ||
-        (typeof value === 'string' && !value.trim())
-      ) {
-        return {
-          code: 'TASK_VALIDATION_ERROR',
-          message: `Missing required field '${String(field)}'`,
-          details: { field },
-        };
-      }
+    const requestedSeconds =
+      typeof input.reactivitySeconds === 'number' && input.reactivitySeconds > 0
+        ? input.reactivitySeconds
+        : input.reactivityTimeIso
+        ? this.parseIsoDurationToSeconds(input.reactivityTimeIso)
+        : null;
+
+    let profileDefaults: ApplyDefaultsResult | null = null;
+
+    try {
+      profileDefaults = await this.orgProfileService.applyDefaults({
+        organizationId: input.organizationId,
+        kind: 'task',
+        existingPriority: normalizedPriority ?? undefined,
+        existingVisibility: normalizedVisibility ?? undefined,
+        requestedReactivitySeconds: requestedSeconds ?? undefined,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `OrgProfileService.applyDefaults failed for org ${input.organizationId}: ${String(
+          error,
+        )}`,
+      );
     }
 
-    if (!ALLOWED_CATEGORIES.has(input.category)) {
-      return {
-        code: 'TASK_VALIDATION_ERROR',
-        message: `Invalid task category: ${input.category}`,
-        details: {
-          field: 'category',
-          allowed: Array.from(ALLOWED_CATEGORIES),
-        },
-      };
-    }
+    const priority: TaskPriority =
+      (profileDefaults?.priority as TaskPriority | undefined) ??
+      normalizedPriority ??
+      'MEDIUM';
 
-    // Basic sanity check for label: must contain at least one dot.
-    if (!input.label.includes('.')) {
-      return {
-        code: 'TASK_VALIDATION_ERROR',
-        message: 'Label must contain at least one dot ("<BASE>.<CATEGORY><SUBCATEGORY>...")',
-        details: { field: 'label' },
-      };
-    }
+    const visibility: TaskVisibility =
+      (profileDefaults?.visibility as TaskVisibility | undefined) ??
+      normalizedVisibility ??
+      'INTERNAL';
 
-    // Validate enum-like fields via the normalizers
-    if (!this.normalizePriority(input.priority)) {
-      return {
-        code: 'TASK_VALIDATION_ERROR',
-        message: `Invalid priority: ${input.priority}`,
-        details: { field: 'priority' },
-      };
-    }
+    const reactivitySeconds =
+      profileDefaults?.reactivitySeconds ??
+      requestedSeconds ??
+      DEFAULT_REACTIVITY_SECONDS;
 
-    if (!this.normalizeSeverity(input.severity)) {
-      return {
-        code: 'TASK_VALIDATION_ERROR',
-        message: `Invalid severity: ${input.severity}`,
-        details: { field: 'severity' },
-      };
-    }
+    const reactivityTimeIso =
+      profileDefaults?.reactivityTimeIso ??
+      input.reactivityTimeIso ??
+      (reactivitySeconds != null
+        ? this.secondsToIsoDuration(reactivitySeconds)
+        : null);
 
-    if (!this.normalizeVisibility(input.visibility)) {
-      return {
-        code: 'TASK_VALIDATION_ERROR',
-        message: `Invalid visibility: ${input.visibility}`,
-        details: { field: 'visibility' },
-      };
-    }
+    let reactivityDeadlineAt: Date | null = null;
 
-    if (!this.normalizeSource(input.source)) {
-      return {
-        code: 'TASK_VALIDATION_ERROR',
-        message: `Invalid source: ${input.source}`,
-        details: { field: 'source' },
-      };
-    }
-
-    return null;
-  }
-
-  private computeReactivityDeadline(
-    createdAt: Date,
-    input: CreateTaskInput,
-  ): Date | null {
-    // Absolute override wins
     if (input.reactivityDeadlineAt) {
-      return new Date(input.reactivityDeadlineAt);
+      reactivityDeadlineAt = this.toDateOrNull(input.reactivityDeadlineAt);
+    } else if (reactivitySeconds != null) {
+      reactivityDeadlineAt = new Date(now.getTime() + reactivitySeconds * 1000);
     }
 
-    let seconds: number | null = null;
-
-    if (typeof input.reactivitySeconds === 'number') {
-      seconds = input.reactivitySeconds;
-    } else if (input.reactivityTimeIso) {
-      seconds = this.parseIsoDurationToSeconds(input.reactivityTimeIso);
-    }
-
-    if (seconds == null || !Number.isFinite(seconds) || seconds <= 0) {
-      // Fallback to profile-like default (aligned with "default" profile).
-      seconds = DEFAULT_REACTIVITY_SECONDS;
-    }
-
-    return new Date(createdAt.getTime() + seconds * 1000);
+    return {
+      priority,
+      severity: normalizedSeverity,
+      visibility,
+      reactivitySeconds,
+      reactivityTimeIso,
+      reactivityDeadlineAt,
+    };
   }
 
-  private parseIsoDurationToSeconds(value: string): number | null {
-    // Very small subset of ISO‑8601 duration: P[nD]T[nH][nM][nS]
-    const trimmed = value.trim().toUpperCase();
-    const match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(
-      trimmed,
-    );
+  private parseIsoDurationToSeconds(
+    isoDuration: string | null | undefined,
+  ): number | null {
+    if (!isoDuration) return null;
+
+    const isoPattern =
+      /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/;
+    const match = isoDuration.match(isoPattern);
     if (!match) {
       return null;
     }
@@ -791,14 +972,99 @@ export class TaskService {
     const days = match[1] ? parseInt(match[1], 10) : 0;
     const hours = match[2] ? parseInt(match[2], 10) : 0;
     const minutes = match[3] ? parseInt(match[3], 10) : 0;
-    const seconds = match[4] ? parseInt(match[4], 10) : 0;
+    const seconds = match[4] ? parseFloat(match[4]) : 0;
 
-    return (
-      days * 24 * 3600 +
-      hours * 3600 +
-      minutes * 60 +
-      seconds
-    );
+    return days * 86400 + hours * 3600 + minutes * 60 + seconds;
+  }
+
+  private secondsToIsoDuration(seconds: number): string {
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+      return 'PT0S';
+    }
+
+    const total = Math.floor(seconds);
+    const days = Math.floor(total / 86400);
+    let remaining = total - days * 86400;
+    const hours = Math.floor(remaining / 3600);
+    remaining -= hours * 3600;
+    const minutes = Math.floor(remaining / 60);
+    const secs = remaining - minutes * 60;
+
+    let result = 'P';
+    if (days > 0) {
+      result += `${days}D`;
+    }
+
+    if (hours || minutes || secs || days === 0) {
+      result += 'T';
+    }
+
+    if (hours) {
+      result += `${hours}H`;
+    }
+    if (minutes) {
+      result += `${minutes}M`;
+    }
+    if (secs || (!days && !hours && !minutes)) {
+      result += `${secs}S`;
+    }
+
+    return result;
+  }
+
+  private toDateOrNull(value: string | Date | null): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    const asDate = new Date(value);
+    return Number.isNaN(asDate.getTime()) ? null : asDate;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Validation & normalization helpers
+  // ---------------------------------------------------------------------------
+
+  private validateCreateTaskInput(input: CreateTaskInput): string | null {
+    const requiredStringFields: (keyof CreateTaskInput)[] = [
+      'organizationId',
+      'type',
+      'category',
+      'title',
+      'description',
+      'label',
+      'source',
+    ];
+
+    for (const field of requiredStringFields) {
+      const value = input[field];
+      if (typeof value !== 'string' || value.trim().length === 0) {
+        return `Field "${field}" is required and must be a non-empty string.`;
+      }
+    }
+
+    if (!this.normalizeSource(input.source)) {
+      return 'Invalid task source.';
+    }
+
+    if (input.priority !== undefined && !this.normalizePriority(input.priority)) {
+      return 'Invalid task priority.';
+    }
+
+    if (input.severity !== undefined && !this.normalizeSeverity(input.severity)) {
+      return 'Invalid task severity.';
+    }
+
+    if (
+      input.visibility !== undefined &&
+      !this.normalizeVisibility(input.visibility)
+    ) {
+      return 'Invalid task visibility.';
+    }
+
+    if (!input.category) {
+      return 'Task category is required.';
+    }
+
+    return null;
   }
 
   private normalizeStatus(input: string): TaskStatus | null {
@@ -812,7 +1078,7 @@ export class TaskService {
 
   private normalizePriority(input: PriorityInput): TaskPriority | null {
     if (!input) return null;
-    const upper = input.toUpperCase() as TaskPriority;
+    const upper = String(input).toUpperCase() as TaskPriority;
     if (['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(upper)) {
       return upper;
     }
@@ -821,7 +1087,7 @@ export class TaskService {
 
   private normalizeSeverity(input: SeverityInput): TaskSeverity | null {
     if (!input) return null;
-    const upper = input.toUpperCase() as TaskSeverity;
+    const upper = String(input).toUpperCase() as TaskSeverity;
     if (['MINOR', 'MODERATE', 'MAJOR', 'CRITICAL'].includes(upper)) {
       return upper;
     }
@@ -830,7 +1096,7 @@ export class TaskService {
 
   private normalizeVisibility(input: VisibilityInput): TaskVisibility | null {
     if (!input) return null;
-    const upper = input.toUpperCase() as TaskVisibility;
+    const upper = String(input).toUpperCase() as TaskVisibility;
     if (['PUBLIC', 'INTERNAL', 'RESTRICTED', 'ANONYMISED'].includes(upper)) {
       return upper;
     }
@@ -839,17 +1105,14 @@ export class TaskService {
 
   private normalizeSource(input: SourceInput): TaskSource | null {
     if (!input) return null;
-    const lower = input.toLowerCase() as TaskSource;
+    const lower = String(input).toLowerCase() as TaskSource;
     if (['email', 'api', 'manual', 'sync'].includes(lower)) {
       return lower;
     }
     return null;
   }
 
-  private isTransitionAllowed(
-    from: TaskStatus,
-    to: TaskStatus,
-  ): boolean {
+  private isTransitionAllowed(from: TaskStatus, to: TaskStatus): boolean {
     const allowed = TASK_STATE_TRANSITIONS[from] ?? [];
     return allowed.includes(to);
   }
@@ -858,7 +1121,8 @@ export class TaskService {
     organizationId: string,
     taskId: string,
   ): Promise<any | null> {
-    const model = await (this.prisma as any).task.findUnique({
+    const prismaAny = this.prisma as any;
+    const model = await prismaAny.task.findUnique({
       where: { id: taskId },
     });
 
@@ -894,15 +1158,17 @@ export class TaskService {
 
     const status = this.normalizeStatus(get('status')) ?? 'PENDING';
     const priority =
-      (this.normalizePriority(get('priority')) ?? 'MEDIUM');
+      this.normalizePriority(get('priority')) ?? 'MEDIUM';
     const severity =
-      (this.normalizeSeverity(get('severity')) ?? 'MINOR');
+      this.normalizeSeverity(get('severity')) ?? 'MINOR';
     const visibility =
-      (this.normalizeVisibility(get('visibility')) ?? 'INTERNAL');
+      this.normalizeVisibility(get('visibility')) ?? 'INTERNAL';
     const source = this.normalizeSource(get('source')) ?? 'manual';
 
     const escalationLevel = get('escalation_level', 'escalationLevel');
     const meta = get('metadata') ?? {};
+
+    const reactivityTimeRaw = get('reactivity_time', 'reactivityTime');
 
     const toIso = (value: any | null | undefined): string | null => {
       if (!value) return null;
@@ -911,13 +1177,20 @@ export class TaskService {
       return Number.isNaN(asDate.getTime()) ? null : asDate.toISOString();
     };
 
+    const reactivityTime: string | null =
+      typeof reactivityTimeRaw === 'string'
+        ? reactivityTimeRaw
+        : typeof reactivityTimeRaw === 'number'
+        ? this.secondsToIsoDuration(reactivityTimeRaw)
+        : null;
+
     return {
       taskId: String(id),
       organizationId: String(organizationId),
       caseId: caseId ? String(caseId) : null,
 
       type: String(get('type') ?? ''),
-      category: get('category') as TaskCategory,
+      category: (get('category') as TaskCategory) ?? 'request',
       subtype: get('subtype') ?? null,
 
       label: String(get('label') ?? ''),
@@ -939,6 +1212,7 @@ export class TaskService {
       assigneeRole: get('assignee_role', 'assigneeRole') ?? null,
 
       dueAt: toIso(get('due_at', 'dueAt')),
+      reactivityTime,
       reactivityDeadlineAt: toIso(
         get('reactivity_deadline_at', 'reactivityDeadlineAt'),
       ),
@@ -948,19 +1222,26 @@ export class TaskService {
 
       metadata: typeof meta === 'object' && meta !== null ? meta : {},
 
-      createdAt: toIso(get('created_at', 'createdAt')) ?? new Date().toISOString(),
-      updatedAt: toIso(get('updated_at', 'updatedAt')) ?? new Date().toISOString(),
+      createdAt:
+        toIso(get('created_at', 'createdAt')) ?? new Date().toISOString(),
+      updatedAt:
+        toIso(get('updated_at', 'updatedAt')) ?? new Date().toISOString(),
     };
   }
 
   private async recordTaskEvent(
-    type: TaskEventType,
+    type:
+      | 'task_created'
+      | 'task_status_changed'
+      | 'task_escalated'
+      | 'task_ownership_changed'
+      | 'task_comment_added',
     taskId: string,
     organizationId: string,
     metadata?: Record<string, any>,
   ): Promise<void> {
     // For now we only log via NestJS Logger.
-    // Later this can be wired into a dedicated LogService + task_events table.
+    // Later this can be wired into TaskEventsService + task_events table.
     this.logger.log(
       JSON.stringify({
         type,

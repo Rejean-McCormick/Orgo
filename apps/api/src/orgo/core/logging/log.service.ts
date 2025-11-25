@@ -1,3 +1,5 @@
+// apps/api/src/orgo/core/logging/log.service.ts
+
 import {
   Injectable,
   Logger as NestLogger,
@@ -6,6 +8,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { promises as fsp } from 'fs';
 import * as path from 'path';
+import {
+  FN_LOG_SECURITY_EVENT,
+  FN_LOG_SYSTEM_EVENT,
+  FunctionalId,
+  isFunctionalId,
+} from '../functional-ids';
 
 /**
  * Canonical log categories (must align with Orgo LOG_CATEGORY enum).
@@ -28,6 +36,32 @@ export enum LogLevel {
   ERROR = 'ERROR',
   CRITICAL = 'CRITICAL',
 }
+
+/**
+ * VISIBILITY enum used for log/event classification.
+ * Mirrors the VISIBILITY enum used in Tasks/Cases and privacy docs.
+ */
+export const LOG_VISIBILITY_VALUES = [
+  'PUBLIC',
+  'INTERNAL',
+  'RESTRICTED',
+  'ANONYMISED',
+] as const;
+
+export type LogVisibility = (typeof LOG_VISIBILITY_VALUES)[number];
+
+/**
+ * Behaviour/profile-level logging detail (Doc 7 – logging_level).
+ */
+export const PROFILE_LOGGING_LEVEL_VALUES = [
+  'minimal',
+  'standard',
+  'detailed',
+  'audit',
+] as const;
+
+export type ProfileLoggingLevel =
+  (typeof PROFILE_LOGGING_LEVEL_VALUES)[number];
 
 export type LogFormat = 'json' | 'text';
 
@@ -78,15 +112,48 @@ export interface LoggingConfig {
   categories: Record<LogCategory, LoggingCategoryConfig>;
 }
 
+/**
+ * Logical log event shape as persisted to log files.
+ *
+ * This matches the Core Services spec (Doc 5 §9.3) with additional optional
+ * context fields for multi-tenant and functional ID tracing.
+ */
 export interface StructuredLogEvent {
   timestamp: string; // ISO8601 UTC
   level: LogLevel;
   category: LogCategory;
   message: string;
+  /**
+   * Optional correlation identifier (e.g. "task_id:123").
+   */
   identifier?: string;
+  /**
+   * Tenant / organization scope (maps to organizations.id).
+   */
+  organizationId?: string;
+  /**
+   * Stable functional identifier for the originating operation.
+   * (e.g. FN_LOG_SYSTEM_EVENT, FN_ALERT_ESCALATION_DELAY)
+   */
+  functionId?: FunctionalId | string;
+  /**
+   * Event-level visibility classification.
+   */
+  visibility?: LogVisibility;
+  /**
+   * Arbitrary structured metadata.
+   * When privacy rules require sanitisation, this may contain only a minimal,
+   * non-sensitive subset of the original payload.
+   */
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * Input payload for logEvent.
+ *
+ * This is the canonical TS form of log_event(category, log_level, message, ...)
+ * from Doc 5 §9.3, extended with tenant/functional/visibility context.
+ */
 export interface LogEventInput {
   /**
    * Category token; case-insensitive string or enum. Invalid values are normalised to SYSTEM.
@@ -95,8 +162,11 @@ export interface LogEventInput {
 
   /**
    * Level token; case-insensitive string or enum. "WARN" is treated as "WARNING".
+   * Callers may use either `level` or `logLevel` (to mirror the spec).
+   * If both are omitted, defaults to INFO.
    */
-  level: LogLevel | string;
+  level?: LogLevel | string;
+  logLevel?: LogLevel | string;
 
   /**
    * Human-readable message.
@@ -117,6 +187,44 @@ export interface LogEventInput {
    * Optional timestamp; if omitted, current time (in UTC) is used.
    */
   timestamp?: Date;
+
+  /**
+   * Stable functional identifier for the operation emitting this event.
+   * When provided, it is normalised against FunctionalId and attached
+   * as both top-level `functionId` and metadata.functionId/fn.
+   */
+  functionId?: FunctionalId | string;
+
+  /**
+   * Tenant / organization scope (maps to organizations.id).
+   */
+  organizationId?: string;
+
+  /**
+   * Optional user context for traceability. These are forwarded into metadata.
+   */
+  actorUserId?: string;
+  actorRoleId?: string;
+
+  /**
+   * Visibility classification (PUBLIC / INTERNAL / RESTRICTED / ANONYMISED).
+   * Used together with profileLoggingLevel / sanitizeMetadata to decide
+   * whether to include or strip potentially sensitive metadata.
+   */
+  visibility?: LogVisibility | string;
+
+  /**
+   * Organization profile logging_level ("minimal" | "standard" | "detailed" | "audit")
+   * if known to the caller (see profiles logging_level).
+   */
+  profileLoggingLevel?: ProfileLoggingLevel;
+
+  /**
+   * Force scrubbing of sensitive metadata fields regardless of profileLoggingLevel.
+   * When true, only safe structural context (e.g. organizationId, functionId,
+   * visibility) is retained in metadata; arbitrary payload fields are dropped.
+   */
+  sanitizeMetadata?: boolean;
 }
 
 /**
@@ -132,6 +240,7 @@ const LOG_LEVEL_ORDER: Record<LogLevel, number> = {
 
 /**
  * Default per-category logging configuration, aligned with the core logging spec.
+ * (Doc 5 §9.2 – logging_config).
  */
 const DEFAULT_CATEGORY_CONFIG: Record<LogCategory, LoggingCategoryConfig> = {
   [LogCategory.WORKFLOW]: {
@@ -174,7 +283,8 @@ const DEFAULT_CATEGORY_CONFIG: Record<LogCategory, LoggingCategoryConfig> = {
  * - Enforce canonical LOG_CATEGORY / LOG_LEVEL tokens.
  * - Honour a minimum log level threshold.
  * - Write structured JSON/text lines to per-category log files.
- * - Provide helpers for security events and log rotation.
+ * - Attach functional IDs and tenant/visibility context to events.
+ * - Provide helpers for security/system events and log rotation.
  */
 @Injectable()
 export class LogService implements OnModuleInit {
@@ -199,19 +309,39 @@ export class LogService implements OnModuleInit {
    */
   logEvent(input: LogEventInput): void {
     const category = this.normalizeCategory(input.category);
-    const level = this.normalizeLevel(input.level);
+    const level = this.resolveLevel(input);
 
     if (!this.shouldLog(level)) {
       return;
     }
 
+    const timestamp = (input.timestamp ?? new Date()).toISOString();
+    const visibility = this.normalizeVisibilityToken(
+      input.visibility as string | undefined,
+    );
+    const normalizedFunctionId = this.normalizeFunctionId(input.functionId);
+
+    const metadata = this.buildSafeMetadata({
+      baseMetadata: input.metadata,
+      organizationId: input.organizationId,
+      functionId: normalizedFunctionId,
+      actorUserId: input.actorUserId,
+      actorRoleId: input.actorRoleId,
+      visibility,
+      profileLoggingLevel: input.profileLoggingLevel,
+      sanitizeMetadata: input.sanitizeMetadata,
+    });
+
     const event: StructuredLogEvent = {
-      timestamp: (input.timestamp ?? new Date()).toISOString(),
+      timestamp,
       level,
       category,
       message: input.message,
       identifier: input.identifier,
-      metadata: input.metadata,
+      organizationId: input.organizationId,
+      functionId: normalizedFunctionId,
+      visibility,
+      metadata,
     };
 
     const line =
@@ -224,24 +354,53 @@ export class LogService implements OnModuleInit {
   }
 
   /**
+   * Convenience helper for SYSTEM-category events.
+   *
+   * Uses FN_LOG_SYSTEM_EVENT by default when no functionId is provided.
+   */
+  logSystemEvent(
+    message: string,
+    options: Omit<LogEventInput, 'category' | 'message'> = {},
+  ): void {
+    const { functionId, ...rest } = options;
+
+    this.logEvent({
+      ...rest,
+      category: LogCategory.SYSTEM,
+      message,
+      functionId: functionId ?? FN_LOG_SYSTEM_EVENT,
+    });
+  }
+
+  /**
    * Convenience helper for SECURITY-category events.
    *
    * Example usage:
-   *   logSecurityEvent('User login failed', { identifier: `user_id:${id}`, metadata: {...} });
+   *   logSecurityEvent('User login failed', {
+   *     identifier: `user_id:${id}`,
+   *     organizationId,
+   *     actorUserId,
+   *     metadata: {...},
+   *   });
+   *
+   * Default level is WARNING when not explicitly provided.
+   * Uses FN_LOG_SECURITY_EVENT by default when no functionId is provided.
    */
   logSecurityEvent(
     message: string,
-    options: Omit<LogEventInput, 'category' | 'level' | 'message'> & {
+    options: Omit<LogEventInput, 'category' | 'message'> & {
       level?: LogLevel | string;
     } = {},
   ): void {
+    const { level, logLevel, functionId, ...rest } = options;
+
     this.logEvent({
+      ...rest,
       category: LogCategory.SECURITY,
-      level: options.level ?? LogLevel.WARNING,
       message,
-      identifier: options.identifier,
-      metadata: options.metadata,
-      timestamp: options.timestamp,
+      // Preserve explicit level/logLevel if provided, otherwise default WARNING.
+      level: level ?? logLevel ?? LogLevel.WARNING,
+      functionId: functionId ?? FN_LOG_SECURITY_EVENT,
     });
   }
 
@@ -325,34 +484,49 @@ export class LogService implements OnModuleInit {
     }
   }
 
-  private normalizeLevelToken(token?: string | null): LogLevel | null {
+  private normalizeLevelToken(token?: string | null): LogLevel | undefined {
     if (!token) {
-      return null;
+      return undefined;
     }
 
     const upper = token.toUpperCase().trim();
 
-    if (upper === 'WARN') {
-      return LogLevel.WARNING;
+    switch (upper) {
+      case 'DEBUG':
+        return LogLevel.DEBUG;
+      case 'INFO':
+        return LogLevel.INFO;
+      case 'WARN':
+      case 'WARNING':
+        return LogLevel.WARNING;
+      case 'ERROR':
+        return LogLevel.ERROR;
+      case 'CRITICAL':
+        return LogLevel.CRITICAL;
+      default:
+        this.logger.warn(
+          `Unknown log level token "${token}", falling back to default.`,
+        );
+        return undefined;
     }
+  }
 
-    const values = Object.values(LogLevel);
-    if (values.includes(upper as LogLevel)) {
-      return upper as LogLevel;
-    }
-
-    this.logger.warn(
-      `Unknown ORGO_LOG_LEVEL "${token}", falling back to default level.`,
-    );
-    return null;
+  /**
+   * Normalise a severity value from LogEventInput.
+   * Accepts both level/logLevel and defaults to INFO when neither is set.
+   */
+  private resolveLevel(input: LogEventInput): LogLevel {
+    const candidate = input.level ?? input.logLevel ?? LogLevel.INFO;
+    return this.normalizeLevel(candidate);
   }
 
   private normalizeLevel(level: LogLevel | string): LogLevel {
     if (Object.values(LogLevel).includes(level as LogLevel)) {
       return level as LogLevel;
     }
-    const normalised = this.normalizeLevelToken(String(level));
-    return normalised ?? LogLevel.INFO;
+
+    const token = this.normalizeLevelToken(String(level));
+    return token ?? LogLevel.INFO;
   }
 
   private normalizeCategory(category: LogCategory | string): LogCategory {
@@ -373,10 +547,171 @@ export class LogService implements OnModuleInit {
     return LogCategory.SYSTEM;
   }
 
+  private normalizeVisibilityToken(
+    visibility?: string | LogVisibility | null,
+  ): LogVisibility | undefined {
+    if (!visibility) {
+      return undefined;
+    }
+
+    const upper = String(visibility).toUpperCase().trim();
+    if (
+      (LOG_VISIBILITY_VALUES as readonly string[]).includes(upper)
+    ) {
+      return upper as LogVisibility;
+    }
+
+    this.logger.warn(
+      `Unknown log visibility "${visibility}", defaulting to INTERNAL.`,
+    );
+    return 'INTERNAL';
+  }
+
+  private normalizeFunctionId(
+    functionId?: FunctionalId | string,
+  ): FunctionalId | string | undefined {
+    if (!functionId) {
+      return undefined;
+    }
+
+    const token = String(functionId).trim();
+    if (!token) {
+      return undefined;
+    }
+
+    if (isFunctionalId(token)) {
+      return token;
+    }
+
+    // Allow non-canonical functional IDs but keep them as plain strings.
+    this.logger.warn(
+      `Non-canonical functionalId "${token}" used in log event.`,
+    );
+    return token;
+  }
+
   private shouldLog(level: LogLevel): boolean {
     return (
       LOG_LEVEL_ORDER[level] >= LOG_LEVEL_ORDER[this.minLevel as LogLevel]
     );
+  }
+
+  /**
+   * Build metadata for a log event, attaching tenant/functional/actor/visibility
+   * context and applying privacy rules when required.
+   */
+  private buildSafeMetadata(input: {
+    baseMetadata?: Record<string, unknown>;
+    organizationId?: string;
+    functionId?: FunctionalId | string;
+    actorUserId?: string;
+    actorRoleId?: string;
+    visibility?: LogVisibility;
+    profileLoggingLevel?: ProfileLoggingLevel;
+    sanitizeMetadata?: boolean;
+  }): Record<string, unknown> | undefined {
+    const effectiveVisibility = input.visibility;
+    const shouldSanitize = this.shouldSanitizeMetadata(
+      effectiveVisibility,
+      input.profileLoggingLevel,
+      input.sanitizeMetadata,
+    );
+
+    // If we must sanitize, keep only structural, non-sensitive context.
+    if (shouldSanitize) {
+      const sanitized: Record<string, unknown> = {};
+
+      if (input.organizationId) {
+        sanitized.organizationId = input.organizationId;
+      }
+
+      if (input.functionId) {
+        sanitized.functionId = input.functionId;
+        sanitized.fn = input.functionId;
+      }
+
+      if (effectiveVisibility) {
+        sanitized.visibility = effectiveVisibility;
+      }
+
+      if (input.actorUserId) {
+        sanitized.actorUserId = input.actorUserId;
+      }
+
+      if (input.actorRoleId) {
+        sanitized.actorRoleId = input.actorRoleId;
+      }
+
+      return Object.keys(sanitized).length > 0 ? sanitized : undefined;
+    }
+
+    // No sanitisation required → merge full metadata payload plus context.
+    const metadata: Record<string, unknown> = {
+      ...(input.baseMetadata ?? {}),
+    };
+
+    if (input.organizationId && metadata.organizationId == null) {
+      metadata.organizationId = input.organizationId;
+    }
+
+    if (input.functionId) {
+      if (metadata.functionId == null) {
+        metadata.functionId = input.functionId;
+      }
+      if (metadata.fn == null) {
+        metadata.fn = input.functionId;
+      }
+    }
+
+    if (input.actorUserId && metadata.actorUserId == null) {
+      metadata.actorUserId = input.actorUserId;
+    }
+
+    if (input.actorRoleId && metadata.actorRoleId == null) {
+      metadata.actorRoleId = input.actorRoleId;
+    }
+
+    if (effectiveVisibility && metadata.visibility == null) {
+      metadata.visibility = effectiveVisibility;
+    }
+
+    return Object.keys(metadata).length > 0 ? metadata : undefined;
+  }
+
+  /**
+   * Decide whether metadata should be stripped down to non-sensitive context.
+   *
+   * Behaviour:
+   * - explicit sanitizeMetadata=true → always sanitize.
+   * - visibility=ANONYMISED → always sanitize.
+   * - visibility=RESTRICTED and profileLoggingLevel is missing or "minimal"
+   *   → sanitize to avoid leaking sensitive fields in operational logs.
+   */
+  private shouldSanitizeMetadata(
+    visibility?: LogVisibility,
+    profileLoggingLevel?: ProfileLoggingLevel,
+    explicit?: boolean,
+  ): boolean {
+    if (explicit) {
+      return true;
+    }
+
+    if (!visibility) {
+      return false;
+    }
+
+    if (visibility === 'ANONYMISED') {
+      return true;
+    }
+
+    if (
+      visibility === 'RESTRICTED' &&
+      (!profileLoggingLevel || profileLoggingLevel === 'minimal')
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   private formatTextLine(event: StructuredLogEvent): string {

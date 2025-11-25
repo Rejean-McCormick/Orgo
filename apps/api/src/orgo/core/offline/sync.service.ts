@@ -1,5 +1,7 @@
+// apps/api/src/orgo/core/offline/sync.service.ts
+
 import { Injectable, Logger } from '@nestjs/common';
-import { DatabaseService } from '../persistence/database.service';
+import { DatabaseService } from '../database/database.service';
 
 export type SyncDirection = 'upload' | 'download' | 'bidirectional';
 
@@ -23,6 +25,7 @@ export interface OfflineTaskChange {
    * The client-side representation of the task after the operation.
    * This is stored/merged into the canonical tasks row.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
 
   /**
@@ -30,6 +33,7 @@ export interface OfflineTaskChange {
    * this change. Used for optimistic concurrency / conflict detection.
    * If omitted, the change is applied with "last write wins" semantics.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   serverVersion?: Record<string, any> | null;
 }
 
@@ -79,6 +83,7 @@ export interface DownloadSnapshot {
    * Tasks changed on the server since last sync and relevant to this org.
    * Shape is the raw tasks rows; filtering/normalisation is handled by the client.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tasks: any[];
 }
 
@@ -106,6 +111,7 @@ export interface SyncResult {
  *
  * This service is intentionally generic and does not embed domain logic.
  * It works with the canonical Task model and multi‑tenant invariants.
+ * It always runs against the ONLINE Postgres database via DatabaseService.
  */
 @Injectable()
 export class SyncService {
@@ -154,7 +160,7 @@ export class SyncService {
       nodeIdentifier,
     );
 
-    // 2. Start sync session
+    // 2. Start sync session (sync_sessions)
     const session = await this.startSyncSession(
       prisma,
       offlineNode.id,
@@ -181,7 +187,7 @@ export class SyncService {
           prisma,
           organizationId,
           offlineNode,
-          payload.clientLastSyncAt,
+          payload.clientLastSyncAt ?? null,
           summary,
         );
       }
@@ -190,7 +196,7 @@ export class SyncService {
       await this.completeSyncSession(prisma, session.id, 'completed', summary);
 
       // 6. Update offline_nodes.last_sync_at
-      await prisma.offline_nodes.update({
+      await prisma.offlineNode.update({
         where: { id: offlineNode.id },
         data: { last_sync_at: new Date() },
       });
@@ -240,13 +246,9 @@ export class SyncService {
   // ---------------------------------------------------------------------------
 
   /**
-   * Obtain a PrismaClient from the DatabaseService. The DatabaseService in the
-   * Orgo stack is expected to expose either:
-   *  - getPrismaClient(): PrismaClient
-   *  - prisma: PrismaClient
-   *
-   * This method handles both shapes and falls back to the raw service for
-   * test/mocked implementations.
+   * Obtain a PrismaClient from the DatabaseService.
+   * This is intentionally tolerant to slight variations in DatabaseService
+   * implementations (prisma vs getPrismaClient()).
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private getPrismaClient(): any {
@@ -269,8 +271,9 @@ export class SyncService {
     prisma: any,
     organizationId: string,
     nodeIdentifier: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
-    const existing = await prisma.offline_nodes.findFirst({
+    const existing = await prisma.offlineNode.findFirst({
       where: {
         organization_id: organizationId,
         node_identifier: nodeIdentifier,
@@ -285,7 +288,7 @@ export class SyncService {
       `Creating offline node for org=${organizationId}, node=${nodeIdentifier}`,
     );
 
-    return prisma.offline_nodes.create({
+    return prisma.offlineNode.create({
       data: {
         organization_id: organizationId,
         node_identifier: nodeIdentifier,
@@ -303,7 +306,7 @@ export class SyncService {
     direction: SyncDirection,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
-    return prisma.sync_sessions.create({
+    return prisma.syncSession.create({
       data: {
         offline_node_id: offlineNodeId,
         direction,
@@ -324,7 +327,7 @@ export class SyncService {
     summary: SyncSummary,
     error?: unknown,
   ): Promise<void> {
-    await prisma.sync_sessions.update({
+    await prisma.syncSession.update({
       where: { id: sessionId },
       data: {
         status,
@@ -335,6 +338,14 @@ export class SyncService {
     });
   }
 
+  /**
+   * Apply uploaded task changes from an offline node to the central tasks table.
+   * Enforces:
+   *  - multi-tenant safety (organization_id checks),
+   *  - optimistic concurrency via serverVersion / updated_at,
+   *  - conflict logging into sync_conflicts,
+   *  - soft-delete semantics (CANCELLED) for deletes.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async applyTaskUploadChanges(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -358,9 +369,18 @@ export class SyncService {
 
       switch (change.operation) {
         case 'insert': {
-          await prisma.tasks.create({
+          // Never allow offline nodes to override identity/tenant fields.
+          const data = { ...change.data };
+
+          delete (data as any).id;
+          delete (data as any).task_id;
+          delete (data as any).taskId;
+          delete (data as any).organization_id;
+          delete (data as any).organizationId;
+
+          await prisma.task.create({
             data: {
-              ...change.data,
+              ...data,
               organization_id: organizationId,
             },
           });
@@ -376,19 +396,50 @@ export class SyncService {
             continue;
           }
 
-          const serverRow = await prisma.tasks.findUnique({
+          const serverRow = await prisma.task.findUnique({
             where: { id: baseTaskId },
           });
 
           if (!serverRow) {
-            // If server no longer has the row, treat as create.
-            await prisma.tasks.create({
+            // If server no longer has the row, treat as create for this org.
+            const data = { ...change.data };
+
+            delete (data as any).id;
+            delete (data as any).task_id;
+            delete (data as any).taskId;
+            delete (data as any).organization_id;
+            delete (data as any).organizationId;
+
+            await prisma.task.create({
               data: {
-                ...change.data,
+                ...data,
                 organization_id: organizationId,
               },
             });
             summary.createdTasks += 1;
+            break;
+          }
+
+          const serverOrgId =
+            (serverRow as any).organization_id ??
+            (serverRow as any).organizationId ??
+            (serverRow as any).org_id ??
+            null;
+
+          if (serverOrgId && serverOrgId !== organizationId) {
+            this.logger.error(
+              `Cross-tenant offline update prevented for task=${baseTaskId}: server organization=${serverOrgId}, client organization=${organizationId}`,
+            );
+
+            await this.recordConflict(
+              prisma,
+              sessionId,
+              'task',
+              baseTaskId,
+              serverRow,
+              change.data,
+            );
+            summary.conflicts += 1;
             break;
           }
 
@@ -405,9 +456,17 @@ export class SyncService {
             break;
           }
 
-          await prisma.tasks.update({
+          const data = { ...change.data };
+
+          delete (data as any).id;
+          delete (data as any).task_id;
+          delete (data as any).taskId;
+          delete (data as any).organization_id;
+          delete (data as any).organizationId;
+
+          await prisma.task.update({
             where: { id: baseTaskId },
-            data: change.data,
+            data,
           });
           summary.updatedTasks += 1;
           break;
@@ -421,12 +480,35 @@ export class SyncService {
             continue;
           }
 
-          const serverRow = await prisma.tasks.findUnique({
+          const serverRow = await prisma.task.findUnique({
             where: { id: baseTaskId },
           });
 
           if (!serverRow) {
             // Already deleted on the server; nothing to do.
+            break;
+          }
+
+          const serverOrgId =
+            (serverRow as any).organization_id ??
+            (serverRow as any).organizationId ??
+            (serverRow as any).org_id ??
+            null;
+
+          if (serverOrgId && serverOrgId !== organizationId) {
+            this.logger.error(
+              `Cross-tenant offline delete prevented for task=${baseTaskId}: server organization=${serverOrgId}, client organization=${organizationId}`,
+            );
+
+            await this.recordConflict(
+              prisma,
+              sessionId,
+              'task',
+              baseTaskId,
+              serverRow,
+              change.data,
+            );
+            summary.conflicts += 1;
             break;
           }
 
@@ -445,7 +527,7 @@ export class SyncService {
 
           // Map delete to a canonical CANCELLED transition; we do not hard‑delete
           // tasks because they are part of the audit trail.
-          await prisma.tasks.update({
+          await prisma.task.update({
             where: { id: baseTaskId },
             data: {
               status: 'CANCELLED',
@@ -479,6 +561,7 @@ export class SyncService {
   private hasVersionConflict(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     serverRow: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     clientServerVersion?: Record<string, any> | null,
   ): boolean {
     if (!clientServerVersion) {
@@ -514,7 +597,7 @@ export class SyncService {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     clientVersion: any,
   ): Promise<void> {
-    await prisma.sync_conflicts.create({
+    await prisma.syncConflict.create({
       data: {
         sync_session_id: sessionId,
         entity_type: entityType,
@@ -543,15 +626,15 @@ export class SyncService {
     clientLastSyncAt: string | null | undefined,
     summary: SyncSummary,
   ): Promise<DownloadSnapshot> {
-    const lastSync =
+    const lastSyncIso =
       clientLastSyncAt ??
       (offlineNode.last_sync_at
         ? new Date(offlineNode.last_sync_at).toISOString()
         : null);
 
-    const lastSyncDate = lastSync ? new Date(lastSync) : new Date(0);
+    const lastSyncDate = lastSyncIso ? new Date(lastSyncIso) : new Date(0);
 
-    const tasks = await prisma.tasks.findMany({
+    const tasks = await prisma.task.findMany({
       where: {
         organization_id: organizationId,
         updated_at: {

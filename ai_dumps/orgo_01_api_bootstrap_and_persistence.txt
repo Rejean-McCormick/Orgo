@@ -1,3 +1,91 @@
+=== FILE 1/9: apps/api/package.json ===
+
+{
+  "name": "api",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "dev": "nest build --webpack --webpackPath webpack-hmr.config.js --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch --runInBand",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
+    "test:ci": "jest --ci --runInBand"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.1.3",
+    "@nestjs/config": "^3.0.0",
+    "@nestjs/core": "^10.1.3",
+    "@nestjs/platform-express": "^10.1.3",
+    "@nestjs/swagger": "^7.1.6",
+    "@prisma/client": "^5.1.0",
+    "joi": "^17.9.2",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^5.0.1",
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.1.11",
+    "@nestjs/schematics": "^10.0.1",
+    "@nestjs/testing": "^10.1.3",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.3",
+    "@types/node": "^20.4.5",
+    "@types/supertest": "^2.0.12",
+    "@typescript-eslint/eslint-plugin": "^6.2.1",
+    "@typescript-eslint/parser": "^6.2.1",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^8.9.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.6.2",
+    "prettier": "^3.0.0",
+    "prisma": "^5.1.0",
+    "run-script-webpack-plugin": "^0.2.0",
+    "source-map-support": "^0.5.21",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "ts-loader": "^9.4.4",
+    "ts-node": "^10.9.1",
+    "tsconfig": "*",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.1.6",
+    "webpack": "^5.88.2",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  }
+}
+
+
+=== FILE 2/9: apps/api/prisma/schema.prisma ===
+
 // Orgo v3 – Prisma schema
 // Operational schema (public) + Insights star-schema (insights)
 
@@ -1584,3 +1672,190 @@ model FactWellbeingCheckin {
   @@index([organization_id])
   @@index([person_id])
 }
+
+
+=== FILE 3/9: apps/api/src/app.controller.ts ===
+
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  async getHello(): Promise<{ message: string }> {
+    return await this.appService.getHello();
+  }
+}
+
+
+=== FILE 4/9: apps/api/src/app.module.ts ===
+
+// C:\MyCode\Orgo\apps\api\src\app.module.ts
+
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { validationSchemaForEnv } from './config/environment-variables';
+import { PersistenceModule } from './persistence/persistence.module';
+
+// Orgo core + backbone
+import { OrgoModule } from './orgo/orgo.module';
+import { OrganizationModule } from './orgo/backbone/organizations/organization.module';
+import { PersonProfileModule } from './orgo/backbone/persons/person-profile.module';
+import { IdentityLinkModule } from './orgo/backbone/identity/identity-link.module';
+
+// Domain modules
+import { EducationModule } from './orgo/domain/education/education.module';
+import { HrModule } from './orgo/domain/hr/hr.module';
+
+// Insights / analytics
+import { InsightsModule } from './orgo/insights/insights.module';
+
+@Module({
+  imports: [
+    // Global ENV config + validation
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: validationSchemaForEnv,
+    }),
+
+    // Prisma-based core persistence (operational DB)
+    PersistenceModule,
+
+    // TypeORM DataSource for Insights (analytics / star-schema).
+    // Uses INSIGHTS_WAREHOUSE_URL when set, otherwise falls back to DATABASE_URL.
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const url =
+          config.get<string>('INSIGHTS_WAREHOUSE_URL') ||
+          config.get<string>('DATABASE_URL');
+
+        if (!url) {
+          throw new Error(
+            'INSIGHTS_WAREHOUSE_URL or DATABASE_URL must be configured for Insights reporting.',
+          );
+        }
+
+        return {
+          type: 'postgres' as const,
+          url,
+          // Insights services use raw SQL; entities are not required here.
+          autoLoadEntities: false,
+          synchronize: false,
+          logging: false,
+        };
+      },
+    }),
+
+    // Core Orgo services (tasks, cases, workflow, labels, config, logging)
+    OrgoModule,
+
+    // Backbone: organizations, persons, identity links
+    OrganizationModule,
+    PersonProfileModule,
+    IdentityLinkModule,
+
+    // Domain-level modules
+    EducationModule,
+    HrModule,
+
+    // Read-only reporting / analytics API
+    InsightsModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+
+=== FILE 5/9: apps/api/src/app.service.ts ===
+
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  async getHello(): Promise<{ message: string }> {
+    return { message: 'Hello World' };
+  }
+}
+
+
+=== FILE 6/9: apps/api/src/config/environment-variables.ts ===
+
+import * as Joi from 'joi';
+
+export interface EnvironmentVariables {
+  DATABASE_URL: string;
+}
+
+export const validationSchemaForEnv = Joi.object<EnvironmentVariables, true>({
+  DATABASE_URL: Joi.string().required(),
+});
+
+
+=== FILE 7/9: apps/api/src/main.ts ===
+
+import { Logger } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
+declare const module: any;
+async function bootstrap() {
+  const logger = new Logger('EntryPoint');
+  const app = await NestFactory.create(AppModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('Leaves Tracker')
+    .setDescription('Api Docs for leaves tracker')
+    .setVersion('1.0')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
+  const PORT = 5002;
+
+  await app.listen(PORT);
+
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
+  logger.log(`Server running on http://localhost:${PORT}`);
+}
+bootstrap();
+
+
+=== FILE 8/9: apps/api/src/persistence/persistence.module.ts ===
+
+import { Module } from '@nestjs/common';
+import { PrismaService } from './prisma/prisma.service';
+
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PersistenceModule {}
+
+
+=== FILE 9/9: apps/api/src/persistence/prisma/prisma.service.ts ===
+
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  async onModuleInit() {
+    await this.$connect();
+  }
+}
+
+

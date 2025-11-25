@@ -2,7 +2,11 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 
-import { LogService } from '../logging/log.service';
+import {
+  LogCategory,
+  LogLevel,
+  LogService,
+} from '../logging/log.service';
 import { FN_SIGNAL_INGEST } from '../functional-ids';
 
 import {
@@ -139,7 +143,13 @@ export class SignalIngestService {
     const normalisedResult = this.normaliseSignal(dto);
 
     if (!normalisedResult.ok || !normalisedResult.data) {
-      return normalisedResult;
+      // Propagate validation/normalisation errors in the standard shape,
+      // but with the SignalIngestResult data type.
+      return {
+        ok: false,
+        data: null,
+        error: normalisedResult.error,
+      };
     }
 
     const signal = normalisedResult.data;
@@ -174,9 +184,7 @@ export class SignalIngestService {
     let workflowResult: WorkflowEngineResult<WorkflowExecutionResultData>;
 
     try {
-      workflowResult = await this.workflowEngine.executeWorkflow(
-        workflowContext,
-      );
+      workflowResult = await this.workflowEngine.executeWorkflow(workflowContext);
     } catch (err: unknown) {
       const error: StandardError = {
         code: 'SIGNAL_WORKFLOW_EXECUTION_ERROR',
@@ -189,8 +197,8 @@ export class SignalIngestService {
       };
 
       await this.logService.logEvent({
-        category: 'WORKFLOW',
-        logLevel: 'ERROR',
+        category: LogCategory.WORKFLOW,
+        level: LogLevel.ERROR,
         message: error.message,
         identifier: FN_SIGNAL_INGEST,
         metadata: {
@@ -225,8 +233,8 @@ export class SignalIngestService {
       };
 
       await this.logService.logEvent({
-        category: 'WORKFLOW',
-        logLevel: 'ERROR',
+        category: LogCategory.WORKFLOW,
+        level: LogLevel.ERROR,
         message: error.message,
         identifier: FN_SIGNAL_INGEST,
         metadata: {
@@ -274,8 +282,8 @@ export class SignalIngestService {
 
     if (failedActions.length > 0) {
       await this.logService.logEvent({
-        category: 'TASK',
-        logLevel: 'ERROR',
+        category: LogCategory.TASK,
+        level: LogLevel.ERROR,
         message:
           'One or more CREATE_TASK actions failed while ingesting signal.',
         identifier: FN_SIGNAL_INGEST,
@@ -289,15 +297,14 @@ export class SignalIngestService {
     }
 
     await this.logService.logEvent({
-      category: 'WORKFLOW',
-      logLevel: 'INFO',
+      category: LogCategory.WORKFLOW,
+      level: LogLevel.INFO,
       message: 'Signal ingested via API / UI.',
       identifier: FN_SIGNAL_INGEST,
       metadata: {
         functionId: FN_SIGNAL_INGEST,
         organizationId: signal.organizationId,
         source: signal.source,
-        workflowId: execution.workflowId,
         matchedRuleIds: execution.matchedRules.map((r) => r.id),
         createdTaskIds: createdTasks.map((t) => t.taskId ?? t.task_id),
       },
@@ -319,9 +326,7 @@ export class SignalIngestService {
    * Normalise either the new CreateSignalDto or the legacy snake_case DTO
    * into a single internal NormalizedSignal shape.
    */
-  private normaliseSignal(
-    dto: SignalInput,
-  ): StandardResult<NormalizedSignal> {
+  private normaliseSignal(dto: SignalInput): StandardResult<NormalizedSignal> {
     try {
       const isLegacy =
         (dto as LegacySignalDto).organization_id !== undefined;
@@ -442,6 +447,28 @@ export class SignalIngestService {
           err instanceof Error ? err.stack ?? err.message : String(err)
         }`,
       );
+
+      // Best-effort structured log for observability; failures here must not
+      // break the original error path.
+      this.logService
+        .logEvent({
+          category: LogCategory.WORKFLOW,
+          level: LogLevel.ERROR,
+          message: error.message,
+          identifier: FN_SIGNAL_INGEST,
+          metadata: {
+            functionId: FN_SIGNAL_INGEST,
+            stage: 'normalise_signal_error',
+            error: error.details,
+          },
+        })
+        .catch((logErr) => {
+          this.logger.warn(
+            `Failed to write signal normalisation log event: ${
+              logErr instanceof Error ? logErr.message : String(logErr)
+            }`,
+          );
+        });
 
       return {
         ok: false,
@@ -625,9 +652,9 @@ export class SignalIngestService {
         : {};
 
     const workflowMeta: Record<string, any> = {
-      workflowId: resolved.workflowId,
       ruleId: resolved.ruleId,
-      actionId: resolved.id,
+      ruleVersion: resolved.ruleVersion,
+      actionIndex: resolved.actionIndex,
       actionType: resolved.action.type,
       origin: 'signal_ingest',
     };

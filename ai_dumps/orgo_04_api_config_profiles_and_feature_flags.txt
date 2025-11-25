@@ -16,6 +16,11 @@ import { OrgProfileService } from './org-profile.service';
 import { FeatureFlagService } from './feature-flag.service';
 
 /**
+ * Canonical environment values used in configuration.
+ */
+export type Environment = 'dev' | 'staging' | 'prod' | 'offline';
+
+/**
  * Standard result shape used by core services (Doc 5).
  * Controllers generally just pass this through to the client.
  */
@@ -35,7 +40,7 @@ export interface StandardResult<T = any> {
  */
 export interface GetGlobalConfigOptions {
   organizationId?: string;
-  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+  environment?: Environment;
   /**
    * Optional list of module identifiers whose config should be included.
    * Example: ["core", "insights", "maintenance"].
@@ -56,7 +61,7 @@ export interface UpdateServiceConfigRequest {
   /**
    * Optional environment scope; must be one of the canonical ENVIRONMENT values (Doc 2).
    */
-  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+  environment?: Environment;
 
   /**
    * Logical module or service identifier, e.g. "core", "email", "logging", "insights".
@@ -70,7 +75,7 @@ export interface UpdateServiceConfigRequest {
   changes: Record<string, unknown>;
 
   /**
-   * Optional free‑form description for audit logs.
+   * Optional free-form description for audit logs.
    */
   reason?: string;
 }
@@ -98,15 +103,15 @@ export interface ImportConfigBundleRequest {
   /**
    * Optional environment this bundle targets.
    */
-  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+  environment?: Environment;
 
   /**
-   * Optional organization scope for org‑specific bundles.
+   * Optional organization scope for org-specific bundles.
    */
   organizationId?: string;
 
   /**
-   * Optional human‑readable description for audit trail.
+   * Optional human-readable description for audit trail.
    */
   reason?: string;
 }
@@ -123,7 +128,7 @@ export interface PreviewOrgProfileRequest {
   profileCode: string;
 
   /**
-   * Optional fine‑grained overrides on top of the base profile.
+   * Optional fine-grained overrides on top of the base profile.
    * The exact structure maps to the profiles YAML schema.
    */
   overrides?: Record<string, unknown>;
@@ -202,23 +207,33 @@ export class ConfigController {
     name: 'modules',
     required: false,
     description:
-      'Comma‑separated list of module identifiers (e.g. "core,insights,maintenance").',
+      'Comma-separated list of module identifiers (e.g. "core,insights,maintenance"), ' +
+      'or a repeated query param (modules=core&modules=insights).',
   })
   async getGlobalConfig(
     @Query('organizationId') organizationId?: string,
-    @Query('environment') environment?: string,
-    @Query('modules') modules?: string,
+    @Query('environment') environment?: GetGlobalConfigOptions['environment'],
+    @Query('modules') modules?: string | string[],
   ): Promise<StandardResult> {
+    const moduleList = (() => {
+      if (!modules) {
+        return undefined;
+      }
+
+      const raw = Array.isArray(modules) ? modules : [modules];
+
+      const tokens = raw
+        .flatMap((value) => value.split(','))
+        .map((m) => m.trim())
+        .filter(Boolean);
+
+      return tokens.length > 0 ? tokens : undefined;
+    })();
+
     const opts: GetGlobalConfigOptions = {
       organizationId: organizationId || undefined,
-      environment:
-        (environment as GetGlobalConfigOptions['environment']) || undefined,
-      modules: modules
-        ? modules
-            .split(',')
-            .map((m) => m.trim())
-            .filter(Boolean)
-        : undefined,
+      environment: environment || undefined,
+      modules: moduleList,
     };
 
     return this.configService.getGlobalConfig(opts);
@@ -385,752 +400,843 @@ export class OrgoConfigModule {}
 
 === FILE 3/7: apps/api/src/orgo/config/config.service.ts ===
 
+// apps/api/src/orgo/config/config.service.ts
+
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService as NestConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 
-export type OrgoEnvironment = 'dev' | 'staging' | 'prod' | 'offline';
-
-export interface ConfigMetadata {
-  config_name: string;
-  version: string;
-  environment: OrgoEnvironment;
-  last_updated: string;
-  owner?: string;
-  organization_id?: string;
-}
-
-export interface BaseConfig {
-  metadata?: ConfigMetadata;
-  // Allow arbitrary additional keys – each config file defines its own subtree.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
+/**
+ * Configuration scope identifiers.
+ */
+export type OrgoConfigScope = 'base' | 'environment' | 'org';
 
 /**
- * Database config (database_connection.yaml)
- * Shape aligned with Doc 5 Core Services specification. :contentReference[oaicite:0]{index=0}
+ * The environment name used to select environment-level configuration.
  */
-export interface DatabasePoolConfig {
-  min_connections?: number;
-  max_connections?: number;
-  idle_timeout_seconds?: number;
-}
+export type OrgoEnvironmentName = string;
 
-export interface PostgresDatabaseConfig {
+/**
+ * Email configuration slice.
+ *
+ * This type is intentionally permissive: only core fields are typed,
+ * while additional keys from YAML are preserved via index signatures.
+ */
+export interface EmailConfig {
   enabled?: boolean;
-  url_env?: string;
-  host?: string;
-  port?: number;
-  database?: string;
-  schema?: string;
-  user_env?: string;
-  password_env?: string;
-  pool?: DatabasePoolConfig;
+  provider?: string;
+  fromAddress?: string;
+  replyToAddress?: string;
+  transactionalDomain?: string;
+  /**
+   * Map of template keys to template identifiers (e.g. provider template IDs).
+   */
+  templates?: Record<string, string>;
+  [key: string]: unknown;
 }
 
-export interface SqliteDatabaseConfig {
+/**
+ * Per-channel notification configuration.
+ */
+export interface NotificationChannelConfig {
   enabled?: boolean;
-  file_path?: string;
-  timeout_seconds?: number;
-}
-
-export interface DatabaseConfig extends BaseConfig {
-  postgres?: PostgresDatabaseConfig;
-  sqlite?: SqliteDatabaseConfig;
+  [key: string]: unknown;
 }
 
 /**
- * Email config (email_config.yaml) :contentReference[oaicite:1]{index=1}
+ * Notifications configuration slice.
  */
-export interface SmtpConfig {
-  host?: string;
-  port?: number;
-  use_tls?: boolean;
-  use_ssl?: boolean;
-  username_env?: string;
-  password_env?: string;
-  connection_timeout_secs?: number;
-  send_timeout_secs?: number;
-  max_retries?: number;
-  retry_backoff_secs?: number;
-}
-
-export interface ImapConfig {
-  host?: string;
-  port?: number;
-  use_ssl?: boolean;
-  username_env?: string;
-  password_env?: string;
-  connection_timeout_secs?: number;
-  read_timeout_secs?: number;
-  folder?: string;
-}
-
-export interface EmailLimitsConfig {
-  max_email_size_mb?: number;
-  allowed_attachment_mimetypes?: string[];
-}
-
-export interface EmailConfig extends BaseConfig {
-  smtp?: SmtpConfig;
-  imap?: ImapConfig;
-  limits?: EmailLimitsConfig;
-}
-
-/**
- * Logging config (logging_config.yaml) :contentReference[oaicite:2]{index=2}
- */
-export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
-export type LogCategory =
-  | 'WORKFLOW'
-  | 'TASK'
-  | 'SYSTEM'
-  | 'SECURITY'
-  | 'EMAIL';
-
-export interface LoggingRootConfig {
-  level?: LogLevel;
-  format?: 'json' | 'text';
-  log_dir?: string;
-}
-
-export interface LoggingCategoryConfig {
-  file?: string;
-  retention_days?: number;
-  rotation?: 'daily' | 'weekly' | 'size';
-  max_file_size_mb?: number;
-}
-
-export interface LoggingConfig extends BaseConfig {
-  logging?: LoggingRootConfig;
-  categories?: Partial<Record<LogCategory | string, LoggingCategoryConfig>>;
-}
-
-/**
- * Notification config (notification_config.yaml) :contentReference[oaicite:3]{index=3}
- */
-export type NotificationChannel = 'EMAIL' | 'SMS' | 'IN_APP' | 'WEBHOOK';
-
-export interface NotificationChannelsConfig {
-  email?: {
+export interface NotificationsConfig {
+  enabled?: boolean;
+  channels?: {
+    email?: NotificationChannelConfig;
+    sms?: NotificationChannelConfig;
+    push?: NotificationChannelConfig;
+    in_app?: NotificationChannelConfig;
+    [channel: string]: NotificationChannelConfig | undefined;
+  };
+  digest?: {
     enabled?: boolean;
-    sender_name?: string;
-    sender_address?: string;
+    /**
+     * Cron expression or similar schedule identifier.
+     */
+    cron?: string;
+    [key: string]: unknown;
   };
-  in_app?: {
-    enabled?: boolean;
-  };
-  sms?: {
-    enabled?: boolean;
-  };
-  webhook?: {
-    enabled?: boolean;
-  };
-}
-
-export interface NotificationTemplatesConfig {
-  task_created?: string;
-  task_assignment?: string;
-  task_escalation?: string;
-  task_completed?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [templateId: string]: any;
-}
-
-export interface NotificationConfig extends BaseConfig {
-  notifications?: {
-    default_channel?: NotificationChannel;
-    channels?: NotificationChannelsConfig;
-    templates?: NotificationTemplatesConfig;
-  };
+  [key: string]: unknown;
 }
 
 /**
- * Insights config (config.yaml – wrapper around `insights:` subtree). :contentReference[oaicite:4]{index=4}
+ * Insights/analytics configuration slice.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface InsightsConfig extends BaseConfig {
-  insights?: any;
+export interface InsightsConfig {
+  enabled?: boolean;
+  /**
+   * Sampling rate between 0 and 1.
+   */
+  samplingRate?: number;
+  /**
+   * Data retention in days.
+   */
+  retentionDays?: number;
+  /**
+   * Destinations (e.g. warehouses, streams, external tools).
+   */
+  destinations?: {
+    [destinationName: string]: {
+      enabled?: boolean;
+      [key: string]: unknown;
+    };
+  };
+  [key: string]: unknown;
 }
 
 /**
- * Profiles YAML (organization_profiles.yaml – top-level `profiles:` map). :contentReference[oaicite:5]{index=5}
+ * Profile / feature-flag configuration slice.
+ *
+ * This allows:
+ * - A top-level `feature_flags` map for simple feature toggles.
+ * - Arbitrary profiles under `profiles` if the docs define those.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ProfilesConfig {
-  profiles: Record<string, any>;
+export interface OrgProfilesConfig {
+  default_profile?: string;
+  feature_flags?: {
+    [flagName: string]: boolean;
+  };
+  profiles?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
-export interface GlobalConfigSnapshot {
-  environment: OrgoEnvironment;
-  configBasePath: string;
-  database: DatabaseConfig | null;
-  email: EmailConfig | null;
-  logging: LoggingConfig | null;
-  notifications: NotificationConfig | null;
-  insights: InsightsConfig | null;
-  profiles: ProfilesConfig | null;
+/**
+ * Workflows configuration slice.
+ *
+ * The shape of workflow definitions is domain-specific, so it is kept generic.
+ */
+export interface WorkflowsConfig {
+  [workflowKey: string]: unknown;
 }
 
-export class ConfigValidationError extends Error {
-  constructor(message: string, public readonly filePath?: string) {
-    super(filePath ? `${message} (config file: ${filePath})` : message);
+/**
+ * Top-level config object as loaded from YAML, after normalization.
+ *
+ * This includes environment-level configuration plus module-level slices.
+ */
+export interface OrgoConfig {
+  /**
+   * Free-form environment label. May be duplicated by `environment`.
+   */
+  env?: OrgoEnvironmentName;
+  /**
+   * Alternative field for environment name.
+   */
+  environment?: OrgoEnvironmentName;
+
+  /**
+   * Module-level configuration slices.
+   */
+  email?: EmailConfig;
+  notifications?: NotificationsConfig;
+  workflows?: WorkflowsConfig;
+  org_profiles?: OrgProfilesConfig;
+  insights?: InsightsConfig;
+
+  /**
+   * Additional modules / keys not explicitly typed here.
+   */
+  [key: string]: unknown;
+}
+
+/**
+ * A partial configuration used for environment-level and org-level overrides.
+ */
+export type OrgoConfigOverride = Partial<OrgoConfig>;
+
+/**
+ * Keys for the strongly-typed module slices that are accessed via helpers.
+ */
+export type OrgoModuleKey =
+  | 'email'
+  | 'notifications'
+  | 'workflows'
+  | 'org_profiles'
+  | 'insights';
+
+/**
+ * Utility: detects plain objects.
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Utility: deep merge of config objects.
+ *
+ * - Later objects override earlier ones.
+ * - Objects are merged recursively.
+ * - Arrays are replaced, not concatenated.
+ * - `undefined` values do not overwrite.
+ */
+function deepMerge<T>(...sources: Array<Partial<T> | undefined>): T {
+  const result: any = {};
+
+  for (const source of sources) {
+    if (!isPlainObject(source)) {
+      continue;
+    }
+
+    for (const [key, value] of Object.entries(source)) {
+      if (value === undefined) {
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        result[key] = value.slice();
+        continue;
+      }
+
+      if (isPlainObject(value)) {
+        const prev = result[key];
+        if (isPlainObject(prev)) {
+          result[key] = deepMerge(prev as any, value as any);
+        } else {
+          result[key] = deepMerge(value as any);
+        }
+        continue;
+      }
+
+      result[key] = value;
+    }
   }
+
+  return result as T;
 }
 
+/**
+ * Service responsible for loading and merging configuration at:
+ * - base scope (`base.yaml`)
+ * - environment scope (`<env>.yaml`)
+ * - organization scope (`orgs/<orgId>.yaml`)
+ *
+ * Configuration is YAML-based, normalized, and validated per slice,
+ * then exposed via helpers for raw and module-level access.
+ */
 @Injectable()
-export class ConfigService {
-  private readonly logger = new Logger(ConfigService.name);
+export class OrgoConfigService {
+  private readonly logger = new Logger(OrgoConfigService.name);
 
-  private readonly env: OrgoEnvironment;
-  private readonly basePath: string;
+  /**
+   * Root directory where YAML config files live.
+   *
+   * Layout:
+   *   base.yaml
+   *   <env>.yaml
+   *   orgs/
+   *     <orgId>.yaml
+   */
+  private readonly configRoot: string;
 
-  private readonly cache = new Map<string, BaseConfig>();
+  /**
+   * Environment name, used to pick `<env>.yaml`.
+   */
+  private readonly environment: OrgoEnvironmentName;
 
-  private static readonly VALID_ENVIRONMENTS: OrgoEnvironment[] = [
-    'dev',
-    'staging',
-    'prod',
-    'offline',
-  ];
+  /**
+   * Base (global) configuration.
+   */
+  private readonly baseConfig: OrgoConfig;
 
-  private static readonly VALID_LOG_LEVELS: LogLevel[] = [
-    'DEBUG',
-    'INFO',
-    'WARNING',
-    'ERROR',
-    'CRITICAL',
-  ];
+  /**
+   * Environment-level configuration overrides.
+   */
+  private readonly envConfig: OrgoConfigOverride;
 
-  private static readonly VALID_LOG_CATEGORIES: LogCategory[] = [
-    'WORKFLOW',
-    'TASK',
-    'SYSTEM',
-    'SECURITY',
-    'EMAIL',
-  ];
+  /**
+   * Cache of org-level configuration overrides per org ID.
+   */
+  private readonly orgConfigCache = new Map<string, OrgoConfigOverride>();
 
-  private static readonly VALID_NOTIFICATION_CHANNELS: NotificationChannel[] =
-    ['EMAIL', 'SMS', 'IN_APP', 'WEBHOOK'];
+  /**
+   * Cache of fully merged config per org ID (base + env + org).
+   */
+  private readonly mergedOrgConfigCache = new Map<string, OrgoConfig>();
 
-  constructor(private readonly nestConfig: NestConfigService) {
-    this.env = this.resolveEnvironment();
-    this.basePath = this.resolveBasePath();
+  constructor() {
+    this.configRoot =
+      process.env.ORGO_CONFIG_ROOT || path.resolve(process.cwd(), 'config');
 
-    this.logger.log(
-      `Initialising Orgo ConfigService (env="${this.env}", basePath="${this.basePath}")`,
+    this.environment = this.detectEnvironment();
+
+    this.baseConfig = this.loadAndNormalizeConfig(
+      this.resolveConfigPath('base'),
+      'base',
+      false,
+    ) as OrgoConfig;
+
+    this.envConfig = this.loadAndNormalizeConfig(
+      this.resolveConfigPath(this.environment),
+      `environment(${this.environment})`,
+      true,
+    );
+  }
+
+  /**
+   * Returns the effective environment name.
+   *
+   * Precedence: ORGO_ENV > NODE_ENV > 'development'.
+   */
+  private detectEnvironment(): OrgoEnvironmentName {
+    const env =
+      process.env.ORGO_ENV ||
+      process.env.NODE_ENV ||
+      'development';
+
+    return env;
+  }
+
+  /**
+   * Resolves a config path within the config root.
+   *
+   * Examples:
+   *   resolveConfigPath('base')      -> <root>/base.yaml
+   *   resolveConfigPath('staging')   -> <root>/staging.yaml
+   */
+  private resolveConfigPath(name: string): string {
+    return path.join(this.configRoot, `${name}.yaml`);
+  }
+
+  /**
+   * Resolves an org override config path.
+   *
+   * Example:
+   *   resolveOrgConfigPath('org_123') -> <root>/orgs/org_123.yaml
+   */
+  private resolveOrgConfigPath(orgId: string): string {
+    return path.join(this.configRoot, 'orgs', `${orgId}.yaml`);
+  }
+
+  /**
+   * Loads a YAML file and returns the raw JS object, or `undefined` if missing.
+   */
+  private loadYamlFile(
+    filePath: string,
+    label: string,
+    allowMissing: boolean,
+  ): unknown | undefined {
+    if (!fs.existsSync(filePath)) {
+      if (allowMissing) {
+        this.logger.debug(
+          `Orgo config "${label}" file not found at ${filePath}; skipping.`,
+        );
+      } else {
+        this.logger.warn(
+          `Orgo config "${label}" file not found at ${filePath}; continuing with empty config.`,
+        );
+      }
+      return undefined;
+    }
+
+    const contents = fs.readFileSync(filePath, 'utf8');
+    if (!contents.trim()) {
+      return {};
+    }
+
+    try {
+      return yaml.load(contents) ?? {};
+    } catch (err) {
+      this.logger.error(
+        `Failed to parse YAML for "${label}" at ${filePath}`,
+        (err as Error).stack,
+      );
+      throw err;
+    }
+  }
+
+  /**
+   * Loads, normalizes, and validates a config object from YAML.
+   */
+  private loadAndNormalizeConfig(
+    filePath: string,
+    label: string,
+    allowMissing: boolean,
+  ): OrgoConfigOverride {
+    const raw = this.loadYamlFile(filePath, label, allowMissing);
+    if (raw === undefined) {
+      return {};
+    }
+    return this.normalizeConfig(raw);
+  }
+
+  /**
+   * Normalizes and validates a config object for the top-level shape
+   * and well-known module slices.
+   */
+  private normalizeConfig(input: unknown): OrgoConfigOverride {
+    if (input == null) {
+      return {};
+    }
+
+    if (!isPlainObject(input)) {
+      throw new Error(
+        'Configuration root must be a plain object (YAML mapping).',
+      );
+    }
+
+    const raw = input as Record<string, unknown>;
+    const cfg: OrgoConfigOverride = { ...raw };
+
+    if ('email' in raw) {
+      cfg.email = this.normalizeEmailConfig(raw.email);
+    }
+
+    if ('notifications' in raw) {
+      cfg.notifications = this.normalizeNotificationsConfig(raw.notifications);
+    }
+
+    if ('insights' in raw) {
+      cfg.insights = this.normalizeInsightsConfig(raw.insights);
+    }
+
+    if ('org_profiles' in raw) {
+      cfg.org_profiles = this.normalizeOrgProfilesConfig(raw.org_profiles);
+    }
+
+    if ('workflows' in raw && raw.workflows !== undefined) {
+      if (!isPlainObject(raw.workflows)) {
+        throw new Error('workflows config must be an object (YAML mapping).');
+      }
+      cfg.workflows = raw.workflows as WorkflowsConfig;
+    }
+
+    return cfg;
+  }
+
+  /**
+   * Normalizes and validates the email slice.
+   */
+  private normalizeEmailConfig(input: unknown): EmailConfig {
+    if (input == null) {
+      return {};
+    }
+
+    if (!isPlainObject(input)) {
+      throw new Error('email config must be an object (YAML mapping).');
+    }
+
+    const raw = input as Record<string, unknown>;
+    const email: EmailConfig = { ...raw };
+
+    if ('enabled' in raw && typeof raw.enabled !== 'boolean') {
+      throw new Error('email.enabled must be a boolean if present.');
+    }
+
+    if ('provider' in raw && typeof raw.provider !== 'string') {
+      throw new Error('email.provider must be a string if present.');
+    }
+
+    if ('fromAddress' in raw && typeof raw.fromAddress !== 'string') {
+      throw new Error('email.fromAddress must be a string if present.');
+    }
+
+    if ('replyToAddress' in raw && typeof raw.replyToAddress !== 'string') {
+      throw new Error('email.replyToAddress must be a string if present.');
+    }
+
+    if (
+      'transactionalDomain' in raw &&
+      typeof raw.transactionalDomain !== 'string'
+    ) {
+      throw new Error('email.transactionalDomain must be a string if present.');
+    }
+
+    if ('templates' in raw) {
+      const { templates } = raw;
+      if (!isPlainObject(templates)) {
+        throw new Error('email.templates must be a mapping of strings.');
+      }
+
+      const normalizedTemplates: Record<string, string> = {};
+      for (const [key, value] of Object.entries(templates)) {
+        if (typeof value !== 'string') {
+          throw new Error(
+            `email.templates["${key}"] must be a string template identifier.`,
+          );
+        }
+        normalizedTemplates[key] = value;
+      }
+
+      email.templates = normalizedTemplates;
+    }
+
+    return email;
+  }
+
+  /**
+   * Normalizes and validates the notifications slice.
+   */
+  private normalizeNotificationsConfig(input: unknown): NotificationsConfig {
+    if (input == null) {
+      return {};
+    }
+
+    if (!isPlainObject(input)) {
+      throw new Error('notifications config must be an object (YAML mapping).');
+    }
+
+    const raw = input as Record<string, unknown>;
+    const notifications: NotificationsConfig = { ...raw };
+
+    if ('enabled' in raw && typeof raw.enabled !== 'boolean') {
+      throw new Error('notifications.enabled must be a boolean if present.');
+    }
+
+    if ('channels' in raw && raw.channels !== undefined) {
+      if (!isPlainObject(raw.channels)) {
+        throw new Error('notifications.channels must be an object.');
+      }
+      const channelsRaw = raw.channels as Record<string, unknown>;
+      const channels: NotificationsConfig['channels'] = {};
+
+      for (const [channelName, channelValue] of Object.entries(channelsRaw)) {
+        if (channelValue == null) {
+          continue;
+        }
+        if (!isPlainObject(channelValue)) {
+          throw new Error(
+            `notifications.channels["${channelName}"] must be an object.`,
+          );
+        }
+        const channel: NotificationChannelConfig = { ...channelValue };
+        if (
+          'enabled' in channelValue &&
+          typeof (channelValue as any).enabled !== 'boolean'
+        ) {
+          throw new Error(
+            `notifications.channels["${channelName}"].enabled must be a boolean if present.`,
+          );
+        }
+        channels[channelName] = channel;
+      }
+
+      notifications.channels = channels;
+    }
+
+    if ('digest' in raw && raw.digest !== undefined) {
+      if (!isPlainObject(raw.digest)) {
+        throw new Error('notifications.digest must be an object.');
+      }
+      const digestRaw = raw.digest as Record<string, unknown>;
+      const digest: NonNullable<NotificationsConfig['digest']> = {
+        ...digestRaw,
+      };
+
+      if ('enabled' in digestRaw && typeof digestRaw.enabled !== 'boolean') {
+        throw new Error('notifications.digest.enabled must be a boolean.');
+      }
+
+      if ('cron' in digestRaw && typeof digestRaw.cron !== 'string') {
+        throw new Error('notifications.digest.cron must be a string.');
+      }
+
+      notifications.digest = digest;
+    }
+
+    return notifications;
+  }
+
+  /**
+   * Normalizes and validates the insights slice.
+   */
+  private normalizeInsightsConfig(input: unknown): InsightsConfig {
+    if (input == null) {
+      return {};
+    }
+
+    if (!isPlainObject(input)) {
+      throw new Error('insights config must be an object (YAML mapping).');
+    }
+
+    const raw = input as Record<string, unknown>;
+    const insights: InsightsConfig = { ...raw };
+
+    if ('enabled' in raw && typeof raw.enabled !== 'boolean') {
+      throw new Error('insights.enabled must be a boolean if present.');
+    }
+
+    if ('samplingRate' in raw) {
+      const sr = raw.samplingRate;
+      if (typeof sr !== 'number') {
+        throw new Error('insights.samplingRate must be a number if present.');
+      }
+      if (sr < 0 || sr > 1) {
+        throw new Error('insights.samplingRate must be between 0 and 1.');
+      }
+    }
+
+    if ('retentionDays' in raw && typeof raw.retentionDays !== 'number') {
+      throw new Error('insights.retentionDays must be a number if present.');
+    }
+
+    if ('destinations' in raw && raw.destinations !== undefined) {
+      if (!isPlainObject(raw.destinations)) {
+        throw new Error('insights.destinations must be an object.');
+      }
+
+      const destRaw = raw.destinations as Record<string, unknown>;
+      const destinations: NonNullable<InsightsConfig['destinations']> = {};
+
+      for (const [name, value] of Object.entries(destRaw)) {
+        if (value == null) {
+          continue;
+        }
+        if (!isPlainObject(value)) {
+          throw new Error(
+            `insights.destinations["${name}"] must be an object.`,
+          );
+        }
+        const dest: { enabled?: boolean; [k: string]: unknown } = { ...value };
+
+        if ('enabled' in value && typeof (value as any).enabled !== 'boolean') {
+          throw new Error(
+            `insights.destinations["${name}"].enabled must be a boolean if present.`,
+          );
+        }
+
+        destinations[name] = dest;
+      }
+
+      insights.destinations = destinations;
+    }
+
+    return insights;
+  }
+
+  /**
+   * Normalizes and validates the org_profiles slice.
+   */
+  private normalizeOrgProfilesConfig(input: unknown): OrgProfilesConfig {
+    if (input == null) {
+      return {};
+    }
+
+    if (!isPlainObject(input)) {
+      throw new Error('org_profiles config must be an object (YAML mapping).');
+    }
+
+    const raw = input as Record<string, unknown>;
+    const orgProfiles: OrgProfilesConfig = { ...raw };
+
+    if (
+      'default_profile' in raw &&
+      raw.default_profile !== undefined &&
+      typeof raw.default_profile !== 'string'
+    ) {
+      throw new Error('org_profiles.default_profile must be a string.');
+    }
+
+    if ('feature_flags' in raw && raw.feature_flags !== undefined) {
+      if (!isPlainObject(raw.feature_flags)) {
+        throw new Error('org_profiles.feature_flags must be an object.');
+      }
+
+      const flagsRaw = raw.feature_flags as Record<string, unknown>;
+      const featureFlags: NonNullable<OrgProfilesConfig['feature_flags']> = {};
+
+      for (const [name, value] of Object.entries(flagsRaw)) {
+        if (typeof value !== 'boolean') {
+          throw new Error(
+            `org_profiles.feature_flags["${name}"] must be a boolean.`,
+          );
+        }
+        featureFlags[name] = value;
+      }
+
+      orgProfiles.feature_flags = featureFlags;
+    }
+
+    if ('profiles' in raw && raw.profiles !== undefined) {
+      if (!isPlainObject(raw.profiles)) {
+        throw new Error('org_profiles.profiles must be an object.');
+      }
+      orgProfiles.profiles = raw.profiles as Record<string, unknown>;
+    }
+
+    return orgProfiles;
+  }
+
+  /**
+   * Returns the environment name used by this service.
+   */
+  getEnvironment(): OrgoEnvironmentName {
+    return this.environment;
+  }
+
+  /**
+   * Returns the raw base configuration (already normalized and validated).
+   */
+  getBaseConfig(): OrgoConfig {
+    return this.baseConfig;
+  }
+
+  /**
+   * Returns the raw environment-level configuration (already normalized).
+   */
+  getEnvironmentConfig(): OrgoConfigOverride {
+    return this.envConfig;
+  }
+
+  /**
+   * Returns the raw organization-level configuration override for a given org,
+   * loading and caching it from YAML if necessary.
+   */
+  getOrgConfig(orgId: string): OrgoConfigOverride {
+    if (!orgId) {
+      return {};
+    }
+
+    const cached = this.orgConfigCache.get(orgId);
+    if (cached) {
+      return cached;
+    }
+
+    const filePath = this.resolveOrgConfigPath(orgId);
+    const override = this.loadAndNormalizeConfig(
+      filePath,
+      `org(${orgId})`,
+      true,
     );
 
-    // Validate core configs eagerly so the app fails fast on misconfiguration.
-    this.ensureCoreConfigsLoaded();
+    this.orgConfigCache.set(orgId, override);
+    return override;
   }
 
   /**
-   * Returns the canonical Orgo environment inferred from env vars.
+   * Returns the three-level scoped configs without merging.
    */
-  getEnvironment(): OrgoEnvironment {
-    return this.env;
-  }
-
-  /**
-   * Returns the absolute base path where Orgo YAML configs are expected.
-   */
-  getConfigBasePath(): string {
-    return this.basePath;
-  }
-
-  /**
-   * Returns a merged view of key Orgo configuration slices.
-   */
-  getGlobalConfig(): GlobalConfigSnapshot {
+  getScopedConfigs(orgId?: string): {
+    base: OrgoConfig;
+    environment: OrgoConfigOverride;
+    org: OrgoConfigOverride;
+  } {
     return {
-      environment: this.env,
-      configBasePath: this.basePath,
-      database: this.getDatabaseConfig(false),
-      email: this.getEmailConfig(false),
-      logging: this.getLoggingConfig(false),
-      notifications: this.getNotificationConfig(false),
-      insights: this.getInsightsConfig(false),
-      profiles: this.getProfilesConfig(false),
+      base: this.baseConfig,
+      environment: this.envConfig,
+      org: orgId ? this.getOrgConfig(orgId) : {},
     };
   }
 
   /**
-   * Load and validate database_connection.yaml.
-   */
-  getDatabaseConfig(required = true): DatabaseConfig | null {
-    const config = this.loadYamlFile<DatabaseConfig>(
-      'database/database_connection.yaml',
-      { required, validateMetadata: true },
-    );
-    if (!config) {
-      return null;
-    }
-    this.validateDatabaseConfig(config, 'database/database_connection.yaml');
-    return config;
-  }
-
-  /**
-   * Load and validate email_config.yaml.
-   */
-  getEmailConfig(required = true): EmailConfig | null {
-    const config = this.loadYamlFile<EmailConfig>('email/email_config.yaml', {
-      required,
-      validateMetadata: true,
-    });
-    if (!config) {
-      return null;
-    }
-    this.validateEmailConfig(config, 'email/email_config.yaml');
-    return config;
-  }
-
-  /**
-   * Load and validate logging_config.yaml.
-   */
-  getLoggingConfig(required = true): LoggingConfig | null {
-    const config = this.loadYamlFile<LoggingConfig>(
-      'logging/logging_config.yaml',
-      {
-        required,
-        validateMetadata: true,
-      },
-    );
-    if (!config) {
-      return null;
-    }
-    this.validateLoggingConfig(config, 'logging/logging_config.yaml');
-    return config;
-  }
-
-  /**
-   * Load and validate notification_config.yaml.
-   */
-  getNotificationConfig(required = true): NotificationConfig | null {
-    const config = this.loadYamlFile<NotificationConfig>(
-      'notifications/notification_config.yaml',
-      { required, validateMetadata: true },
-    );
-    if (!config) {
-      return null;
-    }
-    this.validateNotificationConfig(
-      config,
-      'notifications/notification_config.yaml',
-    );
-    return config;
-  }
-
-  /**
-   * Load and validate insights/config.yaml.
-   */
-  getInsightsConfig(required = true): InsightsConfig | null {
-    const config = this.loadYamlFile<InsightsConfig>('insights/config.yaml', {
-      required,
-      validateMetadata: true,
-    });
-    if (!config) {
-      return null;
-    }
-    // Additional invariants for insights are mostly enforced by Insights module itself;
-    // here we only validate common metadata.
-    return config;
-  }
-
-  /**
-   * Load profiles YAML (organization profiles). This file uses per-profile metadata
-   * rather than a single top-level metadata block, so metadata validation is skipped. :contentReference[oaicite:6]{index=6}
-   */
-  getProfilesConfig(required = true): ProfilesConfig | null {
-    const config = this.loadYamlFile<ProfilesConfig>(
-      'profiles/organization_profiles.yaml',
-      {
-        required,
-        validateMetadata: false,
-      },
-    );
-    if (!config) {
-      return null;
-    }
-    if (!config.profiles || typeof config.profiles !== 'object') {
-      throw new ConfigValidationError(
-        'Profiles config must contain a top-level "profiles" map',
-        'profiles/organization_profiles.yaml',
-      );
-    }
-    return config;
-  }
-
-  /**
-   * Placeholder for future updates via admin APIs.
-   * Aligns with Doc 4 entry ConfigService.updateServiceConfig. :contentReference[oaicite:7]{index=7}
+   * Returns the fully merged configuration for a given org:
+   * base + environment + orgOverride.
    *
-   * This method is intentionally conservative and only supports in-process updates;
-   * persisting config changes back to YAML and writing audit logs should be handled
-   * by a dedicated configuration management flow.
+   * If `orgId` is omitted, only base + environment are merged.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async updateServiceConfig(
-    // e.g. "email", "logging", "database", "notifications", "insights"
-    logicalServiceName: string,
-    // New config subtree to apply (already validated at DTO level).
-    value: any,
-  ): Promise<void> {
-    this.logger.warn(
-      `updateServiceConfig("${logicalServiceName}") called, but dynamic persistence is not yet implemented. ` +
-        'You can implement YAML write-back and audit logging here when enabling the admin config UI.',
+  getMergedConfig(orgId?: string): OrgoConfig {
+    if (!orgId) {
+      return deepMerge<OrgoConfig>(this.baseConfig, this.envConfig);
+    }
+
+    const cached = this.mergedOrgConfigCache.get(orgId);
+    if (cached) {
+      return cached;
+    }
+
+    const orgOverride = this.getOrgConfig(orgId);
+    const merged = deepMerge<OrgoConfig>(
+      this.baseConfig,
+      this.envConfig,
+      orgOverride,
     );
-    // No-op for now – config is read-only at runtime.
-  }
-
-  // -------------------------------------------------------------------------
-  // Internal helpers
-  // -------------------------------------------------------------------------
-
-  private resolveEnvironment(): OrgoEnvironment {
-    const explicit =
-      this.nestConfig.get<string>('ORGO_ENV') ?? process.env.ORGO_ENV;
-    const nodeEnv =
-      this.nestConfig.get<string>('NODE_ENV') ?? process.env.NODE_ENV;
-
-    let raw = (explicit ?? nodeEnv ?? 'dev').toLowerCase();
-
-    if (raw === 'development') {
-      raw = 'dev';
-    }
-    if (raw === 'production') {
-      raw = 'prod';
-    }
-
-    if (
-      (ConfigService.VALID_ENVIRONMENTS as string[]).includes(
-        raw as OrgoEnvironment,
-      )
-    ) {
-      return raw as OrgoEnvironment;
-    }
-
-    this.logger.warn(
-      `Unknown environment "${raw}", falling back to "dev". Expected one of: ${ConfigService.VALID_ENVIRONMENTS.join(
-        ', ',
-      )}`,
-    );
-    return 'dev';
-  }
-
-  private resolveBasePath(): string {
-    const override =
-      this.nestConfig.get<string>('ORGO_CONFIG_BASE_PATH') ??
-      process.env.ORGO_CONFIG_BASE_PATH;
-
-    if (override) {
-      return path.resolve(override);
-    }
-
-    // At runtime the API app usually executes from apps/api or apps/api/dist.
-    // Going two levels up reaches the monorepo root, then /config.
-    return path.resolve(process.cwd(), '..', '..', 'config');
+    this.mergedOrgConfigCache.set(orgId, merged);
+    return merged;
   }
 
   /**
-   * Eagerly load and validate core configs so the app fails fast on misconfiguration.
+   * Returns a strongly-typed module-level configuration slice.
+   *
+   * Example:
+   *   getModuleConfig('email', orgId)
+   *   getModuleConfig('insights')
    */
-  private ensureCoreConfigsLoaded(): void {
-    try {
-      // Database & logging are required for any serious deployment.
-      this.getDatabaseConfig(true);
-      this.getLoggingConfig(true);
-
-      // Email, notifications and insights may be optional; load if present.
-      this.getEmailConfig(false);
-      this.getNotificationConfig(false);
-      this.getInsightsConfig(false);
-      this.getProfilesConfig(false);
-    } catch (error) {
-      if (error instanceof ConfigValidationError) {
-        this.logger.error(error.message);
-      } else {
-        this.logger.error(
-          `Unexpected error while loading Orgo config: ${
-            (error as Error)?.message ?? String(error)
-          }`,
-        );
-      }
-      // Re-throw so NestJS fails the bootstrap process.
-      throw error;
-    }
+  getModuleConfig<K extends OrgoModuleKey>(
+    moduleKey: K,
+    orgId?: string,
+  ): OrgoConfig[K] | undefined {
+    const merged = this.getMergedConfig(orgId);
+    return merged[moduleKey] as OrgoConfig[K] | undefined;
   }
 
   /**
-   * Load a YAML file from the config base path, optionally validate metadata,
-   * and cache the result for subsequent calls.
+   * Convenience: get email config for an optional org.
    */
-  private loadYamlFile<T extends BaseConfig>(
-    relativePath: string,
-    options: { required?: boolean; validateMetadata?: boolean } = {},
-  ): T | null {
-    const { required = true, validateMetadata = true } = options;
+  getEmailConfig(orgId?: string): EmailConfig | undefined {
+    return this.getModuleConfig('email', orgId) as EmailConfig | undefined;
+  }
 
-    if (this.cache.has(relativePath)) {
-      return this.cache.get(relativePath) as T;
+  /**
+   * Convenience: get notifications config for an optional org.
+   */
+  getNotificationsConfig(orgId?: string): NotificationsConfig | undefined {
+    return this.getModuleConfig(
+      'notifications',
+      orgId,
+    ) as NotificationsConfig | undefined;
+  }
+
+  /**
+   * Convenience: get insights config for an optional org.
+   */
+  getInsightsConfig(orgId?: string): InsightsConfig | undefined {
+    return this.getModuleConfig('insights', orgId) as InsightsConfig | undefined;
+  }
+
+  /**
+   * Generic getter using a dot-delimited path into the merged config.
+   *
+   * Examples:
+   *   get('email.provider')
+   *   get('notifications.channels.email.enabled', orgId)
+   */
+  get<T = unknown>(pathExpr: string, orgId?: string): T | undefined {
+    const merged = this.getMergedConfig(orgId);
+    if (!pathExpr) {
+      return merged as unknown as T;
     }
 
-    const absolutePath = path.resolve(this.basePath, relativePath);
+    const parts = pathExpr.split('.');
+    let current: any = merged;
 
-    if (!fs.existsSync(absolutePath)) {
-      const message = `Config file not found at ${absolutePath}`;
-      if (required) {
-        throw new ConfigValidationError(message, relativePath);
+    for (const part of parts) {
+      if (current == null) {
+        return undefined;
       }
-      this.logger.warn(message);
-      return null;
+      current = current[part];
     }
 
-    const fileContents = fs.readFileSync(absolutePath, 'utf8');
-    const parsed = yaml.load(fileContents) as T;
-
-    if (!parsed || typeof parsed !== 'object') {
-      throw new ConfigValidationError(
-        'Config file did not contain a YAML object at the top level',
-        relativePath,
-      );
-    }
-
-    if (validateMetadata) {
-      this.validateMetadata(parsed, relativePath);
-    }
-
-    this.cache.set(relativePath, parsed);
-    return parsed;
+    return current as T | undefined;
   }
 
-  private validateMetadata(config: BaseConfig, relativePath: string): void {
-    if (!config.metadata || typeof config.metadata !== 'object') {
-      throw new ConfigValidationError(
-        'Missing or invalid "metadata" section',
-        relativePath,
-      );
+  /**
+   * Returns whether a feature flag is enabled for a given org.
+   *
+   * Reads from:
+   *   org_profiles.feature_flags[flagName]
+   *
+   * If the flag is not defined, returns `defaultValue` (false by default).
+   */
+  isFeatureEnabled(
+    flagName: string,
+    orgId?: string,
+    defaultValue = false,
+  ): boolean {
+    const merged = this.getMergedConfig(orgId);
+    const orgProfiles = merged.org_profiles as OrgProfilesConfig | undefined;
+    const flags = orgProfiles?.feature_flags;
+    if (!flags) {
+      return defaultValue;
     }
-
-    const { config_name, version, environment, last_updated } = config.metadata;
-
-    if (!config_name || typeof config_name !== 'string') {
-      throw new ConfigValidationError(
-        '"metadata.config_name" must be a non-empty string',
-        relativePath,
-      );
-    }
-
-    if (!version || typeof version !== 'string') {
-      throw new ConfigValidationError(
-        '"metadata.version" must be a non-empty string',
-        relativePath,
-      );
-    }
-
-    // Doc 2: version must match ^3\.[0-9]+$ for Orgo v3 configs. :contentReference[oaicite:8]{index=8}
-    const versionPattern = /^3\.[0-9]+$/;
-    if (!versionPattern.test(version)) {
-      throw new ConfigValidationError(
-        `"metadata.version" must match ${versionPattern.source} for Orgo v3 configs`,
-        relativePath,
-      );
-    }
-
-    if (!environment || typeof environment !== 'string') {
-      throw new ConfigValidationError(
-        '"metadata.environment" must be set',
-        relativePath,
-      );
-    }
-
-    if (
-      !ConfigService.VALID_ENVIRONMENTS.includes(
-        environment as OrgoEnvironment,
-      )
-    ) {
-      throw new ConfigValidationError(
-        `"metadata.environment" must be one of ${ConfigService.VALID_ENVIRONMENTS.join(
-          ', ',
-        )}`,
-        relativePath,
-      );
-    }
-
-    if (!last_updated || typeof last_updated !== 'string') {
-      throw new ConfigValidationError(
-        '"metadata.last_updated" must be a non-empty string in YYYY-MM-DD format',
-        relativePath,
-      );
-    }
-
-    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-    if (!datePattern.test(last_updated)) {
-      throw new ConfigValidationError(
-        '"metadata.last_updated" must be in YYYY-MM-DD format',
-        relativePath,
-      );
-    }
-  }
-
-  private validateDatabaseConfig(
-    config: DatabaseConfig,
-    relativePath: string,
-  ): void {
-    const postgresEnabled = !!config.postgres?.enabled;
-    const sqliteEnabled = !!config.sqlite?.enabled;
-
-    // Doc 2/5: exactly one of postgres.enabled / sqlite.enabled may be true. 
-    if (postgresEnabled && sqliteEnabled) {
-      throw new ConfigValidationError(
-        'Only one of postgres.enabled or sqlite.enabled can be true',
-        relativePath,
-      );
-    }
-
-    if (!postgresEnabled && !sqliteEnabled) {
-      this.logger.warn(
-        `Neither Postgres nor SQLite is enabled in ${relativePath} – database-dependent services may fail.`,
-      );
-    }
-
-    if (config.postgres?.pool) {
-      const { min_connections, max_connections } = config.postgres.pool;
-      if (
-        typeof min_connections === 'number' &&
-        typeof max_connections === 'number' &&
-        min_connections > max_connections
-      ) {
-        throw new ConfigValidationError(
-          'postgres.pool.min_connections must be <= postgres.pool.max_connections',
-          relativePath,
-        );
-      }
-    }
-
-    if (sqliteEnabled && !config.sqlite?.file_path) {
-      this.logger.warn(
-        `SQLite is enabled but "sqlite.file_path" is not set in ${relativePath}`,
-      );
-    }
-  }
-
-  private validateEmailConfig(
-    config: EmailConfig,
-    relativePath: string,
-  ): void {
-    const hasSmtpHost = !!config.smtp?.host;
-    const hasImapHost = !!config.imap?.host;
-
-    // Doc 2/5: at least one of SMTP/IMAP should be configured. 
-    if (!hasSmtpHost && !hasImapHost) {
-      this.logger.warn(
-        `Neither SMTP nor IMAP host is configured in ${relativePath} – email send/receive may be disabled.`,
-      );
-    }
-
-    if (!config.limits) {
-      throw new ConfigValidationError(
-        '"limits" section is required in email config',
-        relativePath,
-      );
-    }
-
-    if (
-      typeof config.limits.max_email_size_mb !== 'number' ||
-      config.limits.max_email_size_mb <= 0
-    ) {
-      throw new ConfigValidationError(
-        '"limits.max_email_size_mb" must be a positive number',
-        relativePath,
-      );
-    }
-
-    if (
-      !Array.isArray(config.limits.allowed_attachment_mimetypes) ||
-      config.limits.allowed_attachment_mimetypes.length === 0
-    ) {
-      throw new ConfigValidationError(
-        '"limits.allowed_attachment_mimetypes" must be a non-empty array',
-        relativePath,
-      );
-    }
-  }
-
-  private validateLoggingConfig(
-    config: LoggingConfig,
-    relativePath: string,
-  ): void {
-    if (!config.logging) {
-      throw new ConfigValidationError(
-        'Missing "logging" root block in logging config',
-        relativePath,
-      );
-    }
-
-    const level = config.logging.level;
-    if (
-      level &&
-      !ConfigService.VALID_LOG_LEVELS.includes(level as LogLevel)
-    ) {
-      throw new ConfigValidationError(
-        `"logging.level" must be one of ${ConfigService.VALID_LOG_LEVELS.join(
-          ', ',
-        )}`,
-        relativePath,
-      );
-    }
-
-    if (config.categories) {
-      Object.keys(config.categories).forEach((categoryKey) => {
-        if (
-          !ConfigService.VALID_LOG_CATEGORIES.includes(
-            categoryKey as LogCategory,
-          )
-        ) {
-          this.logger.warn(
-            `Unknown log category "${categoryKey}" in ${relativePath} – this is allowed but will not map to a canonical LOG_CATEGORY value.`,
-          );
-        }
-      });
-    }
-  }
-
-  private validateNotificationConfig(
-    config: NotificationConfig,
-    relativePath: string,
-  ): void {
-    if (!config.notifications) {
-      throw new ConfigValidationError(
-        'Missing "notifications" root block in notification config',
-        relativePath,
-      );
-    }
-
-    const { default_channel } = config.notifications;
-
-    if (
-      default_channel &&
-      !ConfigService.VALID_NOTIFICATION_CHANNELS.includes(
-        default_channel as NotificationChannel,
-      )
-    ) {
-      throw new ConfigValidationError(
-        `"notifications.default_channel" must be one of ${ConfigService.VALID_NOTIFICATION_CHANNELS.join(
-          ', ',
-        )}`,
-        relativePath,
-      );
-    }
-
-    if (!config.notifications.templates) {
-      this.logger.warn(
-        `No notification templates defined under "notifications.templates" in ${relativePath}`,
-      );
-    }
+    const value = flags[flagName];
+    return typeof value === 'boolean' ? value : defaultValue;
   }
 }
 
@@ -1523,9 +1629,12 @@ export class FeatureFlagController {
 
 === FILE 5/7: apps/api/src/orgo/config/feature-flag.service.ts ===
 
+// apps/api/src/orgo/config/feature-flag.service.ts
+
 import { Injectable, Logger } from '@nestjs/common';
 import { FeatureFlag } from '@prisma/client';
 import { PrismaService } from '../../persistence/prisma/prisma.service';
+import type { FunctionalId } from '../core/functional-ids';
 
 /**
  * Rollout strategies supported via feature_flags.rollout_strategy (JSONB).
@@ -1544,16 +1653,36 @@ export type RolloutStrategy =
   | { type: 'users'; userIds: string[] };
 
 /**
+ * Canonical environment values for Orgo v3 (Doc 2 – ENVIRONMENT).
+ *
+ * This is kept local to avoid taking a hard dependency on controller/config
+ * classes. It must stay aligned with the values used in the HTTP layer.
+ */
+export type OrgoEnvironment = 'dev' | 'staging' | 'prod' | 'offline';
+
+/**
  * Context used when evaluating whether a flag is effectively enabled.
+ *
+ * organizationId:
+ *   - Organization that the evaluation is being performed for.
+ * userId / roleCodes:
+ *   - Optional user / role context for role/user‑scoped rollouts.
+ * environment:
+ *   - Environment in which the evaluation happens (dev/staging/prod/offline).
+ * functionalId:
+ *   - Optional FunctionalId the evaluation is associated with, used for
+ *     per‑function flag evaluation.
  */
 export interface FeatureFlagEvaluationContext {
   organizationId?: string | null;
   userId?: string | null;
   roleCodes?: string[];
+  environment?: OrgoEnvironment;
+  functionalId?: FunctionalId;
 }
 
 /**
- * Input for FeatureFlagService.setFlag.
+ * Input for FeatureFlagService.setFlag (entity‑level upsert).
  *
  * organizationId:
  *   - UUID string for org‑scoped flags.
@@ -1570,16 +1699,74 @@ export interface SetFeatureFlagInput {
 }
 
 /**
+ * Scope for environment‑ and organization‑aware feature flag operations.
+ *
+ * organizationId:
+ *   - UUID for org‑scoped evaluation, or null/undefined for global.
+ * environment:
+ *   - Canonical environment (dev/staging/prod/offline).
+ */
+export interface FeatureFlagScope {
+  environment: OrgoEnvironment;
+  organizationId?: string | null;
+}
+
+/**
+ * View model for feature flags as exposed to API / other services.
+ *
+ * This intentionally mirrors FeatureFlagDto from feature-flag.controller.ts
+ * but is defined here to avoid a circular dependency on the controller layer.
+ */
+export interface FeatureFlagView {
+  key: string;
+  enabled: boolean;
+  description?: string;
+  rolloutPercentage?: number | null;
+  environment: OrgoEnvironment;
+  organizationId?: string | null;
+  updatedAt?: string;
+  updatedByUserId?: string | null;
+  /**
+   * True if the flag value is inherited from a global default (organization_id = NULL)
+   * rather than defined explicitly for the requested organization.
+   */
+  inherited?: boolean;
+}
+
+/**
+ * Input for environment/org‑scoped upsert used by the HTTP layer.
+ *
+ * key:
+ *   - Stable feature flag key (e.g. "orgo.insights.enabled").
+ * rolloutPercentage:
+ *   - Optional 0–100 rollout percentage; when undefined/null, no gradual rollout
+ *     is configured and the flag is either fully on or off.
+ */
+export interface UpsertFeatureFlagForScopeInput {
+  key: string;
+  enabled: boolean;
+  description?: string;
+  rolloutPercentage?: number | null;
+  environment: OrgoEnvironment;
+  organizationId?: string | null;
+}
+
+/**
  * FeatureFlagService
  *
- * Manages feature_flags to gradually roll out or restrict features per organization.
- * Physical table shape is defined in the Orgo DB schema reference (Doc 1, feature_flags). 
+ * Manages feature_flags to gradually roll out or restrict features per
+ * organization and environment. The physical table shape is defined in the
+ * Orgo DB schema reference (Doc 1, feature_flags). 
  */
 @Injectable()
 export class FeatureFlagService {
   private readonly logger = new Logger(FeatureFlagService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  // ---------------------------------------------------------------------------
+  // Entity-level operations (global/org scopes, no environment dimension)
+  // ---------------------------------------------------------------------------
 
   /**
    * Returns the effective set of flags for an organization:
@@ -1617,6 +1804,7 @@ export class FeatureFlagService {
   }
 
   /**
+   * Entity-level get:
    * Fetch a single flag by code for an organization, with override resolution:
    * - Prefers org‑scoped flag if present.
    * - Falls back to global flag.
@@ -1624,21 +1812,42 @@ export class FeatureFlagService {
   async getFlag(
     code: string,
     organizationId?: string | null,
-  ): Promise<FeatureFlag | null> {
-    const orgId = organizationId ?? null;
+  ): Promise<FeatureFlag | null>;
 
-    const flag = await this.prisma.featureFlag.findFirst({
-      where: {
-        code,
-        OR: [{ organizationId: orgId }, { organizationId: null }],
-      },
-      orderBy: [
-        // Non‑null organizationId (org‑specific) should win over global.
-        { organizationId: 'desc' },
-      ],
-    });
+  /**
+   * Scoped view get:
+   * Returns a FeatureFlagView for the given key/org/environment scope.
+   *
+   * This is the entry point expected by the /orgo/config/feature-flags GET /:key
+   * endpoint (FeatureFlagController.getFeatureFlag). :contentReference[oaicite:1]{index=1}
+   */
+  async getFlag(input: {
+    key: string;
+    environment: OrgoEnvironment;
+    organizationId?: string | null;
+  }): Promise<FeatureFlagView | null>;
 
-    return flag ?? null;
+  async getFlag(
+    codeOrInput:
+      | string
+      | { key: string; environment: OrgoEnvironment; organizationId?: string | null },
+    organizationId?: string | null,
+  ): Promise<FeatureFlag | FeatureFlagView | null> {
+    // Entity-level usage (existing behaviour).
+    if (typeof codeOrInput === 'string') {
+      return this.getFlagEntity(codeOrInput, organizationId);
+    }
+
+    // Scoped view usage.
+    const { key, environment, organizationId: orgIdInput } = codeOrInput;
+    const orgId = orgIdInput ?? null;
+    const entity = await this.getFlagEntity(key, orgId);
+
+    if (!entity) {
+      return null;
+    }
+
+    return this.toView(entity, { environment, organizationId: orgId });
   }
 
   /**
@@ -1646,6 +1855,9 @@ export class FeatureFlagService {
    * - resolves org/global override,
    * - checks enabled boolean + time window,
    * - applies rollout_strategy (percentage / roles / users) if present.
+   *
+   * If the flag does not exist, is disabled, is outside its active window,
+   * or has an invalid rollout strategy, this returns false (safe default). 
    */
   async isFeatureEnabled(
     code: string,
@@ -1655,7 +1867,7 @@ export class FeatureFlagService {
     } = {},
   ): Promise<boolean> {
     const { organizationId, context } = params;
-    const flag = await this.getFlag(code, organizationId);
+    const flag = await this.getFlagEntity(code, organizationId);
 
     if (!flag) {
       return false;
@@ -1683,6 +1895,43 @@ export class FeatureFlagService {
   }
 
   /**
+   * Convenience wrapper to evaluate feature flags keyed by FunctionalId.
+   *
+   * Mapping:
+   *   - By default, the feature flag code is the FunctionalId string itself.
+   *     For example, a FunctionalId of "FN_TASK_CREATE" maps to a flag with
+   *     code "FN_TASK_CREATE". This matches the "per-function overrides"
+   *     design in the functional ID inventory docs. :contentReference[oaicite:3]{index=3}
+   *
+   * Usage:
+   *   - Callers can gate behaviour on FunctionalId values without knowing the
+   *     underlying flag codes or rollout strategy details.
+   */
+  async isFeatureEnabledForFunctionalId(
+    functionalId: FunctionalId,
+    params: {
+      organizationId?: string | null;
+      environment?: OrgoEnvironment;
+      userId?: string | null;
+      roleCodes?: string[];
+    } = {},
+  ): Promise<boolean> {
+    const { organizationId, environment, userId, roleCodes } = params;
+
+    const context: FeatureFlagEvaluationContext = {
+      organizationId: organizationId ?? null,
+      environment,
+      userId: userId ?? undefined,
+      roleCodes,
+      functionalId,
+    };
+
+    const code = this.functionalIdToFlagCode(functionalId);
+    return this.isFeatureEnabled(code, { organizationId, context });
+  }
+
+  /**
+   * Entity-level upsert:
    * Create or update a feature flag for an organization.
    *
    * Semantics:
@@ -1691,7 +1940,128 @@ export class FeatureFlagService {
    * - When enabled = true and no enabledFrom is provided, enabledFrom defaults to now.
    * - When enabled = false and no disabledAt is provided, disabledAt defaults to now.
    */
-  async setFlag(input: SetFeatureFlagInput): Promise<FeatureFlag> {
+  async setFlag(input: SetFeatureFlagInput): Promise<FeatureFlag>;
+
+  /**
+   * Scoped upsert used by the HTTP layer: creates or updates a flag for a
+   * given org/environment scope, returning a FeatureFlagView.
+   *
+   * This matches the semantics of PUT /orgo/config/feature-flags/:key in
+   * FeatureFlagController. 
+   */
+  async setFlag(input: UpsertFeatureFlagForScopeInput): Promise<FeatureFlagView>;
+
+  async setFlag(
+    input: SetFeatureFlagInput | UpsertFeatureFlagForScopeInput,
+  ): Promise<FeatureFlag | FeatureFlagView> {
+    // Entity-level upsert (called from internal services / ConfigController).
+    if ((input as SetFeatureFlagInput).code !== undefined) {
+      return this.setFlagEntity(input as SetFeatureFlagInput);
+    }
+
+    // Scoped (org + environment) upsert (called from FeatureFlagController).
+    const scoped = input as UpsertFeatureFlagForScopeInput;
+    const orgId = scoped.organizationId ?? null;
+
+    const rolloutStrategy: RolloutStrategy | null =
+      scoped.rolloutPercentage == null
+        ? null
+        : {
+            type: 'percentage',
+            percentage: scoped.rolloutPercentage,
+          };
+
+    const entity = await this.setFlagEntity({
+      organizationId: orgId,
+      code: scoped.key,
+      enabled: scoped.enabled,
+      description: scoped.description,
+      rolloutStrategy,
+    });
+
+    return this.toView(entity, {
+      environment: scoped.environment,
+      organizationId: orgId,
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Org/environment-scoped helpers (used by orgo/config/feature-flags)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * List feature flags for a given org/environment scope.
+   *
+   * Behaviour:
+   * - Resolves global vs org‑specific overrides as in listFlagsForOrganization.
+   * - Computes the effective enabled state for each flag in the scope using
+   *   the same semantics as isFeatureEnabled (enabled + time window + rollout).
+   */
+  async listFlags(scope: FeatureFlagScope): Promise<FeatureFlagView[]> {
+    const { environment, organizationId } = scope;
+    const orgId = organizationId ?? null;
+
+    const entities = await this.listFlagsForOrganization(orgId);
+
+    return entities.map((flag) =>
+      this.toView(flag, {
+        environment,
+        organizationId: orgId,
+      }),
+    );
+  }
+
+  /**
+   * Delete a feature flag value for a given org/environment scope.
+   *
+   * Current storage is keyed only by (organizationId, code) as per the DB
+   * schema, so environment is accepted for API symmetry but not persisted.
+   * Deleting a flag for an org does not affect global defaults or other orgs.
+   */
+  async deleteFlag(input: {
+    key: string;
+    environment: OrgoEnvironment;
+    organizationId?: string | null;
+  }): Promise<void> {
+    const orgId = input.organizationId ?? null;
+
+    await this.prisma.featureFlag.deleteMany({
+      where: {
+        code: input.key,
+        organizationId: orgId,
+      },
+    });
+
+    this.logger.log(
+      `Deleted feature flag "${input.key}" for org=${orgId ?? 'GLOBAL'} env=${input.environment}`,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Internal helpers
+  // ---------------------------------------------------------------------------
+
+  private async getFlagEntity(
+    code: string,
+    organizationId?: string | null,
+  ): Promise<FeatureFlag | null> {
+    const orgId = organizationId ?? null;
+
+    const flag = await this.prisma.featureFlag.findFirst({
+      where: {
+        code,
+        OR: [{ organizationId: orgId }, { organizationId: null }],
+      },
+      orderBy: [
+        // Non‑null organizationId (org‑specific) should win over global.
+        { organizationId: 'desc' },
+      ],
+    });
+
+    return flag ?? null;
+  }
+
+  private async setFlagEntity(input: SetFeatureFlagInput): Promise<FeatureFlag> {
     const orgId = input.organizationId ?? null;
     const now = new Date();
 
@@ -1777,6 +2147,60 @@ export class FeatureFlagService {
     );
 
     return created;
+  }
+
+  /**
+   * Compute the effective enabled state of a flag for a given scope using the
+   * same semantics as isFeatureEnabled, but without re‑querying the DB.
+   */
+  private isFlagEnabledForScope(
+    flag: FeatureFlag,
+    scope: FeatureFlagScope,
+  ): boolean {
+    if (!flag.enabled) {
+      return false;
+    }
+
+    if (!this.isWithinActiveWindow(flag)) {
+      return false;
+    }
+
+    const context: FeatureFlagEvaluationContext = {
+      organizationId: flag.organizationId ?? scope.organizationId ?? null,
+      environment: scope.environment,
+    };
+
+    return this.evaluateRolloutStrategy(flag.rolloutStrategy, context);
+  }
+
+  /**
+   * Map a raw FeatureFlag entity to a FeatureFlagView for a given scope.
+   */
+  private toView(flag: FeatureFlag, scope: FeatureFlagScope): FeatureFlagView {
+    const enabled = this.isFlagEnabledForScope(flag, scope);
+
+    const normalizedStrategy = this.normalizeRolloutStrategy(
+      flag.rolloutStrategy,
+    );
+    const rolloutPercentage =
+      normalizedStrategy?.type === 'percentage'
+        ? Math.max(0, Math.min(100, normalizedStrategy.percentage))
+        : null;
+
+    const orgId = scope.organizationId ?? null;
+    const inherited = !!orgId && !flag.organizationId;
+
+    return {
+      key: flag.code,
+      enabled,
+      description: flag.description ?? undefined,
+      rolloutPercentage,
+      environment: scope.environment,
+      organizationId: flag.organizationId ?? null,
+      updatedAt: flag.updatedAt?.toISOString?.(),
+      updatedByUserId: null,
+      inherited,
+    };
   }
 
   /**
@@ -1920,10 +2344,13 @@ export class FeatureFlagService {
       case 'roles': {
         const rawRoleCodes = Array.isArray(obj.roleCodes)
           ? obj.roleCodes
+          : Array.isArray(obj['roles'])
+          ? obj['roles']
           : [];
-        const roleCodes = rawRoleCodes.filter(
-          (v): v is string => typeof v === 'string',
-        );
+
+        const roleCodes = rawRoleCodes
+          .map((value) => String(value).trim())
+          .filter(Boolean);
 
         if (roleCodes.length === 0) {
           return null;
@@ -1933,10 +2360,15 @@ export class FeatureFlagService {
       }
 
       case 'users': {
-        const rawUserIds = Array.isArray(obj.userIds) ? obj.userIds : [];
-        const userIds = rawUserIds.filter(
-          (v): v is string => typeof v === 'string',
-        );
+        const rawUserIds = Array.isArray(obj.userIds)
+          ? obj.userIds
+          : Array.isArray(obj['users'])
+          ? obj['users']
+          : [];
+
+        const userIds = rawUserIds
+          .map((value) => String(value).trim())
+          .filter(Boolean);
 
         if (userIds.length === 0) {
           return null;
@@ -1951,30 +2383,45 @@ export class FeatureFlagService {
   }
 
   /**
-   * Deterministic hash from a string seed into [0, 1).
-   * Uses a simple 32‑bit accumulator; sufficient for stable percentage rollouts.
+   * Mapping from FunctionalId → feature flag code.
+   *
+   * Currently this is a 1:1 mapping, but is kept as a separate helper so
+   * naming conventions (e.g. prefixes) can be evolved without touching
+   * callers that rely on FunctionalId.
    */
-  private stableHashToUnitInterval(seed: string): number {
-    let hash = 0;
-
-    for (let i = 0; i < seed.length; i += 1) {
-      hash = (hash * 31 + seed.charCodeAt(i)) | 0;
-    }
-
-    const unsigned = hash >>> 0;
-    return unsigned / 0xffffffff;
+  private functionalIdToFlagCode(functionalId: FunctionalId): string {
+    return functionalId;
   }
 
   /**
-   * Helper: parse Date or ISO string into Date, returning null on invalid input.
+   * Deterministic hash of a string into the [0, 1) interval.
+   *
+   * Uses a simple FNV‑like hash; not cryptographically secure, but stable and
+   * sufficient for percentage rollout bucketing.
    */
-  private toDateOrNull(value?: Date | string | null): Date | null {
+  private stableHashToUnitInterval(seed: string): number {
+    let hash = 2166136261;
+
+    for (let i = 0; i < seed.length; i += 1) {
+      hash ^= seed.charCodeAt(i);
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+
+    // Convert to unsigned 32‑bit and normalize to [0, 1).
+    const unsigned = hash >>> 0;
+    return unsigned / 2 ** 32;
+  }
+
+  /**
+   * Safely parses a Date or date‑like string into a Date, or returns null.
+   */
+  private toDateOrNull(value: Date | string | null | undefined): Date | null {
     if (!value) {
       return null;
     }
 
     if (value instanceof Date) {
-      return value;
+      return Number.isNaN(value.getTime()) ? null : value;
     }
 
     const parsed = new Date(value);
@@ -2402,16 +2849,32 @@ export class OrgProfileController {
 
 === FILE 7/7: apps/api/src/orgo/config/org-profile.service.ts ===
 
+// apps/api/src/orgo/config/org-profile.service.ts
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../persistence/prisma/prisma.service';
+import { PrismaService } from '././persistence/prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 
-export type VisibilityToken = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
+/**
+ * Canonical VISIBILITY token, aligned with VISIBILITY enum (Docs 2, 7, 8).
+ */
+export type VisibilityToken =
+  | 'PUBLIC'
+  | 'INTERNAL'
+  | 'RESTRICTED'
+  | 'ANONYMISED';
+
+/**
+ * Canonical TASK_PRIORITY token, aligned with TASK_PRIORITY enum (Docs 2, 5, 8).
+ */
 export type TaskPriorityToken = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
+/**
+ * Lower‑case visibility tokens as they appear in YAML / JSON configs.
+ */
 type LowerVisibility =
   | 'public'
   | 'internal'
@@ -2419,14 +2882,24 @@ type LowerVisibility =
   | 'anonymised'
   | 'anonymized'; // accept US spelling as alias
 
+/**
+ * Lower‑case priority tokens as they appear in YAML / JSON configs.
+ */
 type LowerPriority = 'low' | 'medium' | 'high' | 'critical';
 
+/**
+ * Default Task metadata block inside a behaviour profile template (Doc 7).
+ */
 export interface ProfileDefaultTaskMetadataTemplate {
   visibility: LowerVisibility;
   default_priority: LowerPriority;
   default_reactivity_seconds: number;
 }
 
+/**
+ * Cyclic overview / pattern review configuration copied from a profile.
+ * Mirrors the `cyclic_overview` block in Doc 7.
+ */
 export interface CyclicOverviewConfig {
   enabled: boolean;
   schedule: {
@@ -2444,14 +2917,26 @@ export interface CyclicOverviewConfig {
   };
 }
 
+/**
+ * Environment token used in profile metadata.
+ */
 export type EnvironmentToken = 'dev' | 'staging' | 'prod' | 'offline';
 
+/**
+ * Metadata attached to each behavioural profile template.
+ */
 export interface ProfileTemplateMetadata {
   version: string;
   last_updated: string;
   environment: EnvironmentToken;
 }
 
+/**
+ * Behaviour profile template as defined in the profiles YAML (Doc 7).
+ *
+ * This mirrors the BehaviourProfile type used in the web app and the
+ * schema template documented in the organization profiles doc.
+ */
 export interface ProfileTemplate {
   description: string;
   metadata: ProfileTemplateMetadata;
@@ -2506,6 +2991,14 @@ export interface ProfileTemplate {
   cyclic_overview: CyclicOverviewConfig;
 }
 
+/**
+ * Resolved profile for a specific organization (tenant).
+ *
+ * Combines:
+ *  - The active profile code (from organization_profiles.profile_code), and
+ *  - The behavioural template from the profiles YAML (Doc 7),
+ *  - An optional shallow copy of the DB row with JSONB overrides.
+ */
 export interface ResolvedOrgProfile {
   organizationId: string;
   profileCode: string;
@@ -2521,8 +3014,14 @@ export interface ResolvedOrgProfile {
   };
 }
 
+/**
+ * What kind of entity profile defaults are being applied to.
+ */
 export type DefaultsTargetKind = 'task' | 'case';
 
+/**
+ * Input for applying profile‑driven defaults to a Task/Case.
+ */
 export interface ApplyDefaultsInput {
   organizationId: string;
   /**
@@ -2598,6 +3097,10 @@ export interface ProfileDiffEnumField {
   changed: boolean;
 }
 
+/**
+ * Compact summary of key behavioural knobs for a profile.
+ * Used by previewProfileDiff and configuration UIs.
+ */
 export interface ProfileSummary {
   profileCode: string;
   description: string;
@@ -2626,14 +3129,77 @@ export interface ProfileDiffResult {
   enumChanges: ProfileDiffEnumField[];
 }
 
+/**
+ * Shape of the profiles YAML file on disk.
+ */
 interface ProfilesFileShape {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: any;
   profiles?: Record<string, ProfileTemplate>;
 }
 
-const DEFAULT_PROFILE_CODE = 'default';
+/**
+ * Small helper snapshot types exposed as convenience integration points.
+ */
 
+/**
+ * SLA configuration derived from a profile for a specific organization.
+ * Used by TaskService / Workflow engines when computing deadlines.
+ */
+export interface OrgSlaConfig {
+  /**
+   * Base reactivity time before first escalation (seconds).
+   * Mirrors ProfileTemplate.reactivity_seconds.
+   */
+  reactivitySeconds: number;
+  /**
+   * Maximum allowed escalation window (seconds).
+   * Mirrors ProfileTemplate.max_escalation_seconds.
+   */
+  maxEscalationSeconds: number;
+  /**
+   * Default SLA for tasks created under this profile, when
+   * the caller does not specify an explicit SLA.
+   * Mirrors default_task_metadata.default_reactivity_seconds,
+   * falling back to reactivity_seconds when omitted.
+   */
+  defaultTaskReactivitySeconds: number;
+}
+
+/**
+ * Default Task metadata derived from the active profile.
+ * Used by TaskService and domain modules when seeding new work.
+ */
+export interface OrgTaskDefaults {
+  priority: TaskPriorityToken;
+  visibility: VisibilityToken;
+  /**
+   * Default SLA in seconds for new Tasks/Cases when caller does not override.
+   */
+  reactivitySeconds: number;
+}
+
+/**
+ * Pattern detection knobs for a given organization.
+ * Used by Insights / analytics modules when aligning pattern windows
+ * with operational expectations.
+ */
+export interface OrgPatternConfig {
+  patternSensitivity: string;
+  patternWindowDays: number;
+  patternMinEvents: number;
+}
+
+/**
+ * Logging and retention knobs for a given organization.
+ * Used by logging/audit services and data retention policies.
+ */
+export interface OrgLoggingConfig {
+  loggingLevel: string;
+  logRetentionDays: number;
+}
+
+const DEFAULT_PROFILE_CODE = 'default';
 const PROFILE_CONFIG_ENV_VAR = 'ORGO_PROFILES_CONFIG_PATH';
 
 @Injectable()
@@ -2648,19 +3214,31 @@ export class OrgProfileService {
 
   private readonly profilesConfigPath: string;
 
+  /**
+   * Current environment, normalised to EnvironmentToken when possible.
+   * Used to validate profile metadata.environment.
+   */
+  private readonly environmentToken: EnvironmentToken | null;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    const fromEnv = this.configService.get<string>(PROFILE_CONFIG_ENV_VAR);
+    const fromEnv = this.configService.get<string>('ENVIRONMENT');
+    const rawEnvironment = fromEnv ?? process.env.ENVIRONMENT ?? null;
+    this.environmentToken = this.normalizeEnvironmentToken(rawEnvironment);
+
+    const profilesPathFromEnv =
+      this.configService.get<string>(PROFILE_CONFIG_ENV_VAR);
     this.profilesConfigPath =
-      fromEnv ??
+      profilesPathFromEnv ??
       path.resolve(
         process.cwd(),
         'config',
         'profiles',
         'organization_profiles.yaml',
       );
+
     this.loadProfilesFromConfig();
   }
 
@@ -2668,6 +3246,10 @@ export class OrgProfileService {
    * Load and cache profile templates from the profiles YAML file.
    * Fails softly: if the file is missing or invalid, we fall back to
    * a hard‑coded "default" profile so the system can still operate.
+   *
+   * This now validates the presence and shape of the per-profile metadata
+   * block (metadata.version / metadata.last_updated / metadata.environment)
+   * and enforces basic environment coherence.
    */
   private loadProfilesFromConfig(): void {
     try {
@@ -2694,7 +3276,11 @@ export class OrgProfileService {
         return;
       }
 
-      this.profileTemplates = { ...parsed.profiles };
+      const validatedProfiles = this.validateAndNormalizeProfileTemplates(
+        parsed.profiles,
+      );
+
+      this.profileTemplates = { ...validatedProfiles };
 
       if (!this.profileTemplates[DEFAULT_PROFILE_CODE]) {
         this.logger.warn(
@@ -2702,11 +3288,6 @@ export class OrgProfileService {
         );
         this.profileTemplates[DEFAULT_PROFILE_CODE] =
           this.buildHardcodedDefaultProfile();
-      }
-
-      // Never expose the internal "_template" as a usable profile.
-      if (this.profileTemplates._template) {
-        delete this.profileTemplates._template;
       }
 
       this.logger.log(
@@ -2725,6 +3306,134 @@ export class OrgProfileService {
   }
 
   /**
+   * Validate and normalise profile templates loaded from YAML.
+   *
+   * Responsibilities:
+   *   - Ensure each profile has a metadata block.
+   *   - Ensure metadata.version, metadata.last_updated, metadata.environment
+   *     are present and strings.
+   *   - Normalise metadata.environment to EnvironmentToken.
+   *   - Enforce environment coherence against ENVIRONMENT when set.
+   *   - Validate that the internal "_template" profile has a coherent schema,
+   *     but do not expose it as a usable profile.
+   */
+  private validateAndNormalizeProfileTemplates(
+    rawProfiles: Record<string, ProfileTemplate>,
+  ): Record<string, ProfileTemplate> {
+    const result: Record<string, ProfileTemplate> = {};
+    const currentEnv = this.environmentToken;
+
+    for (const [code, rawTemplate] of Object.entries(rawProfiles ?? {})) {
+      if (!rawTemplate || typeof rawTemplate !== 'object') {
+        this.logger.warn(
+          `Profile "${code}" in org profiles config is not an object. Skipping.`,
+        );
+        continue;
+      }
+
+      // Basic schema presence for all profiles (including _template).
+      const metadata: any = (rawTemplate as any).metadata;
+      if (!metadata || typeof metadata !== 'object') {
+        this.logger.error(
+          `Profile "${code}" is missing required "metadata" block (metadata.version / metadata.last_updated / metadata.environment). This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      const version =
+        typeof metadata.version === 'string' && metadata.version.trim().length > 0
+          ? metadata.version.trim()
+          : null;
+      const lastUpdated =
+        typeof metadata.last_updated === 'string' &&
+        metadata.last_updated.trim().length > 0
+          ? metadata.last_updated.trim()
+          : null;
+      const envRaw =
+        typeof metadata.environment === 'string' &&
+        metadata.environment.trim().length > 0
+          ? metadata.environment.trim()
+          : null;
+
+      const normalizedEnv = this.normalizeEnvironmentToken(envRaw);
+
+      if (!version || !lastUpdated || !normalizedEnv) {
+        this.logger.error(
+          `Profile "${code}" has invalid metadata; expected non-empty string "version" and "last_updated" and a valid "environment" token. This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      // Minimal schema sanity checks for core fields (applied to all profiles,
+      // including _template).
+      const template = rawTemplate as any;
+
+      if (typeof template.description !== 'string') {
+        this.logger.error(
+          `Profile "${code}" is missing a string "description". This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      if (typeof template.reactivity_seconds !== 'number') {
+        this.logger.error(
+          `Profile "${code}" is missing a numeric "reactivity_seconds". This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      if (typeof template.max_escalation_seconds !== 'number') {
+        this.logger.error(
+          `Profile "${code}" is missing a numeric "max_escalation_seconds". This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      if (
+        !template.default_task_metadata ||
+        typeof template.default_task_metadata !== 'object'
+      ) {
+        this.logger.error(
+          `Profile "${code}" is missing the "default_task_metadata" block. This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      // Environment coherence check.
+      if (currentEnv && normalizedEnv && currentEnv !== normalizedEnv) {
+        this.logger.warn(
+          `Profile "${code}" declares metadata.environment="${normalizedEnv}" which does not match current ENVIRONMENT="${currentEnv}". This profile will be skipped to avoid cross-environment profile leakage.`,
+        );
+        // For both regular profiles and "_template", we do not load the
+        // mismatched profile. "_template" remains validated but unused.
+        continue;
+      }
+
+      const normalizedTemplate: ProfileTemplate = {
+        ...(rawTemplate as ProfileTemplate),
+        metadata: {
+          version,
+          last_updated: lastUpdated,
+          environment: normalizedEnv,
+        },
+      };
+
+      // "_template" is validated for schema coherence but never exposed
+      // as a selectable profile template.
+      if (code === '_template') {
+        this.logger.debug(
+          'Validated internal "_template" profile schema; it will not be exposed as a usable profile.',
+        );
+        continue;
+      }
+
+      result[code] = normalizedTemplate;
+    }
+
+    return result;
+  }
+
+  /**
    * Hard‑coded default profile matching the "default" profile from Doc 7.
    * This is used as a safety net when YAML config is unavailable or invalid.
    */
@@ -2737,8 +3446,8 @@ export class OrgProfileService {
         last_updated: '2025-11-19',
         environment: 'prod',
       },
-      reactivity_seconds: 43200,
-      max_escalation_seconds: 172800,
+      reactivity_seconds: 43_200,
+      max_escalation_seconds: 172_800,
       transparency_level: 'balanced',
       escalation_granularity: 'moderate',
       review_frequency: 'monthly',
@@ -2753,12 +3462,12 @@ export class OrgProfileService {
         minor: { immediate_escalation: false },
       },
       logging_level: 'standard',
-      log_retention_days: 1095,
+      log_retention_days: 1_095,
       automation_level: 'medium',
       default_task_metadata: {
         visibility: 'internal',
         default_priority: 'medium',
-        default_reactivity_seconds: 43200,
+        default_reactivity_seconds: 43_200,
       },
       cyclic_overview: {
         enabled: true,
@@ -2816,6 +3525,12 @@ export class OrgProfileService {
    *
    * If no DB row exists or the table is not yet present, the default profile
    * template is returned.
+   *
+   * Multi‑tenant safety:
+   *   - All lookups are scoped by organization_id.
+   *
+   * Metadata.version is also compared (when possible) with the DB version to
+   * surface mismatches in logs.
    */
   async loadProfile(organizationId: string): Promise<ResolvedOrgProfile> {
     if (!organizationId) {
@@ -2858,6 +3573,30 @@ export class OrgProfileService {
     const profileCode = dbProfile?.profile_code ?? DEFAULT_PROFILE_CODE;
     const template = this.getProfileTemplate(profileCode);
 
+    // Version tracking: compare DB version with metadata.version (major number)
+    // when both are available, so operators can detect drift.
+    const metadataVersion = template.metadata?.version;
+    const dbVersion = dbProfile?.version;
+
+    if (metadataVersion && typeof dbVersion === 'number') {
+      const parsedMetadataVersion = Number.parseInt(
+        String(metadataVersion).split('.')[0],
+        10,
+      );
+
+      if (!Number.isNaN(parsedMetadataVersion)) {
+        if (parsedMetadataVersion !== dbVersion) {
+          this.logger.warn(
+            `Organization profile version mismatch for org "${organizationId}" (profile_code="${profileCode}"): metadata.version="${metadataVersion}", organization_profiles.version=${dbVersion}.`,
+          );
+        }
+      } else {
+        this.logger.warn(
+          `Unable to interpret metadata.version="${metadataVersion}" as a numeric major version for org "${organizationId}" (profile_code="${profileCode}").`,
+        );
+      }
+    }
+
     return {
       organizationId,
       profileCode,
@@ -2883,6 +3622,9 @@ export class OrgProfileService {
    *   - reactivity SLA (seconds + ISO‑8601 duration)
    *   - automation level
    *   - cyclic overview schedule (for review scheduling)
+   *
+   * This is the primary integration point for TaskService and
+   * domain modules when deriving defaults from an organization's profile.
    */
   async applyDefaults(
     input: ApplyDefaultsInput,
@@ -2927,6 +3669,8 @@ export class OrgProfileService {
    *   - Pattern sensitivity & windows
    *   - Logging retention
    *   - Default visibility & priority
+   *
+   * Used by the admin UI via OrgProfileController.previewProfileChange.
    */
   async previewProfileDiff(
     organizationId: string,
@@ -2944,10 +3688,7 @@ export class OrgProfileService {
     const currentTemplate = currentResolved?.template ?? null;
 
     const currentSummary = currentTemplate
-      ? this.summarizeProfile(
-          currentResolved!.profileCode,
-          currentTemplate,
-        )
+      ? this.summarizeProfile(currentResolved!.profileCode, currentTemplate)
       : null;
     const candidateSummary = this.summarizeProfile(
       candidateProfileCode,
@@ -3021,6 +3762,108 @@ export class OrgProfileService {
     };
   }
 
+  /**
+   * Convenience: get a ProfileSummary for the organization's active profile.
+   *
+   * This is a stable integration point for services that only need
+   * high‑level behaviour knobs (Insights, reporting, admin dashboards).
+   */
+  async getProfileSummaryForOrg(
+    organizationId: string,
+  ): Promise<ProfileSummary> {
+    const resolved = await this.loadProfile(organizationId);
+    return this.summarizeProfile(resolved.profileCode, resolved.template);
+  }
+
+  /**
+   * Convenience: return SLA configuration for an organization.
+   *
+   * Used by TaskService, WorkflowEngine and escalation modules when
+   * computing reactive deadlines and escalation horizons.
+   */
+  async getSlaConfig(organizationId: string): Promise<OrgSlaConfig> {
+    const resolved = await this.loadProfile(organizationId);
+    const template = resolved.template;
+
+    const defaultTaskReactivitySeconds =
+      template.default_task_metadata.default_reactivity_seconds ??
+      template.reactivity_seconds;
+
+    return {
+      reactivitySeconds: template.reactivity_seconds,
+      maxEscalationSeconds: template.max_escalation_seconds,
+      defaultTaskReactivitySeconds,
+    };
+  }
+
+  /**
+   * Convenience: default Task/Case metadata derived from the active profile.
+   *
+   * This is a lighter‑weight alternative to applyDefaults when callers
+   * want the profile defaults without providing a full draft payload.
+   */
+  async getTaskDefaults(organizationId: string): Promise<OrgTaskDefaults> {
+    const resolved = await this.loadProfile(organizationId);
+    const template = resolved.template;
+    const defaults = template.default_task_metadata;
+
+    return {
+      priority: this.normalizePriorityToken(defaults.default_priority),
+      visibility: this.normalizeVisibilityToken(defaults.visibility),
+      reactivitySeconds:
+        defaults.default_reactivity_seconds ?? template.reactivity_seconds,
+    };
+  }
+
+  /**
+   * Convenience: pattern detection configuration derived from the active profile.
+   *
+   * Insights / analytics modules can combine this with their own aggregation
+   * settings to decide detection windows and thresholds per organization.
+   */
+  async getPatternConfig(organizationId: string): Promise<OrgPatternConfig> {
+    const resolved = await this.loadProfile(organizationId);
+    const template = resolved.template;
+
+    return {
+      patternSensitivity: template.pattern_sensitivity,
+      patternWindowDays: template.pattern_window_days,
+      patternMinEvents: template.pattern_min_events,
+    };
+  }
+
+  /**
+   * Convenience: logging and retention knobs derived from the active profile.
+   *
+   * Logging services and data retention schedulers can use this to align
+   * operational logs with organizational expectations.
+   */
+  async getLoggingConfig(organizationId: string): Promise<OrgLoggingConfig> {
+    const resolved = await this.loadProfile(organizationId);
+    const template = resolved.template;
+
+    return {
+      loggingLevel: template.logging_level,
+      logRetentionDays: template.log_retention_days,
+    };
+  }
+
+  /**
+   * Convenience: cyclic overview configuration for an organization.
+   *
+   * Used by Insights / reporting layers and scheduling code when setting up
+   * periodic pattern reviews and systemic follow‑ups.
+   */
+  async getCyclicOverviewConfig(
+    organizationId: string,
+  ): Promise<CyclicOverviewConfig> {
+    const resolved = await this.loadProfile(organizationId);
+    return resolved.template.cyclic_overview;
+  }
+
+  /**
+   * Build a compact summary representation of a given profile template.
+   */
   private summarizeProfile(
     profileCode: string,
     template: ProfileTemplate,
@@ -3081,17 +3924,16 @@ export class OrgProfileService {
   /**
    * Map lower‑case config values for priority to canonical TASK_PRIORITY tokens.
    */
-  private normalizePriorityToken(priority: LowerPriority | string): TaskPriorityToken {
-    const value = String(priority).toLowerCase() as LowerPriority;
-
-    switch (value) {
+  private normalizePriorityToken(input: LowerPriority): TaskPriorityToken {
+    switch (input) {
       case 'low':
         return 'LOW';
+      case 'medium':
+        return 'MEDIUM';
       case 'high':
         return 'HIGH';
       case 'critical':
         return 'CRITICAL';
-      case 'medium':
       default:
         return 'MEDIUM';
     }
@@ -3100,31 +3942,61 @@ export class OrgProfileService {
   /**
    * Map lower‑case config values for visibility to canonical VISIBILITY tokens.
    */
-  private normalizeVisibilityToken(
-    visibility: LowerVisibility | string,
-  ): VisibilityToken {
-    const value = String(visibility).toLowerCase() as LowerVisibility;
+  private normalizeVisibilityToken(input: LowerVisibility): VisibilityToken {
+    const normalized = input.toLowerCase() as LowerVisibility;
 
-    switch (value) {
+    switch (normalized) {
       case 'public':
         return 'PUBLIC';
+      case 'internal':
+        return 'INTERNAL';
       case 'restricted':
         return 'RESTRICTED';
       case 'anonymised':
       case 'anonymized':
         return 'ANONYMISED';
-      case 'internal':
       default:
         return 'INTERNAL';
     }
   }
 
   /**
-   * Convert a number of seconds into an ISO‑8601 duration string, e.g. 3600 → "PT3600S".
+   * Normalise environment tokens for profile metadata and the current process
+   * environment. Returns null when the value is missing or invalid.
+   */
+  private normalizeEnvironmentToken(
+    input: string | EnvironmentToken | null | undefined,
+  ): EnvironmentToken | null {
+    if (!input) {
+      return null;
+    }
+
+    const token = String(input).toLowerCase().trim();
+
+    switch (token) {
+      case 'dev':
+      case 'staging':
+      case 'prod':
+      case 'offline':
+        return token;
+      default:
+        this.logger.warn(
+          `Unknown environment token "${input}" in org profiles metadata/config. Expected one of: dev, staging, prod, offline.`,
+        );
+        return null;
+    }
+  }
+
+  /**
+   * Convert a number of seconds into an ISO‑8601 duration string,
+   * e.g. 3600 → "PT3600S".
    */
   private secondsToIsoDuration(seconds: number): string {
-    const safe = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
-    return `PT${safe}S`;
+    const safeSeconds =
+      typeof seconds === 'number' && Number.isFinite(seconds) && seconds >= 0
+        ? Math.floor(seconds)
+        : 0;
+    return `PT${safeSeconds}S`;
   }
 }
 

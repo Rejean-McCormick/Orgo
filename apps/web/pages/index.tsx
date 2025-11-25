@@ -1,13 +1,14 @@
-import { Button } from "ui";
-import { useHelloQuery } from "../src/store/services/api";
+// apps/web/pages/index.tsx
 
-export default function Web() {
-  const { data } = useHelloQuery();
+import type { NextPage } from "next";
+import InsightsOverviewPage from "../src/screens/insights/InsightsOverviewPage";
 
-  return (
-    <div>
-      <h1>{data?.message}</h1>
-      <Button />
-    </div>
-  );
-}
+/**
+ * Orgo web entrypoint.
+ * Routes the root path ("/") into the Insights overview dashboard.
+ */
+const IndexPage: NextPage = () => {
+  return <InsightsOverviewPage />;
+};
+
+export default IndexPage;

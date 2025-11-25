@@ -14,6 +14,11 @@ import { OrgProfileService } from './org-profile.service';
 import { FeatureFlagService } from './feature-flag.service';
 
 /**
+ * Canonical environment values used in configuration.
+ */
+export type Environment = 'dev' | 'staging' | 'prod' | 'offline';
+
+/**
  * Standard result shape used by core services (Doc 5).
  * Controllers generally just pass this through to the client.
  */
@@ -33,7 +38,7 @@ export interface StandardResult<T = any> {
  */
 export interface GetGlobalConfigOptions {
   organizationId?: string;
-  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+  environment?: Environment;
   /**
    * Optional list of module identifiers whose config should be included.
    * Example: ["core", "insights", "maintenance"].
@@ -54,7 +59,7 @@ export interface UpdateServiceConfigRequest {
   /**
    * Optional environment scope; must be one of the canonical ENVIRONMENT values (Doc 2).
    */
-  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+  environment?: Environment;
 
   /**
    * Logical module or service identifier, e.g. "core", "email", "logging", "insights".
@@ -68,7 +73,7 @@ export interface UpdateServiceConfigRequest {
   changes: Record<string, unknown>;
 
   /**
-   * Optional free‑form description for audit logs.
+   * Optional free-form description for audit logs.
    */
   reason?: string;
 }
@@ -96,15 +101,15 @@ export interface ImportConfigBundleRequest {
   /**
    * Optional environment this bundle targets.
    */
-  environment?: 'dev' | 'staging' | 'prod' | 'offline';
+  environment?: Environment;
 
   /**
-   * Optional organization scope for org‑specific bundles.
+   * Optional organization scope for org-specific bundles.
    */
   organizationId?: string;
 
   /**
-   * Optional human‑readable description for audit trail.
+   * Optional human-readable description for audit trail.
    */
   reason?: string;
 }
@@ -121,7 +126,7 @@ export interface PreviewOrgProfileRequest {
   profileCode: string;
 
   /**
-   * Optional fine‑grained overrides on top of the base profile.
+   * Optional fine-grained overrides on top of the base profile.
    * The exact structure maps to the profiles YAML schema.
    */
   overrides?: Record<string, unknown>;
@@ -200,23 +205,33 @@ export class ConfigController {
     name: 'modules',
     required: false,
     description:
-      'Comma‑separated list of module identifiers (e.g. "core,insights,maintenance").',
+      'Comma-separated list of module identifiers (e.g. "core,insights,maintenance"), ' +
+      'or a repeated query param (modules=core&modules=insights).',
   })
   async getGlobalConfig(
     @Query('organizationId') organizationId?: string,
-    @Query('environment') environment?: string,
-    @Query('modules') modules?: string,
+    @Query('environment') environment?: GetGlobalConfigOptions['environment'],
+    @Query('modules') modules?: string | string[],
   ): Promise<StandardResult> {
+    const moduleList = (() => {
+      if (!modules) {
+        return undefined;
+      }
+
+      const raw = Array.isArray(modules) ? modules : [modules];
+
+      const tokens = raw
+        .flatMap((value) => value.split(','))
+        .map((m) => m.trim())
+        .filter(Boolean);
+
+      return tokens.length > 0 ? tokens : undefined;
+    })();
+
     const opts: GetGlobalConfigOptions = {
       organizationId: organizationId || undefined,
-      environment:
-        (environment as GetGlobalConfigOptions['environment']) || undefined,
-      modules: modules
-        ? modules
-            .split(',')
-            .map((m) => m.trim())
-            .filter(Boolean)
-        : undefined,
+      environment: environment || undefined,
+      modules: moduleList,
     };
 
     return this.configService.getGlobalConfig(opts);

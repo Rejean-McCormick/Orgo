@@ -1,8 +1,11 @@
+// apps/api/src/orgo/domain/hr/hr.service.ts
+
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 /**
- * Canonical enums (aligned with Doc 2 / Doc 8)
+ * Canonical enums (aligned with Docs 1, 2, 5, 8).
+ * JSON inputs may be lower‑case; normalization happens in this service.
  */
 export type TaskStatus =
   | 'PENDING'
@@ -21,10 +24,19 @@ export type Visibility = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
 
 export type TaskSource = 'email' | 'api' | 'manual' | 'sync';
 
+/**
+ * Canonical HR case status enum (Doc 1 / HR module spec).
+ */
 export type HrCaseStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
 
+/**
+ * HR confidentiality levels (Doc 1 – HR module).
+ */
 export type HrCaseConfidentialityLevel = 'sensitive' | 'highly_sensitive';
 
+/**
+ * HR case participant roles (Doc 1 – HR module).
+ */
 export type HrCaseParticipantRole =
   | 'complainant'
   | 'respondent'
@@ -33,7 +45,23 @@ export type HrCaseParticipantRole =
   | 'other';
 
 /**
- * Minimal row shapes used for mapping raw SQL results.
+ * Base task category enum for tasks (Doc 1 / Doc 5).
+ * HR domain uses a subset of these.
+ */
+export type TaskCategory =
+  | 'request'
+  | 'incident'
+  | 'update'
+  | 'report'
+  | 'distribution';
+
+/**
+ * HR‑specific task categories (Doc 3 – hr_case module config).
+ */
+export type HrTaskCategory = 'request' | 'update' | 'report';
+
+/**
+ * Minimal row shapes for raw SQL mappings.
  * These reflect the Doc 1 schema (key columns only).
  */
 export interface CaseRow {
@@ -44,6 +72,7 @@ export interface CaseRow {
   description: string;
   status: 'open' | 'in_progress' | 'resolved' | 'archived';
   severity: TaskSeverity;
+  reactivity_time: string | null;
   origin_vertical_level: number | null;
   origin_role: string | null;
   created_at: Date;
@@ -71,7 +100,7 @@ export interface TaskRow {
   organization_id: string;
   case_id: string | null;
   type: string;
-  category: 'request' | 'incident' | 'update' | 'report' | 'distribution';
+  category: TaskCategory;
   subtype: string | null;
   label: string;
   title: string;
@@ -102,29 +131,30 @@ export interface HrCaseParticipantRow {
 
 /**
  * Input DTO for registering a new HR report.
- * This is a service-level DTO; controller-level DTOs can extend/validate this shape.
+ * This is a service‑level DTO; controller‑level DTOs can extend/validate this shape.
  */
 export interface RegisterHrReportInput {
   organizationId: string;
 
   /**
-   * Human-facing title and description of the report.
+   * Human‑facing title and description of the report (user‑facing).
    */
   title: string;
   description: string;
 
   /**
-   * Canonical enums (JSON inputs may be lower-case; normalization happens in service).
+   * Canonical enums (JSON inputs may be lower‑case; normalization happens in service).
    */
   severity?: TaskSeverity | string;
   priority?: TaskPriority | string;
   visibility?: Visibility | string;
 
   /**
-   * Task category & subtype (domain-specific for HR).
-   * Category must be one of: request | incident | update | report | distribution.
+   * Task category & subtype (domain‑specific for HR).
+   * Category must be one of: request | update | report.
+   * (Other task categories are reserved for non‑HR domains.)
    */
-  category?: 'request' | 'incident' | 'update' | 'report' | 'distribution';
+  category?: HrTaskCategory;
   subtype?: string; // e.g. "onboarding" | "offboarding" | "harassment" | "policy_question"
 
   /**
@@ -136,7 +166,7 @@ export interface RegisterHrReportInput {
   /**
    * Signal/source metadata (aligned with task_source_enum / cases.source_type).
    */
-  sourceType?: TaskSource;
+  sourceType?: TaskSource | string;
   sourceReference?: string | null;
 
   /**
@@ -160,12 +190,14 @@ export interface RegisterHrReportInput {
    * Additional context.
    */
   tags?: string[];
+  // Arbitrary structured location (Org unit / physical site, etc.)
+  // Stored as JSONB in cases.location.
   location?: unknown;
   caseMetadata?: Record<string, unknown> | null;
   taskMetadata?: Record<string, unknown> | null;
 
   /**
-   * Explicit confidentiality hint (in addition to severity/subtype-based derivation).
+   * Explicit confidentiality hint (in addition to severity/subtype‑based derivation).
    */
   requiresHighConfidentiality?: boolean;
 
@@ -180,7 +212,8 @@ export interface RegisterHrReportInput {
   createdByUserId?: string | null;
 
   /**
-   * Optional HR-specific title/description overrides for the HR case record.
+   * Optional HR‑specific title/description overrides for the HR case record.
+   * These can differ from the generic Case title/description (e.g. for anonymisation).
    */
   hrTitleOverride?: string | null;
   hrDescriptionOverride?: string | null;
@@ -264,21 +297,31 @@ export class HrModuleService {
    * - Creates a primary Task (`tasks`) of type "hr_case"
    * - Creates hr_case_participants for reporter/respondent/others
    * - Creates a primary hr_case_task_links entry
+   *
+   * All writes are scoped to the given organization_id (multi‑tenant safety).
    */
   async registerReport(input: RegisterHrReportInput): Promise<HrCaseWithPrimaryTask> {
     this.ensureRequiredFields(input);
 
     const severity = this.normalizeSeverity(input.severity);
-    const priority = this.normalizePriority(input.priority ?? this.derivePriorityFromSeverity(severity));
-    const visibility = this.normalizeVisibility(input.visibility ?? 'RESTRICTED');
-    const sourceType: TaskSource = (input.sourceType ?? 'manual') as TaskSource;
-    const category: 'request' | 'incident' | 'update' | 'report' | 'distribution' =
-      input.category ?? 'request';
+    const priority = this.normalizePriority(
+      input.priority ?? this.derivePriorityFromSeverity(severity),
+    );
+
+    // Default visibility for HR is RESTRICTED; harassment subtypes may default to ANONYMISED.
+    const baseVisibility: Visibility | string =
+      input.visibility ??
+      (input.subtype && input.subtype.toLowerCase().trim() === 'harassment'
+        ? 'ANONYMISED'
+        : 'RESTRICTED');
+    const visibility = this.normalizeVisibility(baseVisibility);
+
+    const sourceType = this.normalizeSource(input.sourceType);
+    const category: HrTaskCategory = this.normalizeHrCategory(input.category);
 
     const label = input.label?.trim() || HrModuleService.DEFAULT_HR_LABEL;
     const { verticalBase, horizontalRole } = this.parseLabel(label);
 
-    const now = new Date();
     const organizationId = input.organizationId;
     const originVerticalLevel = verticalBase;
     const originRole = horizontalRole;
@@ -303,8 +346,11 @@ export class HrModuleService {
       },
     );
 
+    const hrTitle = input.hrTitleOverride?.trim() || input.title;
+    const hrDescription = input.hrDescriptionOverride?.trim() || input.description;
+
     return this.prisma.$transaction(async (tx: TxClient) => {
-      // 1. Insert into cases
+      // 1. Insert into cases (generic Case container, canonical lifecycle)
       const [caseRow] = await tx.$queryRaw<CaseRow[]>`
         INSERT INTO cases (
           organization_id,
@@ -334,8 +380,8 @@ export class HrModuleService {
           ${originVerticalLevel},
           ${originRole},
           ${tags},
-          ${locationJson}::jsonb,
-          ${caseMetadataJson}::jsonb
+          ${Prisma.sql`${Prisma.raw(locationJson)}::jsonb`},
+          ${Prisma.sql`${Prisma.raw(caseMetadataJson)}::jsonb`}
         )
         RETURNING
           id,
@@ -345,6 +391,7 @@ export class HrModuleService {
           description,
           status,
           severity,
+          reactivity_time,
           origin_vertical_level,
           origin_role,
           created_at,
@@ -352,16 +399,13 @@ export class HrModuleService {
       `;
 
       if (!caseRow) {
-        throw new Error('Failed to create Case for HR report');
+        throw new BadRequestException('Failed to create Case for HR report');
       }
 
-      // 2. Generate a human-readable HR case code (e.g. HR-2025-0001)
-      const caseCode = await this.generateCaseCode(tx, organizationId, now);
+      const openedAt = caseRow.created_at;
+      const caseCode = await this.generateCaseCode(tx, organizationId, openedAt);
 
-      // 3. Insert into hr_cases
-      const hrTitle = input.hrTitleOverride?.trim() || input.title;
-      const hrDescription = input.hrDescriptionOverride?.trim() || input.description;
-
+      // 2. Insert into hr_cases (HR domain extension of the Case)
       const [hrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
         INSERT INTO hr_cases (
           organization_id,
@@ -387,7 +431,7 @@ export class HrModuleService {
           ${input.caseOwnerRoleId ?? null},
           ${input.caseOwnerUserId ?? null},
           ${null},
-          ${now},
+          ${openedAt},
           ${null}
         )
         RETURNING
@@ -407,10 +451,10 @@ export class HrModuleService {
       `;
 
       if (!hrCaseRow) {
-        throw new Error('Failed to create HrCase for HR report');
+        throw new BadRequestException('Failed to create HR Case for report');
       }
 
-      // 4. Insert primary Task
+      // 3. Insert primary Task (task.type = "hr_case")
       const [taskRow] = await tx.$queryRaw<TaskRow[]>`
         INSERT INTO tasks (
           organization_id,
@@ -432,7 +476,6 @@ export class HrModuleService {
           owner_user_id,
           assignee_role,
           due_at,
-          reactivity_time,
           reactivity_deadline_at,
           escalation_level,
           closed_at,
@@ -444,7 +487,7 @@ export class HrModuleService {
           ${category},
           ${input.subtype ?? null},
           ${label},
-          ${`HR case: ${hrTitle}`},
+          ${hrTitle},
           ${hrDescription},
           ${'PENDING'},
           ${priority},
@@ -455,13 +498,12 @@ export class HrModuleService {
           ${input.reporterPersonId ?? null},
           ${input.caseOwnerRoleId ?? null},
           ${input.caseOwnerUserId ?? null},
-          ${input.assigneeRole ?? 'HR.CaseOfficer'},
+          ${input.assigneeRole ?? horizontalRole ?? null},
           ${dueAt},
-          ${null},
           ${null},
           ${0},
           ${null},
-          ${taskMetadataJson}::jsonb
+          ${Prisma.sql`${Prisma.raw(taskMetadataJson)}::jsonb`}
         )
         RETURNING
           id,
@@ -490,11 +532,11 @@ export class HrModuleService {
       `;
 
       if (!taskRow) {
-        throw new Error('Failed to create primary Task for HR report');
+        throw new BadRequestException('Failed to create primary HR Task for report');
       }
 
-      // 5. Update HrCase with primary_task_id
-      const [updatedHrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
+      // 4. Update hr_cases.primary_task_id
+      const [finalHrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
         UPDATE hr_cases
         SET primary_task_id = ${taskRow.id}
         WHERE id = ${hrCaseRow.id}
@@ -514,9 +556,11 @@ export class HrModuleService {
           closed_at
       `;
 
-      const finalHrCaseRow = updatedHrCaseRow ?? hrCaseRow;
+      if (!finalHrCaseRow) {
+        throw new BadRequestException('Failed to link HR Case to primary Task');
+      }
 
-      // 6. Insert hr_case_participants rows
+      // 5. Insert participants into hr_case_participants
       const participants: HrCaseParticipantRow[] = [];
 
       if (input.reporterPersonId) {
@@ -599,7 +643,7 @@ export class HrModuleService {
         }
       }
 
-      // 7. Link HrCase and Task in hr_case_task_links (link_type "primary")
+      // 6. Link HrCase and Task in hr_case_task_links (link_type "primary")
       await tx.$queryRaw`
         INSERT INTO hr_case_task_links (
           hr_case_id,
@@ -623,6 +667,7 @@ export class HrModuleService {
 
   /**
    * List HR cases for an organization with basic filtering and pagination.
+   * Filters by hr_cases.status, optional free‑text search, and org‑scoped only.
    */
   async listCases(options: ListHrCasesOptions): Promise<PaginatedHrCaseSummary> {
     const { organizationId } = options;
@@ -786,6 +831,59 @@ export class HrModuleService {
     return upper as Visibility;
   }
 
+  /**
+   * Normalizes task source to the canonical task_source_enum, mapping
+   * historical values as described in the DB schema docs.
+   */
+  private normalizeSource(source?: TaskSource | string): TaskSource {
+    if (!source) {
+      return 'manual';
+    }
+    const lower = source.toString().trim().toLowerCase();
+
+    // Historical mapping: map legacy values to canonical sources
+    if (lower === 'ui') {
+      return 'manual';
+    }
+    if (lower === 'import') {
+      return 'sync';
+    }
+    if (lower === 'insight') {
+      return 'api';
+    }
+
+    const allowed: TaskSource[] = ['email', 'api', 'manual', 'sync'];
+
+    if (!allowed.includes(lower as TaskSource)) {
+      throw new BadRequestException(
+        `Invalid sourceType "${source}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return lower as TaskSource;
+  }
+
+  /**
+   * Normalizes HR task category according to the hr_case domain module config.
+   */
+  private normalizeHrCategory(category?: HrTaskCategory | string | null): HrTaskCategory {
+    const allowed: HrTaskCategory[] = ['request', 'update', 'report'];
+
+    if (!category) {
+      return 'request';
+    }
+
+    const lower = category.toString().trim().toLowerCase() as HrTaskCategory;
+
+    if (!allowed.includes(lower)) {
+      throw new BadRequestException(
+        `Invalid HR task category "${category}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return lower;
+  }
+
   private derivePriorityFromSeverity(severity: TaskSeverity): TaskPriority {
     switch (severity) {
       case 'CRITICAL':
@@ -839,7 +937,14 @@ export class HrModuleService {
     return d;
   }
 
-  private parseLabel(label: string): { verticalBase: number | null; horizontalRole: string | null } {
+  /**
+   * Parses a canonical label `<BASE>.<CATEGORY><SUBCATEGORY>.<HORIZONTAL_ROLE?>`
+   * into vertical base and horizontal role.
+   */
+  private parseLabel(label: string): {
+    verticalBase: number | null;
+    horizontalRole: string | null;
+  } {
     const trimmed = label.trim();
     if (!trimmed) {
       return { verticalBase: null, horizontalRole: null };
@@ -859,6 +964,9 @@ export class HrModuleService {
     };
   }
 
+  /**
+   * Generates a human‑friendly HR case code `HR-<YEAR>-<NNNN>` scoped by org.
+   */
   private async generateCaseCode(
     tx: TxClient,
     organizationId: string,

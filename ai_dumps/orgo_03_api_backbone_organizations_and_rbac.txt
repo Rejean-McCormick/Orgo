@@ -382,9 +382,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { Prisma } from '@prisma/client';
 
-import { PrismaService } from '../../../persistence/prisma/prisma.service';
-import { LogService } from '../../core/logging/log.service';
+import { PrismaService } from '../../persistence/prisma/prisma.service';
+import {
+  LogCategory,
+  LogLevel,
+  LogService,
+} from '../../core/logging/log.service';
+import {
+  FN_ORG_CREATE_ORGANIZATION,
+  FN_ORG_UPDATE_ORGANIZATION,
+} from '../../core/functional-ids';
 
 export type OrganizationStatus = 'active' | 'suspended' | 'archived';
 
@@ -400,6 +409,9 @@ export interface CreateOrganizationInput {
    * If omitted, defaults to "default".
    */
   profileCode?: string;
+  /**
+   * Initial status for the organization. If omitted, it defaults to "active".
+   */
   status?: OrganizationStatus;
 }
 
@@ -420,7 +432,11 @@ export interface UpdateOrganizationInput {
 
 /**
  * Canonical TS view of an Organization row with its linked profile_code.
- * Maps directly from the `organizations` and `organization_profiles` tables. 
+ * Maps directly from the `organizations` and `organization_profiles` tables.
+ *
+ * This is the shape used by backbone services and by the web types
+ * (see apps/web/src/orgo/types/organization.ts), modulo snake/camel case
+ * conversion handled at the DTO layer.
  */
 export interface OrganizationWithProfile {
   id: string;
@@ -438,7 +454,7 @@ export interface OrganizationWithProfile {
 
 /**
  * Internal shape that matches the DB row names (`snake_case`) plus optional `profile_code`
- * when joined with `organization_profiles`. 
+ * when joined with `organization_profiles`.
  */
 interface DbOrganizationRow {
   id: string;
@@ -470,7 +486,11 @@ export class OrganizationService {
   ) {}
 
   /**
-   * Create a new organization (tenant) and attach a single active profile row. 
+   * Create a new organization (tenant) and attach a single active profile row.
+   *
+   * - Enforces unique slug across all organizations.
+   * - Validates status against organization_status_enum.
+   * - Initializes organization_profiles with a single row (one active profile per org).
    */
   async createOrganization(
     input: CreateOrganizationInput,
@@ -500,8 +520,8 @@ export class OrganizationService {
 
     const profileCode = input.profileCode ?? 'default';
 
-    const organization = await this.prisma.$transaction<OrganizationWithProfile>(
-      async (tx) => {
+    const organization =
+      await this.prisma.$transaction<OrganizationWithProfile>(async (tx) => {
         // Enforce unique slug
         const existing = await tx.$queryRaw<Pick<DbOrganizationRow, 'id'>[]>`
           SELECT id FROM organizations WHERE slug = ${slug} LIMIT 1
@@ -549,7 +569,7 @@ export class OrganizationService {
             updated_at
         `;
 
-        // Create a single profile row for this org (one active profile per org). :contentReference[oaicite:3]{index=3}
+        // Create a single profile row for this org (one active profile per org).
         await tx.$queryRaw`
           INSERT INTO organization_profiles (
             id,
@@ -577,16 +597,17 @@ export class OrganizationService {
           ...inserted,
           profile_code: profileCode,
         });
-      },
-    );
+      });
 
-    this.logService.logEvent({
-      category: 'SYSTEM',
-      logLevel: 'INFO',
+    await this.logService.logEvent({
+      category: LogCategory.SYSTEM,
+      level: LogLevel.INFO,
+      identifier: FN_ORG_CREATE_ORGANIZATION,
       message: 'Organization created',
-      identifier: `organization_id:${organization.id}`,
       metadata: {
+        organizationId: organization.id,
         slug: organization.slug,
+        status: organization.status,
         profileCode: organization.profileCode,
       },
     });
@@ -597,7 +618,11 @@ export class OrganizationService {
   }
 
   /**
-   * Update an existing organization and optionally its attached profile_code. :contentReference[oaicite:4]{index=4}
+   * Update an existing organization and optionally its attached profile_code.
+   *
+   * - Enforces slug uniqueness when changed.
+   * - Validates status transitions against organization_status_enum.
+   * - Ensures exactly one profile row per org (upsert semantics).
    */
   async updateOrganization(
     id: string,
@@ -607,8 +632,8 @@ export class OrganizationService {
       throw new BadRequestException('id is required');
     }
 
-    const organization = await this.prisma.$transaction<OrganizationWithProfile>(
-      async (tx) => {
+    const organization =
+      await this.prisma.$transaction<OrganizationWithProfile>(async (tx) => {
         const rows = await tx.$queryRaw<DbOrganizationRow[]>`
           SELECT
             o.id,
@@ -660,8 +685,7 @@ export class OrganizationService {
           input.primaryDomain !== undefined
             ? input.primaryDomain
             : current.primary_domain;
-        const newTimezone =
-          input.timezone?.trim() || current.timezone;
+        const newTimezone = input.timezone?.trim() || current.timezone;
         const newDefaultLocale =
           input.defaultLocale?.trim() || current.default_locale;
 
@@ -714,7 +738,7 @@ export class OrganizationService {
         `;
 
         if (newProfileCode) {
-          // Upsert the org's profile row; enforce single profile per org. :contentReference[oaicite:5]{index=5}
+          // Upsert the org's profile row; enforce single profile per org.
           const existingProfile = await tx.$queryRaw<{ id: string }[]>`
             SELECT id
             FROM organization_profiles
@@ -762,16 +786,17 @@ export class OrganizationService {
           ...updated,
           profile_code: newProfileCode ?? current.profile_code ?? null,
         });
-      },
-    );
+      });
 
-    this.logService.logEvent({
-      category: 'SYSTEM',
-      logLevel: 'INFO',
+    await this.logService.logEvent({
+      category: LogCategory.SYSTEM,
+      level: LogLevel.INFO,
+      identifier: FN_ORG_UPDATE_ORGANIZATION,
       message: 'Organization updated',
-      identifier: `organization_id:${organization.id}`,
       metadata: {
+        organizationId: organization.id,
         slug: organization.slug,
+        status: organization.status,
         profileCode: organization.profileCode,
       },
     });
@@ -817,11 +842,18 @@ export class OrganizationService {
   }
 
   /**
+   * Convenience wrapper for controller usage: throws on not found.
+   */
+  async getOrganizationByIdOrThrow(
+    id: string,
+  ): Promise<OrganizationWithProfile> {
+    return this.getOrganizationById(id);
+  }
+
+  /**
    * Fetch a single organization by slug, including its profile_code.
    */
-  async getOrganizationBySlug(
-    slug: string,
-  ): Promise<OrganizationWithProfile> {
+  async getOrganizationBySlug(slug: string): Promise<OrganizationWithProfile> {
     const normalizedSlug = this.normalizeSlug(slug);
     if (!normalizedSlug) {
       throw new BadRequestException('slug cannot be empty');
@@ -857,9 +889,40 @@ export class OrganizationService {
   }
 
   /**
-   * List all organizations with their attached profile_code, ordered by display_name.
+   * List organizations with their attached profile_code, ordered by display_name.
+   *
+   * Optionally filters:
+   * - by status (active / suspended / archived)
+   * - by free-text search across slug, display_name, legal_name, primary_domain.
+   *
+   * This is used by the admin UI organizations listing.
    */
-  async listOrganizations(): Promise<OrganizationWithProfile[]> {
+  async listOrganizations(params?: {
+    status?: OrganizationStatus;
+    search?: string;
+  }): Promise<OrganizationWithProfile[]> {
+    const statusFilter = params?.status;
+    const searchRaw = params?.search?.trim();
+
+    if (statusFilter) {
+      this.ensureValidStatus(statusFilter);
+    }
+
+    const search = searchRaw && searchRaw.length > 0 ? searchRaw : undefined;
+
+    const statusCondition = statusFilter
+      ? Prisma.sql`AND o.status = ${statusFilter}`
+      : Prisma.sql``;
+
+    const searchCondition = search
+      ? Prisma.sql`AND (
+          o.slug ILIKE ${`%${search}%`}
+          OR o.display_name ILIKE ${`%${search}%`}
+          OR o.legal_name ILIKE ${`%${search}%`}
+          OR o.primary_domain ILIKE ${`%${search}%`}
+        )`
+      : Prisma.sql``;
+
     const rows = await this.prisma.$queryRaw<DbOrganizationRow[]>`
       SELECT
         o.id,
@@ -876,6 +939,9 @@ export class OrganizationService {
       FROM organizations o
       LEFT JOIN organization_profiles op
         ON op.organization_id = o.id
+      WHERE 1 = 1
+      ${statusCondition}
+      ${searchCondition}
       ORDER BY o.display_name ASC
     `;
 
@@ -883,7 +949,7 @@ export class OrganizationService {
   }
 
   /**
-   * Ensure the status value is within `organization_status_enum`. :contentReference[oaicite:6]{index=6}
+   * Ensure the status value is within `organization_status_enum`.
    */
   private ensureValidStatus(status: OrganizationStatus): void {
     if (!OrganizationService.ALLOWED_STATUSES.includes(status)) {
@@ -900,7 +966,7 @@ export class OrganizationService {
    * - lower-case
    * - non-alphanumeric → "-"
    * - trim leading/trailing "-"
-   * - max length 63 chars (DNS-ish). :contentReference[oaicite:7]{index=7}
+   * - max length 63 chars (DNS-ish).
    */
   private normalizeSlug(source: string): string {
     return source

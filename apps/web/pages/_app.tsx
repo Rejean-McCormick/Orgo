@@ -1,14 +1,36 @@
-import type { AppProps } from "next/app";
-import { Provider } from "react-redux";
-import store from "../src/store";
-import "../src/styles/global.css";
+import '../styles.css';
 
-function MyApp({ Component, pageProps }: AppProps) {
+import type { AppProps } from 'next/app';
+import type { NextPage } from 'next';
+import Head from 'next/head';
+import type { ReactElement, ReactNode } from 'react';
+
+import { AppProviders } from '../src/providers/AppProviders';
+
+export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
+  getLayout?: (page: ReactElement) => ReactNode;
+};
+
+export type AppPropsWithLayout<P = any> = AppProps<P> & {
+  Component: NextPageWithLayout<P>;
+};
+
+function OrgoApp({ Component, pageProps }: AppPropsWithLayout) {
+  const getLayout =
+    Component.getLayout ??
+    ((page: ReactElement) => page);
+
+  const page = getLayout(<Component {...pageProps} />);
+
   return (
-    <Provider store={store}>
-      <Component {...pageProps} />;
-    </Provider>
+    <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Orgo</title>
+      </Head>
+      <AppProviders pageProps={pageProps}>{page}</AppProviders>
+    </>
   );
 }
 
-export default MyApp;
+export default OrgoApp;

@@ -1,16 +1,39 @@
 // apps/api/src/orgo/core/notifications/notification.service.ts
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+import type { Request } from 'express';
+
 import { OrgoConfigService } from '../../config/config.service';
 import { OrgProfileService } from '../../config/org-profile.service';
+import { FeatureFlagService } from '../../config/feature-flag.service';
+import type { FeatureFlagEvaluationContext } from '../../config/feature-flag.service';
 import { LogService } from '../logging/log.service';
 import { EmailService } from '../email/email.service';
+import { PrismaService } from './././persistence/prisma/prisma.service';
+import type {
+  ListNotificationsQueryDto,
+  NotificationChannel as ApiNotificationChannel,
+  NotificationStatus as ApiNotificationStatus,
+  NotificationDto,
+  NotificationFeedResponseDto,
+  SendInAppNotificationDto,
+} from './notification.controller';
 
 /**
  * Injection token for a pluggable recipient resolver.
  * A provider must be bound to this token in the NotificationsModule.
  */
-export const NOTIFICATION_RECIPIENT_RESOLVER = 'NOTIFICATION_RECIPIENT_RESOLVER';
+export const NOTIFICATION_RECIPIENT_RESOLVER =
+  'NOTIFICATION_RECIPIENT_RESOLVER';
 
 /**
  * Canonical notification channels (Doc 2 §2.8 / Doc 5 §7).
@@ -56,7 +79,7 @@ export interface ServiceResult<T> {
 
 /**
  * Minimal Task payload required to send notifications.
- * This is a logical view aligned with the canonical Task model (Doc 5 §3.1 / Doc 8 §8.4.2).
+ * Logical view aligned with the canonical Task model (Doc 5 §3.1 / Doc 8 §8.4.2).
  */
 export interface NotifiableTask {
   taskId: string;
@@ -180,8 +203,31 @@ export interface NotificationRecipientResolver {
 }
 
 /**
+ * DB-level channel and status enums, matching notification_channel_enum /
+ * notification_status_enum (Doc 1, Module 7).
+ */
+type NotificationChannelDb = 'email' | 'sms' | 'in_app' | 'webhook';
+type NotificationStatusDb = 'queued' | 'sent' | 'failed' | 'cancelled';
+
+interface AuthContext {
+  organizationId: string;
+  userId: string;
+}
+
+interface RequestWithAuthContext extends Request {
+  organizationId?: string;
+  userId?: string;
+  user?: {
+    organizationId?: string;
+    userId?: string;
+    [key: string]: unknown;
+  };
+}
+
+/**
  * NotificationService – orchestrates Task-driven notifications
- * across configured channels (email, in-app, etc.) (Doc 5 §7).
+ * across configured channels (email, in-app, etc.) (Doc 5 §7),
+ * and persists them into the notifications table.
  */
 @Injectable()
 export class NotificationService {
@@ -192,13 +238,17 @@ export class NotificationService {
     private readonly orgProfileService: OrgProfileService,
     private readonly configService: OrgoConfigService,
     private readonly logService: LogService,
+    private readonly prisma: PrismaService,
+    private readonly featureFlagService: FeatureFlagService,
     @Inject(NOTIFICATION_RECIPIENT_RESOLVER)
     private readonly recipientResolver: NotificationRecipientResolver,
+    @Inject(REQUEST) @Optional()
+    private readonly request?: RequestWithAuthContext,
   ) {}
 
   /**
    * Public entry point: send notifications for a Task lifecycle event
-   * (Doc 5 §7.3).
+   * (Doc 5 §7.3). This is invoked by task/case/workflow engines (NOTIFY actions).
    */
   async sendTaskNotification(
     task: NotifiableTask,
@@ -227,9 +277,53 @@ export class NotificationService {
         profile?.notification_scope,
       );
 
-      const channels = this.selectChannelsForEvent(
-        notificationConfig,
-        eventType,
+      const featureContext: FeatureFlagEvaluationContext = {
+        organizationId: task.organizationId,
+        userId: task.createdByUserId ?? null,
+      };
+
+      // Global per-org notifications flag. If disabled, all task notifications
+      // are suppressed regardless of config.
+      const notificationsEnabled = await this.isFeatureFlagEnabledOrUnset(
+        'orgo.notifications.enabled',
+        task.organizationId,
+        featureContext,
+      );
+
+      if (!notificationsEnabled) {
+        const summary: TaskNotificationDispatchSummary = {
+          taskId: task.taskId,
+          organizationId: task.organizationId,
+          eventType,
+          scope,
+          suppressed: true,
+          suppressionReason:
+            'Notifications disabled for organization via feature flag',
+          channels: [],
+        };
+
+        await this.safeLogEvent({
+          category: 'TASK',
+          logLevel: 'INFO',
+          message: 'Notification suppressed: notifications globally disabled',
+          identifier: `task_id:${task.taskId}`,
+          metadata: { eventType, scope },
+        });
+
+        return {
+          ok: true,
+          data: summary,
+          error: null,
+        };
+      }
+
+      let channels = this.selectChannelsForEvent(notificationConfig, eventType);
+
+      // Per-channel flags (email / in_app / sms / webhook).
+      channels = await this.filterChannelsByFeatureFlags(
+        channels,
+        task.organizationId,
+        featureContext,
       );
 
       if (channels.length === 0) {
@@ -464,6 +558,160 @@ export class NotificationService {
   }
 
   /**
+   * List notifications for the current user (notifications feed API).
+   * Multi-tenant + user scoping is derived from the request context.
+   */
+  async listNotificationsForCurrentUser(
+    filters: ListNotificationsQueryDto,
+  ): Promise<NotificationFeedResponseDto> {
+    const { organizationId, userId } = this.getAuthContextOrThrow();
+
+    const limit =
+      typeof filters.limit === 'number' && Number.isFinite(filters.limit)
+        ? Math.min(Math.max(Math.floor(filters.limit), 1), 200)
+        : 50;
+
+    const where: any = {
+      organization_id: organizationId,
+      recipient_user_id: userId,
+    };
+
+    if (filters.channel) {
+      where.channel = filters.channel;
+    }
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    const query: any = {
+      where,
+      orderBy: {
+        queued_at: 'desc',
+      },
+      take: limit + 1,
+    };
+
+    if (filters.cursor) {
+      query.cursor = { id: filters.cursor };
+      query.skip = 1;
+    }
+
+    const rows = await this.prisma.notification.findMany(query);
+
+    const hasMore = rows.length > limit;
+    const slice = rows.slice(0, limit);
+
+    const items: NotificationDto[] = slice.map((row: any) => ({
+      id: row.id,
+      organizationId: row.organization_id,
+      channel: row.channel as ApiNotificationChannel,
+      status: row.status as ApiNotificationStatus,
+      recipientUserId: row.recipient_user_id,
+      recipientAddress: row.recipient_address,
+      relatedTaskId: row.related_task_id,
+      payload: (row.payload ?? {}) as Record<string, unknown>,
+      queuedAt: row.queued_at ? row.queued_at.toISOString() : null,
+      sentAt: row.sent_at ? row.sent_at.toISOString() : null,
+      failedAt: row.failed_at ? row.failed_at.toISOString() : null,
+      errorMessage: row.error_message ?? null,
+    }));
+
+    return {
+      items,
+      nextCursor: hasMore ? rows[limit].id : null,
+    };
+  }
+
+  /**
+   * Send an ad-hoc in-app notification to a single user in the current org.
+   * Used by the /api/v3/notifications/in-app endpoint.
+   */
+  async sendInApp(body: SendInAppNotificationDto): Promise<NotificationDto> {
+    const { organizationId, userId } = this.getAuthContextOrThrow();
+
+    if (!body.recipientUserId) {
+      throw new BadRequestException('recipientUserId is required');
+    }
+    if (!body.title || !body.title.trim()) {
+      throw new BadRequestException('title is required');
+    }
+    if (!body.body || !body.body.trim()) {
+      throw new BadRequestException('body is required');
+    }
+
+    const featureContext: FeatureFlagEvaluationContext = {
+      organizationId,
+      userId,
+    };
+
+    const inAppEnabled = await this.isFeatureFlagEnabledOrUnset(
+      'orgo.notifications.in_app',
+      organizationId,
+      featureContext,
+    );
+
+    if (!inAppEnabled) {
+      throw new ForbiddenException(
+        'In-app notifications are disabled for this organization',
+      );
+    }
+
+    const now = new Date();
+
+    const payload: Record<string, unknown> = {
+      title: body.title,
+      body: body.body,
+      ...(body.metadata ? { metadata: body.metadata } : {}),
+      ...(body.relatedTaskId ? { relatedTaskId: body.relatedTaskId } : {}),
+      triggeredByUserId: userId,
+    };
+
+    const record = await this.prisma.notification.create({
+      data: {
+        organization_id: organizationId,
+        channel: 'in_app',
+        status: 'sent',
+        recipient_user_id: body.recipientUserId,
+        recipient_address: null,
+        template_id: null,
+        payload,
+        related_task_id: body.relatedTaskId ?? null,
+        queued_at: now,
+        sent_at: now,
+        failed_at: null,
+        error_message: null,
+      },
+    });
+
+    await this.safeLogEvent({
+      category: 'TASK',
+      logLevel: 'INFO',
+      message: 'Ad-hoc in-app notification created',
+      identifier: `notification_id:${record.id}`,
+      metadata: {
+        recipientUserId: body.recipientUserId,
+        relatedTaskId: body.relatedTaskId ?? null,
+      },
+    });
+
+    return {
+      id: record.id,
+      organizationId: record.organization_id,
+      channel: record.channel as ApiNotificationChannel,
+      status: record.status as ApiNotificationStatus,
+      recipientUserId: record.recipient_user_id,
+      recipientAddress: record.recipient_address,
+      relatedTaskId: record.related_task_id,
+      payload: (record.payload ?? {}) as Record<string, unknown>,
+      queuedAt: record.queued_at ? record.queued_at.toISOString() : null,
+      sentAt: record.sent_at ? record.sent_at.toISOString() : null,
+      failedAt: record.failed_at ? record.failed_at.toISOString() : null,
+      errorMessage: record.error_message ?? null,
+    };
+  }
+
+  /**
    * Load and normalise notification configuration for an organization
    * (Doc 5 §7.2). Delegates to OrgoConfigService.
    */
@@ -509,7 +757,7 @@ export class NotificationService {
    */
   private selectChannelsForEvent(
     config: NotificationConfig,
-    eventType: TaskNotificationEventType,
+    _eventType: TaskNotificationEventType,
   ): NotificationChannel[] {
     const channels: NotificationChannel[] = [];
 
@@ -546,6 +794,51 @@ export class NotificationService {
         return !!config.channels.webhook?.enabled;
       default:
         return false;
+    }
+  }
+
+  /**
+   * Filter eligible channels based on per-channel feature flags.
+   * Missing flags do not gate behaviour (config remains the source of truth).
+   */
+  private async filterChannelsByFeatureFlags(
+    channels: NotificationChannel[],
+    organizationId: string,
+    context: FeatureFlagEvaluationContext,
+  ): Promise<NotificationChannel[]> {
+    if (!this.featureFlagService || channels.length === 0) {
+      return channels;
+    }
+
+    const enabledChannels: NotificationChannel[] = [];
+
+    for (const channel of channels) {
+      const flagCode = this.getChannelFeatureFlagCode(channel);
+      const enabled = await this.isFeatureFlagEnabledOrUnset(
+        flagCode,
+        organizationId,
+        context,
+      );
+      if (enabled) {
+        enabledChannels.push(channel);
+      }
+    }
+
+    return enabledChannels;
+  }
+
+  private getChannelFeatureFlagCode(channel: NotificationChannel): string {
+    switch (channel) {
+      case 'EMAIL':
+        return 'orgo.notifications.email';
+      case 'SMS':
+        return 'orgo.notifications.sms';
+      case 'IN_APP':
+        return 'orgo.notifications.in_app';
+      case 'WEBHOOK':
+        return 'orgo.notifications.webhook';
+      default:
+        return 'orgo.notifications.unknown';
     }
   }
 
@@ -609,6 +902,7 @@ export class NotificationService {
    * Send email notification using EmailService (Doc 4 / Doc 5 §4.3).
    * Provider failures are captured as a channel-level error so that
    * the overall notification operation can still return a structured result.
+   * Each send is also persisted into the notifications table.
    */
   private async sendEmailTaskNotification(
     task: NotifiableTask,
@@ -631,6 +925,16 @@ export class NotificationService {
     const subject = this.buildEmailSubject(task, eventType);
     const variables = this.buildEmailTemplateVariables(task, eventType);
 
+    const payloadForPersistence: Record<string, unknown> = {
+      subject,
+      templateId,
+      variables,
+      to,
+      cc,
+      eventType,
+      taskId: task.taskId,
+    };
+
     try {
       const result = await this.emailService.sendEmail({
         to,
@@ -640,6 +944,20 @@ export class NotificationService {
         variables,
         senderName: config.channels.email.senderName,
         senderAddress: config.channels.email.senderAddress,
+      });
+
+      const status: NotificationStatusDb = result.ok ? 'sent' : 'failed';
+
+      await this.persistNotificationRecord({
+        organizationId: task.organizationId,
+        channel: 'EMAIL',
+        status,
+        recipientUserId: null,
+        recipientAddress: to[0] ?? cc[0] ?? null,
+        templateId,
+        relatedTaskId: task.taskId,
+        payload: payloadForPersistence,
+        errorMessage: result.ok ? null : result.error?.message ?? undefined,
       });
 
       if (!result.ok) {
@@ -663,6 +981,18 @@ export class NotificationService {
         error.stack,
       );
 
+      await this.persistNotificationRecord({
+        organizationId: task.organizationId,
+        channel: 'EMAIL',
+        status: 'failed',
+        recipientUserId: null,
+        recipientAddress: to[0] ?? cc[0] ?? null,
+        templateId,
+        relatedTaskId: task.taskId,
+        payload: payloadForPersistence,
+        errorMessage: error.message,
+      });
+
       return {
         channel: 'EMAIL',
         success: false,
@@ -674,8 +1004,9 @@ export class NotificationService {
   }
 
   /**
-   * Stub for in-app notifications. This should be wired to a persistence
-   * layer and/or WebSocket gateway (e.g. TaskEventsGateway) later.
+   * In-app notifications for task events.
+   * Currently persisted into notifications table with status=sent and
+   * channel-ready payload (title/description + recipients/metadata).
    */
   private async sendInAppTaskNotification(
     task: NotifiableTask,
@@ -691,7 +1022,26 @@ export class NotificationService {
       };
     }
 
-    // For now, we only log an in-app notification event.
+    const payload: Record<string, unknown> = {
+      taskId: task.taskId,
+      organizationId: task.organizationId,
+      eventType,
+      recipients: recipientIdentifiers,
+      title: this.buildEmailSubject(task, eventType),
+      description: task.description,
+    };
+
+    await this.persistNotificationRecord({
+      organizationId: task.organizationId,
+      channel: 'IN_APP',
+      status: 'sent',
+      recipientUserId: null,
+      recipientAddress: null,
+      templateId: null,
+      relatedTaskId: task.taskId,
+      payload,
+    });
+
     await this.safeLogEvent({
       category: 'TASK',
       logLevel: 'INFO',
@@ -819,6 +1169,7 @@ export class NotificationService {
   /**
    * Extract identifiers for IN_APP notifications.
    * Prefers userId; falls back to normalised identifiers if none present.
+   * (Fixes the earlier malformed spread syntax).
    */
   private extractInAppRecipientIdentifiers(
     primaryRecipients: NotificationRecipient[],
@@ -847,17 +1198,186 @@ export class NotificationService {
   }
 
   /**
-   * Safely log notification-related events without allowing logging failures
-   * to break the notification flow (Doc 5 §2.4).
+   * Persist a notification into the notifications table.
+   * This is the central "queue" primitive for all channels; current
+   * implementation persists final status (sent/failed) with channel-ready payload.
    */
-  private async safeLogEvent(payload: any): Promise<void> {
+  private async persistNotificationRecord(params: {
+    organizationId?: string | null;
+    channel: NotificationChannel;
+    status: NotificationStatusDb;
+    recipientUserId?: string | null;
+    recipientAddress?: string | null;
+    templateId?: string | null;
+    relatedTaskId?: string | null;
+    payload: Record<string, unknown>;
+    queuedAt?: Date | null;
+    sentAt?: Date | null;
+    failedAt?: Date | null;
+    errorMessage?: string | null;
+  }): Promise<void> {
+    const {
+      organizationId,
+      channel,
+      status,
+      recipientUserId,
+      recipientAddress,
+      templateId,
+      relatedTaskId,
+      payload,
+      queuedAt,
+      sentAt,
+      failedAt,
+      errorMessage,
+    } = params;
+
+    if (!organizationId) {
+      // Without an org context we cannot enforce multi-tenant boundaries; skip persistence.
+      return;
+    }
+
+    const now = new Date();
+    const queuedAtEffective = queuedAt ?? now;
+
     try {
-      await this.logService.logEvent(payload);
+      await this.prisma.notification.create({
+        data: {
+          organization_id: organizationId,
+          channel: this.toDbChannel(channel),
+          status,
+          recipient_user_id: recipientUserId ?? null,
+          recipient_address: recipientAddress ?? null,
+          template_id: templateId ?? null,
+          payload,
+          related_task_id: relatedTaskId ?? null,
+          queued_at: queuedAtEffective,
+          sent_at: sentAt ?? (status === 'sent' ? now : null),
+          failed_at: failedAt ?? (status === 'failed' ? now : null),
+          error_message: errorMessage ?? null,
+        },
+      });
+    } catch (err) {
+      const error = err as Error;
+      this.logger.error(
+        `Failed to persist notification record (channel=${channel}, status=${status}): ${error.message}`,
+        error.stack,
+      );
+    }
+  }
+
+  private toDbChannel(channel: NotificationChannel): NotificationChannelDb {
+    switch (channel) {
+      case 'EMAIL':
+        return 'email';
+      case 'SMS':
+        return 'sms';
+      case 'IN_APP':
+        return 'in_app';
+      case 'WEBHOOK':
+        return 'webhook';
+      default:
+        return 'email';
+    }
+  }
+
+  /**
+   * Resolve auth context (organizationId + userId) from the current request.
+   * Used to enforce multi-tenant and per-user scoping for the feed and ad-hoc
+   * in-app notifications.
+   */
+  private getAuthContextFromRequest(): AuthContext | null {
+    const req = this.request as RequestWithAuthContext | undefined;
+    if (!req) {
+      return null;
+    }
+
+    const userFromReq = (req as any).user || {};
+
+    const organizationId =
+      (userFromReq && (userFromReq.organizationId as string | undefined)) ??
+      (req as any).organizationId ??
+      null;
+
+    const userId =
+      (userFromReq && (userFromReq.userId as string | undefined)) ??
+      (req as any).userId ??
+      (userFromReq && (userFromReq.id as string | undefined)) ??
+      null;
+
+    if (!organizationId || !userId) {
+      return null;
+    }
+
+    return { organizationId, userId };
+  }
+
+  private getAuthContextOrThrow(): AuthContext {
+    const ctx = this.getAuthContextFromRequest();
+    if (!ctx) {
+      throw new UnauthorizedException(
+        'Authentication context is not available for notifications',
+      );
+    }
+    return ctx;
+  }
+
+  /**
+   * Feature flag helper: if the flag does not exist, treat it as "not gating"
+   * and fall back to configuration (returns true).
+   */
+  private async isFeatureFlagEnabledOrUnset(
+    code: string,
+    organizationId: string | null,
+    context: FeatureFlagEvaluationContext,
+  ): Promise<boolean> {
+    if (!this.featureFlagService) {
+      return true;
+    }
+
+    try {
+      const flag = await this.featureFlagService.getFlag(code, organizationId);
+
+      if (!flag) {
+        // No explicit flag configured; do not gate behaviour.
+        return true;
+      }
+
+      return this.featureFlagService.isFeatureEnabled(code, {
+        organizationId,
+        context,
+      });
     } catch (err) {
       const error = err as Error;
       this.logger.warn(
-        `Failed to write notification log event: ${error.message}`,
-        error.stack,
+        `Feature flag evaluation failed for ${code} (org=${organizationId ?? 'null'}): ${error.message}. Defaulting to enabled.`,
+      );
+      return true;
+    }
+  }
+
+  /**
+   * Safely log notification-related events without allowing logging failures
+   * to break the notification flow (Doc 5 §2.4).
+   */
+  private async safeLogEvent(event: {
+    category: string;
+    logLevel: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
+    message: string;
+    identifier?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<void> {
+    try {
+      await this.logService.logEvent({
+        ...event,
+        metadata: {
+          ...(event.metadata ?? {}),
+          component: 'NotificationService',
+        },
+      });
+    } catch (err) {
+      const error = err as Error;
+      this.logger.warn(
+        `Failed to log notification event (${event.message}): ${error.message}`,
       );
     }
   }

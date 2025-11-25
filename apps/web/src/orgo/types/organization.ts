@@ -151,7 +151,6 @@ export interface BehaviorProfileDefaultTaskMetadata {
 /**
  * Cyclic overview / pattern detection configuration from the profiles YAML.
  */
-
 export interface BehaviorProfileCyclicIncidentFrequency {
   min_events: number;
   window_days: number;
@@ -229,7 +228,10 @@ export interface BehaviorProfile {
  * Mapping from profile code → behaviour profile.
  * Mirrors the `profiles:` top-level map in the YAML.
  */
-export type BehaviorProfilesMap = Record<OrganizationProfileKey, BehaviorProfile>;
+export type BehaviorProfilesMap = Record<
+  OrganizationProfileKey,
+  BehaviorProfile
+>;
 
 /**
  * Database-level link between an organization and a profile code,

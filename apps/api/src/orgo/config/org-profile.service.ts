@@ -1,13 +1,29 @@
+// apps/api/src/orgo/config/org-profile.service.ts
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../persistence/prisma/prisma.service';
+import { PrismaService } from '././persistence/prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 
-export type VisibilityToken = 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'ANONYMISED';
+/**
+ * Canonical VISIBILITY token, aligned with VISIBILITY enum (Docs 2, 7, 8).
+ */
+export type VisibilityToken =
+  | 'PUBLIC'
+  | 'INTERNAL'
+  | 'RESTRICTED'
+  | 'ANONYMISED';
+
+/**
+ * Canonical TASK_PRIORITY token, aligned with TASK_PRIORITY enum (Docs 2, 5, 8).
+ */
 export type TaskPriorityToken = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
+/**
+ * Lower‑case visibility tokens as they appear in YAML / JSON configs.
+ */
 type LowerVisibility =
   | 'public'
   | 'internal'
@@ -15,14 +31,24 @@ type LowerVisibility =
   | 'anonymised'
   | 'anonymized'; // accept US spelling as alias
 
+/**
+ * Lower‑case priority tokens as they appear in YAML / JSON configs.
+ */
 type LowerPriority = 'low' | 'medium' | 'high' | 'critical';
 
+/**
+ * Default Task metadata block inside a behaviour profile template (Doc 7).
+ */
 export interface ProfileDefaultTaskMetadataTemplate {
   visibility: LowerVisibility;
   default_priority: LowerPriority;
   default_reactivity_seconds: number;
 }
 
+/**
+ * Cyclic overview / pattern review configuration copied from a profile.
+ * Mirrors the `cyclic_overview` block in Doc 7.
+ */
 export interface CyclicOverviewConfig {
   enabled: boolean;
   schedule: {
@@ -40,14 +66,26 @@ export interface CyclicOverviewConfig {
   };
 }
 
+/**
+ * Environment token used in profile metadata.
+ */
 export type EnvironmentToken = 'dev' | 'staging' | 'prod' | 'offline';
 
+/**
+ * Metadata attached to each behavioural profile template.
+ */
 export interface ProfileTemplateMetadata {
   version: string;
   last_updated: string;
   environment: EnvironmentToken;
 }
 
+/**
+ * Behaviour profile template as defined in the profiles YAML (Doc 7).
+ *
+ * This mirrors the BehaviourProfile type used in the web app and the
+ * schema template documented in the organization profiles doc.
+ */
 export interface ProfileTemplate {
   description: string;
   metadata: ProfileTemplateMetadata;
@@ -102,6 +140,14 @@ export interface ProfileTemplate {
   cyclic_overview: CyclicOverviewConfig;
 }
 
+/**
+ * Resolved profile for a specific organization (tenant).
+ *
+ * Combines:
+ *  - The active profile code (from organization_profiles.profile_code), and
+ *  - The behavioural template from the profiles YAML (Doc 7),
+ *  - An optional shallow copy of the DB row with JSONB overrides.
+ */
 export interface ResolvedOrgProfile {
   organizationId: string;
   profileCode: string;
@@ -117,8 +163,14 @@ export interface ResolvedOrgProfile {
   };
 }
 
+/**
+ * What kind of entity profile defaults are being applied to.
+ */
 export type DefaultsTargetKind = 'task' | 'case';
 
+/**
+ * Input for applying profile‑driven defaults to a Task/Case.
+ */
 export interface ApplyDefaultsInput {
   organizationId: string;
   /**
@@ -194,6 +246,10 @@ export interface ProfileDiffEnumField {
   changed: boolean;
 }
 
+/**
+ * Compact summary of key behavioural knobs for a profile.
+ * Used by previewProfileDiff and configuration UIs.
+ */
 export interface ProfileSummary {
   profileCode: string;
   description: string;
@@ -222,14 +278,77 @@ export interface ProfileDiffResult {
   enumChanges: ProfileDiffEnumField[];
 }
 
+/**
+ * Shape of the profiles YAML file on disk.
+ */
 interface ProfilesFileShape {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: any;
   profiles?: Record<string, ProfileTemplate>;
 }
 
-const DEFAULT_PROFILE_CODE = 'default';
+/**
+ * Small helper snapshot types exposed as convenience integration points.
+ */
 
+/**
+ * SLA configuration derived from a profile for a specific organization.
+ * Used by TaskService / Workflow engines when computing deadlines.
+ */
+export interface OrgSlaConfig {
+  /**
+   * Base reactivity time before first escalation (seconds).
+   * Mirrors ProfileTemplate.reactivity_seconds.
+   */
+  reactivitySeconds: number;
+  /**
+   * Maximum allowed escalation window (seconds).
+   * Mirrors ProfileTemplate.max_escalation_seconds.
+   */
+  maxEscalationSeconds: number;
+  /**
+   * Default SLA for tasks created under this profile, when
+   * the caller does not specify an explicit SLA.
+   * Mirrors default_task_metadata.default_reactivity_seconds,
+   * falling back to reactivity_seconds when omitted.
+   */
+  defaultTaskReactivitySeconds: number;
+}
+
+/**
+ * Default Task metadata derived from the active profile.
+ * Used by TaskService and domain modules when seeding new work.
+ */
+export interface OrgTaskDefaults {
+  priority: TaskPriorityToken;
+  visibility: VisibilityToken;
+  /**
+   * Default SLA in seconds for new Tasks/Cases when caller does not override.
+   */
+  reactivitySeconds: number;
+}
+
+/**
+ * Pattern detection knobs for a given organization.
+ * Used by Insights / analytics modules when aligning pattern windows
+ * with operational expectations.
+ */
+export interface OrgPatternConfig {
+  patternSensitivity: string;
+  patternWindowDays: number;
+  patternMinEvents: number;
+}
+
+/**
+ * Logging and retention knobs for a given organization.
+ * Used by logging/audit services and data retention policies.
+ */
+export interface OrgLoggingConfig {
+  loggingLevel: string;
+  logRetentionDays: number;
+}
+
+const DEFAULT_PROFILE_CODE = 'default';
 const PROFILE_CONFIG_ENV_VAR = 'ORGO_PROFILES_CONFIG_PATH';
 
 @Injectable()
@@ -244,19 +363,31 @@ export class OrgProfileService {
 
   private readonly profilesConfigPath: string;
 
+  /**
+   * Current environment, normalised to EnvironmentToken when possible.
+   * Used to validate profile metadata.environment.
+   */
+  private readonly environmentToken: EnvironmentToken | null;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    const fromEnv = this.configService.get<string>(PROFILE_CONFIG_ENV_VAR);
+    const fromEnv = this.configService.get<string>('ENVIRONMENT');
+    const rawEnvironment = fromEnv ?? process.env.ENVIRONMENT ?? null;
+    this.environmentToken = this.normalizeEnvironmentToken(rawEnvironment);
+
+    const profilesPathFromEnv =
+      this.configService.get<string>(PROFILE_CONFIG_ENV_VAR);
     this.profilesConfigPath =
-      fromEnv ??
+      profilesPathFromEnv ??
       path.resolve(
         process.cwd(),
         'config',
         'profiles',
         'organization_profiles.yaml',
       );
+
     this.loadProfilesFromConfig();
   }
 
@@ -264,6 +395,10 @@ export class OrgProfileService {
    * Load and cache profile templates from the profiles YAML file.
    * Fails softly: if the file is missing or invalid, we fall back to
    * a hard‑coded "default" profile so the system can still operate.
+   *
+   * This now validates the presence and shape of the per-profile metadata
+   * block (metadata.version / metadata.last_updated / metadata.environment)
+   * and enforces basic environment coherence.
    */
   private loadProfilesFromConfig(): void {
     try {
@@ -290,7 +425,11 @@ export class OrgProfileService {
         return;
       }
 
-      this.profileTemplates = { ...parsed.profiles };
+      const validatedProfiles = this.validateAndNormalizeProfileTemplates(
+        parsed.profiles,
+      );
+
+      this.profileTemplates = { ...validatedProfiles };
 
       if (!this.profileTemplates[DEFAULT_PROFILE_CODE]) {
         this.logger.warn(
@@ -298,11 +437,6 @@ export class OrgProfileService {
         );
         this.profileTemplates[DEFAULT_PROFILE_CODE] =
           this.buildHardcodedDefaultProfile();
-      }
-
-      // Never expose the internal "_template" as a usable profile.
-      if (this.profileTemplates._template) {
-        delete this.profileTemplates._template;
       }
 
       this.logger.log(
@@ -321,6 +455,134 @@ export class OrgProfileService {
   }
 
   /**
+   * Validate and normalise profile templates loaded from YAML.
+   *
+   * Responsibilities:
+   *   - Ensure each profile has a metadata block.
+   *   - Ensure metadata.version, metadata.last_updated, metadata.environment
+   *     are present and strings.
+   *   - Normalise metadata.environment to EnvironmentToken.
+   *   - Enforce environment coherence against ENVIRONMENT when set.
+   *   - Validate that the internal "_template" profile has a coherent schema,
+   *     but do not expose it as a usable profile.
+   */
+  private validateAndNormalizeProfileTemplates(
+    rawProfiles: Record<string, ProfileTemplate>,
+  ): Record<string, ProfileTemplate> {
+    const result: Record<string, ProfileTemplate> = {};
+    const currentEnv = this.environmentToken;
+
+    for (const [code, rawTemplate] of Object.entries(rawProfiles ?? {})) {
+      if (!rawTemplate || typeof rawTemplate !== 'object') {
+        this.logger.warn(
+          `Profile "${code}" in org profiles config is not an object. Skipping.`,
+        );
+        continue;
+      }
+
+      // Basic schema presence for all profiles (including _template).
+      const metadata: any = (rawTemplate as any).metadata;
+      if (!metadata || typeof metadata !== 'object') {
+        this.logger.error(
+          `Profile "${code}" is missing required "metadata" block (metadata.version / metadata.last_updated / metadata.environment). This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      const version =
+        typeof metadata.version === 'string' && metadata.version.trim().length > 0
+          ? metadata.version.trim()
+          : null;
+      const lastUpdated =
+        typeof metadata.last_updated === 'string' &&
+        metadata.last_updated.trim().length > 0
+          ? metadata.last_updated.trim()
+          : null;
+      const envRaw =
+        typeof metadata.environment === 'string' &&
+        metadata.environment.trim().length > 0
+          ? metadata.environment.trim()
+          : null;
+
+      const normalizedEnv = this.normalizeEnvironmentToken(envRaw);
+
+      if (!version || !lastUpdated || !normalizedEnv) {
+        this.logger.error(
+          `Profile "${code}" has invalid metadata; expected non-empty string "version" and "last_updated" and a valid "environment" token. This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      // Minimal schema sanity checks for core fields (applied to all profiles,
+      // including _template).
+      const template = rawTemplate as any;
+
+      if (typeof template.description !== 'string') {
+        this.logger.error(
+          `Profile "${code}" is missing a string "description". This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      if (typeof template.reactivity_seconds !== 'number') {
+        this.logger.error(
+          `Profile "${code}" is missing a numeric "reactivity_seconds". This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      if (typeof template.max_escalation_seconds !== 'number') {
+        this.logger.error(
+          `Profile "${code}" is missing a numeric "max_escalation_seconds". This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      if (
+        !template.default_task_metadata ||
+        typeof template.default_task_metadata !== 'object'
+      ) {
+        this.logger.error(
+          `Profile "${code}" is missing the "default_task_metadata" block. This profile will be ignored.`,
+        );
+        continue;
+      }
+
+      // Environment coherence check.
+      if (currentEnv && normalizedEnv && currentEnv !== normalizedEnv) {
+        this.logger.warn(
+          `Profile "${code}" declares metadata.environment="${normalizedEnv}" which does not match current ENVIRONMENT="${currentEnv}". This profile will be skipped to avoid cross-environment profile leakage.`,
+        );
+        // For both regular profiles and "_template", we do not load the
+        // mismatched profile. "_template" remains validated but unused.
+        continue;
+      }
+
+      const normalizedTemplate: ProfileTemplate = {
+        ...(rawTemplate as ProfileTemplate),
+        metadata: {
+          version,
+          last_updated: lastUpdated,
+          environment: normalizedEnv,
+        },
+      };
+
+      // "_template" is validated for schema coherence but never exposed
+      // as a selectable profile template.
+      if (code === '_template') {
+        this.logger.debug(
+          'Validated internal "_template" profile schema; it will not be exposed as a usable profile.',
+        );
+        continue;
+      }
+
+      result[code] = normalizedTemplate;
+    }
+
+    return result;
+  }
+
+  /**
    * Hard‑coded default profile matching the "default" profile from Doc 7.
    * This is used as a safety net when YAML config is unavailable or invalid.
    */
@@ -333,8 +595,8 @@ export class OrgProfileService {
         last_updated: '2025-11-19',
         environment: 'prod',
       },
-      reactivity_seconds: 43200,
-      max_escalation_seconds: 172800,
+      reactivity_seconds: 43_200,
+      max_escalation_seconds: 172_800,
       transparency_level: 'balanced',
       escalation_granularity: 'moderate',
       review_frequency: 'monthly',
@@ -349,12 +611,12 @@ export class OrgProfileService {
         minor: { immediate_escalation: false },
       },
       logging_level: 'standard',
-      log_retention_days: 1095,
+      log_retention_days: 1_095,
       automation_level: 'medium',
       default_task_metadata: {
         visibility: 'internal',
         default_priority: 'medium',
-        default_reactivity_seconds: 43200,
+        default_reactivity_seconds: 43_200,
       },
       cyclic_overview: {
         enabled: true,
@@ -412,6 +674,12 @@ export class OrgProfileService {
    *
    * If no DB row exists or the table is not yet present, the default profile
    * template is returned.
+   *
+   * Multi‑tenant safety:
+   *   - All lookups are scoped by organization_id.
+   *
+   * Metadata.version is also compared (when possible) with the DB version to
+   * surface mismatches in logs.
    */
   async loadProfile(organizationId: string): Promise<ResolvedOrgProfile> {
     if (!organizationId) {
@@ -454,6 +722,30 @@ export class OrgProfileService {
     const profileCode = dbProfile?.profile_code ?? DEFAULT_PROFILE_CODE;
     const template = this.getProfileTemplate(profileCode);
 
+    // Version tracking: compare DB version with metadata.version (major number)
+    // when both are available, so operators can detect drift.
+    const metadataVersion = template.metadata?.version;
+    const dbVersion = dbProfile?.version;
+
+    if (metadataVersion && typeof dbVersion === 'number') {
+      const parsedMetadataVersion = Number.parseInt(
+        String(metadataVersion).split('.')[0],
+        10,
+      );
+
+      if (!Number.isNaN(parsedMetadataVersion)) {
+        if (parsedMetadataVersion !== dbVersion) {
+          this.logger.warn(
+            `Organization profile version mismatch for org "${organizationId}" (profile_code="${profileCode}"): metadata.version="${metadataVersion}", organization_profiles.version=${dbVersion}.`,
+          );
+        }
+      } else {
+        this.logger.warn(
+          `Unable to interpret metadata.version="${metadataVersion}" as a numeric major version for org "${organizationId}" (profile_code="${profileCode}").`,
+        );
+      }
+    }
+
     return {
       organizationId,
       profileCode,
@@ -479,6 +771,9 @@ export class OrgProfileService {
    *   - reactivity SLA (seconds + ISO‑8601 duration)
    *   - automation level
    *   - cyclic overview schedule (for review scheduling)
+   *
+   * This is the primary integration point for TaskService and
+   * domain modules when deriving defaults from an organization's profile.
    */
   async applyDefaults(
     input: ApplyDefaultsInput,
@@ -523,6 +818,8 @@ export class OrgProfileService {
    *   - Pattern sensitivity & windows
    *   - Logging retention
    *   - Default visibility & priority
+   *
+   * Used by the admin UI via OrgProfileController.previewProfileChange.
    */
   async previewProfileDiff(
     organizationId: string,
@@ -540,10 +837,7 @@ export class OrgProfileService {
     const currentTemplate = currentResolved?.template ?? null;
 
     const currentSummary = currentTemplate
-      ? this.summarizeProfile(
-          currentResolved!.profileCode,
-          currentTemplate,
-        )
+      ? this.summarizeProfile(currentResolved!.profileCode, currentTemplate)
       : null;
     const candidateSummary = this.summarizeProfile(
       candidateProfileCode,
@@ -617,6 +911,108 @@ export class OrgProfileService {
     };
   }
 
+  /**
+   * Convenience: get a ProfileSummary for the organization's active profile.
+   *
+   * This is a stable integration point for services that only need
+   * high‑level behaviour knobs (Insights, reporting, admin dashboards).
+   */
+  async getProfileSummaryForOrg(
+    organizationId: string,
+  ): Promise<ProfileSummary> {
+    const resolved = await this.loadProfile(organizationId);
+    return this.summarizeProfile(resolved.profileCode, resolved.template);
+  }
+
+  /**
+   * Convenience: return SLA configuration for an organization.
+   *
+   * Used by TaskService, WorkflowEngine and escalation modules when
+   * computing reactive deadlines and escalation horizons.
+   */
+  async getSlaConfig(organizationId: string): Promise<OrgSlaConfig> {
+    const resolved = await this.loadProfile(organizationId);
+    const template = resolved.template;
+
+    const defaultTaskReactivitySeconds =
+      template.default_task_metadata.default_reactivity_seconds ??
+      template.reactivity_seconds;
+
+    return {
+      reactivitySeconds: template.reactivity_seconds,
+      maxEscalationSeconds: template.max_escalation_seconds,
+      defaultTaskReactivitySeconds,
+    };
+  }
+
+  /**
+   * Convenience: default Task/Case metadata derived from the active profile.
+   *
+   * This is a lighter‑weight alternative to applyDefaults when callers
+   * want the profile defaults without providing a full draft payload.
+   */
+  async getTaskDefaults(organizationId: string): Promise<OrgTaskDefaults> {
+    const resolved = await this.loadProfile(organizationId);
+    const template = resolved.template;
+    const defaults = template.default_task_metadata;
+
+    return {
+      priority: this.normalizePriorityToken(defaults.default_priority),
+      visibility: this.normalizeVisibilityToken(defaults.visibility),
+      reactivitySeconds:
+        defaults.default_reactivity_seconds ?? template.reactivity_seconds,
+    };
+  }
+
+  /**
+   * Convenience: pattern detection configuration derived from the active profile.
+   *
+   * Insights / analytics modules can combine this with their own aggregation
+   * settings to decide detection windows and thresholds per organization.
+   */
+  async getPatternConfig(organizationId: string): Promise<OrgPatternConfig> {
+    const resolved = await this.loadProfile(organizationId);
+    const template = resolved.template;
+
+    return {
+      patternSensitivity: template.pattern_sensitivity,
+      patternWindowDays: template.pattern_window_days,
+      patternMinEvents: template.pattern_min_events,
+    };
+  }
+
+  /**
+   * Convenience: logging and retention knobs derived from the active profile.
+   *
+   * Logging services and data retention schedulers can use this to align
+   * operational logs with organizational expectations.
+   */
+  async getLoggingConfig(organizationId: string): Promise<OrgLoggingConfig> {
+    const resolved = await this.loadProfile(organizationId);
+    const template = resolved.template;
+
+    return {
+      loggingLevel: template.logging_level,
+      logRetentionDays: template.log_retention_days,
+    };
+  }
+
+  /**
+   * Convenience: cyclic overview configuration for an organization.
+   *
+   * Used by Insights / reporting layers and scheduling code when setting up
+   * periodic pattern reviews and systemic follow‑ups.
+   */
+  async getCyclicOverviewConfig(
+    organizationId: string,
+  ): Promise<CyclicOverviewConfig> {
+    const resolved = await this.loadProfile(organizationId);
+    return resolved.template.cyclic_overview;
+  }
+
+  /**
+   * Build a compact summary representation of a given profile template.
+   */
   private summarizeProfile(
     profileCode: string,
     template: ProfileTemplate,
@@ -677,17 +1073,16 @@ export class OrgProfileService {
   /**
    * Map lower‑case config values for priority to canonical TASK_PRIORITY tokens.
    */
-  private normalizePriorityToken(priority: LowerPriority | string): TaskPriorityToken {
-    const value = String(priority).toLowerCase() as LowerPriority;
-
-    switch (value) {
+  private normalizePriorityToken(input: LowerPriority): TaskPriorityToken {
+    switch (input) {
       case 'low':
         return 'LOW';
+      case 'medium':
+        return 'MEDIUM';
       case 'high':
         return 'HIGH';
       case 'critical':
         return 'CRITICAL';
-      case 'medium':
       default:
         return 'MEDIUM';
     }
@@ -696,30 +1091,60 @@ export class OrgProfileService {
   /**
    * Map lower‑case config values for visibility to canonical VISIBILITY tokens.
    */
-  private normalizeVisibilityToken(
-    visibility: LowerVisibility | string,
-  ): VisibilityToken {
-    const value = String(visibility).toLowerCase() as LowerVisibility;
+  private normalizeVisibilityToken(input: LowerVisibility): VisibilityToken {
+    const normalized = input.toLowerCase() as LowerVisibility;
 
-    switch (value) {
+    switch (normalized) {
       case 'public':
         return 'PUBLIC';
+      case 'internal':
+        return 'INTERNAL';
       case 'restricted':
         return 'RESTRICTED';
       case 'anonymised':
       case 'anonymized':
         return 'ANONYMISED';
-      case 'internal':
       default:
         return 'INTERNAL';
     }
   }
 
   /**
-   * Convert a number of seconds into an ISO‑8601 duration string, e.g. 3600 → "PT3600S".
+   * Normalise environment tokens for profile metadata and the current process
+   * environment. Returns null when the value is missing or invalid.
+   */
+  private normalizeEnvironmentToken(
+    input: string | EnvironmentToken | null | undefined,
+  ): EnvironmentToken | null {
+    if (!input) {
+      return null;
+    }
+
+    const token = String(input).toLowerCase().trim();
+
+    switch (token) {
+      case 'dev':
+      case 'staging':
+      case 'prod':
+      case 'offline':
+        return token;
+      default:
+        this.logger.warn(
+          `Unknown environment token "${input}" in org profiles metadata/config. Expected one of: dev, staging, prod, offline.`,
+        );
+        return null;
+    }
+  }
+
+  /**
+   * Convert a number of seconds into an ISO‑8601 duration string,
+   * e.g. 3600 → "PT3600S".
    */
   private secondsToIsoDuration(seconds: number): string {
-    const safe = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
-    return `PT${safe}S`;
+    const safeSeconds =
+      typeof seconds === 'number' && Number.isFinite(seconds) && seconds >= 0
+        ? Math.floor(seconds)
+        : 0;
+    return `PT${safeSeconds}S`;
   }
 }
