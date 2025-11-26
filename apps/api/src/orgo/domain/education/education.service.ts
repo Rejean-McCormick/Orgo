@@ -5,7 +5,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from './././persistence/prisma/prisma.service';
 
 /**
  * Canonical enums aligned with Doc 1 / Doc 2 / Doc 8.
@@ -273,13 +274,7 @@ export class EducationModuleService {
    */
   private static readonly DEFAULT_EDUCATION_LABEL = '100.94.Education.Support';
 
-  private readonly prisma: PrismaClient;
-
-  constructor() {
-    // Note: if a shared PrismaService / PersistenceModule is in place,
-    // this can be refactored to inject that instead.
-    this.prisma = new PrismaClient();
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Register a new student incident:
@@ -375,7 +370,7 @@ export class EducationModuleService {
             ${null},
             ${0},
             ${null},
-            ${taskMetadataJson}::jsonb
+            ${Prisma.sql`${Prisma.raw(taskMetadataJson)}::jsonb`}
           )
           RETURNING
             id,

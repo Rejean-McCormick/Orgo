@@ -336,18 +336,32 @@ export class EducationController {
     required: false,
     description:
       'Filter by learning group (class/team) identifier (learning_groups.id).',
+    schema: {
+      type: 'string',
+      format: 'uuid',
+      nullable: true,
+    },
   })
   @ApiQuery({
     name: 'person_id',
     required: false,
     description:
       'Filter by primary person the incident is about (person_profiles.id).',
+    schema: {
+      type: 'string',
+      format: 'uuid',
+      nullable: true,
+    },
   })
   @ApiQuery({
     name: 'status',
     required: false,
     description:
       'Optional Task status filter (PENDING, IN_PROGRESS, COMPLETED, etc.).',
+    schema: {
+      type: 'string',
+      example: 'PENDING',
+    },
   })
   @ApiQuery({
     name: 'severity',
@@ -355,22 +369,38 @@ export class EducationController {
     description:
       'Optional severity filter (MINOR, MODERATE, MAJOR, CRITICAL). Uses DB enum tokens.',
     enum: TaskSeverity,
+    example: TaskSeverity.MINOR,
   })
   @ApiQuery({
     name: 'search',
     required: false,
     description:
       'Free‑text search over label, title and description for incidents in this organization.',
+    schema: {
+      type: 'string',
+      minLength: 1,
+    },
   })
   @ApiQuery({
     name: 'page',
     required: false,
     description: 'Page number (1‑based). Defaults to 1.',
+    schema: {
+      type: 'integer',
+      minimum: 1,
+      default: 1,
+    },
   })
   @ApiQuery({
     name: 'page_size',
     required: false,
     description: 'Page size (items per page). Defaults to 25.',
+    schema: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 100,
+      default: 25,
+    },
   })
   async listIncidents(
     @Req() req: RequestWithContext,

@@ -954,7 +954,7 @@ export const orgoApi = baseOrgoApi.injectEndpoints({
       RegisterStudentIncidentInput
     >({
       query: (body) => ({
-        url: "/domain/education/tasks",
+        url: "/domain/education/incidents",
         method: "POST",
         body,
       }),
@@ -973,7 +973,7 @@ export const orgoApi = baseOrgoApi.injectEndpoints({
         page,
         pageSize,
       }) => ({
-        url: "/domain/education/tasks",
+        url: "/domain/education/incidents",
         method: "GET",
         params: {
           organization_id: organizationId,
@@ -986,6 +986,7 @@ export const orgoApi = baseOrgoApi.injectEndpoints({
       }),
       providesTags: ["Education"],
     }),
+
 
     /* ------------------------------ Insights -------------------------------- */
 

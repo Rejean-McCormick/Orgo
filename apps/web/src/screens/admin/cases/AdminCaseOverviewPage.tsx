@@ -1,24 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import type { CaseStatus, CaseSeverity } from '../../../orgo/types/case';
 
-type CaseStatus =
-  | 'OPEN'
-  | 'IN_PROGRESS'
-  | 'ON_HOLD'
-  | 'RESOLVED'
-  | 'CLOSED'
-  | 'CANCELLED';
-
-type CasePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-
-interface CaseUser {
+export interface CaseUser {
   id: string;
   name: string;
   email?: string | null;
   avatarUrl?: string | null;
 }
 
-interface CaseNote {
+export interface CaseNote {
   id: string;
   body: string;
   createdAt: string;
@@ -26,7 +17,7 @@ interface CaseNote {
   isInternal?: boolean;
 }
 
-interface CaseActivity {
+export interface CaseActivity {
   id: string;
   type:
     | 'status_change'
@@ -42,7 +33,7 @@ interface CaseActivity {
   metadata?: Record<string, unknown>;
 }
 
-interface CaseAttachment {
+export interface CaseAttachment {
   id: string;
   fileName: string;
   url: string;
@@ -52,14 +43,14 @@ interface CaseAttachment {
   uploadedBy?: CaseUser | null;
 }
 
-interface AdminCaseOverview {
+export interface AdminCaseOverview {
   id: string;
   externalId?: string | null;
   title: string;
   summary?: string | null;
   description?: string | null;
   status: CaseStatus;
-  priority: CasePriority;
+  severity: CaseSeverity;
   createdAt: string;
   updatedAt: string;
   closedAt?: string | null;
@@ -76,9 +67,9 @@ interface AdminCaseOverview {
   attachments?: CaseAttachment[];
 }
 
-type ActiveTab = 'summary' | 'activity' | 'notes' | 'attachments';
+export type ActiveTab = 'summary' | 'activity' | 'notes' | 'attachments';
 
-interface AdminCaseOverviewPageProps {
+export interface AdminCaseOverviewPageProps {
   /**
    * Optional caseId prop. If not provided, the component will
    * try to read `caseId` from the router params.
@@ -86,7 +77,7 @@ interface AdminCaseOverviewPageProps {
   caseId?: string;
 }
 
-type LoadingState = 'idle' | 'loading' | 'success' | 'error' | 'not_found';
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error' | 'not_found';
 
 interface PageState {
   status: LoadingState;
@@ -94,7 +85,7 @@ interface PageState {
   error: string | null;
 }
 
-const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
+export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
   caseId: caseIdProp,
 }) => {
   const { caseId: caseIdFromParams } = useParams<{ caseId: string }>();
@@ -131,11 +122,10 @@ const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
       }));
 
       try {
-        // Adjust this endpoint and query parameters to match your backend.
-        const response = await fetch(
-          `/api/admin/cases/${encodeURIComponent(caseId)}?include=overview`,
-          { signal: controller.signal },
-        );
+        // Use the canonical v3 case endpoint; adjust includes/admin scoping as needed.
+        const response = await fetch(`/v3/cases/${encodeURIComponent(caseId)}`, {
+          signal: controller.signal,
+        });
 
         if (cancelled) {
           return;
@@ -191,7 +181,7 @@ const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
   }, [caseId, reloadToken]);
 
   const { status, data, error } = state;
-  const isLoading = status === 'idle' || status === 'loading';
+  const isLoading = status === 'loading';
 
   const handleRetry = () => {
     setReloadToken((value) => value + 1);
@@ -229,7 +219,7 @@ const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
             {data && (
               <div className="AdminCaseOverviewPage__metaRow">
                 <StatusBadge status={data.status} />
-                <PriorityBadge priority={data.priority} />
+                <SeverityBadge severity={data.severity} />
                 <span className="AdminCaseOverviewPage__id">#{data.id}</span>
               </div>
             )}
@@ -391,8 +381,8 @@ const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
                       value={formatStatus(data.status)}
                     />
                     <KeyValueRow
-                      label="Priority"
-                      value={formatPriority(data.priority)}
+                      label="Severity"
+                      value={formatSeverity(data.severity)}
                     />
                     <KeyValueRow
                       label="Created"
@@ -456,23 +446,23 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   );
 };
 
-interface PriorityBadgeProps {
-  priority: CasePriority;
+interface SeverityBadgeProps {
+  severity: CaseSeverity;
 }
 
-const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
+const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity }) => {
   return (
     <span
-      className={`AdminCaseOverviewPage__priority AdminCaseOverviewPage__priority--${priority}`}
+      className={`AdminCaseOverviewPage__priority AdminCaseOverviewPage__priority--${severity}`}
     >
-      {formatPriority(priority)}
+      {formatSeverity(severity)}
     </span>
   );
 };
 
 interface HeaderMetaProps {
   label: string;
-  value: string;
+  value: React.ReactNode;
 }
 
 const HeaderMeta: React.FC<HeaderMetaProps> = ({ label, value }) => (
@@ -496,7 +486,7 @@ const SectionCard: React.FC<SectionCardProps> = ({ title, children }) => (
 
 interface KeyValueRowProps {
   label: string;
-  value: string;
+  value: React.ReactNode;
 }
 
 const KeyValueRow: React.FC<KeyValueRowProps> = ({ label, value }) => (
@@ -747,7 +737,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({
   );
 };
 
-function formatStatus(status: CaseStatus): string {
+export function formatStatus(status: CaseStatus): string {
   return status
     .toLowerCase()
     .split('_')
@@ -755,12 +745,12 @@ function formatStatus(status: CaseStatus): string {
     .join(' ');
 }
 
-function formatPriority(priority: CasePriority): string {
-  const label = priority.toLowerCase();
+export function formatSeverity(severity: CaseSeverity): string {
+  const label = String(severity).toLowerCase();
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-function formatDateTime(value?: string | null): string {
+export function formatDateTime(value?: string | null): string {
   if (!value) {
     return '—';
   }
@@ -771,7 +761,7 @@ function formatDateTime(value?: string | null): string {
   return date.toLocaleString();
 }
 
-function formatBytes(size: number): string {
+export function formatBytes(size: number): string {
   if (size === 0) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   const exponent = Math.floor(Math.log(size) / Math.log(1024));

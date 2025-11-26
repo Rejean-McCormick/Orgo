@@ -545,23 +545,29 @@ const AdminTaskOverviewPage = () => {
 
         <div className="flex flex-col">
           <label className="mb-1 text-xs font-medium text-gray-700" htmlFor="role">
-            Role or label search
+            Assignee role
           </label>
           <input
             id="role"
             type="text"
-            placeholder="role or label fragment"
+            placeholder="assignee/owner role label"
+            className="block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            value={filters.role}
+            onChange={handleInputChange("role")}
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="mb-1 text-xs font-medium text-gray-700" htmlFor="labelSearch">
+            Label / title search
+          </label>
+          <input
+            id="labelSearch"
+            type="text"
+            placeholder="task label or title fragment"
             className="block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             value={filters.labelSearch}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => {
-              const value = event.target.value;
-              setPage(1);
-              setFilters((prev) => ({
-                ...prev,
-                role: value,
-                labelSearch: value,
-              }));
-            }}
+            onChange={handleInputChange("labelSearch")}
           />
         </div>
       </div>

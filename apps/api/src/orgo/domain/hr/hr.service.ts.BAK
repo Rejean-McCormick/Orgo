@@ -1,11 +1,7 @@
 // apps/api/src/orgo/domain/hr/hr.service.ts
 
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '../../persistence/prisma.service';
-import { TaskService } from '../../core/task/task.service';
-import { CaseService } from '../../core/case/case.service';
-import { LabelService } from '../../core/label/label.service';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 /**
  * Canonical enums (aligned with Docs 1, 2, 5, 8).
@@ -286,18 +282,19 @@ export class HrModuleService {
    */
   private static readonly DEFAULT_HR_LABEL = '100.94.HR.CaseOfficer';
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly taskService: TaskService,
-    private readonly caseService: CaseService,
-    private readonly labelService: LabelService,
-  ) {}
+  private readonly prisma: PrismaClient;
+
+  constructor() {
+    // Note: if you already have a shared PrismaService / DatabaseService,
+    // inject it here instead of instantiating PrismaClient directly.
+    this.prisma = new PrismaClient();
+  }
 
   /**
    * Register a new HR report:
-   * - Creates a generic Case (`cases`) via CaseService
-   * - Creates a primary Task (`tasks`) of type "hr_case" via TaskService
+   * - Creates a generic Case (`cases`)
    * - Creates an HR Case (`hr_cases`) linked 1:1 with the Case
+   * - Creates a primary Task (`tasks`) of type "hr_case"
    * - Creates hr_case_participants for reporter/respondent/others
    * - Creates a primary hr_case_task_links entry
    *
@@ -306,76 +303,100 @@ export class HrModuleService {
   async registerReport(input: RegisterHrReportInput): Promise<HrCaseWithPrimaryTask> {
     this.ensureRequiredFields(input);
 
-    const organizationId = input.organizationId;
+    const severity = this.normalizeSeverity(input.severity);
+    const priority = this.normalizePriority(
+      input.priority ?? this.derivePriorityFromSeverity(severity),
+    );
 
-    // HR-specific task category
+    // Default visibility for HR is RESTRICTED; harassment subtypes may default to ANONYMISED.
+    const baseVisibility: Visibility | string =
+      input.visibility ??
+      (input.subtype && input.subtype.toLowerCase().trim() === 'harassment'
+        ? 'ANONYMISED'
+        : 'RESTRICTED');
+    const visibility = this.normalizeVisibility(baseVisibility);
+
+    const sourceType = this.normalizeSource(input.sourceType);
     const category: HrTaskCategory = this.normalizeHrCategory(input.category);
 
-    // Let the shared LabelService generate a canonical HR label when none is provided.
-    let label: string | null | undefined = input.label?.trim();
-    if (!label) {
-      try {
-        // The exact API of LabelService may differ; adapt as needed.
-        label =
-          (await this.labelService.generateHrLabel?.({
-            organizationId,
-            category,
-            subtype: input.subtype ?? null,
-          })) ?? null;
-      } catch {
-        // Swallow and fall back to default HR label if the label service
-        // is not yet configured for HR or throws.
-      }
-    }
-    if (!label) {
-      label = HrModuleService.DEFAULT_HR_LABEL;
-    }
+    const label = input.label?.trim() || HrModuleService.DEFAULT_HR_LABEL;
+    const { verticalBase, horizontalRole } = this.parseLabel(label);
 
-    const { verticalBase, horizontalRole } = this.parseLabel(label as string);
+    const organizationId = input.organizationId;
+    const originVerticalLevel = verticalBase;
+    const originRole = horizontalRole;
+
+    const confidentialityLevel = this.deriveConfidentialityLevel({
+      severity,
+      subtype: input.subtype,
+      requiresHighConfidentiality: input.requiresHighConfidentiality,
+    });
+
+    const dueAt = this.normalizeOptionalDate(input.dueAt);
+
+    const tags = input.tags ?? [];
+    const locationJson = input.location != null ? JSON.stringify(input.location) : 'null';
+    const caseMetadataJson = JSON.stringify(input.caseMetadata ?? {});
+    const taskMetadataJson = JSON.stringify(
+      input.taskMetadata ?? {
+        domain: 'hr_case',
+        subtype: input.subtype ?? null,
+        reporter_person_id: input.reporterPersonId ?? null,
+        respondent_person_id: input.respondentPersonId ?? null,
+      },
+    );
 
     const hrTitle = input.hrTitleOverride?.trim() || input.title;
     const hrDescription = input.hrDescriptionOverride?.trim() || input.description;
 
-    const tags: string[] = input.tags ?? [];
-    const caseMetadata: Record<string, unknown> = input.caseMetadata ?? {};
-    const taskMetadata: Record<string, unknown> = {
-      ...(input.taskMetadata ?? {}),
-      domain: 'hr_case',
-      subtype: input.subtype ?? null,
-      reporter_person_id: input.reporterPersonId ?? null,
-      respondent_person_id: input.respondentPersonId ?? null,
-    };
-
-    // HR-specific visibility rule: harassment tasks default to ANONYMISED;
-    // otherwise we let TaskService / core defaults decide.
-    let visibilityOverride: Visibility | string | undefined;
-    if (input.visibility) {
-      visibilityOverride = input.visibility;
-    } else if (input.subtype && input.subtype.toLowerCase().trim() === 'harassment') {
-      visibilityOverride = 'ANONYMISED';
-    }
-
-    const dueAt = this.normalizeOptionalDate(input.dueAt);
-
     return this.prisma.$transaction(async (tx: TxClient) => {
-      // 1. Create the generic Case via the core CaseService.
-      const caseRow = (await this.caseService.createCase(
-        {
-          organizationId,
+      // 1. Insert into cases (generic Case container, canonical lifecycle)
+      const [caseRow] = await tx.$queryRaw<CaseRow[]>`
+        INSERT INTO cases (
+          organization_id,
+          source_type,
+          source_reference,
           label,
-          title: input.title,
-          description: input.description,
+          title,
+          description,
+          status,
+          severity,
+          reactivity_time,
+          origin_vertical_level,
+          origin_role,
           tags,
-          location: input.location ?? null,
-          metadata: caseMetadata,
-          originVerticalLevel: verticalBase,
-          originRole: horizontalRole,
-          sourceType: input.sourceType,
-          sourceReference: input.sourceReference ?? null,
-          severity: input.severity, // let core normalize & default
-        },
-        tx,
-      )) as CaseRow | null;
+          location,
+          metadata
+        ) VALUES (
+          ${organizationId},
+          ${sourceType},
+          ${input.sourceReference ?? null},
+          ${label},
+          ${input.title},
+          ${input.description},
+          ${'open'},
+          ${severity},
+          ${null},
+          ${originVerticalLevel},
+          ${originRole},
+          ${tags},
+          ${Prisma.sql`${Prisma.raw(locationJson)}::jsonb`},
+          ${Prisma.sql`${Prisma.raw(caseMetadataJson)}::jsonb`}
+        )
+        RETURNING
+          id,
+          organization_id,
+          label,
+          title,
+          description,
+          status,
+          severity,
+          reactivity_time,
+          origin_vertical_level,
+          origin_role,
+          created_at,
+          updated_at
+      `;
 
       if (!caseRow) {
         throw new BadRequestException('Failed to create Case for HR report');
@@ -384,45 +405,7 @@ export class HrModuleService {
       const openedAt = caseRow.created_at;
       const caseCode = await this.generateCaseCode(tx, organizationId, openedAt);
 
-      // 2. Create the primary Task via the core TaskService.
-      const taskRow = (await this.taskService.createTask(
-        {
-          organizationId,
-          caseId: caseRow.id,
-          type: 'hr_case',
-          category,
-          subtype: input.subtype ?? null,
-          label,
-          title: hrTitle,
-          description: hrDescription,
-          // Delegate defaults (status, severity, priority, visibility, source) to TaskService / DomainTaskFactory
-          severity: input.severity,
-          priority: input.priority,
-          visibility: visibilityOverride,
-          source: input.sourceType,
-          createdByUserId: input.createdByUserId ?? null,
-          requesterPersonId: input.reporterPersonId ?? null,
-          ownerRoleId: input.caseOwnerRoleId ?? null,
-          ownerUserId: input.caseOwnerUserId ?? null,
-          assigneeRole: input.assigneeRole ?? horizontalRole ?? null,
-          dueAt,
-          metadata: taskMetadata,
-        },
-        tx,
-      )) as TaskRow | null;
-
-      if (!taskRow) {
-        throw new BadRequestException('Failed to create primary HR Task for report');
-      }
-
-      // Use the canonical severity as persisted by the core TaskService to derive HR confidentiality.
-      const confidentialityLevel = this.deriveConfidentialityLevel({
-        severity: taskRow.severity,
-        subtype: input.subtype,
-        requiresHighConfidentiality: input.requiresHighConfidentiality,
-      });
-
-      // 3. Insert into hr_cases (HR domain extension of the Case)
+      // 2. Insert into hr_cases (HR domain extension of the Case)
       const [hrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
         INSERT INTO hr_cases (
           organization_id,
@@ -447,7 +430,7 @@ export class HrModuleService {
           ${confidentialityLevel},
           ${input.caseOwnerRoleId ?? null},
           ${input.caseOwnerUserId ?? null},
-          ${taskRow.id},
+          ${null},
           ${openedAt},
           ${null}
         )
@@ -471,7 +454,113 @@ export class HrModuleService {
         throw new BadRequestException('Failed to create HR Case for report');
       }
 
-      // 4. Insert participants into hr_case_participants
+      // 3. Insert primary Task (task.type = "hr_case")
+      const [taskRow] = await tx.$queryRaw<TaskRow[]>`
+        INSERT INTO tasks (
+          organization_id,
+          case_id,
+          type,
+          category,
+          subtype,
+          label,
+          title,
+          description,
+          status,
+          priority,
+          severity,
+          visibility,
+          source,
+          created_by_user_id,
+          requester_person_id,
+          owner_role_id,
+          owner_user_id,
+          assignee_role,
+          due_at,
+          reactivity_deadline_at,
+          escalation_level,
+          closed_at,
+          metadata
+        ) VALUES (
+          ${organizationId},
+          ${caseRow.id},
+          ${'hr_case'},
+          ${category},
+          ${input.subtype ?? null},
+          ${label},
+          ${hrTitle},
+          ${hrDescription},
+          ${'PENDING'},
+          ${priority},
+          ${severity},
+          ${visibility},
+          ${sourceType},
+          ${input.createdByUserId ?? null},
+          ${input.reporterPersonId ?? null},
+          ${input.caseOwnerRoleId ?? null},
+          ${input.caseOwnerUserId ?? null},
+          ${input.assigneeRole ?? horizontalRole ?? null},
+          ${dueAt},
+          ${null},
+          ${0},
+          ${null},
+          ${Prisma.sql`${Prisma.raw(taskMetadataJson)}::jsonb`}
+        )
+        RETURNING
+          id,
+          organization_id,
+          case_id,
+          type,
+          category,
+          subtype,
+          label,
+          title,
+          description,
+          status,
+          priority,
+          severity,
+          visibility,
+          source,
+          created_by_user_id,
+          requester_person_id,
+          owner_role_id,
+          owner_user_id,
+          assignee_role,
+          due_at,
+          reactivity_deadline_at,
+          escalation_level,
+          closed_at
+      `;
+
+      if (!taskRow) {
+        throw new BadRequestException('Failed to create primary HR Task for report');
+      }
+
+      // 4. Update hr_cases.primary_task_id
+      const [finalHrCaseRow] = await tx.$queryRaw<HrCaseRow[]>`
+        UPDATE hr_cases
+        SET primary_task_id = ${taskRow.id}
+        WHERE id = ${hrCaseRow.id}
+        RETURNING
+          id,
+          organization_id,
+          case_id,
+          case_code,
+          title,
+          description,
+          status,
+          confidentiality_level,
+          case_owner_role_id,
+          case_owner_user_id,
+          primary_task_id,
+          opened_at,
+          closed_at
+      `;
+
+      if (!finalHrCaseRow) {
+        throw new BadRequestException('Failed to link HR Case to primary Task');
+      }
+
+      // 5. Insert participants into hr_case_participants
       const participants: HrCaseParticipantRow[] = [];
 
       if (input.reporterPersonId) {
@@ -482,7 +571,7 @@ export class HrModuleService {
             role_in_case,
             notes
           ) VALUES (
-            ${hrCaseRow.id},
+            ${finalHrCaseRow.id},
             ${input.reporterPersonId},
             ${'complainant'},
             ${input.reporterNotes ?? null}
@@ -507,7 +596,7 @@ export class HrModuleService {
             role_in_case,
             notes
           ) VALUES (
-            ${hrCaseRow.id},
+            ${finalHrCaseRow.id},
             ${input.respondentPersonId},
             ${'respondent'},
             ${input.respondentNotes ?? null}
@@ -536,7 +625,7 @@ export class HrModuleService {
               role_in_case,
               notes
             ) VALUES (
-              ${hrCaseRow.id},
+              ${finalHrCaseRow.id},
               ${personId},
               ${roleForOthers},
               ${null}
@@ -554,14 +643,14 @@ export class HrModuleService {
         }
       }
 
-      // 5. Link HrCase and Task in hr_case_task_links (link_type "primary")
+      // 6. Link HrCase and Task in hr_case_task_links (link_type "primary")
       await tx.$queryRaw`
         INSERT INTO hr_case_task_links (
           hr_case_id,
           task_id,
           link_type
         ) VALUES (
-          ${hrCaseRow.id},
+          ${finalHrCaseRow.id},
           ${taskRow.id},
           ${'primary'}
         )
@@ -569,7 +658,7 @@ export class HrModuleService {
 
       return {
         case: caseRow,
-        hrCase: hrCaseRow,
+        hrCase: finalHrCaseRow,
         primaryTask: taskRow,
         participants,
       };
@@ -687,6 +776,93 @@ export class HrModuleService {
     }
   }
 
+  private normalizeSeverity(severity?: TaskSeverity | string): TaskSeverity {
+    if (!severity) {
+      return 'MODERATE';
+    }
+    const raw = severity.toString().trim();
+    const upper = raw.toUpperCase();
+
+    if (upper === 'INFO') {
+      // Historical mapping rule: treat "info" as MINOR
+      return 'MINOR';
+    }
+
+    const allowed: TaskSeverity[] = ['MINOR', 'MODERATE', 'MAJOR', 'CRITICAL'];
+
+    if (!allowed.includes(upper as TaskSeverity)) {
+      throw new BadRequestException(
+        `Invalid severity "${severity}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return upper as TaskSeverity;
+  }
+
+  private normalizePriority(priority?: TaskPriority | string): TaskPriority {
+    if (!priority) {
+      return 'MEDIUM';
+    }
+    const upper = priority.toString().trim().toUpperCase();
+    const allowed: TaskPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+
+    if (!allowed.includes(upper as TaskPriority)) {
+      throw new BadRequestException(
+        `Invalid priority "${priority}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return upper as TaskPriority;
+  }
+
+  private normalizeVisibility(visibility?: Visibility | string): Visibility {
+    if (!visibility) {
+      return 'RESTRICTED';
+    }
+    const upper = visibility.toString().trim().toUpperCase();
+    const allowed: Visibility[] = ['PUBLIC', 'INTERNAL', 'RESTRICTED', 'ANONYMISED'];
+
+    if (!allowed.includes(upper as Visibility)) {
+      throw new BadRequestException(
+        `Invalid visibility "${visibility}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return upper as Visibility;
+  }
+
+  /**
+   * Normalizes task source to the canonical task_source_enum, mapping
+   * historical values as described in the DB schema docs.
+   */
+  private normalizeSource(source?: TaskSource | string): TaskSource {
+    if (!source) {
+      return 'manual';
+    }
+    const lower = source.toString().trim().toLowerCase();
+
+    // Historical mapping: map legacy values to canonical sources
+    if (lower === 'ui') {
+      return 'manual';
+    }
+    if (lower === 'import') {
+      return 'sync';
+    }
+    if (lower === 'insight') {
+      return 'api';
+    }
+
+    const allowed: TaskSource[] = ['email', 'api', 'manual', 'sync'];
+
+    if (!allowed.includes(lower as TaskSource)) {
+      throw new BadRequestException(
+        `Invalid sourceType "${source}". Expected one of: ${allowed.join(', ')}`,
+      );
+    }
+
+    return lower as TaskSource;
+  }
+
   /**
    * Normalizes HR task category according to the hr_case domain module config.
    */
@@ -706,6 +882,20 @@ export class HrModuleService {
     }
 
     return lower;
+  }
+
+  private derivePriorityFromSeverity(severity: TaskSeverity): TaskPriority {
+    switch (severity) {
+      case 'CRITICAL':
+        return 'CRITICAL';
+      case 'MAJOR':
+        return 'HIGH';
+      case 'MODERATE':
+        return 'MEDIUM';
+      case 'MINOR':
+      default:
+        return 'LOW';
+    }
   }
 
   private deriveConfidentialityLevel(opts: {
