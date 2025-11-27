@@ -41,10 +41,12 @@ module.exports = {
       },
     },
     build: {
+      // local: still uses turbo for the whole monorepo
       default: "npx turbo run build",
+      // CI: build pruned app workspaces directly, no turbo run
       ci: {
-        web: "cd out && npm run build",
-        api: "cd out && npm run build",
+        web: `cd ${ciWebPath} && yarn build`,
+        api: `cd ${ciApiPath} && yarn build`,
       },
     },
     docker: {
