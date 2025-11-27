@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { CaseStatus, CaseSeverity } from '../../../orgo/types/case';
 
 export interface CaseUser {
@@ -85,11 +85,20 @@ interface PageState {
   error: string | null;
 }
 
+const getTabFromSearchParams = (params: URLSearchParams): ActiveTab => {
+  const tab = params.get('tab');
+  if (tab === 'activity' || tab === 'notes' || tab === 'attachments') {
+    return tab;
+  }
+  return 'summary';
+};
+
 export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
   caseId: caseIdProp,
 }) => {
   const { caseId: caseIdFromParams } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const caseId = caseIdProp ?? caseIdFromParams ?? '';
 
@@ -98,7 +107,10 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
     data: null,
     error: null,
   });
-  const [activeTab, setActiveTab] = useState<ActiveTab>('summary');
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() =>
+    getTabFromSearchParams(searchParams),
+  );
   const [reloadToken, setReloadToken] = useState<number>(0);
 
   useEffect(() => {
@@ -161,9 +173,7 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
         }
 
         const message =
-          err instanceof Error
-            ? err.message
-            : 'Unexpected error while loading case.';
+          err instanceof Error ? err.message : 'Unexpected error while loading case.';
         setState({
           status: 'error',
           data: null,
@@ -194,11 +204,18 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
-    // If you persist tab selection to the URL, integrate it here.
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (tab === 'summary') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', tab);
+    }
+
+    setSearchParams(nextParams, { replace: true });
   };
 
-  const title =
-    data?.title || (caseId ? `Case ${caseId}` : 'Case overview');
+  const title = data?.title || (caseId ? `Case ${caseId}` : 'Case overview');
 
   return (
     <div className="AdminCaseOverviewPage">
@@ -227,25 +244,13 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
 
           {data && (
             <div className="AdminCaseOverviewPage__headerRight">
-              <HeaderMeta
-                label="Created"
-                value={formatDateTime(data.createdAt)}
-              />
-              <HeaderMeta
-                label="Updated"
-                value={formatDateTime(data.updatedAt)}
-              />
+              <HeaderMeta label="Created" value={formatDateTime(data.createdAt)} />
+              <HeaderMeta label="Updated" value={formatDateTime(data.updatedAt)} />
               {data.slaDueAt && (
-                <HeaderMeta
-                  label="SLA due"
-                  value={formatDateTime(data.slaDueAt)}
-                />
+                <HeaderMeta label="SLA due" value={formatDateTime(data.slaDueAt)} />
               )}
               {data.closedAt && (
-                <HeaderMeta
-                  label="Closed"
-                  value={formatDateTime(data.closedAt)}
-                />
+                <HeaderMeta label="Closed" value={formatDateTime(data.closedAt)} />
               )}
             </div>
           )}
@@ -291,32 +296,17 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
                 {data.summary || data.description || 'No summary provided.'}
               </p>
               <dl className="AdminCaseOverviewPage__detailsList">
-                <KeyValueRow
-                  label="External ID"
-                  value={data.externalId || '—'}
-                />
-                <KeyValueRow
-                  label="Category"
-                  value={data.category || '—'}
-                />
-                <KeyValueRow
-                  label="Subcategory"
-                  value={data.subcategory || '—'}
-                />
-                <KeyValueRow
-                  label="Channel"
-                  value={data.channel || '—'}
-                />
+                <KeyValueRow label="External ID" value={data.externalId || '—'} />
+                <KeyValueRow label="Category" value={data.category || '—'} />
+                <KeyValueRow label="Subcategory" value={data.subcategory || '—'} />
+                <KeyValueRow label="Channel" value={data.channel || '—'} />
                 {data.tags && data.tags.length > 0 && (
                   <div className="AdminCaseOverviewPage__detailsRow">
                     <dt>Tags</dt>
                     <dd>
                       <div className="AdminCaseOverviewPage__tags">
                         {data.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="AdminCaseOverviewPage__tag"
-                          >
+                          <span key={tag} className="AdminCaseOverviewPage__tag">
                             {tag}
                           </span>
                         ))}
@@ -331,10 +321,7 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
               <div className="AdminCaseOverviewPage__people">
                 <PersonRow label="Requester" user={data.requester} />
                 <PersonRow label="Assignee" user={data.assignee} />
-                <KeyValueRow
-                  label="Team"
-                  value={data.teamName || '—'}
-                />
+                <KeyValueRow label="Team" value={data.teamName || '—'} />
               </div>
             </SectionCard>
           </section>
@@ -370,20 +357,10 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
             <div className="AdminCaseOverviewPage__tabContent">
               {activeTab === 'summary' && (
                 <SectionCard title="Overview">
-                  <p>
-                    {data.description ||
-                      data.summary ||
-                      'No additional information.'}
-                  </p>
+                  <p>{data.description || data.summary || 'No additional information.'}</p>
                   <dl className="AdminCaseOverviewPage__detailsList AdminCaseOverviewPage__detailsList--twoColumn">
-                    <KeyValueRow
-                      label="Status"
-                      value={formatStatus(data.status)}
-                    />
-                    <KeyValueRow
-                      label="Severity"
-                      value={formatSeverity(data.severity)}
-                    />
+                    <KeyValueRow label="Status" value={formatStatus(data.status)} />
+                    <KeyValueRow label="Severity" value={formatSeverity(data.severity)} />
                     <KeyValueRow
                       label="Created"
                       value={formatDateTime(data.createdAt)}
@@ -396,10 +373,7 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
                       label="SLA due"
                       value={formatDateTime(data.slaDueAt)}
                     />
-                    <KeyValueRow
-                      label="Closed"
-                      value={formatDateTime(data.closedAt)}
-                    />
+                    <KeyValueRow label="Closed" value={formatDateTime(data.closedAt)} />
                   </dl>
                 </SectionCard>
               )}
@@ -419,9 +393,7 @@ export const AdminCaseOverviewPage: React.FC<AdminCaseOverviewPageProps> = ({
 
               {activeTab === 'attachments' && (
                 <SectionCard title="Attachments">
-                  <AttachmentsList
-                    attachments={data.attachments || []}
-                  />
+                  <AttachmentsList attachments={data.attachments || []} />
                 </SectionCard>
               )}
             </div>
@@ -508,20 +480,14 @@ const PersonRow: React.FC<PersonRowProps> = ({ label, user }) => (
       <div className="AdminCaseOverviewPage__person">
         <Avatar name={user.name} avatarUrl={user.avatarUrl} />
         <div className="AdminCaseOverviewPage__personInfo">
-          <div className="AdminCaseOverviewPage__personName">
-            {user.name}
-          </div>
+          <div className="AdminCaseOverviewPage__personName">{user.name}</div>
           {user.email && (
-            <div className="AdminCaseOverviewPage__personEmail">
-              {user.email}
-            </div>
+            <div className="AdminCaseOverviewPage__personEmail">{user.email}</div>
           )}
         </div>
       </div>
     ) : (
-      <div className="AdminCaseOverviewPage__personEmpty">
-        Unassigned
-      </div>
+      <div className="AdminCaseOverviewPage__personEmpty">Unassigned</div>
     )}
   </div>
 );
@@ -557,11 +523,7 @@ interface TabButtonProps {
   onClick: () => void;
 }
 
-const TabButton: React.FC<TabButtonProps> = ({
-  label,
-  isActive,
-  onClick,
-}) => (
+const TabButton: React.FC<TabButtonProps> = ({ label, isActive, onClick }) => (
   <button
     type="button"
     className={`AdminCaseOverviewPage__tabButton${
@@ -605,9 +567,7 @@ const NotesList: React.FC<NotesListProps> = ({ notes }) => {
                   </span>
                 </>
               ) : (
-                <span className="AdminCaseOverviewPage__noteAuthorName">
-                  System
-                </span>
+                <span className="AdminCaseOverviewPage__noteAuthorName">System</span>
               )}
             </div>
             <div className="AdminCaseOverviewPage__noteMeta">
@@ -621,9 +581,7 @@ const NotesList: React.FC<NotesListProps> = ({ notes }) => {
               )}
             </div>
           </div>
-          <div className="AdminCaseOverviewPage__noteBody">
-            {note.body}
-          </div>
+          <div className="AdminCaseOverviewPage__noteBody">{note.body}</div>
         </li>
       ))}
     </ul>
@@ -646,10 +604,7 @@ const ActivityList: React.FC<ActivityListProps> = ({ activities }) => {
   return (
     <ul className="AdminCaseOverviewPage__activityList">
       {activities.map((activity) => (
-        <li
-          key={activity.id}
-          className="AdminCaseOverviewPage__activityItem"
-        >
+        <li key={activity.id} className="AdminCaseOverviewPage__activityItem">
           <div className="AdminCaseOverviewPage__activityHeader">
             <div className="AdminCaseOverviewPage__activityActor">
               {activity.actor ? (
@@ -685,9 +640,7 @@ interface AttachmentsListProps {
   attachments: CaseAttachment[];
 }
 
-const AttachmentsList: React.FC<AttachmentsListProps> = ({
-  attachments,
-}) => {
+const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
   if (!attachments.length) {
     return (
       <div className="AdminCaseOverviewPage__emptyState">

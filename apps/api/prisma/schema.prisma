@@ -23,6 +23,7 @@ enum OrganizationStatus {
   archived
 
   @@map("organization_status_enum")
+  @@schema("public")
 }
 
 enum TaskStatus {
@@ -35,6 +36,7 @@ enum TaskStatus {
   CANCELLED
 
   @@map("task_status_enum")
+  @@schema("public")
 }
 
 enum TaskPriority {
@@ -44,6 +46,7 @@ enum TaskPriority {
   CRITICAL
 
   @@map("task_priority_enum")
+  @@schema("public")
 }
 
 enum TaskSeverity {
@@ -53,6 +56,7 @@ enum TaskSeverity {
   CRITICAL
 
   @@map("task_severity_enum")
+  @@schema("public")
 }
 
 enum Visibility {
@@ -62,6 +66,7 @@ enum Visibility {
   ANONYMISED
 
   @@map("visibility_enum")
+  @@schema("public")
 }
 
 enum TaskSource {
@@ -71,6 +76,7 @@ enum TaskSource {
   sync
 
   @@map("task_source_enum")
+  @@schema("public")
 }
 
 enum NotificationChannel {
@@ -80,6 +86,7 @@ enum NotificationChannel {
   webhook
 
   @@map("notification_channel_enum")
+  @@schema("public")
 }
 
 // Shared enums
@@ -90,6 +97,8 @@ enum TaskCategory {
   update
   report
   distribution
+
+  @@schema("public")
 }
 
 enum CaseStatus {
@@ -97,36 +106,48 @@ enum CaseStatus {
   in_progress
   resolved
   archived
+
+  @@schema("public")
 }
 
 enum UserAuthProvider {
   local
   sso
   external_only
+
+  @@schema("public")
 }
 
 enum UserAccountStatus {
   active
   invited
   disabled
+
+  @@schema("public")
 }
 
 enum ConfidentialityLevel {
   normal
   sensitive
   highly_sensitive
+
+  @@schema("public")
 }
 
 enum CommentVisibility {
   internal_only
   requester_visible
   org_wide
+
+  @@schema("public")
 }
 
 enum WorkflowInstanceStatus {
   running
   completed
   cancelled
+
+  @@schema("public")
 }
 
 enum EscalationInstanceStatus {
@@ -135,6 +156,8 @@ enum EscalationInstanceStatus {
   in_progress
   completed
   cancelled
+
+  @@schema("public")
 }
 
 enum EscalationActionType {
@@ -143,6 +166,8 @@ enum EscalationActionType {
   auto_reassign
   auto_close
   raise_severity
+
+  @@schema("public")
 }
 
 enum ParameterSource {
@@ -150,11 +175,15 @@ enum ParameterSource {
   org_override
   profile
   runtime
+
+  @@schema("public")
 }
 
 enum ActorType {
   user
   system
+
+  @@schema("public")
 }
 
 enum SecurityEventType {
@@ -163,6 +192,8 @@ enum SecurityEventType {
   api_abuse
   data_export
   config_change
+
+  @@schema("public")
 }
 
 enum SecuritySeverity {
@@ -170,6 +201,8 @@ enum SecuritySeverity {
   medium
   high
   critical
+
+  @@schema("public")
 }
 
 enum NotificationStatus {
@@ -177,24 +210,32 @@ enum NotificationStatus {
   sent
   failed
   cancelled
+
+  @@schema("public")
 }
 
 enum OfflineNodeStatus {
   active
   inactive
   retired
+
+  @@schema("public")
 }
 
 enum SyncDirection {
   upload
   download
   bidirectional
+
+  @@schema("public")
 }
 
 enum SyncStatus {
   running
   completed
   failed
+
+  @@schema("public")
 }
 
 enum SyncResolutionStrategy {
@@ -202,6 +243,8 @@ enum SyncResolutionStrategy {
   client_wins
   manual_review
   merged
+
+  @@schema("public")
 }
 
 enum LearningGroupMemberRole {
@@ -211,6 +254,8 @@ enum LearningGroupMemberRole {
   coach
   teacher
   mentor
+
+  @@schema("public")
 }
 
 enum HrCaseStatus {
@@ -218,11 +263,15 @@ enum HrCaseStatus {
   under_review
   resolved
   dismissed
+
+  @@schema("public")
 }
 
 enum HrCaseConfidentialityLevel {
   sensitive
   highly_sensitive
+
+  @@schema("public")
 }
 
 enum HrCaseParticipantRole {
@@ -231,6 +280,8 @@ enum HrCaseParticipantRole {
   witness
   advocate
   other
+
+  @@schema("public")
 }
 
 enum MaintenanceCalendarSlotStatus {
@@ -238,11 +289,15 @@ enum MaintenanceCalendarSlotStatus {
   in_progress
   completed
   cancelled
+
+  @@schema("public")
 }
 
 enum EmailDirection {
   inbound
   outbound
+
+  @@schema("public")
 }
 
 enum EmailProcessingEventType {
@@ -252,6 +307,8 @@ enum EmailProcessingEventType {
   task_created
   linked_to_existing_task
   dropped
+
+  @@schema("public")
 }
 
 enum LoginTerminationReason {
@@ -259,6 +316,49 @@ enum LoginTerminationReason {
   timeout
   forced
   unknown
+
+  @@schema("public")
+}
+
+enum UserRoleScopeType {
+  global
+  team
+  location
+  unit
+  custom
+
+  @@schema("public")
+}
+
+enum TaskEventType {
+  created
+  status_changed
+  priority_changed
+  ownership_changed
+  comment_added
+  email_linked
+  escalated
+  deadline_updated
+  metadata_updated
+
+  @@schema("public")
+}
+
+enum TaskEventOrigin {
+  ui
+  api
+  email
+  system_rule
+
+  @@schema("public")
+}
+
+enum EmailArchiveSourceType {
+  pst
+  mbox
+  eml_folder
+
+  @@schema("public")
 }
 
 //
@@ -279,7 +379,46 @@ model Organization {
   created_at     DateTime @default(now()) @db.Timestamptz(6)
   updated_at     DateTime @updatedAt @db.Timestamptz(6)
 
+  // Back-relations
+  profiles                     OrganizationProfile[]
+  users                        UserAccount[]
+  person_profiles              PersonProfile[]
+  roles                        Role[]
+  login_sessions               LoginSession[]
+  api_tokens                   ApiToken[]
+  email_account_configs        EmailAccountConfig[]
+  role_inboxes                 RoleInbox[]
+  email_threads                EmailThread[]
+  email_messages               EmailMessage[]
+  email_ingestion_batches      EmailIngestionBatch[]
+  email_processing_events      EmailProcessingEvent[]
+  tasks                        Task[]
+  task_events                  TaskEvent[]
+  routing_rules                RoutingRule[]
+  workflow_definitions         WorkflowDefinition[]
+  workflow_instances           WorkflowInstance[]
+  escalation_policies          EscalationPolicy[]
+  parameter_overrides          ParameterOverride[]
+  feature_flags                FeatureFlag[]
+  label_definitions            LabelDefinition[]
+  entity_labels                EntityLabel[]
+  notification_templates       NotificationTemplate[]
+  notifications                Notification[]
+  activity_logs                ActivityLog[]
+  security_events              SecurityEvent[]
+  system_metric_snapshots      SystemMetricSnapshot[]
+  cases                        Case[]
+  maintenance_assets           MaintenanceAsset[]
+  maintenance_task_links       MaintenanceTaskLink[]
+  maintenance_calendar_slots   MaintenanceCalendarSlot[]
+  hr_cases                     HrCase[]
+  wellbeing_checkins           WellbeingCheckin[]
+  learning_groups              LearningGroup[]
+  offline_nodes                OfflineNode[]
+  email_archive_import_batches EmailArchiveImportBatch[]
+
   @@map("organizations")
+  @@schema("public")
 }
 
 model OrganizationProfile {
@@ -299,6 +438,7 @@ model OrganizationProfile {
 
   @@map("organization_profiles")
   @@unique([organization_id])
+  @@schema("public")
 }
 
 //
@@ -323,8 +463,30 @@ model UserAccount {
 
   organization    Organization      @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  person_profiles               PersonProfile[]
+  role_permissions_granted      RolePermission[]
+  role_assignments              UserRoleAssignment[] @relation("UserRoleAssignmentUser")
+  role_assignments_assigned_by  UserRoleAssignment[] @relation("UserRoleAssignmentAssignedBy")
+  login_sessions                LoginSession[]
+  api_tokens_created            ApiToken[]
+  sync_conflicts_resolved       SyncConflict[]
+  entity_labels_applied         EntityLabel[]
+  notifications_received        Notification[]
+  tasks_created                 Task[] @relation("TaskCreatedByUser")
+  tasks_owned                   Task[] @relation("TaskOwnerUser")
+  task_assignments              TaskAssignment[]
+  task_events                   TaskEvent[]
+  task_comments                 TaskComment[]
+  workflow_transition_events    WorkflowTransitionEvent[]
+  activity_logs                 ActivityLog[]
+  security_events               SecurityEvent[]
+  
+  routing_rules_as_target RoutingRule[] @relation("RoutingRuleTargetUser")
+
   @@map("user_accounts")
   @@unique([organization_id, email])
+  @@schema("public")
 }
 
 model PersonProfile {
@@ -344,7 +506,16 @@ model PersonProfile {
   organization          Organization         @relation(fields: [organization_id], references: [id])
   linked_user           UserAccount?         @relation(fields: [linked_user_id], references: [id])
 
+  // Back-relations
+  requested_tasks           Task[]
+  hr_cases_as_subject       HrCase[]
+  hr_case_participations    HrCaseParticipant[]
+  wellbeing_checkins        WellbeingCheckin[]
+  learning_group_memberships LearningGroupMembership[]
+  education_task_links      EducationTaskLink[]
+
   @@map("person_profiles")
+  @@schema("public")
 }
 
 model Role {
@@ -360,8 +531,19 @@ model Role {
 
   organization    Organization? @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  role_permissions                    RolePermission[]
+  role_inboxes                        RoleInbox[]
+  user_role_assignments               UserRoleAssignment[]
+  tasks_owned                         Task[]
+  task_assignments                    TaskAssignment[]
+  routing_rules_targeting             RoutingRule[]
+  task_events_as_actor                TaskEvent[]
+  workflow_transition_events_as_actor WorkflowTransitionEvent[]
+
   @@map("roles")
   @@unique([organization_id, code])
+  @@schema("public")
 }
 
 model Permission {
@@ -372,34 +554,31 @@ model Permission {
   created_at  DateTime @default(now()) @db.Timestamptz(6)
   updated_at  DateTime @updatedAt @db.Timestamptz(6)
 
+  // Back-relations
+  role_permissions RolePermission[]
+
   @@map("permissions")
+  @@schema("public")
 }
 
 model RolePermission {
-  id                 String      @id @default(uuid()) @db.Uuid
-  role_id            String      @db.Uuid
-  permission_id      String      @db.Uuid
-  granted_by_user_id String?     @db.Uuid
-  granted_at         DateTime    @db.Timestamptz(6)
+  id                 String       @id @default(uuid()) @db.Uuid
+  role_id            String       @db.Uuid
+  permission_id      String       @db.Uuid
+  granted_by_user_id String?      @db.Uuid
+  granted_at         DateTime     @db.Timestamptz(6)
 
-  created_at         DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime    @updatedAt @db.Timestamptz(6)
+  created_at         DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime     @updatedAt @db.Timestamptz(6)
 
-  role               Role        @relation(fields: [role_id], references: [id])
-  permission         Permission  @relation(fields: [permission_id], references: [id])
+  role               Role         @relation(fields: [role_id], references: [id])
+  permission         Permission   @relation(fields: [permission_id], references: [id])
   granted_by_user    UserAccount? @relation(fields: [granted_by_user_id], references: [id])
 
   @@map("role_permissions")
   @@index([role_id])
   @@index([permission_id])
-}
-
-enum UserRoleScopeType {
-  global
-  team
-  location
-  unit
-  custom
+  @@schema("public")
 }
 
 model UserRoleAssignment {
@@ -415,13 +594,14 @@ model UserRoleAssignment {
   created_at          DateTime          @default(now()) @db.Timestamptz(6)
   updated_at          DateTime          @updatedAt @db.Timestamptz(6)
 
-  user                UserAccount       @relation(fields: [user_id], references: [id])
-  role                Role              @relation(fields: [role_id], references: [id])
-  assigned_by_user    UserAccount?      @relation(fields: [assigned_by_user_id], references: [id])
+  user             UserAccount  @relation("UserRoleAssignmentUser", fields: [user_id], references: [id])
+  role             Role         @relation(fields: [role_id], references: [id])
+  assigned_by_user UserAccount? @relation("UserRoleAssignmentAssignedBy", fields: [assigned_by_user_id], references: [id])
 
   @@map("user_role_assignments")
   @@index([user_id])
   @@index([role_id])
+  @@schema("public")
 }
 
 model LoginSession {
@@ -438,10 +618,14 @@ model LoginSession {
   user              UserAccount           @relation(fields: [user_id], references: [id])
   organization      Organization          @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  activity_logs     ActivityLog[]
+
   // no default audit; created_at/updated_at here are logical fields
 
   @@map("login_sessions")
   @@index([user_id])
+  @@schema("public")
 }
 
 model ApiToken {
@@ -462,6 +646,7 @@ model ApiToken {
 
   @@map("api_tokens")
   @@unique([token_hash])
+  @@schema("public")
 }
 
 //
@@ -470,18 +655,19 @@ model ApiToken {
 // -----------------------------------------------------------------------------
 
 model EmailAccountConfig {
-  id               String   @id @default(uuid()) @db.Uuid
-  organization_id  String?  @db.Uuid
-  provider         String
-  connection_config Json    @db.JsonB
-  is_active        Boolean
+  id                String   @id @default(uuid()) @db.Uuid
+  organization_id   String?  @db.Uuid
+  provider          String
+  connection_config Json     @db.JsonB
+  is_active         Boolean
 
-  created_at       DateTime @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime @updatedAt @db.Timestamptz(6)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @updatedAt @db.Timestamptz(6)
 
-  organization     Organization? @relation(fields: [organization_id], references: [id])
+  organization      Organization? @relation(fields: [organization_id], references: [id])
 
   @@map("email_account_configs")
+  @@schema("public")
 }
 
 model RoleInbox {
@@ -499,6 +685,7 @@ model RoleInbox {
 
   @@map("role_inboxes")
   @@index([organization_id, role_id])
+  @@schema("public")
 }
 
 model EmailThread {
@@ -513,8 +700,12 @@ model EmailThread {
 
   organization       Organization @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  messages           EmailMessage[]
+
   @@map("email_threads")
   @@index([organization_id])
+  @@schema("public")
 }
 
 model EmailMessage {
@@ -544,10 +735,16 @@ model EmailMessage {
   thread              EmailThread? @relation(fields: [email_thread_id], references: [id])
   linked_task         Task?        @relation(fields: [linked_task_id], references: [id])
 
+  // Back-relations
+  attachments         EmailAttachment[]
+  processing_events   EmailProcessingEvent[]
+  imported_mappings   ImportedMessageMapping[]
+
   @@map("email_messages")
   @@index([organization_id])
   @@index([email_thread_id])
   @@index([linked_task_id])
+  @@schema("public")
 }
 
 model EmailAttachment {
@@ -555,7 +752,7 @@ model EmailAttachment {
   email_message_id String   @db.Uuid
   filename         String
   content_type     String
-  size_bytes       BigInt   @db.Int8
+  size_bytes       BigInt   @db.BigInt
   storage_location String
   checksum         String?
 
@@ -566,6 +763,7 @@ model EmailAttachment {
 
   @@map("email_attachments")
   @@index([email_message_id])
+  @@schema("public")
 }
 
 model EmailIngestionBatch {
@@ -584,8 +782,12 @@ model EmailIngestionBatch {
 
   organization    Organization @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  processing_events EmailProcessingEvent[]
+
   @@map("email_ingestion_batches")
   @@index([organization_id])
+  @@schema("public")
 }
 
 model EmailProcessingEvent {
@@ -607,6 +809,7 @@ model EmailProcessingEvent {
   @@map("email_processing_events")
   @@index([organization_id])
   @@index([email_message_id])
+  @@schema("public")
 }
 
 //
@@ -645,58 +848,56 @@ model Task {
   created_at             DateTime      @default(now()) @db.Timestamptz(6)
   updated_at             DateTime      @updatedAt @db.Timestamptz(6)
 
-  organization           Organization  @relation(fields: [organization_id], references: [id])
-  case                   Case?         @relation(fields: [case_id], references: [id])
-  created_by_user        UserAccount?  @relation(fields: [created_by_user_id], references: [id])
+  organization           Organization   @relation(fields: [organization_id], references: [id])
+  case                   Case?          @relation(fields: [case_id], references: [id])
+  created_by_user        UserAccount?   @relation("TaskCreatedByUser", fields: [created_by_user_id], references: [id])
   requester_person       PersonProfile? @relation(fields: [requester_person_id], references: [id])
-  owner_role             Role?         @relation(fields: [owner_role_id], references: [id])
-  owner_user             UserAccount?  @relation(fields: [owner_user_id], references: [id])
+  owner_role             Role?          @relation(fields: [owner_role_id], references: [id])
+  owner_user             UserAccount?   @relation("TaskOwnerUser", fields: [owner_user_id], references: [id])
+
+  // Back-relations
+  email_messages             EmailMessage[]
+  assignments                TaskAssignment[]
+  events                     TaskEvent[]
+  comments                   TaskComment[]
+  workflow_instances         WorkflowInstance[]
+  workflow_transition_events WorkflowTransitionEvent[]
+  escalation_instances       EscalationInstance[]
+  escalation_events          EscalationEvent[]
+  notifications              Notification[]
+  maintenance_links          MaintenanceTaskLink[]
+  hr_case_links              HrCaseTaskLink[]
+  education_links            EducationTaskLink[]
+  hr_primary_cases           HrCase[]        // HrCase.primary_task
 
   @@map("tasks")
   @@index([organization_id])
   @@index([case_id])
   @@index([owner_role_id])
   @@index([owner_user_id])
+  @@schema("public")
 }
 
 model TaskAssignment {
-  id                String   @id @default(uuid()) @db.Uuid
-  task_id           String   @db.Uuid
-  assigned_role_id  String?  @db.Uuid
-  assigned_user_id  String?  @db.Uuid
+  id                String    @id @default(uuid()) @db.Uuid
+  task_id           String    @db.Uuid
+  assigned_role_id  String?   @db.Uuid
+  assigned_user_id  String?   @db.Uuid
   is_primary        Boolean
-  assigned_at       DateTime @db.Timestamptz(6)
+  assigned_at       DateTime  @db.Timestamptz(6)
   unassigned_at     DateTime? @db.Timestamptz(6)
   assignment_reason String?
 
-  created_at        DateTime @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime @updatedAt @db.Timestamptz(6)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @updatedAt @db.Timestamptz(6)
 
-  task              Task        @relation(fields: [task_id], references: [id])
-  assigned_role     Role?       @relation(fields: [assigned_role_id], references: [id])
+  task              Task         @relation(fields: [task_id], references: [id])
+  assigned_role     Role?        @relation(fields: [assigned_role_id], references: [id])
   assigned_user     UserAccount? @relation(fields: [assigned_user_id], references: [id])
 
   @@map("task_assignments")
   @@index([task_id])
-}
-
-enum TaskEventType {
-  created
-  status_changed
-  priority_changed
-  ownership_changed
-  comment_added
-  email_linked
-  escalated
-  deadline_updated
-  metadata_updated
-}
-
-enum TaskEventOrigin {
-  ui
-  api
-  email
-  system_rule
+  @@schema("public")
 }
 
 model TaskEvent {
@@ -718,6 +919,7 @@ model TaskEvent {
 
   @@map("task_events")
   @@index([organization_id, task_id])
+  @@schema("public")
 }
 
 model TaskComment {
@@ -735,31 +937,34 @@ model TaskComment {
 
   @@map("task_comments")
   @@index([task_id])
+  @@schema("public")
 }
 
 model RoutingRule {
-  id             String        @id @default(uuid()) @db.Uuid
-  organization_id String?      @db.Uuid
-  name           String
-  task_type      String?
-  task_category  TaskCategory?
-  label_codes    String[]
-  priority_min   TaskPriority?
-  target_role_id String?       @db.Uuid
-  target_user_id String?       @db.Uuid
-  is_fallback    Boolean
-  weight         Int
+  id              String        @id @default(uuid()) @db.Uuid
+  organization_id String?       @db.Uuid
+  name            String
+  task_type       String?
+  task_category   TaskCategory?
+  label_codes     String[]
+  priority_min    TaskPriority?
+  target_role_id  String?       @db.Uuid
+  target_user_id  String?       @db.Uuid
+  is_fallback     Boolean
+  weight          Int
 
-  created_at     DateTime      @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime      @updatedAt @db.Timestamptz(6)
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @updatedAt @db.Timestamptz(6)
 
-  organization   Organization? @relation(fields: [organization_id], references: [id])
-  target_role    Role?         @relation(fields: [target_role_id], references: [id])
-  target_user    UserAccount?  @relation(fields: [target_user_id], references: [id])
+  organization    Organization? @relation(fields: [organization_id], references: [id])
+  target_role     Role?         @relation(fields: [target_role_id], references: [id])
+  target_user     UserAccount?  @relation("RoutingRuleTargetUser", fields: [target_user_id], references: [id])
 
   @@map("routing_rules")
   @@index([organization_id])
+  @@schema("public")
 }
+
 
 model WorkflowDefinition {
   id              String   @id @default(uuid()) @db.Uuid
@@ -776,9 +981,13 @@ model WorkflowDefinition {
 
   organization    Organization? @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  instances       WorkflowInstance[]
+
   @@map("workflow_definitions")
   @@index([organization_id])
   @@unique([organization_id, code])
+  @@schema("public")
 }
 
 model WorkflowInstance {
@@ -798,9 +1007,13 @@ model WorkflowInstance {
   task                   Task                  @relation(fields: [task_id], references: [id])
   organization           Organization          @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  transition_events      WorkflowTransitionEvent[]
+
   @@map("workflow_instances")
   @@index([workflow_definition_id])
   @@index([task_id])
+  @@schema("public")
 }
 
 model WorkflowTransitionEvent {
@@ -823,6 +1036,7 @@ model WorkflowTransitionEvent {
   @@map("workflow_transition_events")
   @@index([workflow_instance_id])
   @@index([task_id])
+  @@schema("public")
 }
 
 model EscalationPolicy {
@@ -840,9 +1054,13 @@ model EscalationPolicy {
 
   organization    Organization? @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  escalation_instances EscalationInstance[]
+
   @@map("escalation_policies")
   @@index([organization_id])
   @@unique([organization_id, policy_code])
+  @@schema("public")
 }
 
 model EscalationInstance {
@@ -861,30 +1079,35 @@ model EscalationInstance {
   task                 Task             @relation(fields: [task_id], references: [id])
   escalation_policy    EscalationPolicy @relation(fields: [escalation_policy_id], references: [id])
 
+  // Back-relations
+  events               EscalationEvent[]
+
   @@map("escalation_instances")
   @@index([task_id])
+  @@schema("public")
 }
 
 model EscalationEvent {
-  id                    String               @id @default(uuid()) @db.Uuid
-  escalation_instance_id String              @db.Uuid
-  task_id               String               @db.Uuid
-  step_index            Int
-  action_type           EscalationActionType
-  action_payload        Json                 @db.JsonB
-  executed_at           DateTime             @db.Timestamptz(6)
-  success               Boolean
-  error_message         String?
+  id                     String               @id @default(uuid()) @db.Uuid
+  escalation_instance_id String               @db.Uuid
+  task_id                String               @db.Uuid
+  step_index             Int
+  action_type            EscalationActionType
+  action_payload         Json                 @db.JsonB
+  executed_at            DateTime             @db.Timestamptz(6)
+  success                Boolean
+  error_message          String?
 
-  created_at            DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime             @updatedAt @db.Timestamptz(6)
+  created_at             DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime             @updatedAt @db.Timestamptz(6)
 
-  escalation_instance   EscalationInstance   @relation(fields: [escalation_instance_id], references: [id])
-  task                  Task                 @relation(fields: [task_id], references: [id])
+  escalation_instance    EscalationInstance   @relation(fields: [escalation_instance_id], references: [id])
+  task                   Task                 @relation(fields: [task_id], references: [id])
 
   @@map("escalation_events")
   @@index([escalation_instance_id])
   @@index([task_id])
+  @@schema("public")
 }
 
 //
@@ -909,26 +1132,28 @@ model ParameterOverride {
   @@map("parameter_overrides")
   @@index([organization_id])
   @@index([module_code, parameter_key])
+  @@schema("public")
 }
 
 model FeatureFlag {
-  id              String   @id @default(uuid()) @db.Uuid
-  organization_id String?  @db.Uuid
-  code            String
-  description     String
-  enabled         Boolean
-  rollout_strategy Json    @db.JsonB
-  enabled_from    DateTime? @db.Timestamptz(6)
-  disabled_at     DateTime? @db.Timestamptz(6)
+  id               String   @id @default(uuid()) @db.Uuid
+  organization_id  String?  @db.Uuid
+  code             String
+  description      String
+  enabled          Boolean
+  rollout_strategy Json     @db.JsonB
+  enabled_from     DateTime? @db.Timestamptz(6)
+  disabled_at      DateTime? @db.Timestamptz(6)
 
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @updatedAt @db.Timestamptz(6)
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @updatedAt @db.Timestamptz(6)
 
-  organization    Organization? @relation(fields: [organization_id], references: [id])
+  organization     Organization? @relation(fields: [organization_id], references: [id])
 
   @@map("feature_flags")
   @@index([organization_id])
   @@unique([organization_id, code])
+  @@schema("public")
 }
 
 //
@@ -950,9 +1175,13 @@ model LabelDefinition {
 
   organization    Organization? @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  entity_labels   EntityLabel[]
+
   @@map("label_definitions")
   @@index([organization_id])
   @@unique([organization_id, code])
+  @@schema("public")
 }
 
 model EntityLabel {
@@ -967,13 +1196,14 @@ model EntityLabel {
   created_at         DateTime @default(now()) @db.Timestamptz(6)
   updated_at         DateTime @updatedAt @db.Timestamptz(6)
 
-  organization       Organization @relation(fields: [organization_id], references: [id])
+  organization       Organization    @relation(fields: [organization_id], references: [id])
   label              LabelDefinition @relation(fields: [label_id], references: [id])
   applied_by_user    UserAccount?    @relation(fields: [applied_by_user_id], references: [id])
 
   @@map("entity_labels")
   @@index([organization_id, entity_type, entity_id])
   @@index([label_id])
+  @@schema("public")
 }
 
 //
@@ -996,9 +1226,13 @@ model NotificationTemplate {
 
   organization     Organization?      @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  notifications    Notification[]
+
   @@map("notification_templates")
   @@index([organization_id])
   @@unique([organization_id, code])
+  @@schema("public")
 }
 
 model Notification {
@@ -1028,6 +1262,7 @@ model Notification {
   @@index([organization_id])
   @@index([recipient_user_id])
   @@index([related_task_id])
+  @@schema("public")
 }
 
 //
@@ -1056,6 +1291,7 @@ model ActivityLog {
   @@map("activity_logs")
   @@index([organization_id])
   @@index([target_type, target_id])
+  @@schema("public")
 }
 
 model SecurityEvent {
@@ -1077,6 +1313,7 @@ model SecurityEvent {
   @@map("security_events")
   @@index([organization_id])
   @@index([user_id])
+  @@schema("public")
 }
 
 model SystemMetricSnapshot {
@@ -1093,6 +1330,7 @@ model SystemMetricSnapshot {
 
   @@map("system_metric_snapshots")
   @@index([organization_id])
+  @@schema("public")
 }
 
 //
@@ -1122,8 +1360,14 @@ model Case {
 
   organization          Organization  @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  tasks                 Task[]
+  hr_cases              HrCase[]
+  wellbeing_checkins    WellbeingCheckin[]
+
   @@map("cases")
   @@index([organization_id])
+  @@schema("public")
 }
 
 //
@@ -1145,28 +1389,34 @@ model MaintenanceAsset {
 
   organization    Organization @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  maintenance_links  MaintenanceTaskLink[]
+  calendar_slots     MaintenanceCalendarSlot[]
+
   @@map("maintenance_assets")
   @@index([organization_id])
+  @@schema("public")
 }
 
 model MaintenanceTaskLink {
-  id                String        @id @default(uuid()) @db.Uuid
-  task_id           String        @db.Uuid
-  asset_id          String?       @db.Uuid
-  organization_id   String        @db.Uuid
+  id                String           @id @default(uuid()) @db.Uuid
+  task_id           String           @db.Uuid
+  asset_id          String?          @db.Uuid
+  organization_id   String           @db.Uuid
   link_type         String
   priority_override TaskPriority?
 
-  created_at        DateTime      @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime      @updatedAt @db.Timestamptz(6)
+  created_at        DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime         @updatedAt @db.Timestamptz(6)
 
-  task              Task          @relation(fields: [task_id], references: [id])
+  task              Task             @relation(fields: [task_id], references: [id])
   asset             MaintenanceAsset? @relation(fields: [asset_id], references: [id])
-  organization      Organization  @relation(fields: [organization_id], references: [id])
+  organization      Organization     @relation(fields: [organization_id], references: [id])
 
   @@map("maintenance_task_links")
   @@index([task_id])
   @@index([asset_id])
+  @@schema("public")
 }
 
 model MaintenanceCalendarSlot {
@@ -1188,6 +1438,7 @@ model MaintenanceCalendarSlot {
   @@map("maintenance_calendar_slots")
   @@index([organization_id])
   @@index([asset_id])
+  @@schema("public")
 }
 
 //
@@ -1216,9 +1467,14 @@ model HrCase {
   subject_person            PersonProfile?             @relation(fields: [subject_person_id], references: [id])
   primary_task              Task?                      @relation(fields: [primary_task_id], references: [id])
 
+  // Back-relations
+  participants              HrCaseParticipant[]
+  task_links                HrCaseTaskLink[]
+
   @@map("hr_cases")
   @@index([organization_id])
   @@unique([organization_id, case_code])
+  @@schema("public")
 }
 
 model HrCaseParticipant {
@@ -1236,6 +1492,7 @@ model HrCaseParticipant {
 
   @@map("hr_case_participants")
   @@index([hr_case_id])
+  @@schema("public")
 }
 
 model HrCaseTaskLink {
@@ -1253,6 +1510,7 @@ model HrCaseTaskLink {
   @@map("hr_case_task_links")
   @@index([hr_case_id])
   @@index([task_id])
+  @@schema("public")
 }
 
 model WellbeingCheckin {
@@ -1275,6 +1533,7 @@ model WellbeingCheckin {
   @@map("wellbeing_checkins")
   @@index([organization_id])
   @@index([person_id])
+  @@schema("public")
 }
 
 //
@@ -1296,9 +1555,14 @@ model LearningGroup {
 
   organization    Organization @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  memberships     LearningGroupMembership[]
+  education_links EducationTaskLink[]
+
   @@map("learning_groups")
   @@index([organization_id])
   @@unique([organization_id, code])
+  @@schema("public")
 }
 
 model LearningGroupMembership {
@@ -1316,6 +1580,7 @@ model LearningGroupMembership {
   @@map("learning_group_memberships")
   @@index([learning_group_id])
   @@index([person_id])
+  @@schema("public")
 }
 
 model EducationTaskLink {
@@ -1334,6 +1599,7 @@ model EducationTaskLink {
 
   @@map("education_task_links")
   @@index([task_id])
+  @@schema("public")
 }
 
 //
@@ -1354,9 +1620,13 @@ model OfflineNode {
 
   organization    Organization     @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  sync_sessions   SyncSession[]
+
   @@map("offline_nodes")
   @@index([organization_id])
   @@unique([node_identifier])
+  @@schema("public")
 }
 
 model SyncSession {
@@ -1374,8 +1644,12 @@ model SyncSession {
 
   offline_node    OfflineNode @relation(fields: [offline_node_id], references: [id])
 
+  // Back-relations
+  conflicts       SyncConflict[]
+
   @@map("sync_sessions")
   @@index([offline_node_id])
+  @@schema("public")
 }
 
 model SyncConflict {
@@ -1398,12 +1672,7 @@ model SyncConflict {
 
   @@map("sync_conflicts")
   @@index([sync_session_id])
-}
-
-enum EmailArchiveSourceType {
-  pst
-  mbox
-  eml_folder
+  @@schema("public")
 }
 
 model EmailArchiveImportBatch {
@@ -1422,8 +1691,12 @@ model EmailArchiveImportBatch {
 
   organization      Organization          @relation(fields: [organization_id], references: [id])
 
+  // Back-relations
+  imported_messages ImportedMessageMapping[]
+
   @@map("email_archive_import_batches")
   @@index([organization_id])
+  @@schema("public")
 }
 
 model ImportedMessageMapping {
@@ -1441,6 +1714,7 @@ model ImportedMessageMapping {
   @@map("imported_message_mappings")
   @@index([email_archive_import_batch_id])
   @@index([email_message_id])
+  @@schema("public")
 }
 
 //
@@ -1497,16 +1771,16 @@ model DimTask {
 }
 
 model DimCase {
-  case_id              String   @id @db.Uuid
-  organization_id      String   @db.Uuid
-  label                String
-  title                String
-  status               String
-  severity             String
+  case_id               String   @id @db.Uuid
+  organization_id       String   @db.Uuid
+  label                 String
+  title                 String
+  status                String
+  severity              String
   origin_vertical_level Int
-  origin_role          String
-  opened_at            DateTime @db.Timestamptz(6)
-  closed_at            DateTime? @db.Timestamptz(6)
+  origin_role           String
+  opened_at             DateTime @db.Timestamptz(6)
+  closed_at             DateTime? @db.Timestamptz(6)
 
   @@schema("insights")
   @@map("dim_cases")
@@ -1535,15 +1809,15 @@ model DimLearningGroup {
 }
 
 model FactTask {
-  id                     BigInt   @id @default(autoincrement()) @db.Int8
-  date_key               DateTime @db.Date
-  task_id                String   @db.Uuid
-  organization_id        String   @db.Uuid
-  status                 String
-  priority               String
-  severity               String
-  created_at             DateTime @db.Timestamptz(6)
-  closed_at              DateTime? @db.Timestamptz(6)
+  id                      BigInt   @id @default(autoincrement()) @db.BigInt
+  date_key                DateTime @db.Date
+  task_id                 String   @db.Uuid
+  organization_id         String   @db.Uuid
+  status                  String
+  priority                String
+  severity                String
+  created_at              DateTime @db.Timestamptz(6)
+  closed_at               DateTime? @db.Timestamptz(6)
   resolution_time_minutes Int?
 
   @@schema("insights")
@@ -1553,7 +1827,7 @@ model FactTask {
 }
 
 model FactCase {
-  id                   BigInt   @id @default(autoincrement()) @db.Int8
+  id                   BigInt   @id @default(autoincrement()) @db.BigInt
   date_key             DateTime @db.Date
   case_id              String   @db.Uuid
   organization_id      String   @db.Uuid
@@ -1570,14 +1844,14 @@ model FactCase {
 }
 
 model FactWellbeingCheckin {
-  id               BigInt   @id @default(autoincrement()) @db.Int8
-  date_key         DateTime @db.Date
-  checkin_id       String   @db.Uuid
-  organization_id  String   @db.Uuid
-  person_id        String   @db.Uuid
-  score            Int
-  tags             String[]
-  created_at       DateTime @db.Timestamptz(6)
+  id              BigInt   @id @default(autoincrement()) @db.BigInt
+  date_key        DateTime @db.Date
+  checkin_id      String   @db.Uuid
+  organization_id String   @db.Uuid
+  person_id       String   @db.Uuid
+  score           Int
+  tags            String[]
+  created_at      DateTime @db.Timestamptz(6)
 
   @@schema("insights")
   @@map("fact_wellbeing_checkins")

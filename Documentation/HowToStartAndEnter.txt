@@ -1,0 +1,55 @@
+For Orgo you should use **yarn**, not pnpm.
+
+Reason:
+
+* The root `package.json` has
+
+  ```json
+  "packageManager": "yarn@1.22.17"
+  ```
+
+  and the monorepo tooling (`package-scripts.js`, CI commands) is wired to `yarn` and `yarn install --frozen-lockfile`.
+
+pnpm is fine for your other project; just use different commands per folder.
+
+Concrete steps for Orgo on your machine:
+
+1. From the Orgo root:
+
+   ```powershell
+   cd C:\MyCode\Orgo
+   yarn install
+   ```
+
+2. To run everything in dev (API + web in parallel, via Turbo):
+
+   ```powershell
+   yarn dev
+   ```
+
+   This runs `turbo run dev --parallel` from the root. 
+
+3. Or run each app separately:
+
+   * API (NestJS, port 5002):
+
+     ```powershell
+     cd C:\MyCode\Orgo\apps\api
+     yarn dev
+     ```
+
+   * Web UI (Next.js, port 3000):
+
+     ```powershell
+     cd C:\MyCode\Orgo\apps\web
+     yarn dev
+     ```
+
+
+
+4. Open the interface to test:
+
+   * Web app: `http://localhost:3000/` (root routes to the Insights overview page).
+   * API / Swagger: `http://localhost:5002/docs`. 
+
+So: keep using **pnpm** for your other project, but for **Orgo** follow the repo and use **yarn classic (1.22.x)**.
