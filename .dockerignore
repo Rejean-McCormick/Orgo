@@ -1,17 +1,23 @@
+# Node / Yarn noise
 node_modules
-npm-debug.log
-yarn-error.log
-.pnpm-store
+**/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next / build artefacts
 .next
-out
+**/.next
 dist
-Dockerfile*
-.dockerignore
+**/dist
+out
+.turbo
+**/.turbo
+
+# VCS
 .git
-.gitignore
-.eslintcache
-coverage
-.vscode
-.idea
+.git/**/*
+
+# Local env
 .env
 .env.*

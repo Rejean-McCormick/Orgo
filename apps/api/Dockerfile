@@ -33,7 +33,7 @@ WORKDIR /app
 
 COPY --from=installer /app/ ./
 COPY --from=builder /app/out/full/ ./
-COPY .gitignore .gitignore
+
 
 # Build only the api (and whatever it depends on)
 RUN yarn turbo run build --scope=api --include-dependencies --no-deps

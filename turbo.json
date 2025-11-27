@@ -1,8 +1,15 @@
 {
+  "$schema": "https://turbo.build/schema.json",
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"]
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "apps/*/dist/**",
+        "apps/*/.next/**",
+        "packages/*/dist/**"
+      ]
     },
     "lint": {
       "outputs": []
@@ -11,6 +18,7 @@
       "cache": false
     },
     "test:ci": {
+      "dependsOn": ["^build"],
       "cache": false
     }
   }

@@ -25,7 +25,7 @@ WORKDIR /app
 
 COPY --from=installer /app/ ./
 COPY --from=builder /app/out/full/ ./
-COPY .gitignore .gitignore
+
 
 # Build only web app and its dependencies
 RUN yarn turbo run build --scope=web --include-dependencies --no-deps
