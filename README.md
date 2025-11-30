@@ -86,7 +86,7 @@ Orgo is implemented as a TypeScript monorepo:
 
 - **Insights** – ETL jobs hydrate `insights.dim_*` and `insights.fact_*` tables used by reports and cyclic review logic.
 
-The `Documentation/` directory contains the more formal Orgo v3 spec (schema reference, core services, insights config, profiles and cyclic overview).
+The `Documentation/` directory contains the more formal Orgo v3 spec (schema reference, core services, insights config, profiles and cyclic overview.
 
 ---
 
@@ -94,13 +94,13 @@ The `Documentation/` directory contains the more formal Orgo v3 spec (schema ref
 
 Common top-level paths:
 
-- `apps/api/` – NestJS API (core services, domain modules)
-- `apps/web/` – Next.js web UI (queues, cases, tasks, insights)
-- `Documentation/` – Orgo v3 specification (DB schema, invariants, services, insights, profiles, cyclic overview)
-- `config/` – Environment/org/module configuration (YAML), validated on startup
-- `package-scripts.js` – Monorepo scripts (dev, build, test)
-- `turbo.json` – Turbo configuration for orchestrating tasks
-- `docker-compose.yml` – Draft Docker orchestration (WIP / may change)
+- `apps/api/` – NestJS API (core services, domain modules)  
+- `apps/web/` – Next.js web UI (queues, cases, tasks, insights)  
+- `Documentation/` – Orgo v3 specification (DB schema, invariants, services, insights, profiles, cyclic overview)  
+- `config/` – Environment/org/module configuration (YAML), validated on startup  
+- `package-scripts.js` – Monorepo scripts (dev, build, test)  
+- `turbo.json` – Turbo configuration for orchestrating tasks  
+- `docker-compose.yml` – Draft Docker orchestration (WIP / may change)  
 - `ai_dumps/` – Internal AI planning / design artefacts (not required for usage)
 
 ---
@@ -109,10 +109,10 @@ Common top-level paths:
 
 ### Prerequisites
 
-- Node.js (recent LTS)
-- Yarn classic 1.x (the repo is wired to `yarn@1.22.x`)
-- A running PostgreSQL or SQLite instance for dev (depending on your local config)
-- Git
+- Node.js (recent LTS)  
+- Yarn classic 1.x (the repo is wired to `yarn@1.22.x`)  
+- A running PostgreSQL or SQLite instance for dev (depending on your local config)  
+- Git  
 
 ### 1. Clone and install
 
@@ -122,3 +122,134 @@ cd Orgo
 
 # Install dependencies with Yarn 1.x
 yarn install
+```
+
+### 2. Run everything in dev
+
+From the repo root:
+
+```bash
+# API + web in parallel (via Turbo)
+yarn dev
+```
+
+This runs the monorepo dev scripts (Turbo) which start:
+
+- API on `http://localhost:5002`  
+- Web UI on `http://localhost:3000`  
+
+Then:
+
+- open the web app: `http://localhost:3000/`  
+- open the API docs (Swagger): `http://localhost:5002/docs`
+
+### 3. Run apps separately (optional)
+
+If you prefer separate terminals:
+
+API (NestJS):
+
+```bash
+cd apps/api
+yarn dev
+```
+
+Web UI (Next.js):
+
+```bash
+cd apps/web
+yarn dev
+```
+
+Ports are the same as above (5002 for API, 3000 for web).
+
+---
+
+## Configuration & environments
+
+Orgo treats configuration as code and uses YAML files per environment and organization.
+
+- **Environments**: `dev`, `staging`, `prod`, `offline`
+
+- **Configuration layers**
+
+  - global defaults (logging, timezones, base reactivity windows);  
+  - environment overrides (dev / staging / prod / offline);  
+  - per-organization config (profile selection, routing ranges, label sets);  
+  - domain module config (maintenance, HR, education, etc.).  
+
+Each YAML config typically includes metadata like:
+
+```yaml
+metadata:
+  config_name: "email_config"
+  version: "3.x"
+  environment: "<dev|staging|prod|offline>"
+  last_updated: "YYYY-MM-DD"
+  owner: "team-or-role"
+  organization_id: "default"  # or specific org slug/id
+```
+
+Validation scripts enforce allowed environments, version ranges and required metadata, and will fail fast or fall back to safe defaults if something is invalid.
+
+---
+
+## Extending Orgo
+
+You can extend Orgo without forking the whole engine.
+
+### New domain workflow
+
+1. **Define labels & task types**  
+   Decide which label patterns and task types/subtypes the domain cares about.
+
+2. **Add domain config**  
+   Under `domain_modules/<domain>/rules/*.yaml`, specify:
+   - label matches;
+   - default severity, reactivity windows and visibility;
+   - assignment rules and optional auto-created tasks.
+
+3. **Hook into core services (optional)**  
+   Implement callbacks like `on_task_create`, `on_task_update`, `on_escalation` if the domain needs extra behaviour.
+
+4. **Templates & notifications**  
+   Add email/report templates under `domain_modules/<domain>/templates`.
+
+5. **Tests**  
+   Add unit tests for rule matching and integration tests for end-to-end flows (signal → case → tasks → escalation → resolution).
+
+### New profile
+
+1. Start from a reference profile (e.g. “hospital”, “school”, “retail chain”).  
+2. Override:
+   - reactivity windows,
+   - privacy defaults,
+   - notification scope,
+   - logging depth,
+   - pattern sensitivity.  
+3. Attach the profile to an organization via its org config.
+
+---
+
+## Documentation & wiki
+
+- **Docs bundle (in-repo)** – see `Documentation/` for:
+  - database schema reference;
+  - global invariants & enums (status, priority, severity, visibility, log categories);
+  - core services specification (workflow engine, email gateway, notification & logging);
+  - insights module configuration;
+  - profiles & cyclic overview.
+
+- **Wiki (online)** – the Orgo wiki provides a narrative overview:
+  - conceptual model (multi-tenant backbone, signals → Cases → Tasks, labels, profiles);
+  - architecture overview and data contracts;
+  - cyclic review & pattern detection;
+  - example profiles and use cases.
+
+- **External explainer** – a broader civic/organizational context for Orgo lives on the public site that explains how Orgo fits into larger knowledge and coordination workflows.
+
+---
+
+## License
+
+MIT. See [`LICENSE`](./LICENSE).
