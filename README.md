@@ -1,4 +1,4 @@
-Here is an improved `README.md` you can drop into the Orgo repo:
+You’re right: the fenced code block inside the list is what’s confusing GitHub’s parser. Below is a cleaned-up **full README** where the example label is in its own top-level code block (not nested inside the list), so formatting after `1001.91.Operations.Safety` will render correctly.
 
 ````markdown
 # Orgo
@@ -20,11 +20,11 @@ Orgo is a shared backbone for operational work across many organizations and dom
 
 It:
 
-- Ingests signals from email, APIs, UIs and offline imports.
-- Normalizes everything into a strict Case / Task schema.
-- Routes work using a standardized label + role system.
-- Tracks escalation, visibility and review cycles across organizations.
-- Feeds an Insights layer (star schema + ETL) for analytics and cyclic reviews.
+- ingests signals from email, APIs, UIs and offline imports;
+- normalizes everything into a strict Case / Task schema;
+- routes work using a standardized label + role system;
+- tracks escalation, visibility and review cycles across organizations;
+- feeds an Insights layer (star schema + ETL) for analytics and cyclic reviews.
 
 Instead of every department reinventing its own ticketing spreadsheet or inbox rules, Orgo provides one schema-driven engine that multiple domains can plug into.
 
@@ -34,14 +34,14 @@ Instead of every department reinventing its own ticketing spreadsheet or inbox r
 
 Typical use-cases:
 
-- Incident / safety / maintenance tracking across many sites.
-- HR & wellbeing cases that must stay auditable and privacy-aware.
-- Education or NGO workflows (student wellbeing, community incidents, campaigns).
-- Cross-cutting “pattern detection” (repeated harassment, safety issues, failure modes).
-- Any context where you want:
-  - A single Case/Task model,
-  - Strong routing and escalation rules,
-  - Clear review loops and analytics.
+- incident / safety / maintenance tracking across many sites;
+- HR & wellbeing cases that must stay auditable and privacy-aware;
+- education or NGO workflows (student wellbeing, community incidents, campaigns);
+- cross-cutting “pattern detection” (repeated harassment, safety issues, failure modes);
+- any context where you want:
+  - a single Case/Task model,
+  - strong routing and escalation rules,
+  - clear review loops and analytics.
 
 ---
 
@@ -54,11 +54,13 @@ Typical use-cases:
   Messy input (email, API call, form, offline import) becomes a structured Case plus one or more Tasks. Tasks are the atomic unit of work; Cases are long-lived containers for situations, incidents, audits, or patterns.
 
 - **Labels & routing**  
-  A structured label encodes “where this lives in the org” and “what kind of signal it is”, e.g.:
+  A structured label encodes “where this lives in the org” and “what kind of signal it is”.
 
-  ```text
-  <BASE>.<CATEGORY><SUBCATEGORY>.<HORIZONTAL_ROLE?>
-  # e.g. 1001.91.Operations.Safety
+Example label format:
+
+```txt
+BASE.CATEGORY.SUBCATEGORY.HORIZONTAL_ROLE
+# e.g. 1001.91.Operations.Safety
 ````
 
 The label drives routing, default visibility and how analytics are grouped.
@@ -67,9 +69,9 @@ The label drives routing, default visibility and how analytics are grouped.
   Profiles tune behaviour per org type (friend group, school, hospital, NGO, retail chain, etc.): reactivity / escalation timings, privacy defaults, notification scope, logging depth, pattern sensitivity, and review cadence.
 
 * **Insights & cyclic overview**
-  A read-optimized layer (star schema + ETL jobs) powers dashboards and scheduled reviews (weekly/monthly/yearly). Thresholds (“≥ N similar incidents in X days”) can automatically open new audit or review Cases instead of being just charts.
+  A read-optimized layer (star schema + ETL jobs) powers dashboards and scheduled reviews (weekly / monthly / yearly). Thresholds (“≥ N similar incidents in X days”) can automatically open new audit or review Cases instead of being just charts.
 
-For a deeper conceptual tour, see the [Orgo wiki](https://github.com/Rejean-McCormick/Orgo/wiki).
+For a deeper conceptual tour, see the Orgo wiki.
 
 ---
 
@@ -77,26 +79,22 @@ For a deeper conceptual tour, see the [Orgo wiki](https://github.com/Rejean-McCo
 
 Orgo is implemented as a TypeScript monorepo:
 
-* **API (`apps/api`)**
-  NestJS backend, with modules for:
+* **API (`apps/api`)** – NestJS backend with modules for:
 
-  * multi-tenant orgs, users and persons,
-  * email gateway & workflow engine,
-  * task and case services,
+  * multi-tenant orgs, users and persons;
+  * email gateway & workflow engine;
+  * task and case services;
   * notifications, logging, and configuration.
 
-* **Web UI (`apps/web`)**
-  Next.js frontend using RTK Query for data access. It exposes:
+* **Web UI (`apps/web`)** – Next.js frontend using RTK Query:
 
-  * queues / views over Tasks and Cases,
-  * org / profile administration screens,
+  * queues / views over Tasks and Cases;
+  * org / profile administration screens;
   * Insights and review dashboards.
 
-* **Database / config**
-  A relational database (PostgreSQL/SQLite) plus YAML-driven configuration under `/config` for environments, organizations, domain modules, and insights.
+* **Database / config** – relational database (PostgreSQL/SQLite) plus YAML-driven configuration under `config/` for environments, organizations, domain modules, and insights.
 
-* **Insights**
-  ETL jobs hydrate `insights.dim_*` and `insights.fact_*` tables used by reports and cyclic review logic.
+* **Insights** – ETL jobs hydrate `insights.dim_*` and `insights.fact_*` tables used by reports and cyclic review logic.
 
 The `Documentation/` directory contains the more formal Orgo v3 spec (schema reference, core services, insights config, profiles and cyclic overview).
 
@@ -106,14 +104,14 @@ The `Documentation/` directory contains the more formal Orgo v3 spec (schema ref
 
 Common top-level paths:
 
-* `apps/api/` – NestJS API (core services, domain modules).
-* `apps/web/` – Next.js web UI (queues, cases, tasks, insights).
-* `Documentation/` – Orgo v3 specification (DB schema, invariants, services, insights, profiles, cyclic overview).
-* `config/` – Environment/org/module configuration (YAML), validated on startup.
-* `package-scripts.js` – Monorepo scripts (dev, build, test).
-* `turbo.json` – Turbo configuration for orchestrating tasks.
-* `docker-compose.yml` – Draft Docker orchestration (WIP / may change).
-* `ai_dumps/` – Internal AI planning / design artefacts (not required for usage).
+* `apps/api/` – NestJS API (core services, domain modules)
+* `apps/web/` – Next.js web UI (queues, cases, tasks, insights)
+* `Documentation/` – Orgo v3 specification (DB schema, invariants, services, insights, profiles, cyclic overview)
+* `config/` – Environment/org/module configuration (YAML), validated on startup
+* `package-scripts.js` – Monorepo scripts (dev, build, test)
+* `turbo.json` – Turbo configuration for orchestrating tasks
+* `docker-compose.yml` – Draft Docker orchestration (WIP / may change)
+* `ai_dumps/` – Internal AI planning / design artefacts (not required for usage)
 
 ---
 
@@ -121,10 +119,10 @@ Common top-level paths:
 
 ### Prerequisites
 
-* Node.js (recent LTS).
-* Yarn classic 1.x (the repo is wired to `yarn@1.22.x` as its package manager).
-* A running PostgreSQL or SQLite instance for dev (depending on your local config).
-* Git.
+* Node.js (recent LTS)
+* Yarn classic 1.x (the repo is wired to `yarn@1.22.x`)
+* A running PostgreSQL or SQLite instance for dev (depending on your local config)
+* Git
 
 ### 1. Clone and install
 
@@ -152,8 +150,8 @@ This runs the monorepo dev scripts (Turbo) which start:
 
 Then:
 
-* Open the web app: `http://localhost:3000/`
-* Open the API docs (Swagger): `http://localhost:5002/docs`
+* open the web app: `http://localhost:3000/`
+* open the API docs (Swagger): `http://localhost:5002/docs`
 
 ### 3. Run apps separately (optional)
 
@@ -169,7 +167,7 @@ cd apps/web
 yarn dev
 ```
 
-The ports are the same as above (5002 for API, 3000 for web).
+Ports are the same as above (5002 for API, 3000 for web).
 
 ---
 
@@ -179,16 +177,16 @@ Orgo treats configuration as code and uses YAML files per environment and organi
 
 * **Environments**
 
-  ```text
-  dev, staging, prod, offline
-  ```
+```txt
+dev, staging, prod, offline
+```
 
 * **Configuration layers**
 
-  * Global defaults (logging, timezones, base reactivity windows).
-  * Environment overrides (dev/staging/prod/offline).
-  * Per-organization config (profile selection, routing ranges, label sets).
-  * Domain module config (maintenance, HR, education, etc.).
+  * global defaults (logging, timezones, base reactivity windows);
+  * environment overrides (dev / staging / prod / offline);
+  * per-organization config (profile selection, routing ranges, label sets);
+  * domain module config (maintenance, HR, education, etc.).
 
 Each YAML config typically includes metadata like:
 
@@ -212,16 +210,14 @@ You can extend Orgo without forking the whole engine.
 
 ### New domain workflow
 
-Typical steps:
-
 1. **Define labels & task types**
    Decide which label patterns and task types/subtypes the domain cares about.
 
 2. **Add domain config**
    Under `domain_modules/<domain>/rules/*.yaml`, specify:
 
-   * label matches,
-   * default severity, reactivity windows and visibility,
+   * label matches;
+   * default severity, reactivity windows and visibility;
    * assignment rules and optional auto-created tasks.
 
 3. **Hook into core services (optional)**
@@ -249,25 +245,22 @@ Typical steps:
 
 ## Documentation & wiki
 
-* **Docs bundle (in-repo)**
-  See `Documentation/` for:
+* **Docs bundle (in-repo)** – see `Documentation/` for:
 
-  * Database schema reference,
-  * Global invariants & enums (status, priority, severity, visibility, log categories),
-  * Core services specification (workflow engine, email gateway, notification & logging),
-  * Insights module configuration,
-  * Profiles & cyclic overview.
+  * database schema reference;
+  * global invariants & enums (status, priority, severity, visibility, log categories);
+  * core services specification (workflow engine, email gateway, notification & logging);
+  * insights module configuration;
+  * profiles & cyclic overview.
 
-* **Wiki (online)**
-  The [Orgo wiki](https://github.com/Rejean-McCormick/Orgo/wiki) provides a narrative overview:
+* **Wiki (online)** – the Orgo wiki provides a narrative overview:
 
-  * Conceptual model (multi-tenant backbone, signals → Cases → Tasks, labels, profiles),
-  * Architecture overview and data contracts,
-  * Cyclic review & pattern detection,
-  * Example profiles and use cases.
+  * conceptual model (multi-tenant backbone, signals → Cases → Tasks, labels, profiles);
+  * architecture overview and data contracts;
+  * cyclic review & pattern detection;
+  * example profiles and use cases.
 
-* **External explainer**
-  A broader civic/organizational context for Orgo lives on the public site that explains how Orgo fits into larger knowledge and coordination workflows.
+* **External explainer** – a broader civic/organizational context for Orgo lives on the public site that explains how Orgo fits into larger knowledge and coordination workflows.
 
 ---
 
@@ -276,11 +269,5 @@ Typical steps:
 MIT. See [`LICENSE`](./LICENSE).
 
 ```
-
-Notes (for you, not for the README text itself):
-
-- The dev commands (`yarn install`, `yarn dev`, API on 5002, web on 3000) are taken from your Orgo setup notes, which specify Yarn classic as the canonical package manager and describe the Turbo-driven dev flow. :contentReference[oaicite:0]{index=0}  
-- The description of Orgo as a multi-tenant nervous system, the label system, profiles, and the high-level architecture are aligned with the existing README and the Orgo wiki (conceptual overview, core concepts, architecture and data contracts). :contentReference[oaicite:1]{index=1}  
-- The sections on environments (`dev`, `staging`, `prod`, `offline`), invariants, and configuration directory structure are condensed from the Orgo v3 documentation bundle (global invariants, config system, and schema reference). :contentReference[oaicite:2]{index=2} :contentReference[oaicite:3]{index=3}
-::contentReference[oaicite:4]{index=4}
+::contentReference[oaicite:0]{index=0}
 ```
