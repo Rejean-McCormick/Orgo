@@ -1,0 +1,41 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S1552015",
+      "based_on": "P1552",
+      "label_en": "case has social issue / need type"
+    },
+    {
+      "id": "S0000011",
+      "based_on": null,
+      "label_en": "case has family situation"
+    },
+    {
+      "id": "S1552016",
+      "based_on": "P1552",
+      "label_en": "case has protection measure"
+    },
+    {
+      "id": "S0000012",
+      "based_on": null,
+      "label_en": "case has support network"
+    },
+    {
+      "id": "S361014",
+      "based_on": "P361",
+      "label_en": "case has intervention"
+    },
+    {
+      "id": "S1552017",
+      "based_on": "P1552",
+      "label_en": "case has risk level"
+    },
+    {
+      "id": "S1343003",
+      "based_on": "P1343",
+      "label_en": "case has assessment / report document"
+    }
+  ]
+}

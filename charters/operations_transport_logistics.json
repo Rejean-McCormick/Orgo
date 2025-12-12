@@ -1,0 +1,51 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S1552301",
+      "based_on": "P1552",
+      "label_en": "has shipment / consignment"
+    },
+    {
+      "id": "S361301",
+      "based_on": "P361",
+      "label_en": "has route / itinerary"
+    },
+    {
+      "id": "S361302",
+      "based_on": "P361",
+      "label_en": "has trip / run"
+    },
+    {
+      "id": "S2283301",
+      "based_on": "P2283",
+      "label_en": "uses vehicle"
+    },
+    {
+      "id": "S7103301",
+      "based_on": "P710",
+      "label_en": "has driver / operator"
+    },
+    {
+      "id": "S2763301",
+      "based_on": "P276",
+      "label_en": "has pickup location"
+    },
+    {
+      "id": "S2763302",
+      "based_on": "P276",
+      "label_en": "has dropoff location"
+    },
+    {
+      "id": "S5853301",
+      "based_on": "P585",
+      "label_en": "has planned departure time"
+    },
+    {
+      "id": "S5853302",
+      "based_on": "P585",
+      "label_en": "has planned arrival time"
+    }
+  ]
+}

@@ -1,11 +1,13 @@
-import '../styles.css';
+// apps/web/pages/_app.tsx
 
-import type { AppProps } from 'next/app';
-import type { NextPage } from 'next';
-import Head from 'next/head';
-import type { ReactElement, ReactNode } from 'react';
+import "./styles.css";
 
-import { AppProviders } from '../src/providers/AppProviders';
+import type { AppProps } from "next/app";
+import type { NextPage } from "next";
+import Head from "next/head";
+import type { ReactElement, ReactNode } from "react";
+
+import { AppProviders } from "../src/providers/AppProviders";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -28,7 +30,8 @@ function OrgoApp({ Component, pageProps }: AppPropsWithLayout) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Orgo</title>
       </Head>
-      <AppProviders pageProps={pageProps}>{page}</AppProviders>
+      {/* AppProviders no longer expects pageProps */}
+      <AppProviders>{page}</AppProviders>
     </>
   );
 }

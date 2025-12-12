@@ -27,16 +27,15 @@ RUN yarn install --frozen-lockfile
 # Prisma generate – uses the schema, no DB connection required
 RUN cd apps/api && npx prisma generate
 
-# 3) Copy full pruned source and build the api with Turbo
+# 3) Copy full pruned source and build the api (no turbo run here)
 FROM base AS sourcer
 WORKDIR /app
 
 COPY --from=installer /app/ ./
 COPY --from=builder /app/out/full/ ./
 
-
 # Build only the api (and whatever it depends on)
-RUN yarn turbo run build --scope=api --include-dependencies --no-deps
+RUN cd apps/api && yarn build
 
 # 4) Runtime image
 FROM node:20-alpine AS runner

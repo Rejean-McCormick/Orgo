@@ -1,0 +1,71 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S31001",
+      "based_on": "P31",
+      "label_en": "incident is of type"
+    },
+    {
+      "id": "S828001",
+      "based_on": "P828",
+      "label_en": "incident has cause"
+    },
+    {
+      "id": "S1542001",
+      "based_on": "P1542",
+      "label_en": "incident has effect / consequence"
+    },
+    {
+      "id": "S1542002",
+      "based_on": "P1542",
+      "label_en": "incident impacts (asset/service/person)"
+    },
+    {
+      "id": "S1552001",
+      "based_on": "P1552",
+      "label_en": "incident has severity"
+    },
+    {
+      "id": "S1552002",
+      "based_on": "P1552",
+      "label_en": "incident has priority"
+    },
+    {
+      "id": "S1552003",
+      "based_on": "P1552",
+      "label_en": "incident has status"
+    },
+    {
+      "id": "S361001",
+      "based_on": "P361",
+      "label_en": "incident has corrective action"
+    },
+    {
+      "id": "S361002",
+      "based_on": "P361",
+      "label_en": "incident has preventive action"
+    },
+    {
+      "id": "S0000001",
+      "based_on": null,
+      "label_en": "incident is recurring pattern"
+    },
+    {
+      "id": "S155001",
+      "based_on": "P155",
+      "label_en": "incident escalates to (next level)"
+    },
+    {
+      "id": "S2959001",
+      "based_on": "P2959",
+      "label_en": "incident is duplicate of"
+    },
+    {
+      "id": "S0000002",
+      "based_on": null,
+      "label_en": "incident is related to"
+    }
+  ]
+}

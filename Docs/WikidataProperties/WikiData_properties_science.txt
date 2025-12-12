@@ -1,0 +1,2374 @@
+[
+  {
+    "id": "P10019",
+    "label": "equivalent in higher rank taxon",
+    "description": "an equivalent class that is species-neutral or scoped to higher ranking taxa",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P10038",
+    "label": "Conway polyhedron notation",
+    "description": "notation that defines polytopes and tessellations",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to mathematics"
+  },
+  {
+    "id": "P10228",
+    "label": "facilitates flow of",
+    "description": "the cargo/substrate actively transported or passively channeled by a protein",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to biology, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P10287",
+    "label": "DFG Science Classification",
+    "description": "German Research Foundation (DFG) classification of scientific disciplines, research areas, review boards, and subject areas",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to science, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P10322",
+    "label": "time in the pouch",
+    "description": "the time the animal spends in the pouch",
+    "type": "Quantity",
+    "categories": "Wikidata property related to taxa, Wikidata property related to biology, Wikidata property related to animals and zoology, Wikidata property for quantities, Wikidata property related to time and duration, Wikidata property related to the life of an animal"
+  },
+  {
+    "id": "P1033",
+    "label": "GHS signal word",
+    "description": "please use with items \"warning\" (Q15350847) and \"danger\" (Q15221217)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P10374",
+    "label": "computational complexity",
+    "description": "the most specific complexity class this computational problem has been proved to belong to; if available, provide the tight complexity, otherwise both hardness and membership can be specified",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics, Wikidata property related to computing"
+  },
+  {
+    "id": "P1057",
+    "label": "chromosome",
+    "description": "chromosome on which an entity is localized",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P1060",
+    "label": "disease transmission process",
+    "description": "process by which a pathogen is transmitted, equivalent to \"transmitted by\" in the relation ontology http://purl.obolibrary.org/obo/RO_0002451",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P10614",
+    "label": "has surface",
+    "description": "the object is the 2-dimensional surface that partly or completely surrounds the subject in 3-dimensional space",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P10630",
+    "label": "medically indicated in case of",
+    "description": "medical condition for which the net benefit of a medical procedure is expected to be positive",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P10685",
+    "label": "ionic radius",
+    "description": "radius of an atom's ion in ionic crystals structure",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P10764",
+    "label": "charge number",
+    "description": "for a particle, quotient of its electric charge and the elementary charge",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P10795",
+    "label": "coordination number",
+    "description": "number of atoms, molecules or ions bonded to in a molecule or crystal",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P1086",
+    "label": "atomic number",
+    "description": "number of protons found in the nucleus of the atom",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P10946",
+    "label": "contraindicated in case of",
+    "description": "medical condition for which the net benefit of a medical procedure is expected to be negative",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P10969",
+    "label": "power series expansion",
+    "description": "power series expansion of the subject",
+    "type": "Math",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P1097",
+    "label": "g-factor",
+    "description": "characteristic property of any elementary particle (Land\u00e9 factor)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P1102",
+    "label": "flattening",
+    "description": "measure of the compression of an ellipsoid of revolution",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics, Wikidata property related to mathematics"
+  },
+  {
+    "id": "P11034",
+    "label": "Gauss notation",
+    "description": "Gauss notation for knots and links",
+    "type": "Math",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P11035",
+    "label": "crossing number",
+    "description": "crossing number for mathematical knots; the crossing number of a knot is the smallest number of crossings of any diagram of the knot. It is a knot invariant.",
+    "type": "Quantity",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P1108",
+    "label": "electronegativity",
+    "description": "tendency of an atom or functional group to attract electrons.",
+    "type": "Quantity",
+    "categories": "physical property, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P1109",
+    "label": "refractive index",
+    "description": "refractive index of a substance with wavelength and temperature as qualifiers",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to physics"
+  },
+  {
+    "id": "P1117",
+    "label": "pKa",
+    "description": "acid dissociation constant",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P1121",
+    "label": "oxidation state",
+    "description": "this atom has or can have the oxidation number",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P11231",
+    "label": "has biological vector",
+    "description": "a taxon which functions as a vector for this pathogenic biological group",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P11413",
+    "label": "sampling rate",
+    "description": "frequency at which a system measures a continuous-time signal; use with units like \u201chertz\u201d and \u201cframes per second\u201d",
+    "type": "Quantity",
+    "categories": "Wikidata property related to computing, Wikidata property related to television, Wikidata property related to science"
+  },
+  {
+    "id": "P1148",
+    "label": "neutron number",
+    "description": "number of neutrons of an isotope",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P1164",
+    "label": "group cardinality",
+    "description": "number of elements in a finite group in mathematics",
+    "type": "Quantity",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P117",
+    "label": "chemical structure",
+    "description": "image of a representation of the structure for a chemical compound",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to chemistry, Wikidata property for linking to a representative image, curated Wikidata property"
+  },
+  {
+    "id": "P1171",
+    "label": "approximation algorithm",
+    "description": "method used to approximate a number",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P11801",
+    "label": "visited by",
+    "description": "organisms attracted by this plant taxon and reported to visit it",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P1181",
+    "label": "numeric value",
+    "description": "numerical value of a number, a mathematical constant, or a physical constant",
+    "type": "Quantity",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P11813",
+    "label": "solubility product constant",
+    "description": "equilibrium constant for a sparingly soluble solid chemical substance dissolved in an aqueous solution",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P1193",
+    "label": "prevalence",
+    "description": "portion in percent of a population with a given disease or disorder",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property related to demography"
+  },
+  {
+    "id": "P1199",
+    "label": "mode of inheritance",
+    "description": "manner in which a particular genetic trait or disorder is passed from one generation to the next",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P12081",
+    "label": "WHO Aware Classification",
+    "description": "antibiotic classification according to the World Health Organization",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to chemistry, Wikidata property related to the United Nations"
+  },
+  {
+    "id": "P12099",
+    "label": "parent form of an active substance",
+    "description": "parent form of a chemical entity (e.g. a salt) used as an active substance in pharmaceutical products",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P12168",
+    "label": "Torino scale",
+    "description": "the Torino scale level for the astronomical object",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property, Wikidata property related to natural science"
+  },
+  {
+    "id": "P12322",
+    "label": "underlying structure(s)",
+    "description": "mathematical structure(s) obtained by deleting some data of this mathematical structure",
+    "type": "WikibaseItem",
+    "categories": "transitive Wikidata property, Wikidata property related to mathematics"
+  },
+  {
+    "id": "P12432",
+    "label": "age of onset of sexual maturity",
+    "description": "point in time after which an individual attains the ability to reproduce sexually",
+    "type": "Quantity",
+    "categories": "Wikidata property related to biology, Wikidata property related to time and duration, Wikidata property related to animals and zoology, Wikidata property related to the life of an animal"
+  },
+  {
+    "id": "P12457",
+    "label": "invariant under",
+    "description": "subject is unchanged by this process / function / group of transformation / equivalence relation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics, Wikidata property related to mathematics, Wikidata property for causes and effects"
+  },
+  {
+    "id": "P12491",
+    "label": "SMIRKS",
+    "description": "line notation that represents generic chemical reactions",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P12663",
+    "label": "risk group",
+    "description": "risk group of a biological agent guiding its initial handling in labs according to the risk group classification defined by the WHO laboratory biosafety manual",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P128",
+    "label": "regulates (molecular biology)",
+    "description": "process regulated by a protein or RNA in molecular biology",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P129",
+    "label": "physically interacts with",
+    "description": "physical entity that the subject interacts with",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P12956",
+    "label": "exponent of base unit",
+    "description": "a qualifier of derived from base unit (P12571) used to describe the exponent of the unit",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to physics"
+  },
+  {
+    "id": "P1312",
+    "label": "has facet polytope",
+    "description": "facet of a polytope, in the next-lower dimension",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P1322",
+    "label": "dual to",
+    "description": "dual of a polytope, graph or curve",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics, Wikidata property related to graphs"
+  },
+  {
+    "id": "P13318",
+    "label": "mode of reproduction",
+    "description": "ways for living organisms to propagate or produce their offsprings",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P13413",
+    "label": "beam energy",
+    "description": "kinetic energy of elementary or composite particles moving together (for example in a particle accelerator)",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to natural science"
+  },
+  {
+    "id": "P1349",
+    "label": "ploidy",
+    "description": "ploidy of a genome, a taxon or an anatomical entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P1360",
+    "label": "Monte Carlo Particle Number",
+    "description": "number given to each elementary particle",
+    "type": "String",
+    "categories": "unique identifier, Wikidata property related to physics"
+  },
+  {
+    "id": "P13914",
+    "label": "collector",
+    "description": "person or group who physically collected a specimen or object in the field",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P1531",
+    "label": "hybrid of",
+    "description": "parent of this hybrid breed or cultivar",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P1568",
+    "label": "definition domain",
+    "description": "set of \"input\" or argument values for which a mathematical function is defined; subset of input set",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P1571",
+    "label": "codomain",
+    "description": "codomain of a function",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P1582",
+    "label": "natural product of taxon",
+    "description": "links a natural product with its source (animal, plant, fungal, algal, etc.)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology, Wikidata property related to processes and manufacturing"
+  },
+  {
+    "id": "P1603",
+    "label": "number of cases",
+    "description": "cumulative number of confirmed, probable and suspected occurrences",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P1604",
+    "label": "biosafety level",
+    "description": "level of the biocontainment precautions required to isolate dangerous biological agents",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P1605",
+    "label": "has natural reservoir",
+    "description": "host species for the pathogen in which it is endemic",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P1606",
+    "label": "natural reservoir of",
+    "description": "pathogen of which this species is a long-term host",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P1660",
+    "label": "has index case",
+    "description": "initial patient in the population of an epidemiological investigation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P1673",
+    "label": "general formula",
+    "description": "molecular formula of a class of compounds",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P1678",
+    "label": "has vertex figure",
+    "description": "the figure exposed when a corner of a polytope is sliced off",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P1691",
+    "label": "operations and procedures key (OPS)",
+    "description": "official classification of operational procedures",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to medicine, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P171",
+    "label": "parent taxon",
+    "description": "closest parent taxon of the taxon in question",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to taxa, Wikidata property related to biology, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P1851",
+    "label": "input set",
+    "description": "a superset of the domain of a function or relation that may include some inputs for which the function is not defined; to specify the set of only those inputs for which the function is defined use domain (P1568)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P1909",
+    "label": "side effect",
+    "description": "effect of a medication or procedure, that occurs next to the desired effect",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P1910",
+    "label": "decreased expression in",
+    "description": "indicates that a decreased expression of the subject gene is found in the object disease",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P1911",
+    "label": "increased expression in",
+    "description": "this property should link a gene and a disease and indicate that an increased expression of the gene is found in the disease",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P1912",
+    "label": "gene deletion association with",
+    "description": "This property should link a gene and a disease due to a deletion",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P1913",
+    "label": "gene duplication association with",
+    "description": "This property should link a gene and a disease due to a duplication",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P1914",
+    "label": "gene insertion association with",
+    "description": "This property should link a gene and a disease due to an insertion",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P1915",
+    "label": "gene inversion association with",
+    "description": "This property should link a gene and a disease due to an inversion",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology"
+  },
+  {
+    "id": "P1916",
+    "label": "gene substitution association with",
+    "description": "disease caused or associated with the substitution of this gene",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P1917",
+    "label": "posttranslational modification association with",
+    "description": "This property should link a protein-coding gene to a disease where the encoded protein is associated with a posttranslation modification",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P1918",
+    "label": "altered regulation leads to",
+    "description": "this property should link a gene and a disease due to altered regulation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P1924",
+    "label": "vaccine for",
+    "description": "disease that a vaccine is for",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P1990",
+    "label": "species kept",
+    "description": "taxa, preferably species, present at a zoo, botanical garden, collection, or other institution. NOT specific animals, not for any geographic location",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P1995",
+    "label": "health specialty",
+    "description": "main specialty relevant to this medical condition or treatment",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P2012",
+    "label": "cuisine",
+    "description": "type of food served by a restaurant or restaurant chain or national food culture",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to gastronomy"
+  },
+  {
+    "id": "P2054",
+    "label": "density",
+    "description": "density of a substance with phase of matter and temperature as qualifiers",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2055",
+    "label": "electrical conductivity",
+    "description": "electrical conductivity of a substance with phase of matter and temperature as qualifiers",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry, Wikidata property related to engineering, Wikidata property related to physics"
+  },
+  {
+    "id": "P2068",
+    "label": "thermal conductivity",
+    "description": "property of a material that describes how efficiently heat is conducted",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2076",
+    "label": "temperature",
+    "description": "qualifier to indicate at what temperature something took place",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2077",
+    "label": "under pressure",
+    "description": "qualifier to indicate at what pressure something took place",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2101",
+    "label": "melting point",
+    "description": "temperature at which a solid changes its state from solid to liquid at atmospheric pressure",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2102",
+    "label": "boiling point",
+    "description": "temperature at which a substance changes its phase from liquid to gas (indicate the corresponding pressure as qualifier)",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2107",
+    "label": "decomposition point",
+    "description": "decomposition point of a substance",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2113",
+    "label": "sublimation temperature",
+    "description": "temperature at which a substance changes directly from solid to gaseous (indicate corresponding pressure qualifier)",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2118",
+    "label": "kinematic viscosity",
+    "description": "viscosity of a substance, with phase of matter (P515) and temperature (P2076) as qualifiers",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry, Wikidata property related to engineering"
+  },
+  {
+    "id": "P2119",
+    "label": "vapor pressure",
+    "description": "pressure exerted by a vapor in thermodynamic equilibrium with its condensed phases",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2128",
+    "label": "flash point",
+    "description": "lowest temperature at which it can vaporize to form an ignitable mixture in air. Add qualifier for measurement method (P459): open cup or closed cup. Not equal to fire point.",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2129",
+    "label": "immediately dangerous to life or health",
+    "description": "Immediately Dangerous to Life and Health value",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2143",
+    "label": "genome size",
+    "description": "size of the genome in base pairs",
+    "type": "Quantity",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P2175",
+    "label": "medical condition treated",
+    "description": "disease that this pharmaceutical drug, procedure, or therapy is used to treat",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P2176",
+    "label": "drug or therapy used for treatment",
+    "description": "drug, procedure, or therapy that can be used to treat a medical condition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P2177",
+    "label": "solubility",
+    "description": "property of a chemical to dissolve in another chemical forming a solution. Provide solvent (P2178) and temperature (P2076) as qualifiers",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2200",
+    "label": "electric charge",
+    "description": "electric charge of a subatomic particle",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P2201",
+    "label": "electric dipole moment",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P2203",
+    "label": "upper flammable limit",
+    "description": "upper bound of the concentration range over which a flammable mixture of gas or vapour in air can be ignited at a given temperature and pressure (0-1)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2204",
+    "label": "minimum explosive concentration",
+    "description": "minimum concentration at which a chemical can explode",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2222",
+    "label": "gyromagnetic ratio",
+    "description": "characteristic property of any elementary particle",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics, Wikidata property related to ratios and proportions"
+  },
+  {
+    "id": "P2223",
+    "label": "decay width",
+    "description": "characteristic property of any elementary particle",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P2231",
+    "label": "explosive velocity",
+    "description": "detonating velocity is explosively measured",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2239",
+    "label": "first aid measures",
+    "description": "actions to take to help a person in the case of exposure to this hazard or malady (accidents, injuries, harmful chemicals)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P2240",
+    "label": "median lethal dose (LD50)",
+    "description": "the dose required to kill half the members of a tested population after a specified test duration (LC\u2085\u2080 \u2192 P2712)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property related to chemistry, Wikidata property for quantities"
+  },
+  {
+    "id": "P2275",
+    "label": "World Health Organisation  international non-proprietary name",
+    "description": "identifier for a drug",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property related to medicine, Wikidata property related to chemistry, Wikidata property related to the United Nations"
+  },
+  {
+    "id": "P2288",
+    "label": "lymphatic drainage",
+    "description": "lymphatic drainage of an anatomical structure",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to anatomy"
+  },
+  {
+    "id": "P2293",
+    "label": "genetic association",
+    "description": "general link between a disease and the causal genetic entity, if the detailed mechanism is unknown/unavailable",
+    "type": "WikibaseItem",
+    "categories": "disease, Wikidata property related to biology"
+  },
+  {
+    "id": "P2300",
+    "label": "minimal lethal dose",
+    "description": "lowest dose of a toxic substance in an environmental medium that kills individual organisms or test species under a defined set of conditions",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property for physical quantities"
+  },
+  {
+    "id": "P2329",
+    "label": "antagonist muscle",
+    "description": "muscle memory and antagonism",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to anatomy"
+  },
+  {
+    "id": "P2374",
+    "label": "natural abundance",
+    "description": "relative proportion of an isotope as found in nature (Earth's crust, or other location with qualifiers)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2375",
+    "label": "has superpartner",
+    "description": "partner particle, in supersymmetry; inverse of \"superpartner of\"",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P2376",
+    "label": "superpartner of",
+    "description": "partner particle, in supersymmetry; inverse of \"has superpartner\"",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P2384",
+    "label": "statement describes",
+    "description": "formalization of the statement contains a bound variable in this class",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P2396",
+    "label": "image of function",
+    "description": "set of values that a mathematical function actually takes",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P2404",
+    "label": "time-weighted average exposure limit",
+    "description": "recommended or required concentration limit for chemical exposure in a workplace in a given work day",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property for physical quantities"
+  },
+  {
+    "id": "P2405",
+    "label": "ceiling exposure limit",
+    "description": "recommended or required maximum concentration for chemical exposure in a given work day",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2406",
+    "label": "maximum peak exposure limit",
+    "description": "recommended or required maximum concentration for chemical exposure during a five-minute excursion within a certain period of hours",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2407",
+    "label": "short-term exposure limit",
+    "description": "recommended or required concentration limit for chemical exposure during a brief time window",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2414",
+    "label": "substrate of",
+    "description": "substrate that an enzyme acts upon to create a product",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P246",
+    "label": "element symbol",
+    "description": "identifier for a chemical element",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2534",
+    "label": "defining formula",
+    "description": "mathematical formula representing a theorem or law",
+    "type": "Math",
+    "categories": "Wikidata property related to physics, Wikidata property related to mathematics"
+  },
+  {
+    "id": "P2535",
+    "label": "Sandbox-Mathematical expression",
+    "description": "Sandbox property for value of type \"Mathematical expression\"",
+    "type": "Math",
+    "categories": "Wikidata sandbox property, Wikidata property related to mathematics"
+  },
+  {
+    "id": "P2542",
+    "label": "acceptable daily intake",
+    "description": "estimate of the amount of a food additive, expressed on a body weight basis, that can be ingested daily over a lifetime without appreciable health risk",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to biology, Wikidata property related to food and eating"
+  },
+  {
+    "id": "P2548",
+    "label": "strand orientation",
+    "description": "orientation of gene on double stranded DNA molecule",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P2571",
+    "label": "uncertainty corresponds to",
+    "description": "number of standard deviations (sigma) expressing the confidence level of a value",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to physics, non-restrictive qualifier"
+  },
+  {
+    "id": "P2575",
+    "label": "measures",
+    "description": "physical quantity that this device measures",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P2577",
+    "label": "admissible rule in",
+    "description": "this logic inference rule is admissible in that logical system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P2579",
+    "label": "studied by",
+    "description": "subject is studied by this science or domain",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to science, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P2597",
+    "label": "Gram staining",
+    "description": "Gram stain type of a bacterial strain",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P2610",
+    "label": "thickness",
+    "description": "extent from one surface to the opposite",
+    "type": "Quantity",
+    "categories": "Wikidata property related to engineering, Wikidata property related to physics"
+  },
+  {
+    "id": "P2658",
+    "label": "Scoville grade",
+    "description": "scale measuring pungency of chili peppers (values from 0 to 16,000,000,000)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to food and eating"
+  },
+  {
+    "id": "P2665",
+    "label": "alcohol by volume",
+    "description": "percentage of alcohol in a fluid",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property of quantity type indicating a percentage, Wikidata property related to food and eating"
+  },
+  {
+    "id": "P2710",
+    "label": "minimal lethal concentration",
+    "description": "lowest concentration of a toxic substance in an environmental medium that kills individual organisms or test species under a defined set of conditions",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2712",
+    "label": "median lethal concentration (LC50)",
+    "description": "statistically derived median concentration of a substance in an environmental medium expected to kill 50% of organisms in a given population under a defined set of conditions",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property related to chemistry, Wikidata property for quantities"
+  },
+  {
+    "id": "P2717",
+    "label": "no-observed-adverse-effect level",
+    "description": "greatest concentration or amount of a substance, found by experiment or observation, which causes no detectable adverse alteration of morphology, functional capacity, growth, development, or life span of the target organism under defined conditions of exposure",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2718",
+    "label": "lowest-observed-adverse-effect level",
+    "description": "lowest concentration or amount of a substance (dose), found by experiment or observation, which causes an adverse effect on morphology, functional capacity, growth, development, or life span of a target organism distinguishable from normal (control) organisms of the same species and strain under defined conditions of exposure",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P274",
+    "label": "chemical formula",
+    "description": "description of chemical compound giving element symbols and counts",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P2820",
+    "label": "cardinality of this set",
+    "description": "measure of number of elements of a set",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P2841",
+    "label": "age of onset",
+    "description": "age group in which disease manifestations appear",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to age"
+  },
+  {
+    "id": "P2844",
+    "label": "incidence",
+    "description": "probability of occurrence of a given condition in a population within a specified period of time",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property related to events"
+  },
+  {
+    "id": "P2849",
+    "label": "produced by",
+    "description": "links a class of biological features (such as a biochemical compound) with another class of biological entities known to produce it",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P2854",
+    "label": "disease burden",
+    "description": "impact of a health problem as measured by financial cost, mortality, morbidity, or other indicators. It is often quantified in terms of quality-adjusted life years (QALYs) or disability-adjusted life years (DALYs)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P2993",
+    "label": "partition coefficient water/octanol",
+    "description": "logarithm of the partition coefficient (n-octanol/water)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3013",
+    "label": "surface tension",
+    "description": "physical property of liquid",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3063",
+    "label": "gestation period",
+    "description": "amount of time needed for gestation for this animal taxon",
+    "type": "Quantity",
+    "categories": "Wikidata property related to taxa, Wikidata property related to biology, Wikidata property related to time and duration, Wikidata property related to animals and zoology, Wikidata property for quantities, Wikidata property related to the life of an animal"
+  },
+  {
+    "id": "P3070",
+    "label": "dynamic viscosity",
+    "description": "viscosity of a substance, with phase of matter (P515) and temperature (P2076) as qualifiers",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry, Wikidata property related to engineering"
+  },
+  {
+    "id": "P3071",
+    "label": "standard molar entropy",
+    "description": "entropy content of one mole of substance under standard conditions (25\u00b0C, 1 bar)",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3078",
+    "label": "standard enthalpy of formation",
+    "description": "change of enthalpy during the formation of 1 mole of the compound from its constituent elements, with all substances in their standard states at 1 bar and 25\u00b0C",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3094",
+    "label": "develops from",
+    "description": "this class of items develops from another class of items (biology)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology"
+  },
+  {
+    "id": "P3189",
+    "label": "innervated by",
+    "description": "nerves which innervate this anatomical structure",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P3190",
+    "label": "innervates",
+    "description": "anatomical structures innervated by this nerve",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to anatomy"
+  },
+  {
+    "id": "P3228",
+    "label": "Schl\u00e4fli symbol",
+    "description": "notation that defines regular polytopes and tessellations",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to mathematics"
+  },
+  {
+    "id": "P3261",
+    "label": "anatomical branch of",
+    "description": "main stem of this blood vessel, lymphatic vessel or nerve",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P3262",
+    "label": "has anatomical branch",
+    "description": "branches of this blood vessel, lymphatic vessel or nerve",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P3263",
+    "label": "base",
+    "description": "configuration of a polytop vertices around the symmetry axis",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P3264",
+    "label": "radix",
+    "description": "number of distinct digits in a positional numeral system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics, Wikidata property for quantities"
+  },
+  {
+    "id": "P3331",
+    "label": "HGVS nomenclature",
+    "description": "Sequence Variant Nomenclature from the Human Genome Variation Society (HGVS)",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology"
+  },
+  {
+    "id": "P3354",
+    "label": "positive therapeutic predictor for",
+    "description": "the presence of the genetic variant helps to predict response to a treatment",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P3355",
+    "label": "negative therapeutic predictor for",
+    "description": "the presence of the genetic variant helps to predict no response or resistance to a treatment",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P3356",
+    "label": "positive diagnostic predictor for",
+    "description": "the presence of the genetic variant helps to diagnose the presence of disease, used as inclusion criteria",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P3357",
+    "label": "negative diagnostic predictor for",
+    "description": "the presence of the genetic variant helps to diagnose the absence of disease, used as exclusion criteria",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P3358",
+    "label": "positive prognostic predictor for",
+    "description": "the presence of the genetic variant helps to prognose good outcome for the disease",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P3359",
+    "label": "negative prognostic predictor for",
+    "description": "the presence of the genetic variant helps to prognose poor outcome for the disease",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to disease biomarkers"
+  },
+  {
+    "id": "P3364",
+    "label": "stereoisomer of",
+    "description": "target item is a stereoisomer of this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3433",
+    "label": "biological variant of",
+    "description": "a variant of a physical biological entity (e.g., gene sequence, protein sequence, epigenetic mark)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P3457",
+    "label": "case fatality rate",
+    "description": "proportion of patients who die of a particular medical condition out of all who have this condition within a given time frame",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property related to ratios and proportions"
+  },
+  {
+    "id": "P3464",
+    "label": "medicine marketing authorization",
+    "description": "medicinal product's marketing authorization status",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P3487",
+    "label": "maximal incubation period in humans",
+    "description": "maximal time between an infection and the onset of disease symptoms in infected humans",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property related to time and duration, Wikidata property for quantities, Wikidata property related to biology"
+  },
+  {
+    "id": "P3488",
+    "label": "minimal incubation period in humans",
+    "description": "minimal time between an infection and the onset of disease symptoms in infected humans",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology"
+  },
+  {
+    "id": "P3489",
+    "label": "pregnancy category",
+    "description": "official categorisation of safety of medicine in pregnancy",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P3490",
+    "label": "muscle origin",
+    "description": "the anatomic entity to which the beginning of a muscle is anchored",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to anatomy, Wikidata property related to biology"
+  },
+  {
+    "id": "P3491",
+    "label": "muscle insertion",
+    "description": "the anatomic entity to which the end of a muscle is anchored",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to anatomy, Wikidata property related to biology"
+  },
+  {
+    "id": "P3492",
+    "label": "basic reproduction number",
+    "description": "number of infections caused by one infection within an uninfected population",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property related to ratios and proportions"
+  },
+  {
+    "id": "P3737",
+    "label": "maximum wavelength of sensitivity",
+    "description": "maximum wavelength that the item can detect",
+    "type": "Quantity",
+    "categories": "Wikidata property for quantities, Wikidata property related to physics"
+  },
+  {
+    "id": "P3738",
+    "label": "minimum wavelength of sensitivity",
+    "description": "minimum wavelength that the item can detect",
+    "type": "Quantity",
+    "categories": "Wikidata property for quantities, Wikidata property related to physics"
+  },
+  {
+    "id": "P3741",
+    "label": "seed dispersal",
+    "description": "mode used by the item to disperse its seeds",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P3771",
+    "label": "activator of",
+    "description": "protein for which this chemical acts as an activator",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P3772",
+    "label": "agonist of",
+    "description": "protein for which this chemical acts as an agonist",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3773",
+    "label": "antagonist of",
+    "description": "protein for which this chemical compound acts as an antagonist",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3774",
+    "label": "blocker of",
+    "description": "protein (e.g. channel/pore protein) for which this chemical compound acts as a blocker",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P3775",
+    "label": "disrupting agent for",
+    "description": "protein/protein complex for which this chemical compound acts as a disrupting agent",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3776",
+    "label": "inhibitor of",
+    "description": "protein for which this chemical compound acts as an inhibitor; only specify the inhibited function if the protein has more than one function (qualifier \"of\")",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3777",
+    "label": "antisense inhibitor of",
+    "description": "protein/gene for which this chemical (e.g. a miRNA/siRNA) acts as an antisense inhibitor",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3778",
+    "label": "positive allosteric modulator of",
+    "description": "protein for which this chemical acts as a positive allosteric modulator",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3779",
+    "label": "negative allosteric modulator of",
+    "description": "protein for which this chemical compound acts as a negative allosteric modulator",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3780",
+    "label": "active ingredient in",
+    "description": "is part of and forms biologically active component. Inverse of \"has active ingredient\"",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P3781",
+    "label": "has active ingredient",
+    "description": "has part biologically active component; inverse of \"active ingredient in\" (P3780)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to medicine"
+  },
+  {
+    "id": "P3891",
+    "label": "observing time available",
+    "description": "amount of observing time available at a telescope (or other instrument)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P4020",
+    "label": "ISQ dimension",
+    "description": "property of an observable physical quantity being a product of the ISQ base quantities (length, mass, time, etc.)",
+    "type": "Math",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P4044",
+    "label": "therapeutic area",
+    "description": "disease area in which a medical intervention is applied",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P4147",
+    "label": "conjugate acid",
+    "description": "species formed by accepting a proton (H\u207a)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P4149",
+    "label": "conjugate base",
+    "description": "species formed by losing a proton (H\u207a)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P4183",
+    "label": "angle from vertical",
+    "description": "angle the principal axis of an item makes with the vertical; use degree (Q28390) as unit",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P4184",
+    "label": "slope",
+    "description": "angle the surface of an item makes with the horizontal",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P4196",
+    "label": "cytogenetic location",
+    "description": "cytogenetic location of the gene or region",
+    "type": "String",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4250",
+    "label": "defined daily dose",
+    "description": "average maintenance dose per day for a medicine used for its main indication in adults",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property for physical quantities"
+  },
+  {
+    "id": "P4268",
+    "label": "half maximal inhibitory concentration (IC50)",
+    "description": "measure of the effectiveness of a substance in inhibiting a specific biological or biochemical function",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to biology, Wikidata property for quantities"
+  },
+  {
+    "id": "P4269",
+    "label": "half maximal effective concentration (EC50)",
+    "description": "concentration of a drug, antibody or toxicant which induces a response halfway between the baseline and maximum after a specified exposure time",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to biology, Wikidata property for quantities"
+  },
+  {
+    "id": "P4425",
+    "label": "mtDNA haplogroup",
+    "description": "mitochondrial DNA haplogroup of a person or organism",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P4426",
+    "label": "Y-DNA Haplogroup",
+    "description": "Y-DNA haplogroup of a person or organism",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P4501",
+    "label": "albedo",
+    "description": "ratio of reflected radiation to incident radiation",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about astronomical objects, Wikidata property related to physics, Wikidata property related to ratios and proportions"
+  },
+  {
+    "id": "P4545",
+    "label": "sexually homologous with",
+    "description": "body part that originates from the same tissue or cell during fetal development in the opposing sex",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to gender"
+  },
+  {
+    "id": "P4599",
+    "label": "monomer of",
+    "description": "polymer composed of this monomer subunits",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P4600",
+    "label": "polymer of",
+    "description": "monomer of which this polymer compose",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P4628",
+    "label": "ICTV virus genome composition",
+    "description": "classification of viruses of the International Committee on Taxonomy of Viruses by the molecular composition of the virus genome (DNA, RNA, double or single stranded and translational polarity)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4770",
+    "label": "hydrated form of",
+    "description": "given compound is an anhydrous form of this compound",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P4774",
+    "label": "biological phase",
+    "description": "biological period or stage when this biological process or phenomenon occurs",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4844",
+    "label": "research intervention",
+    "description": "the focus of an experiment, also called the experimental variable, research activity, or study intervention",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to natural science"
+  },
+  {
+    "id": "P4863",
+    "label": "recognition sequence",
+    "description": "DNA sequence recognized by a restriction enzyme, DNA binding domain, etc, written from 5' to 3'",
+    "type": "String",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4864",
+    "label": "cutting site of restriction enzyme",
+    "description": "DNA cutting site of restriction enzyme, written from 5' to 3'",
+    "type": "String",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4873",
+    "label": "isoschizomer",
+    "description": "isoschizomers of the restriction restriction enzyme, which have the same recognition sequence and the cutting site.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4875",
+    "label": "neoschizomer",
+    "description": "neoschizomers of the restriction restriction enzyme, which have the same recognition sequence but a different cutting site.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4882",
+    "label": "segmental innervation",
+    "description": "specific level(s) of spinal cord responsible for the function of this muscle or organ",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4914",
+    "label": "produces cohesive end",
+    "description": "overhang DNA sequence generated by restriction enzyme, written from 5' to 3'",
+    "type": "String",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4915",
+    "label": "isocaudomer",
+    "description": "isocaudomer of the restriction restriction enzyme, which have the different recognition sequence but produces the same termini",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P4951",
+    "label": "INCI name",
+    "description": "uniform, nonproprietary, systematic name internationally recognized to identify a cosmetic ingredient",
+    "type": "String",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P4952",
+    "label": "safety classification and labelling",
+    "description": "classification data for the identification and labelling of chemical risks associated with a product",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P4954",
+    "label": "may prevent disease",
+    "description": "disease which may be prevented by this substance",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P5040",
+    "label": "GHS hazard pictogram",
+    "description": "qualifier for P4952 for GHS hazard pictograms",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P5041",
+    "label": "GHS hazard statement",
+    "description": "qualifier for P4952 for GHS H-statements (also EUH-statements, AUH-statements)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P5042",
+    "label": "GHS precautionary statement",
+    "description": "qualifier for P4952 for GHS P-statements",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P5131",
+    "label": "possible medical findings",
+    "description": "possible medical findings of a medical condition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P5132",
+    "label": "suggests the existence of",
+    "description": "medical conditions associated with the subject medical finding",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P5133",
+    "label": "has evaluation",
+    "description": "evaluation or interpretation corresponding to the subject attribute or examination",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P5134",
+    "label": "evaluation of",
+    "description": "the subject finding is an evaluation or interpretation of the object attribute or test",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P5135",
+    "label": "greater than",
+    "description": "instances of the item have a greater value than corresponding instances of the object, for the given measure",
+    "type": "WikibaseItem",
+    "categories": "transitive Wikidata property, Wikidata property related to mathematics, orderable Wikidata property"
+  },
+  {
+    "id": "P5136",
+    "label": "less than",
+    "description": "instances of the item have a lesser value than corresponding instances of the object, for the given measure",
+    "type": "WikibaseItem",
+    "categories": "transitive Wikidata property, Wikidata property related to mathematics, orderable Wikidata property"
+  },
+  {
+    "id": "P515",
+    "label": "phase of matter",
+    "description": "state or phase of the matter at which the measure was made",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to chemistry, Wikidata property related to physics"
+  },
+  {
+    "id": "P517",
+    "label": "interaction",
+    "description": "subset of the four fundamental forces (strong (Q11415), electromagnetic (Q849919), weak (Q11418), and gravitation (Q11412) with which a particle interacts",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P5230",
+    "label": "chromosome count",
+    "description": "karyological information on the number of chromosomes typical for a species (2n)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P5236",
+    "label": "prime factor",
+    "description": "one of the prime numbers that can be multiplied to give this number",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P5350",
+    "label": "Alexander polynomial",
+    "description": "invariant of a knot or link. Use 't' as variable and list monomials in decreasing order.",
+    "type": "Math",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P5351",
+    "label": "Conway polynomial",
+    "description": "invariant of a knot. Use z as variable and list monomials in decreasing order.",
+    "type": "Math",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P5352",
+    "label": "Jones polynomial",
+    "description": "invariant of a knot or link. Use q as variable and list monomials in decreasing order.",
+    "type": "Math",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P5446",
+    "label": "reference value",
+    "description": "value or range of values for a medical test (subject item), used to evaluate whether the results of the test are normal or not",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P5479",
+    "label": "ultimate tensile strength",
+    "description": "material property measuring the tensil strengh at break",
+    "type": "Quantity",
+    "categories": "Wikidata property related to engineering, Wikidata property related to physics"
+  },
+  {
+    "id": "P5480",
+    "label": "tensile modulus of elasticity",
+    "description": "material property linking elastic deformation to yield strength",
+    "type": "Quantity",
+    "categories": "Wikidata property related to engineering, Wikidata property related to physics"
+  },
+  {
+    "id": "P5483",
+    "label": "hardness",
+    "description": "measure of how resistant solid matter is to various kinds of permanent shape change when a force is applied",
+    "type": "Quantity",
+    "categories": "Wikidata property related to engineering, Wikidata property related to physics"
+  },
+  {
+    "id": "P5520",
+    "label": "toughness",
+    "description": "material property measuring the ability of a material to absorb energy and plastically deform without fracturing",
+    "type": "Quantity",
+    "categories": "Wikidata property related to engineering, Wikidata property related to physics"
+  },
+  {
+    "id": "P5529",
+    "label": "yield strength",
+    "description": "material proprety measuring the stress above which materials begin to permanently deform",
+    "type": "Quantity",
+    "categories": "Wikidata property related to engineering, Wikidata property related to physics"
+  },
+  {
+    "id": "P556",
+    "label": "crystal system",
+    "description": "type of crystal for minerals\u00a0and/or for crystal compounds",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P5572",
+    "label": "expressed in",
+    "description": "gene or protein is expressed during a specific condition/cell cycle/process/form",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to processes and manufacturing"
+  },
+  {
+    "id": "P5575",
+    "label": "coefficient of friction",
+    "description": "dimensionless scalar value which describes the ratio of the force of friction between two bodies and the force pressing them together",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P5589",
+    "label": "microstructure",
+    "description": "very small scale structure of a material, defined as the structure of a prepared surface of material as revealed by a microscope above 25\u00d7 magnification",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P5593",
+    "label": "Poisson's ratio",
+    "description": "the negative of the ratio of (signed) transverse strain to (signed) axial strain",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P5594",
+    "label": "moisture absorption",
+    "description": "quantity of moisture a material would absorb in given conditions",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics, Wikidata property of quantity type indicating a percentage"
+  },
+  {
+    "id": "P5596",
+    "label": "relative humidity",
+    "description": "ratio of the partial pressure of water vapor to the equilibrium vapor pressure of water at a given temperature",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to physics"
+  },
+  {
+    "id": "P5642",
+    "label": "risk factor",
+    "description": "factor associated with a high prevalence of a particular gene, disease or characteristic. These factors can be country of origin, country of citizenship, race, gender, occupation, anamnesis, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P5668",
+    "label": "bulk modulus",
+    "description": "measure of how resistant to compressibility that substance is",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P5669",
+    "label": "compressive strength",
+    "description": "capacity of a material or structure to withstand loads tending to reduce size",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P5679",
+    "label": "electrical resistivity",
+    "description": "quantifies how strongly a given material opposes the flow of electric current",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to physics"
+  },
+  {
+    "id": "P589",
+    "label": "point group",
+    "description": "crystal subdivision",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics, Wikidata property related to mineralogy"
+  },
+  {
+    "id": "P5893",
+    "label": "work hardening strain",
+    "description": "the strengthening of a material by the specified ratio of plastic deformation",
+    "type": "Quantity",
+    "categories": "Wikidata property of quantity type indicating a percentage, Wikidata property related to physics"
+  },
+  {
+    "id": "P5929",
+    "label": "limiting oxygen index",
+    "description": "the minimum concentration of oxygen, expressed as a percentage, that will support combustion of a polymer",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property of quantity type indicating a percentage"
+  },
+  {
+    "id": "P5947",
+    "label": "Vicat softening point",
+    "description": "the temperature at which the specimen is penetrated to a depth of 1 mm by a flat-ended needle with a 1 mm2 circular or square cross-section",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P6073",
+    "label": "permeability",
+    "description": "the penetration of a permeate (such as a liquid, gas, or vapor) through a solid",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P6099",
+    "label": "clinical trial phase",
+    "description": "step designation for a clinical trial",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to natural science"
+  },
+  {
+    "id": "P6153",
+    "label": "research site",
+    "description": "place where this item was researched",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to natural science, Wikidata property related to research"
+  },
+  {
+    "id": "P6185",
+    "label": "tautomer of",
+    "description": "target item is a tautomer of this one",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P6212",
+    "label": "heat treating",
+    "description": "Industrial and metalworking processes used to alter the physical, and sometimes chemical, properties of a material.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to engineering, Wikidata property related to physics"
+  },
+  {
+    "id": "P6272",
+    "label": "specific rotation",
+    "description": "angle through which plane-polarized light is rotated by an optically active substance or a solution of that substance",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry, Wikidata property for physical quantities"
+  },
+  {
+    "id": "P6274",
+    "label": "concentration",
+    "description": "qualifier: amount of substance in a mixture (solution) during measurement",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P636",
+    "label": "route of administration",
+    "description": "path by which a drug, fluid, poison, or other substance is taken into the body",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P6438",
+    "label": "Euler characteristic",
+    "description": "topological invariant of a space; the alternating sum of the dimensions of the (co)homology of a space",
+    "type": "Quantity",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P644",
+    "label": "genomic start",
+    "description": "genomic starting coordinate of the biological sequence (e.g. a gene)",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to biology"
+  },
+  {
+    "id": "P645",
+    "label": "genomic end",
+    "description": "genomic ending coordinate of the biological sequence (e.g. a gene)",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to biology"
+  },
+  {
+    "id": "P6497",
+    "label": "drag coefficient",
+    "description": "dimensionless quantity that is used to quantify the drag or resistance of an object in a fluid environment, such as air or water",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P6507",
+    "label": "taxon author citation",
+    "description": "valid author citation for a taxon using the appropriate nomenclature (ICNafp, ICZN, ect.)",
+    "type": "String",
+    "categories": "Wikidata property related to taxa, Wikidata property with datatype string that is not an external identifier, Wikidata property related to biology"
+  },
+  {
+    "id": "P660",
+    "label": "EC enzyme classification",
+    "description": "the Enzyme Commission (EC)-based accepted name of any enzyme classifications of the protein or RNA molecule",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P680",
+    "label": "molecular function",
+    "description": "represents gene ontology function annotations",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P681",
+    "label": "cell component",
+    "description": "component of the cell in which this item is present",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P682",
+    "label": "biological process",
+    "description": "is involved in the biological process",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P684",
+    "label": "ortholog",
+    "description": "orthologous gene in another species (use with 'species' qualifier)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P688",
+    "label": "encodes",
+    "description": "the product of a gene (protein or RNA)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P6884",
+    "label": "target muscle",
+    "description": "muscle that is targeted in a physical exercise",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to anatomy"
+  },
+  {
+    "id": "P689",
+    "label": "afflicts",
+    "description": "type of organism which a condition or disease afflicts (for an organ affected by a condition, use P927)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P702",
+    "label": "encoded by",
+    "description": "the gene that encodes some gene product",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to biology, Wikidata property related to processes and manufacturing"
+  },
+  {
+    "id": "P703",
+    "label": "found in taxon",
+    "description": "the taxon in which the item can be found",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to taxa, Wikidata property related to chemistry, Wikidata property related to biology"
+  },
+  {
+    "id": "P7079",
+    "label": "shrinkage",
+    "description": "reduction in the size of something, or the process of becoming smaller, typically when a material return to room temperature after heating",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics, Wikidata property related to chemistry, Wikidata property of quantity type indicating a percentage"
+  },
+  {
+    "id": "P7083",
+    "label": "surface roughness",
+    "description": "component of surface texture quantified by the deviations in the direction of the normal vector of a real surface from its ideal form",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P7316",
+    "label": "number of decimal digits",
+    "description": "number of decimal digits of a natural number",
+    "type": "Quantity",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P7347",
+    "label": "peer review URL",
+    "description": "link to the peer review of a scholarly publication",
+    "type": "Url",
+    "categories": "Wikidata property, Wikidata property related to science, Wikidata property related to research"
+  },
+  {
+    "id": "P7442",
+    "label": "glacier status",
+    "description": "Indicates whether a glacier is retreating, surging, or stable. Qualify each value with \"point in time\" (P585) to indicate when.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to natural science"
+  },
+  {
+    "id": "P7500",
+    "label": "comorbidity",
+    "description": "presence of one or more additional conditions co-occurring with (that is, concomitant or concurrent with) a primary condition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P7527",
+    "label": "charge conjugation quantum number",
+    "description": "charge conjugation (or c-parity) has a multiplicative quantum number that applies when all quantum charges are reversed, i.e. when a particle is transformed into its antiparticle",
+    "type": "Quantity",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P769",
+    "label": "significant drug interaction",
+    "description": "clinically significant interaction between two pharmacologically active substances (i.e., drugs and/or active metabolites) where concomitant intake can lead to altered effectiveness or adverse drug events.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P7719",
+    "label": "generalization of",
+    "description": "theory/notion/statement/algorithm which in some sense this theory/notion/statement/algorithm generalizes",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P7767",
+    "label": "serving temperature",
+    "description": "serving temperature of a food dish",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to gastronomy"
+  },
+  {
+    "id": "P7770",
+    "label": "egg incubation period",
+    "description": "amount of time needed for incubation of eggs for this animal taxon (birds, fish, reptiles, monotremes)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to taxa, Wikidata property related to biology, Wikidata property related to the life of an animal, Wikidata property related to animals and zoology"
+  },
+  {
+    "id": "P780",
+    "label": "symptoms and signs",
+    "description": "possible symptoms or signs of a medical condition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P7973",
+    "label": "quantity symbol (LaTeX)",
+    "description": "symbol for a mathematical or physical quantity in LaTeX",
+    "type": "Math",
+    "categories": "Wikidata property related to mathematics, Wikidata property related to physics"
+  },
+  {
+    "id": "P8000",
+    "label": "electron configuration",
+    "description": "distribution of electrons of an atom or ion, using a standard notation",
+    "type": "String",
+    "categories": "Wikidata property related to chemistry, Wikidata property with datatype string that is not an external identifier"
+  },
+  {
+    "id": "P8010",
+    "label": "number of recoveries",
+    "description": "number of cases that recovered from disease",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P8011",
+    "label": "number of medical tests",
+    "description": "cumulative number of medical tests",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P8026",
+    "label": "LiverTox likelihood score",
+    "description": "categorization of the likelihood that a medication is associated with drug induced liver injury that was developed by the Drug-Induced Liver Injury Network (DILIN) Network and published in NCBI's LiverTox",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P8045",
+    "label": "organized response related to outbreak",
+    "description": "specific action taken or system used as a reaction to an outbreak",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P8049",
+    "label": "number of hospitalized cases",
+    "description": "number of cases that are hospitalized",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P816",
+    "label": "decays to",
+    "description": "what isotope does this radioactive isotope decay to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P8193",
+    "label": "hardiness of plant",
+    "description": "recommended hardiness zone for plant, ability of plant to survive adverse growing conditions",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P8194",
+    "label": "hardiness zone",
+    "description": "geographic climate area relevant to plant growth and survival, on USDA scale or similar",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P8204",
+    "label": "tabular case data",
+    "description": "tabular data on Wikimedia Commons of confirmed cases, recoveries, deaths, etc. due to a medical event; corresponds to P8011, P1603, P8049, P8010, P1120. Try to avoid deleting such statements",
+    "type": "TabularData",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to medicine"
+  },
+  {
+    "id": "P8224",
+    "label": "image of molecular model or crystal lattice model",
+    "description": "graphical representation of a molecule or crystal lattice",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P8339",
+    "label": "entry receptor",
+    "description": "receptor protein or protein whose receptor is being used by this subject virus/microorganism group to enter cells",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P8378",
+    "label": "Dowker-Thistlethwaite notation",
+    "description": "descriptive property of mathematical knots, also known as Dowker notation",
+    "type": "Math",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P8398",
+    "label": "offset from vertical",
+    "description": "distance from a vertical line at a given height, e.g. overhang in metres of a leaning tower at its top",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to physics"
+  },
+  {
+    "id": "P8459",
+    "label": "descriptive solubility",
+    "description": "(qualifier for P2177) qualitative level of solubility, when a numerical value is not available",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry, non-restrictive qualifier"
+  },
+  {
+    "id": "P8465",
+    "label": "van der Waals constant a",
+    "description": "constant used in the van der Waals equation in the pressure factor",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P8466",
+    "label": "van der Waals constant b",
+    "description": "constant used in the van der Waals equation in the volume factor",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P8489",
+    "label": "SmallGroup ID",
+    "description": "identifier of a specific small group, in the SmallGrp library and Magma",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P8533",
+    "label": "SMARTS notation",
+    "description": "notation used for specifying substructural patterns in chemical molecules",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to chemistry"
+  },
+  {
+    "id": "P8558",
+    "label": "Butcher tableau",
+    "description": "table containing the coefficients of a Runge-Kutta method",
+    "type": "Math",
+    "categories": "Wikidata property related to mathematics, Wikidata property for items about algorithms"
+  },
+  {
+    "id": "P873",
+    "label": "phase point",
+    "description": "phase point to describe critical point and triple point (see talk page for an example)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry, Wikidata property for physical quantities"
+  },
+  {
+    "id": "P877",
+    "label": "NFPA Special",
+    "description": "NFPA code for a chemical's other hazards in white (bottom) quadrant",
+    "type": "String",
+    "categories": "Wikidata property related to chemistry, Wikidata property with datatype string that is not an external identifier, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P8789",
+    "label": "defining mutations",
+    "description": "genetic mutations that define a haplogroup",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P8824",
+    "label": "attraction to",
+    "description": "sexual attraction or arousal arising from an entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P8864",
+    "label": "identity element",
+    "description": "value of the identity element of the mathematical operation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P8865",
+    "label": "mathematical inverse",
+    "description": "inverse element with respect to binary operation given as a qualifier using P2210",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P8866",
+    "label": "has operator",
+    "description": "mathematical operator associated with this algebraic structure",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P8872",
+    "label": "has marker",
+    "description": "a gene or a protein published as a marker of a species-specific cell type",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to biology"
+  },
+  {
+    "id": "P913",
+    "label": "notation",
+    "description": "mathematical notation or another symbol",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mathematics"
+  },
+  {
+    "id": "P922",
+    "label": "magnetic ordering",
+    "description": "magnetic ordering of a substance",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to physics"
+  },
+  {
+    "id": "P923",
+    "label": "medical examination",
+    "description": "examinations that might be used to diagnose and/or prognose the medical condition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P924",
+    "label": "possible treatment",
+    "description": "health treatment used to resolve or ameliorate a medical condition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P925",
+    "label": "presynaptic connection",
+    "description": "neuron connects on its presynaptic end to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P926",
+    "label": "postsynaptic connection",
+    "description": "neuron connects on its postsynaptic end to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine"
+  },
+  {
+    "id": "P927",
+    "label": "anatomical location",
+    "description": "where in the body or cell does this feature or condition lie or happen",
+    "type": "WikibaseItem",
+    "categories": "transitive Wikidata property, Wikidata property related to medicine"
+  },
+  {
+    "id": "P9275",
+    "label": "inverse agonist of",
+    "description": "substance whose binding to a protein produces the opposite response as an agonist binding to that protein",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P9440",
+    "label": "pH value",
+    "description": "acidity and alkalinity of an aqueous solution",
+    "type": "Quantity",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P970",
+    "label": "neurological function",
+    "description": "function of a neurological structure",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P9733",
+    "label": "International Tables for Crystallography space group number",
+    "description": "space group number as assigned in International Tables for Crystallography Vol. A",
+    "type": "String",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P993",
+    "label": "NFPA Health",
+    "description": "NFPA rating for a chemical's hazard to health (blue quadrant in fire diamond)",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to chemistry, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P994",
+    "label": "NFPA Fire",
+    "description": "NFPA rating for a chemical's flammability (red quadrant in fire diamond)",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to chemistry, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P995",
+    "label": "NFPA Instability",
+    "description": "NFPA rating for chemical or physical reactivity (yellow quadrant in fire diamond)",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to chemistry, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P9977",
+    "label": "isotopically modified form of",
+    "description": "given molecular entity is a form with natural isotopic composition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to chemistry"
+  },
+  {
+    "id": "P9998",
+    "label": "excitation energy",
+    "description": "energy difference of an excited state from the ground state of its physical system",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to physics"
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S276003",
+      "based_on": "P276",
+      "label_en": "resident is assigned to room / bed"
+    },
+    {
+      "id": "S1552018",
+      "based_on": "P1552",
+      "label_en": "has autonomy level"
+    },
+    {
+      "id": "S1552019",
+      "based_on": "P1552",
+      "label_en": "has fall risk level"
+    },
+    {
+      "id": "S361015",
+      "based_on": "P361",
+      "label_en": "has daily care routine / care plan"
+    },
+    {
+      "id": "S527005",
+      "based_on": "P527",
+      "label_en": "care routine has daily care tasks"
+    },
+    {
+      "id": "S585004",
+      "based_on": "P585",
+      "label_en": "care routine scheduled at"
+    },
+    {
+      "id": "S0000013",
+      "based_on": null,
+      "label_en": "has caregiver / family contact"
+    },
+    {
+      "id": "S1343004",
+      "based_on": "P1343",
+      "label_en": "has care documentation (records/reports)"
+    }
+  ]
+}

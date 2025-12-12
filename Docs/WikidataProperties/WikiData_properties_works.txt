@@ -1,0 +1,3243 @@
+[
+  {
+    "id": "P10027",
+    "label": "official forum URL",
+    "description": "website whose main topic is the entity and users can discuss, post questions, answer existing questions to help other users",
+    "type": "Url",
+    "categories": "Wikidata property related to software, Wikidata property related to online communities, Wikidata property related to websites"
+  },
+  {
+    "id": "P10093",
+    "label": "image with color chart",
+    "description": "image of painting or artwork together with a visible color correction chart",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to indicate a source, Wikidata property to link to Commons, Wikidata property related to art, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P10129",
+    "label": "protective marking",
+    "description": "label applied to an intellectual work to indicate how the document should be handled, particularly from a security or privacy perspective",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P10135",
+    "label": "recording date",
+    "description": "the date when a recording was made",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property for items about musical works"
+  },
+  {
+    "id": "P1028",
+    "label": "donated by",
+    "description": "person or organization who donated the object",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art"
+  },
+  {
+    "id": "P10300",
+    "label": "DPI for original size",
+    "description": "resolution in dots per inch (dpi) when printed at original size of painting or other work, value based on pixels of image and size of work (height, width)",
+    "type": "Quantity",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P10308",
+    "label": "director of publication",
+    "description": "the person who is legally responsible for a publication (text, images, audio, or video, including broadcast). Definitions and translations may vary depending on the country and legislation.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P10316",
+    "label": "DPI for A4 printing",
+    "description": "resolution in dots per inch (dpi) when printed on format A4 (210\u2009\u00d7\u2009297 mm), value based on pixels of image and aspect ratio",
+    "type": "Quantity",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P1032",
+    "label": "digital rights management system",
+    "description": "technologies to control the use of digital content and devices after sale",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software, Wikidata property related to video games"
+  },
+  {
+    "id": "P10339",
+    "label": "semantic gender",
+    "description": "used when a word is only used to refer to people of this gender or to animals of this sex, independent of the grammatical gender",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for lexicographic senses, Wikidata property related to gender, Wikidata property stating third-parties\u2019 gender"
+  },
+  {
+    "id": "P10358",
+    "label": "original catalog description",
+    "description": "content of field labeled \"description\" in original institutional catalog metadata (for use on Wikimedia Commons)",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to link to Commons, Wikidata property to describe media items"
+  },
+  {
+    "id": "P1040",
+    "label": "film editor",
+    "description": "person who works with the raw footage, selecting shots and combining them into sequences to create a finished motion picture",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films"
+  },
+  {
+    "id": "P10408",
+    "label": "created during",
+    "description": "specific event or occurrence a work was created during",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P10612",
+    "label": "choreography for",
+    "description": "the song or work this item is the choreography for",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music, Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P10627",
+    "label": "web interface software",
+    "description": "software that generates the web interface for the source code repository",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to software"
+  },
+  {
+    "id": "P10661",
+    "label": "exhibited creator",
+    "description": "intellectual or creative entity (person or organization) responsible for the elements exhibited",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to art"
+  },
+  {
+    "id": "P10664",
+    "label": "featured track(s)",
+    "description": "soundtrack of this audiovisual work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to video games, Wikidata property related to music, Wikidata property related to movies and television shows"
+  },
+  {
+    "id": "P10673",
+    "label": "debut date",
+    "description": "date when a person or group is considered to have \"debuted\"",
+    "type": "Time",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P10676",
+    "label": "number of references",
+    "description": "number of references of an item, e.g. of a scholarly article",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about scholarly articles"
+  },
+  {
+    "id": "P10695",
+    "label": "introduced in",
+    "description": "work that introduced this concept or feature",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software, Wikidata property related to research"
+  },
+  {
+    "id": "P1071",
+    "label": "location of creation",
+    "description": "place where the item was conceived or made; where applicable, location of final assembly",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to processes and manufacturing"
+  },
+  {
+    "id": "P1072",
+    "label": "readable file format",
+    "description": "file format a program can open and read",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P1073",
+    "label": "writable file format",
+    "description": "file format a program can create and/or write to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P1074",
+    "label": "fictional or mythical analog of",
+    "description": "used to link an entity or class of entities appearing in a creative work with the analogous entity or class of entities in the real world",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction, Wikidata property to describe the elements of identity"
+  },
+  {
+    "id": "P1080",
+    "label": "from narrative universe",
+    "description": "subject's fictional entity is in the object narrative. See also P1441 (present in work) and P1445 (fictional universe described in)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P10806",
+    "label": "orchestrator",
+    "description": "person or body responsible for arranging a musical composition for orchestra",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P10836",
+    "label": "inker",
+    "description": "comics artist responsible for outlining, interpreting, finalizing, and retracing a drawing by using a pencil, pen or a brush",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to comics, Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P10837",
+    "label": "penciller",
+    "description": "artist who works on the creation of comic books, graphic novels, and similar visual art forms, with a focus on the initial pencil illustrations",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to comics, Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P10893",
+    "label": "recordist",
+    "description": "the person or other agent who recorded the audio and/or video for this file",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to describe media items, Wikidata property related to audio files and recordings, Wikidata property related to video files and recordings"
+  },
+  {
+    "id": "P10923",
+    "label": "error-report URL or e-mail",
+    "description": "e-mail (prefixed with mailto:) or webpage to which error in the entries of this external ID can be reported",
+    "type": "Url",
+    "categories": "Wikidata property for properties, Wikidata property related to software, Wikidata property related to websites, Wikidata property related to data communication, storage, and retrieval"
+  },
+  {
+    "id": "P10994",
+    "label": "KFCB classification (Kenya)",
+    "description": "rating in the film classification system of Kenya",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property for items about films, Wikidata property representing cinema content ratings, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P11036",
+    "label": "Instagram post ID",
+    "description": "identifier for a post on Instagram",
+    "type": "ExternalId",
+    "categories": "Wikidata property to identify social media posts"
+  },
+  {
+    "id": "P1104",
+    "label": "number of pages",
+    "description": "number of pages in an edition of a written work; see allowed units constraint for valid values to use for units in conjunction with a number",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about books, Wikidata property for items about manuscripts, Wikidata property for items about scholarly articles"
+  },
+  {
+    "id": "P11105",
+    "label": "annotator",
+    "description": "the person responsible for annotating, extracting, and interpreting texts and meanings from ancient manuscripts and other documents",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about books, Wikidata property for items about manuscripts, Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P11106",
+    "label": "alphabetical index",
+    "description": "initial letter or character of entries found at pages starting with qualifier value in this book with alphabetically ordered entries. Use applicable qualifier such as P304",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about books"
+  },
+  {
+    "id": "P11108",
+    "label": "recorded participant",
+    "description": "agent taking an active role as a participant in a nonfiction moving image or other recorded work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to creative works, Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P1113",
+    "label": "number of episodes",
+    "description": "number of episodes in a film/TV/radio series",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works, Wikidata property for quantities"
+  },
+  {
+    "id": "P11197",
+    "label": "build system",
+    "description": "build system used by a software during its development",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P11200",
+    "label": "tiratge",
+    "description": "number of musical bars for each section of a sardana",
+    "type": "Quantity",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P11201",
+    "label": "official demo URL",
+    "description": "demo website, that is officially recommended by the developers of the software, where the software can be tried out directly in the web browser",
+    "type": "Url",
+    "categories": "Wikidata property related to software, Wikidata property related to websites"
+  },
+  {
+    "id": "P11254",
+    "label": "translation contribution URL",
+    "description": "URL of a website where you can contribute translations to the subject",
+    "type": "Url",
+    "categories": "Wikidata property related to software, Wikidata property related to websites"
+  },
+  {
+    "id": "P11265",
+    "label": "alt text",
+    "description": "alternative text used when an image can't be rendered or when accessed from assistive technology such as a screen reader",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P11269",
+    "label": "changeset",
+    "description": "identifier of a changeset in an online version control system",
+    "type": "String",
+    "categories": "Wikidata property to indicate a source, Wikidata property related to software"
+  },
+  {
+    "id": "P1151",
+    "label": "topic's main Wikimedia portal",
+    "description": "Wikimedia portal associated with this topic",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P11556",
+    "label": "credits URL",
+    "description": "URL of an official webpage with a list of credits and roles attributed to various people, organizations or applications that contribute(d) to this item's existence",
+    "type": "Url",
+    "categories": "Wikidata property related to software, Wikidata property related to websites"
+  },
+  {
+    "id": "P11590",
+    "label": "stamp perforation",
+    "description": "type of perforation for a sheet of stamps",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P11611",
+    "label": "Norwegian media rating",
+    "description": "age rating system for motion pictures, video and TV content used in Norway",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P1163",
+    "label": "media type",
+    "description": "IANA-registered identifier for a file type",
+    "type": "String",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P11849",
+    "label": "first performance by",
+    "description": "performer or performing group for the first performance of a work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to theater, Wikidata property related to music"
+  },
+  {
+    "id": "P11862",
+    "label": "orchestration",
+    "description": "an enumeration of the instruments used in a musical composition or arrangement described using any system of score notation",
+    "type": "String",
+    "categories": "Wikidata property for items about musical works, Wikidata property related to musical instruments"
+  },
+  {
+    "id": "P1191",
+    "label": "date of first performance",
+    "description": "date a work was first debuted, performed or live-broadcasted (do not use for TV series episodes)",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to creative works, Wikidata property for items about musical works, Wikidata property for items about plays"
+  },
+  {
+    "id": "P1200",
+    "label": "category for the water basin",
+    "description": "the Wikimedia category associated with the basin of a bodies of water",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories, Wikidata property for items about bodies of water"
+  },
+  {
+    "id": "P12020",
+    "label": "state of transmission",
+    "description": "state in which a work is transmitted or its existence; for the state of its material witnesses, use P5816",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, curated Wikidata property"
+  },
+  {
+    "id": "P1204",
+    "label": "Wikimedia portal's main topic",
+    "description": "primary topic of this Wikimedia portal",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P12041",
+    "label": "type of musical notation",
+    "description": "system of musical notation used on a given music source or composition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, curated Wikidata property"
+  },
+  {
+    "id": "P12050",
+    "label": "demo of",
+    "description": "video game or software that this trial version is based on",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to video games"
+  },
+  {
+    "id": "P12324",
+    "label": "production manager",
+    "description": "manager that is responsible for the administration of a feature film or television production",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P12346",
+    "label": "based on media",
+    "description": "media file or files that this media file is based on",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P1240",
+    "label": "Danish Bibliometric Research Indicator level",
+    "description": "Danish scientific level of research publications, coordinated with the nordic list of publication channels. See also item {{q|Q57408668}}",
+    "type": "String",
+    "categories": "Wikidata property related to creative works, Wikidata property with datatype string that is not an external identifier"
+  },
+  {
+    "id": "P12456",
+    "label": "phonographic copyright",
+    "description": "person or organization that holds the phonographic copyright",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music, Wikidata property related to copyright"
+  },
+  {
+    "id": "P12468",
+    "label": "PyPI trove classifier",
+    "description": "standardized classification system for software, used and maintained by the Python Package Index",
+    "type": "String",
+    "categories": "Wikidata property related to software, Wikidata property with datatype string that is not an external identifier, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P12484",
+    "label": "competition judge",
+    "description": "competition judge for an award or television show",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to awards, prizes and honours, Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P12516",
+    "label": "rug style",
+    "description": "classification of an individual textile floor covering based on geographic or cultural origin, structure, or pattern",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P12526",
+    "label": "performing organization",
+    "description": "organization that received funding to create this entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P12548",
+    "label": "media modality",
+    "description": "which media modalities are present in a creative work, particularly in digital, multimodal works such as electronic literature",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P12563",
+    "label": "Imagehash difference hash",
+    "description": "hash which tells whether two images look nearly identical",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property to describe media items"
+  },
+  {
+    "id": "P1257",
+    "label": "depicts Iconclass notation",
+    "description": "Iconclass code depicted in an artwork, for linking Iconclass codes with their corresponding artistic themes or concepts, use P1256 (Iconclass notation)",
+    "type": "String",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art, Wikidata property to describe media items"
+  },
+  {
+    "id": "P12617",
+    "label": "creative director",
+    "description": "person who makes high-level creative decisions",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P12634",
+    "label": "official server list URL",
+    "description": "website, officially recommended by the developer of the software, that lists public server instances of the software",
+    "type": "Url",
+    "categories": "Wikidata property related to software, Wikidata property related to websites"
+  },
+  {
+    "id": "P12649",
+    "label": "number of accepted contributions",
+    "description": "number of accepted submissions, e.g., conference articles to a conference",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about scholarly articles"
+  },
+  {
+    "id": "P12680",
+    "label": "deterioration",
+    "description": "type of deterioration presented by an artwork, building, artifact, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to photography, Wikidata property related to art"
+  },
+  {
+    "id": "P12692",
+    "label": "representation type",
+    "description": "property to indicate the representation type as a qualifier for Wikimedia Commons SDC Depicts statements of such Wikidata items",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property to link to Commons, Wikidata property related to creative works, Wikidata property to describe media items, Wikidata property related to art"
+  },
+  {
+    "id": "P12830",
+    "label": "music mood",
+    "description": "qualifier carrying an emotion (mood) relevant to a musical audio recording",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property for items about musical works, Wikidata property related to music"
+  },
+  {
+    "id": "P12969",
+    "label": "game designer",
+    "description": "person(s) who devised and developed this game",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to games and leisure activities, Wikidata property related to video games"
+  },
+  {
+    "id": "P13046",
+    "label": "publication type of scholarly work",
+    "description": "type of this scholarly work (e.g. \u201csystematic review\u201d, \u201cproceedings\u201d, etc.)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about scholarly articles"
+  },
+  {
+    "id": "P13150",
+    "label": "ISCC code",
+    "description": "ISCC hash code that identifies a media object based on fuzzy hashing",
+    "type": "String",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P1324",
+    "label": "source code repository URL",
+    "description": "public source code repository",
+    "type": "Url",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P13269",
+    "label": "directs readers to",
+    "description": "document or class of documents to which this item or class directs readers",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P13296",
+    "label": "study or design for this work",
+    "description": "preliminary work for this finished work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to art"
+  },
+  {
+    "id": "P13308",
+    "label": "software used for creation",
+    "description": "software that was used to create this media or work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P13360",
+    "label": "presented works",
+    "description": "works of art or creative works performed, displayed or presented at a given event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art"
+  },
+  {
+    "id": "P13381",
+    "label": "AI-generation prompt",
+    "description": "exact prompt that was used to AI-generate this media or work",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property related to creative works, Wikidata property to describe media items"
+  },
+  {
+    "id": "P13414",
+    "label": "number of downloads",
+    "description": "number of downloads of times this application or creative work have been downloaded",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works, Wikidata property related to digital distribution"
+  },
+  {
+    "id": "P13449",
+    "label": "BEACON file URL",
+    "description": "URL of an online service's BEACON file, a data interchange format for large numbers of uniform links.",
+    "type": "Url",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P1354",
+    "label": "shown with features",
+    "description": "secondary features depicted in a work. Use as qualifier for \"depicts\" (P180)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata property to describe media items"
+  },
+  {
+    "id": "P13571",
+    "label": "context window",
+    "description": "maximum number of tokens that a large language model can process at one time",
+    "type": "Quantity",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P13593",
+    "label": "cosplay of",
+    "description": "characters that are cosplayed in this image or video",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P13598",
+    "label": "Guizzi's classification of musical instruments number",
+    "description": "number in Guizzi's classification system of musical instruments",
+    "type": "String",
+    "categories": "Wikidata property related to musical instruments, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P13602",
+    "label": "single taken from the album or EP",
+    "description": "indicates the album from which the item is taken",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P1372",
+    "label": "binding of software library",
+    "description": "software library in another programming language provided by the subject software binding",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P13773",
+    "label": "LSF rating",
+    "description": "Indonesia film classification administered by the Film Censorship Board",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films"
+  },
+  {
+    "id": "P13794",
+    "label": "date filed",
+    "description": "filing date for a document, e.g. a patent or court case",
+    "type": "Time",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P1401",
+    "label": "issue tracker URL",
+    "description": "web page where bugs, issues, and feature requests for a particular software program can be listed or reported",
+    "type": "Url",
+    "categories": "Wikidata property related to software, Wikidata property related to websites"
+  },
+  {
+    "id": "P1414",
+    "label": "GUI toolkit or framework",
+    "description": "framework or toolkit a program uses to display the graphical user interface",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P1423",
+    "label": "template has topic",
+    "description": "topic related to template",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia templates"
+  },
+  {
+    "id": "P1424",
+    "label": "topic has template",
+    "description": "the main template relating to a topic",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia templates"
+  },
+  {
+    "id": "P1431",
+    "label": "executive producer",
+    "description": "executive producer of a movie, TV show, or other piece of media or entertainment",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property related to music"
+  },
+  {
+    "id": "P1433",
+    "label": "published in",
+    "description": "larger work that a given work was published in, like a journal, a website, a collection, a book or a music album",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a source, Wikidata property related to creative works"
+  },
+  {
+    "id": "P1434",
+    "label": "takes place in fictional universe",
+    "description": "the subject is a work describing a fictional universe, i.e. whose plot occurs in this universe",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to in-narrative data, Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P1436",
+    "label": "collection or exhibition size",
+    "description": "number of items in a collection or exhibition",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to events, Wikidata property related to art, Wikidata property for quantities"
+  },
+  {
+    "id": "P144",
+    "label": "based on",
+    "description": "the work(s) or inputs used as the basis for subject item; for fictional analog use P1074",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P1445",
+    "label": "fictional universe described in",
+    "description": "to link a fictional universe with a work that describes it: <universe> \"described in the work:\" <work>",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P1476",
+    "label": "title",
+    "description": "published name of a work, such as a newspaper article, a literary work, piece of music, a website, or a performance work",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to indicate a source, Wikidata qualifier, Wikidata property to indicate a name, Wikidata property related to creative works"
+  },
+  {
+    "id": "P149",
+    "label": "architectural style",
+    "description": "architectural style of a structure",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to architecture, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P1547",
+    "label": "depends on software",
+    "description": "subject software depends on object software",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P1558",
+    "label": "tempo marking",
+    "description": "qualitative indication about the speed or pace of a given musical piece (use P1725 for numerical tempo markings)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P1574",
+    "label": "exemplar of",
+    "description": "links an individual copy of a work to the item for that work or edition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about books, Wikidata property for items about manuscripts"
+  },
+  {
+    "id": "P161",
+    "label": "cast member",
+    "description": "actor in the subject production [use \"character role\" (P453) and/or \"name of the character role\" (P4633) as qualifiers] [use \"voice actor\" (P725) for voice-only role] - [use \"recorded participant\" (P11108) for non-fiction productions]",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P162",
+    "label": "producer",
+    "description": "person(s) who produced the film, musical work, theatrical production, etc. (for film, this does not include executive producers, associate producers, etc.) [for production company, use P272, video games - use P178]",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works, Wikidata property for items about films"
+  },
+  {
+    "id": "P1625",
+    "label": "has melody",
+    "description": "this work has the melody of the following work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P1638",
+    "label": "working title",
+    "description": "temporary name of a product or project used during its development",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P1639",
+    "label": "pendant of",
+    "description": "other work in a pair of opposing artworks, such as wedding portraits, commissioned together, but not always",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art"
+  },
+  {
+    "id": "P1641",
+    "label": "port",
+    "description": "default communication endpoint in TCP, UDP, or other transport protocol",
+    "type": "Quantity",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P1656",
+    "label": "unveiled by",
+    "description": "person who unveils a statue, sculpture, memorial or plaque, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to sculpture, Wikidata property related to burials, graves, and memorials"
+  },
+  {
+    "id": "P1657",
+    "label": "MPA film rating",
+    "description": "US film classification administered by the Motion Picture Association",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property for items about films, Wikidata property representing cinema content ratings, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P1680",
+    "label": "subtitle",
+    "description": "for works, when the title is followed by a subtitle",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to indicate a source, Wikidata property related to creative works, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P1684",
+    "label": "inscription",
+    "description": "inscriptions, markings and signatures on an object",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property related to creative works, Wikidata property related to structures, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P170",
+    "label": "creator",
+    "description": "maker of this creative work or other object (where no more specific property exists)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata property for items about fictional characters and entities, Wikidata property to identify contributors to works or products"
+  },
+  {
+    "id": "P1725",
+    "label": "beats per minute",
+    "description": "tempo of a musical work, indicated numerically (use P1558 for qualitative tempo markings)",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P1740",
+    "label": "category for films shot at this location",
+    "description": "the object is a category for films shot at or in the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories, Wikidata property for items about films"
+  },
+  {
+    "id": "P1753",
+    "label": "list related to category",
+    "description": "Wikimedia list equivalent to a Wikimedia category",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P1754",
+    "label": "category related to list",
+    "description": "Wikimedia category that matches the Wikimedia list",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P1762",
+    "label": "Hornbostel-Sachs classification",
+    "description": "Hornbostel-Sachs classification of a musical instrument",
+    "type": "String",
+    "categories": "Wikidata property related to classification schemes, Wikidata property related to musical instruments"
+  },
+  {
+    "id": "P1779",
+    "label": "possible creator",
+    "description": "for a creative work with considerable uncertainty about the author",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property to identify contributors to works or products"
+  },
+  {
+    "id": "P178",
+    "label": "developer",
+    "description": "organization or person that developed the item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to software"
+  },
+  {
+    "id": "P179",
+    "label": "part of the series",
+    "description": "series which contains the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property to indicate a source, Wikidata property for the relationship of the element to its class"
+  },
+  {
+    "id": "P1791",
+    "label": "category for people buried here",
+    "description": "Wikimedia category for people with a burial site within this area",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for birth or death, Wikidata property about Wikimedia categories, Wikidata property related to burials, graves, and memorials"
+  },
+  {
+    "id": "P180",
+    "label": "depicts",
+    "description": "entity visually depicted in an image, literarily described in a work, or otherwise incorporated into an audiovisual or other medium; see also P921, 'main subject'",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property to describe media items"
+  },
+  {
+    "id": "P1809",
+    "label": "choreographer",
+    "description": "person(s) who did the choreography",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P1811",
+    "label": "list of episodes",
+    "description": "link to the article with the list of episodes for this series",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P1872",
+    "label": "minimum number of players",
+    "description": "minimum numbers of players of a game",
+    "type": "Quantity",
+    "categories": "Wikidata property related to games and leisure activities"
+  },
+  {
+    "id": "P1873",
+    "label": "maximum number of players",
+    "description": "maximum numbers of players of a game",
+    "type": "Quantity",
+    "categories": "Wikidata property related to games and leisure activities"
+  },
+  {
+    "id": "P1877",
+    "label": "after a work by",
+    "description": "artist whose work strongly inspired / was copied in this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art"
+  },
+  {
+    "id": "P1881",
+    "label": "list of characters",
+    "description": "Wikimedia page with the list of characters for this work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P1897",
+    "label": "highest note",
+    "description": "highest note that an instrument can play or singer can sing",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to musical instruments"
+  },
+  {
+    "id": "P1898",
+    "label": "lowest note",
+    "description": "lowest note that an instrument can play or singer can sing",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to musical instruments"
+  },
+  {
+    "id": "P1922",
+    "label": "first line",
+    "description": "first line (incipit) of a poem, first sentence of a novel, speech, etc.",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P1932",
+    "label": "object named as",
+    "description": "use as qualifier to indicate how the object's value was given in the source",
+    "type": "String",
+    "categories": "Wikidata property related to creative works, Wikidata property with datatype string that is not an external identifier, non-restrictive qualifier, Wikidata qualifier to describe the object of a statement"
+  },
+  {
+    "id": "P195",
+    "label": "collection",
+    "description": "art, museum, archival, or bibliographic collection of which the subject is part (item is in the collection of X)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata property related to archives, Wikidata property related to libraries, Wikidata property related to museums"
+  },
+  {
+    "id": "P1957",
+    "label": "Wikisource index page URL",
+    "description": "URL of the page in Wikisource containing digital and paper pagination of the source",
+    "type": "Url",
+    "categories": "Wikidata property related to creative works, Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P2033",
+    "label": "category for pictures taken with this camera",
+    "description": "Commons category for photos taken with that camera",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to link to Commons, Wikidata property about Wikimedia categories, Wikidata property related to photography"
+  },
+  {
+    "id": "P2047",
+    "label": "duration",
+    "description": "length of time of an event or process",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works, orderable Wikidata property, Wikidata property for physical quantities, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P2061",
+    "label": "aspect ratio (W:H)",
+    "description": "image width to height ratio of flags, films, photographs, and other images",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property to describe media items, Wikidata property related to ratios and proportions"
+  },
+  {
+    "id": "P2078",
+    "label": "user manual URL",
+    "description": "link to the user manual of the subject (product, program)",
+    "type": "Url",
+    "categories": "Wikidata property related to software, Wikidata property related to websites"
+  },
+  {
+    "id": "P2093",
+    "label": "author name string",
+    "description": "stores unspecified author or editor name for publications; use if Wikidata item for author (P50) or editor (P98) does not exist or is not known. Do not use both.",
+    "type": "String",
+    "categories": "Wikidata property related to creative works, Wikidata property to indicate a source, Wikidata property with datatype string that is not an external identifier"
+  },
+  {
+    "id": "P2130",
+    "label": "capital cost",
+    "description": "amount of money spent on building or producing an object",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works, Wikidata property related to economics, Wikidata property for quantities"
+  },
+  {
+    "id": "P2142",
+    "label": "box office",
+    "description": "box office takings accumulated by a film",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P2208",
+    "label": "average shot length",
+    "description": "cinemetrical measure",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about films"
+  },
+  {
+    "id": "P2279",
+    "label": "ambitus",
+    "description": "musical interval/range of a melody",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to musical instruments, Wikidata property for items about musical works"
+  },
+  {
+    "id": "P2291",
+    "label": "charted in",
+    "description": "chart where the element reached a position",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P2343",
+    "label": "playing range image",
+    "description": "image showing the playing range of the instrument",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to musical instruments"
+  },
+  {
+    "id": "P2354",
+    "label": "has list",
+    "description": "Wikimedia list related to this subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property giving Wikimedia list"
+  },
+  {
+    "id": "P2360",
+    "label": "intended public",
+    "description": "intended audience or user of this work, product, object, or event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P2363",
+    "label": "NMHH film rating",
+    "description": "rating of a film in the Hungarian film rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing media content ratings, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P2377",
+    "label": "MediaWiki hooks used",
+    "description": "MediaWiki hooks used by this extension",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P2379",
+    "label": "deprecated in version",
+    "description": "software version it was deprecated in",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P2408",
+    "label": "set in period",
+    "description": "historical, contemporary, or future period, year, century or day the work or genre is set in or event featured in the story of the work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction, Wikidata property related to in-narrative data, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P2437",
+    "label": "number of seasons",
+    "description": "number of seasons a television or radio series has had",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works, Wikidata property for quantities"
+  },
+  {
+    "id": "P2438",
+    "label": "narrator",
+    "description": "narrator, character or person that tells the story",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P2507",
+    "label": "corrigendum / erratum",
+    "description": "published notice that corrects or amends a previous publication",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P2512",
+    "label": "has spin-off",
+    "description": "works that are spin-offs of this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P2515",
+    "label": "costume designer",
+    "description": "person who designed the costumes for a film, television programme, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to fashion, Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P2517",
+    "label": "category for recipients of this award",
+    "description": "link to Wikimedia category for recipients of this award",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories, Wikidata property related to awards, prizes and honours"
+  },
+  {
+    "id": "P2521",
+    "label": "female form of label",
+    "description": "female form of name or title (for male use P3321)",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to indicate a name, Wikidata property related to women and feminism, Wikidata property implying third-parties\u2019 gender"
+  },
+  {
+    "id": "P2550",
+    "label": "recording or performance of",
+    "description": "item is a recording or release of this composition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P2551",
+    "label": "used metre",
+    "description": "rhythmic structure of the poetic text or musical piece",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to poetry"
+  },
+  {
+    "id": "P2552",
+    "label": "quantitative metrical pattern",
+    "description": "description of a quantitative verse's metric",
+    "type": "String",
+    "categories": "Wikidata property related to creative works, Wikidata property with datatype string that is not an external identifier, Wikidata property related to poetry"
+  },
+  {
+    "id": "P2553",
+    "label": "in work",
+    "description": "qualifier of award received and nominated for (P1411) to specify in which creative work the awarded or nominated creative work appeared causing the nomination/award win",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, Wikidata property related to awards, prizes and honours"
+  },
+  {
+    "id": "P2554",
+    "label": "production designer",
+    "description": "person(s) responsible for overall aesthetic of the story of this motion picture, play, video game or similar; responsible for visual concept, producing interior, exterior, location, graphics, etc; deals with many and varied logistic related to this",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to theater, Wikidata property related to video games, Wikidata property related to movies and television shows"
+  },
+  {
+    "id": "P2599",
+    "label": "block size",
+    "description": "size of block for this block cipher or hash function",
+    "type": "Quantity",
+    "categories": "Wikidata property related to software, Wikidata property for quantities"
+  },
+  {
+    "id": "P2629",
+    "label": "BBFC rating",
+    "description": "British media content rating (add BBFC reference with qualifier \"P2676\")",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing media content ratings, Wikidata property representing trailer, commercial and advertisement content ratings, Wikidata property representing television series episode content ratings, Wikidata property related to classification schemes, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P2634",
+    "label": "model",
+    "description": "person who appears in an artwork or photograph, in the role of an artist's model, rather than subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to photography, Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P2635",
+    "label": "number of parts of this work",
+    "description": "the number of parts that a work comprises",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works, Wikidata property for quantities"
+  },
+  {
+    "id": "P2637",
+    "label": "RARS rating",
+    "description": "rating in the Russian media content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing media content ratings, Wikidata property representing mobile app and software content ratings, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property representing television content ratings, Wikidata property representing literary content ratings"
+  },
+  {
+    "id": "P2667",
+    "label": "corresponding template",
+    "description": "the one-value-template that has the same meaning as this property",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for properties, Wikidata property about Wikimedia templates"
+  },
+  {
+    "id": "P2675",
+    "label": "reply to",
+    "description": "the intellectual work to which the subsequent work is a direct reply",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P2677",
+    "label": "relative position within image",
+    "description": "position of a motif within a larger image, defined by x-offset (from left), y-offset (down from top), width w, and height h of the crop region (as a percentage of the whole image) values",
+    "type": "String",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, Wikidata property with datatype string that is not an external identifier, Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata property related to art"
+  },
+  {
+    "id": "P2681",
+    "label": "is recto of",
+    "description": "the two-dimensional artwork that is on the back (verso) side of this artwork",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art"
+  },
+  {
+    "id": "P2682",
+    "label": "is verso of",
+    "description": "the two-dimensional artwork that is on the front (recto) side of this artwork",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art"
+  },
+  {
+    "id": "P2684",
+    "label": "Kijkwijzer rating",
+    "description": "Dutch media content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing cinema content ratings, Wikidata property representing television content ratings, Wikidata property for items about films, Wikidata property representing home video content ratings, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P272",
+    "label": "production company",
+    "description": "company that produced this film, audio or performing arts work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P2739",
+    "label": "typeface/font used",
+    "description": "style of type used in a work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to typefaces and typography"
+  },
+  {
+    "id": "P2747",
+    "label": "Filmiroda rating",
+    "description": "rating of a film in the former (2004\u20132011) Hungarian film rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing cinema content ratings, Wikidata property related to classification schemes, Wikidata property for items about films, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P275",
+    "label": "copyright license",
+    "description": "license under which this copyrighted work is released",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property to describe media items, Wikidata property related to copyright"
+  },
+  {
+    "id": "P2754",
+    "label": "production date",
+    "description": "period of active production of (creative) work; the only date stated should refer to end of production; production starts after pre-production (planning) and is followed by publication date (P577); in general cases, use inception (P571)",
+    "type": "Time",
+    "categories": "Wikidata property to indicate a source, Wikidata property related to creative works"
+  },
+  {
+    "id": "P2756",
+    "label": "EIRIN film rating",
+    "description": "category in the Japanese film rating system (add EIRIN number with qualifier P2676)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing cinema content ratings, Wikidata property for items about films, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P2758",
+    "label": "CNC film rating (France)",
+    "description": "category assigned to a film by the Board of Film Classification (CNC) which what audiences may view it in France",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing cinema content ratings, Wikidata property related to classification schemes, Wikidata property for items about films, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P277",
+    "label": "programmed in",
+    "description": "the programming language(s) in which the software is developed",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P2860",
+    "label": "cites work",
+    "description": "citation from one creative or scholarly work to another",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P287",
+    "label": "designed by",
+    "description": "person or organization which designed the object. For buildings use \"architect\" (Property:P84)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P2913",
+    "label": "date depicted",
+    "description": "date represented in a work (for narrative works use P2408)",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to creative works, Wikidata property related to time and duration, Wikidata property to describe media items"
+  },
+  {
+    "id": "P2992",
+    "label": "software quality assurance",
+    "description": "quality assurance process in place for a particular software",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P301",
+    "label": "category's main topic",
+    "description": "primary topic of the subject Wikimedia category",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P3030",
+    "label": "sheet music",
+    "description": "media file containing the musical score (sheet music) for this item",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property for items about musical works"
+  },
+  {
+    "id": "P3033",
+    "label": "package management system",
+    "description": "package management system used to publish the software",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P306",
+    "label": "operating system",
+    "description": "operating system (OS) on which a software works or the OS installed on hardware",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P3080",
+    "label": "game artist",
+    "description": "game artist(s) that produced art assets for role-playing games, collectible card games, video game, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P3092",
+    "label": "film crew member",
+    "description": "member of the crew creating an audiovisual work, used for miscellaneous roles qualified with the job title when no specific property exists. Don't use if such a property is available: notably for cast member (P161), director (P57), etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to movies and television shows, Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P3132",
+    "label": "last line",
+    "description": "last line (excipit) of a poem, last sentence of a novel, etc.",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P3156",
+    "label": "Australian Classification",
+    "description": "content rating of an audiovisual work or video game in the Australian Classification system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property representing television content ratings, Wikidata property representing literary content ratings, Wikidata property representing trailer, commercial and advertisement content ratings, Wikidata property representing mobile app and software content ratings, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P3174",
+    "label": "art director",
+    "description": "person credited as the art director/artistic director of this work; manages the process of making the visuals, which is done by concept artists, graphic designers, set designers, costume designers, lighting designers; See also P8938 for organizations",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P3216",
+    "label": "ClassInd rating",
+    "description": "rating of an audiovisual work, video game or RPG in the Brazilian Advisory Rating System (ClassInd)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property representing television content ratings, Wikidata property representing mobile app and software content ratings, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P3275",
+    "label": "storyboard artist",
+    "description": "person credited as the storyboard artist of this work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P3300",
+    "label": "musical conductor",
+    "description": "the person who directs a musical group, orchestra or chorus",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to music"
+  },
+  {
+    "id": "P3306",
+    "label": "ICAA rating",
+    "description": "rating in the Spanish motion picture content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing cinema content ratings, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P3321",
+    "label": "male form of label",
+    "description": "male form of name or title (for female use P2521)",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to indicate a name, Wikidata property implying third-parties\u2019 gender"
+  },
+  {
+    "id": "P3374",
+    "label": "endianness",
+    "description": "order of the bytes that compose a digital word in computer memory",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P3383",
+    "label": "film poster",
+    "description": "poster used to promote and advertise this film (if file is available on Commons). Use P154 for logos, P18 for movie stills and related images. Items about film posters can be linked with the qualifier \"subject of\" (P805).",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property for items about films, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P3402",
+    "label": "CNC film rating (Romania)",
+    "description": "rating of a movie in the Romanian content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing cinema content ratings, Wikidata property related to classification schemes, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P3428",
+    "label": "INCAA film rating",
+    "description": "rating of a movie in the Argentinian content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P344",
+    "label": "director of photography",
+    "description": "person responsible for the framing, lighting, and filtration of the subject work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property related to photography"
+  },
+  {
+    "id": "P3440",
+    "label": "time signature",
+    "description": "specification of beats in a musical bar or measure",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P348",
+    "label": "software version identifier",
+    "description": "numeric or nominal identifier of a version of a software program or file format, current or past",
+    "type": "String",
+    "categories": "Wikidata property related to software, Wikidata property with datatype string that is not an external identifier"
+  },
+  {
+    "id": "P3559",
+    "label": "maximum size or capacity",
+    "description": "maximum allowed/supported/usable (data) size",
+    "type": "Quantity",
+    "categories": "Wikidata property related to software, Wikidata property for items about computer hardware"
+  },
+  {
+    "id": "P3575",
+    "label": "data size",
+    "description": "size of a software, dataset, neural network, or individual file",
+    "type": "Quantity",
+    "categories": "Wikidata property related to software, Wikidata property for quantities"
+  },
+  {
+    "id": "P360",
+    "label": "is a list of",
+    "description": "common element between all listed items",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property giving Wikimedia list, Wikidata property using many other properties as qualifiers"
+  },
+  {
+    "id": "P364",
+    "label": "original language of film or TV show",
+    "description": "language in which a film or a performance work was originally created. Deprecated for written works and songs; use P407 (\"language of work or name\") instead.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a language, Wikidata property for items about films, partially deprecated Wikidata property, Wikidata property related to television programs"
+  },
+  {
+    "id": "P3650",
+    "label": "JMK film rating",
+    "description": "rating of a film in the Austrian film rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing media content ratings, Wikidata property related to classification schemes, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P368",
+    "label": "Sandbox-CommonsMediaFile",
+    "description": "Sandbox property for value of type \"Commons Media File\"",
+    "type": "CommonsMedia",
+    "categories": "Wikidata sandbox property, Wikidata property to describe media items"
+  },
+  {
+    "id": "P3701",
+    "label": "incarnation of",
+    "description": "incarnation of another religious or supernatural being",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to religions and beliefs, Wikidata property related to art"
+  },
+  {
+    "id": "P371",
+    "label": "presenter",
+    "description": "main role in presenting a radio or television program or a performing arts show",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to radio, Wikidata property to identify contributors to creative works, Wikidata property to identify contributors to audiovisual works, Wikidata property related to movies and television shows"
+  },
+  {
+    "id": "P3803",
+    "label": "original film format",
+    "description": "film format (gauge/size) used to create a work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films"
+  },
+  {
+    "id": "P3816",
+    "label": "film script",
+    "description": "script version for subject film is described at",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films"
+  },
+  {
+    "id": "P3818",
+    "label": "KMRB film rating",
+    "description": "rating of a film in the South Korean film/video rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing cinema content ratings, Wikidata property related to classification schemes, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P3828",
+    "label": "wears",
+    "description": "clothing or accessory worn on subject's body",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata property related to fashion, Wikidata property related to art"
+  },
+  {
+    "id": "P3834",
+    "label": "RTC film rating",
+    "description": "rating of a film in the Mexican film classification system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing cinema content ratings, Wikidata property representing television content ratings, Wikidata property related to classification schemes, Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P3876",
+    "label": "category for alumni of educational institution",
+    "description": "category containing people who studied at this institution",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property about Wikimedia categories, Wikidata property related to education"
+  },
+  {
+    "id": "P3912",
+    "label": "newspaper format",
+    "description": "physical size of a newspaper (berliner, broadsheet, tabloid, etc.)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P3921",
+    "label": "Wikidata SPARQL query equivalent",
+    "description": "SPARQL code that returns a set of entities that correspond with this category or list. Include ?item",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P393",
+    "label": "edition number",
+    "description": "number of an edition (first, second, ... as 1, 2, ...) or event",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to events, Wikidata property for items about books"
+  },
+  {
+    "id": "P3966",
+    "label": "programming paradigm",
+    "description": "programming paradigm in which a programming language is classified",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P3985",
+    "label": "supports programming language",
+    "description": "programming language which is supported by this programming tool",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P400",
+    "label": "platform",
+    "description": "platform for which a work was developed or released, or the specific platform version of a software product",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P4032",
+    "label": "reviewed by",
+    "description": "person who reviewed/refereed the work, e.g., scientific peer-reviewer",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P404",
+    "label": "game mode",
+    "description": "video game's available playing mode(s)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to video games"
+  },
+  {
+    "id": "P4043",
+    "label": "emulates",
+    "description": "emulates the identified platform, CPU, or system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P406",
+    "label": "soundtrack release",
+    "description": "music release that incorporates music directly recorded from the soundtrack of an audiovisual work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P407",
+    "label": "language of work or name",
+    "description": "language associated with this creative work (such as books, shows, songs, broadcasts or websites) or a name (for persons use \"native language\" (P103) and \"languages spoken, written or signed\" (P1412))",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a source, Wikidata property to indicate a language, Wikidata property related to creative works, Wikidata property used as \"depicts\" (P180) qualifier on Commons, restrictive or non-restrictive qualifier"
+  },
+  {
+    "id": "P408",
+    "label": "software engine",
+    "description": "software engine employed by the subject item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P4082",
+    "label": "captured with",
+    "description": "equipment (e.g. model of camera, lens, microphone), used to capture this image, video, audio, or data",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P415",
+    "label": "radio format",
+    "description": "describes the overall content broadcast on a radio station",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to radio"
+  },
+  {
+    "id": "P4151",
+    "label": "game mechanics",
+    "description": "constructs of rules or methods designed for interaction with the game state",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to games and leisure activities, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P4195",
+    "label": "category for employees of the organization",
+    "description": "Wikimedia category for people who work or worked at this organization",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P4224",
+    "label": "category contains",
+    "description": "category contains elements that are instances of this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories, Wikidata property using many other properties as qualifiers"
+  },
+  {
+    "id": "P4290",
+    "label": "official app",
+    "description": "official app for this organization or other entity (a downloadable application for Android, iOS, etc.)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to software"
+  },
+  {
+    "id": "P4312",
+    "label": "camera setup",
+    "description": "filmmaking method that the cameras were placed by. Use single-camera (Q2918907) or multiple-camera (Q738160)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property related to television"
+  },
+  {
+    "id": "P4316",
+    "label": "kinship equivalent in SPARQL at Wikidata",
+    "description": "part of a SPARQL query that lists this type of ?relative of a ?person. Use with relationship properties (except \"relative\" (P1038)). See instructions for applicable format",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P4329",
+    "label": "category populated by",
+    "description": "software component (template, module, extension, MediaWiki core) populating the category",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P433",
+    "label": "issue",
+    "description": "issue of a newspaper, a scientific journal or magazine for reference purpose",
+    "type": "String",
+    "categories": "Wikidata property to indicate a source, Wikidata property with datatype string that is not an external identifier, Wikidata property related to creative works, restrictive qualifier"
+  },
+  {
+    "id": "P437",
+    "label": "distribution format",
+    "description": "method (or type) of distribution for the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, restrictive qualifier"
+  },
+  {
+    "id": "P4387",
+    "label": "update method",
+    "description": "method used by an app/OS to receive updates or self-update",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P4428",
+    "label": "implementation of",
+    "description": "implementation of a standard, program, specification or programming language",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P4437",
+    "label": "FPB rating",
+    "description": "rating of a film or video game in the South African media content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing media content ratings, Wikidata property related to classification schemes, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P444",
+    "label": "review score",
+    "description": "review score received by a creative work or other entity",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to creative works"
+  },
+  {
+    "id": "P447",
+    "label": "review score by",
+    "description": "issuer of a review score",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works"
+  },
+  {
+    "id": "P449",
+    "label": "original broadcaster",
+    "description": "network(s) or service(s) that originally broadcast a radio or television program",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to radio"
+  },
+  {
+    "id": "P4510",
+    "label": "describes a project that uses",
+    "description": "essential component or tool that was used in this project",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P453",
+    "label": "character role",
+    "description": "specific role played or filled by subject -- use only as qualifier of \"cast member\" (P161), \"voice actor\" (P725)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P4575",
+    "label": "HTML entity",
+    "description": "escaping sequence in the source code of an HTML document that represents a textual character, either in the content of a text element or a tagged comment, or in the given value of an attribute",
+    "type": "String",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P4608",
+    "label": "scenographer",
+    "description": "person who designed the stage or film set of this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to theater, Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P4633",
+    "label": "name of the character role",
+    "description": "name by which a character role is recorded in a database or mentioned in the context of a work, use as qualifier for cast; notably a specific performance of a theatrical production of a play",
+    "type": "String",
+    "categories": "Wikidata qualifier, Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P4646",
+    "label": "representation of",
+    "description": "performing arts production the item is a representation of",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P4653",
+    "label": "partition table type",
+    "description": "qualifier for \"partition identifier\" that determines what type of partition table is used with the identifier",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software, Wikidata property for items about computer hardware"
+  },
+  {
+    "id": "P4654",
+    "label": "partition type identifier",
+    "description": "string that contains the identifier of a partition type specified in a partition table",
+    "type": "String",
+    "categories": "Wikidata property related to software, Wikidata property for items about computer hardware"
+  },
+  {
+    "id": "P4656",
+    "label": "Wikimedia import URL",
+    "description": "URL of source to indicate the page or revision of an import source from another Wikimedia project (except actual references, such as Wikisource source texts). Use instead of \"reference URL\" (P854). Permalinks are preferred.",
+    "type": "Url",
+    "categories": "Wikidata property to indicate a source, Wikidata property to link to Commons, Wikidata property about Wikimedia entities, Wikidata property that suggests a reference is weak"
+  },
+  {
+    "id": "P4669",
+    "label": "tabular software version",
+    "description": "historical list of software versions and their release dates. alternative to P348",
+    "type": "TabularData",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to software"
+  },
+  {
+    "id": "P4714",
+    "label": "title page number",
+    "description": "qualifier to indicate the number of the page of a document in which the title page is located. Don't use for the actual cover page.",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property to describe media items"
+  },
+  {
+    "id": "P4742",
+    "label": "Uniform Resource Identifier Scheme",
+    "description": "IANA-assigned uniform resource identifier scheme which identifies items within this class or set",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P4745",
+    "label": "is proceedings from",
+    "description": "this work contains articles presented at the given event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P4765",
+    "label": "Commons compatible image available at URL",
+    "description": "image with Commons compatible copyright status is available at the following URL. It could be uploaded to Commons to illustrate the item",
+    "type": "Url",
+    "categories": "Wikidata property related to art"
+  },
+  {
+    "id": "P479",
+    "label": "input device",
+    "description": "input device used to interact with a software or a device",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P4805",
+    "label": "make-up artist",
+    "description": "person in charge of make-up",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P4809",
+    "label": "sets environment variable",
+    "description": "an environment variable which a software program sets",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P4810",
+    "label": "reads environment variable",
+    "description": "an environment variable which a software program reads and may be effected by",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P4837",
+    "label": "has command line option",
+    "description": "an option which is accepted by the software from the command line",
+    "type": "String",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P485",
+    "label": "archives at",
+    "description": "the institution holding the subject's archives",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a source, Wikidata property for participating organizations, Wikidata property related to archives"
+  },
+  {
+    "id": "P4878",
+    "label": "symbolizes",
+    "description": "symbolism of an artistic element; can also be used as a qualifier for \"depicts\" (P180) statements",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works"
+  },
+  {
+    "id": "P4908",
+    "label": "season",
+    "description": "season of a series (television, web, podcast)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P4945",
+    "label": "download URL",
+    "description": "URL which can be used to download a work",
+    "type": "Url",
+    "categories": "Wikidata property related to software, Wikidata property related to websites"
+  },
+  {
+    "id": "P495",
+    "label": "country of origin",
+    "description": "country of origin of this item (creative work, food, phrase, product, etc.)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P4969",
+    "label": "derivative work",
+    "description": "new work of art (film, book, software, etc.) derived from major part of this work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P4998",
+    "label": "key press",
+    "description": "keyboard shortcut sequence. See property talk page for applicable syntax",
+    "type": "String",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P50",
+    "label": "author",
+    "description": "main creator(s) of a written work (use on works, not humans); use P2093 (author name string) when Wikidata item is unknown or does not exist",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a source, Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P5024",
+    "label": "choral conductor",
+    "description": "musical conductor of a choir",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P5026",
+    "label": "lighting designer",
+    "description": "person responsible for lighting on a stage",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P5059",
+    "label": "modified version of",
+    "description": "indicates the work or one of its versions which served as a basis for the adaptation or arrangement resulting in the given version of the work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property for items about musical works"
+  },
+  {
+    "id": "P5070",
+    "label": "French standard size for oil paintings",
+    "description": "standard for sizes of canvases for use by artists",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to art"
+  },
+  {
+    "id": "P5125",
+    "label": "Wikimedia outline",
+    "description": "item about an outline of the topic at Wikimedia sites",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P5126",
+    "label": "assistant director",
+    "description": "assistant stage director of a performing arts, film or television production",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P5150",
+    "label": "IGAC rating",
+    "description": "rating of a film or theatrical production in the Portuguese classification system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P5152",
+    "label": "KAVI rating",
+    "description": "rating in the Finnish film and television rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property representing television content ratings"
+  },
+  {
+    "id": "P5178",
+    "label": "glossary entry at Wikipedia URL",
+    "description": "description of a concept in a glossary at Wikipedia. Use sitelinks for Wikipedia articles. Format: use full URL including anchor (#)",
+    "type": "Url",
+    "categories": "Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P5196",
+    "label": "output device",
+    "description": "output device used to interact with a software, video game console or video card",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P5201",
+    "label": "IMDA rating",
+    "description": "rating in the Singaporean film and video game rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P548",
+    "label": "version type",
+    "description": "type of version (qualifier for P348, software version), e.g. alpha, beta, stable",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to software"
+  },
+  {
+    "id": "P5524",
+    "label": "horizontal depth",
+    "description": "spatial extent for 3D object along the third axis, what is most commonly referred to as its depth. Compare with \"vertical depth\" (P4511)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to engineering, Wikidata property related to physics, Wikidata property for quantities, Wikidata property related to art"
+  },
+  {
+    "id": "P57",
+    "label": "director",
+    "description": "director(s) of film, TV-series, stageplay, video game or similar",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P5707",
+    "label": "samples from work",
+    "description": "audio or video which this work uses a raw excerpt of",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P577",
+    "label": "publication date",
+    "description": "date or point in time when a work or product was first published or released",
+    "type": "Time",
+    "categories": "Wikidata property to indicate a source, Wikidata property with datatype 'time', Wikidata property related to creative works, non-restrictive qualifier"
+  },
+  {
+    "id": "P58",
+    "label": "screenwriter",
+    "description": "person(s) who wrote the script for subject item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P5800",
+    "label": "narrative role",
+    "description": "narrative role of this character (should be used as a qualifier with P674 or restricted to a certain work using P10663)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P5880",
+    "label": "video designer",
+    "description": "person responsible for the creation and integration of film and motion graphics on a stage",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P5881",
+    "label": "projection designer",
+    "description": "person responsible for producing all moving and still images that are displayed during a live performance",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P5933",
+    "label": "X post ID",
+    "description": "identifier of a status on X/Twitter",
+    "type": "ExternalId",
+    "categories": "Wikidata property to identify social media posts"
+  },
+  {
+    "id": "P5940",
+    "label": "plot expanded in",
+    "description": "a narrative of this creative work is expanded in another work while '''not necessarily''' being part of the same series. For series use P179 instead",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P5961",
+    "label": "depicted part",
+    "description": "use as qualifier for \"depicts\" (P180)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P5970",
+    "label": "Medier\u00e5det rating",
+    "description": "rating of a film in the Danish movie content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing media content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P5996",
+    "label": "category for films in this language",
+    "description": "link to category entity contains films in this language",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P6022",
+    "label": "expression, gesture or body pose",
+    "description": "qualifier on \"depicts\" (P180) for position of a figure in an artwork",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, Wikidata property to describe media items, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P6086",
+    "label": "dramaturge",
+    "description": "person responsible for dramaturgical aspects in a performing arts production",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P6108",
+    "label": "IIIF manifest URL",
+    "description": "JSON-LD formatted document URL reference described by the IIIF Presentation API",
+    "type": "Url",
+    "categories": "Wikidata property, Wikidata property related to art"
+  },
+  {
+    "id": "P6116",
+    "label": "chord progression",
+    "description": "series of chords used in this musical work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P6166",
+    "label": "quotes work",
+    "description": "other creative work which this work quotes from textually, verbally or lyrically",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P6186",
+    "label": "category for eponymous categories",
+    "description": "Wikimedia category that contains subcategories dedicated to specific instances of the said item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P6243",
+    "label": "digital representation of",
+    "description": "faithful digitized representation of the indicated object or work. For use on Commons MediaInfo entities.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P629",
+    "label": "edition or translation of",
+    "description": "is an edition or translation of this entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property for the relationship of the element to its class"
+  },
+  {
+    "id": "P6333",
+    "label": "title of broader work",
+    "description": "title of website, journal or other work in which an article (or publication of other type) is published in. Use \"published in\" (P1433) instead if possible",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to indicate a source, Wikidata property related to creative works"
+  },
+  {
+    "id": "P6365",
+    "label": "member category",
+    "description": "category item for members of the organization",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata qualifier, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P6379",
+    "label": "has works in the collection",
+    "description": "collection that has works of this person or organisation (use archives at [P485] for archives)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to art, Wikidata property related to museums"
+  },
+  {
+    "id": "P6437",
+    "label": "day of regular release",
+    "description": "day(s) when parts of this creative work are released, aired, published, etc",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P6439",
+    "label": "has lyrics",
+    "description": "work whose text is used as the lyrics of this work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P6452",
+    "label": "CBFC rating",
+    "description": "rating in the Indian film rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P6500",
+    "label": "non-free artwork image URL",
+    "description": "URL for image of copyrighted artwork on official collection or artist website",
+    "type": "Url",
+    "categories": "Wikidata property for linking to a representative image, Wikidata property related to art"
+  },
+  {
+    "id": "P6524",
+    "label": "expression of",
+    "description": "realization of a work through words, sound, image etc. in the FRBR model",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P655",
+    "label": "translator",
+    "description": "agent who adapts any kind of written text from one language to another",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P6568",
+    "label": "inscription mentions",
+    "description": "item about a person or an object mentioned in the inscription's text. Use on Wikimedia Commons on media files",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property, Wikidata property to describe media items, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P658",
+    "label": "tracklist",
+    "description": "audio tracks contained in this release",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P6592",
+    "label": "OpenStreetMap zoom level",
+    "description": "raster zoom level (or vector zoom +1) that would be requested for a 512\u00d7512-pixel OSM map that could contain the boundaries of this item",
+    "type": "String",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P6606",
+    "label": "study or design for",
+    "description": "finished work of art for which the subject is a preliminary study, design, or conceptual drawing",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to art"
+  },
+  {
+    "id": "P6657",
+    "label": "CHVRS Classification",
+    "description": "Canadian movie classification",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing media content ratings, Wikidata property representing home video content ratings, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P6658",
+    "label": "RCQ classification",
+    "description": "movie classification for the R\u00e9gie du Cin\u00e9ma Qu\u00e9b\u00e9cois",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about films, Wikidata property representing media content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P6670",
+    "label": "musical quotation or excerpt",
+    "description": "quotation or excerpt from this musical work, in LilyPond syntax",
+    "type": "MusicalNotation",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P6686",
+    "label": "musical motif",
+    "description": "short recurring melodic or rhythmic musical phrase in this musical work, in LilyPond syntax",
+    "type": "MusicalNotation",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P6695",
+    "label": "number of sentences",
+    "description": "number of sentences in this text",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P6711",
+    "label": "data transfer speed",
+    "description": "transfer speed through a bus or a communication medium",
+    "type": "Quantity",
+    "categories": "Wikidata property, Wikidata property related to software, Wikidata property for items about computer hardware"
+  },
+  {
+    "id": "P6718",
+    "label": "music video",
+    "description": "short film integrating this composition with imagery",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P6731",
+    "label": "Commons quality assessment",
+    "description": "assessment on Wikimedia Commons of the file: featured picture, valued image, quality images, picture of the day, picture of the year etc. Use on media entities only",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P674",
+    "label": "characters",
+    "description": "characters which appear in this item (like plays, operas, operettas, books, comics, films, TV series, video games)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P676",
+    "label": "lyricist",
+    "description": "author of song lyrics",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P6833",
+    "label": "title in HTML",
+    "description": "(qualifier) for title property (P1476), to write title with HTML markup, if the string can't render it normally. Allowed tags are: sup, sub, i",
+    "type": "Monolingualtext",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, non-restrictive qualifier, Wikidata property related to websites"
+  },
+  {
+    "id": "P6835",
+    "label": "title in LaTeX",
+    "description": "(qualifier) for title property (P1476), to write title in LaTeX/math notation, if the string can't render it normally. Enclose normal text with \"\\text{\" and \"}\"",
+    "type": "Math",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, non-restrictive qualifier"
+  },
+  {
+    "id": "P6875",
+    "label": "motif represents",
+    "description": "object or concept from which this motif is derived, or which it represents",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property to describe the elements of identity"
+  },
+  {
+    "id": "P6883",
+    "label": "LilyPond notation",
+    "description": "musical notation in LilyPond syntax",
+    "type": "MusicalNotation",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P6948",
+    "label": "video system",
+    "description": "video system hardware that the item uses",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P6949",
+    "label": "announcement date",
+    "description": "time of the first public presentation of a subject by the creator, of information by the media",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to creative works"
+  },
+  {
+    "id": "P6962",
+    "label": "narrative motif",
+    "description": "thematic unit in a narrative or literary work used to develop a theme, mood or plot",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P7008",
+    "label": "unabbreviated text",
+    "description": "(qualifier) text in inscription with the abbreviations expanded in a fairly reliable way",
+    "type": "Monolingualtext",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, non-restrictive qualifier"
+  },
+  {
+    "id": "P7009",
+    "label": "extracted from",
+    "description": "source this image was cropped from. Use on Wikimedia Commons only.",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P7010",
+    "label": "imprimatur granted by",
+    "description": "person or organization authorizing publication of the book",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P7075",
+    "label": "mod of",
+    "description": "video game this mod is based on",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to video games"
+  },
+  {
+    "id": "P7084",
+    "label": "related category",
+    "description": "Wikimedia category is related to this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P7137",
+    "label": "acknowledged",
+    "description": "persons or institutions acknowledged on a creative work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to works or products"
+  },
+  {
+    "id": "P7150",
+    "label": "epigraph",
+    "description": "short quotation introducing a literary work",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P7228",
+    "label": "access restriction status",
+    "description": "status of any access restrictions on the object, collection, or materials. Indicates whether the material is available to the general public or not",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to archives"
+  },
+  {
+    "id": "P725",
+    "label": "voice actor",
+    "description": "performer of a spoken role in a creative work such as animation, video game, radio drama, or dubbing over [use \"character role\" (P453) as qualifier] [use \"cast member\" (P161) for live acting]",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to audiovisual works"
+  },
+  {
+    "id": "P7327",
+    "label": "OFLC classification",
+    "description": "rating in the media content rating system of New Zealand",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property representing literary content ratings, Wikidata property representing trailer, commercial and advertisement content ratings, Wikidata property representing music content ratings, Wikidata property representing television series episode content ratings, Wikidata property representing video game content ratings, Wikidata property representing media content ratings, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P7367",
+    "label": "content descriptor",
+    "description": "content descriptors for this video game, film, television show, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to movies and television shows, Wikidata property related to video games"
+  },
+  {
+    "id": "P7380",
+    "label": "identified in image by",
+    "description": "qualifier for the identification of a value/object with a number, letter or sign inscribed in the image",
+    "type": "String",
+    "categories": "Wikidata qualifier, Wikidata property to describe media items, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P7417",
+    "label": "image of back side",
+    "description": "image of the reverse side of this \"2D\" object",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P7418",
+    "label": "image of front side",
+    "description": "image of obverse (front side) of this 2D object",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P7419",
+    "label": "gender educated",
+    "description": "genders educated at this educational institution",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to education, Wikidata property stating third-parties\u2019 gender"
+  },
+  {
+    "id": "P7457",
+    "label": "creator's signature",
+    "description": "image of the artist's mark on the work that identifies their work",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to creative works"
+  },
+  {
+    "id": "P747",
+    "label": "has edition or translation",
+    "description": "item that is an edition or translation of this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P7482",
+    "label": "source of file",
+    "description": "broad nature of the origin of the file",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property, Wikidata property to describe media items"
+  },
+  {
+    "id": "P750",
+    "label": "distributed by",
+    "description": "distributor of a creative work; distributor for a record label; news agency; film distributor",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to creative works"
+  },
+  {
+    "id": "P751",
+    "label": "introduced feature",
+    "description": "feature introduced by this version of a product item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P7514",
+    "label": "landscape architect",
+    "description": "person or architectural firm that designed this outdoor area, possibly including landmarks and structures",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to architecture, Wikidata property to identify contributors to works or products"
+  },
+  {
+    "id": "P756",
+    "label": "removed feature",
+    "description": "which feature was removed by this version of a product item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P7569",
+    "label": "Wikimedia page-version URL",
+    "description": "(qualifier) URL of revision of Wikipedia article or other page on a WMF site being used, site specific URL to a page version ID (oldid parameter). Sample: nlwiki URL starts with https://nl.wikipedia.org/w/index.php?oldid=",
+    "type": "Url",
+    "categories": "Wikidata qualifier, Wikidata property about Wikimedia entities"
+  },
+  {
+    "id": "P7573",
+    "label": "IFCO rating",
+    "description": "rating certificate of a film in the Irish content classification system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property related to classification schemes, Wikidata property representing video game content ratings, Wikidata property representing home video content ratings, Wikidata property representing cinema content ratings, Wikidata property representing television content ratings"
+  },
+  {
+    "id": "P7598",
+    "label": "ascending scale",
+    "description": "sequence of notes starting from a tonic in one octave and ending with the tonic one octave above",
+    "type": "MusicalNotation",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P7599",
+    "label": "descending scale",
+    "description": "sequence of notes starting from a tonic in one octave and ending with the tonic one octave below",
+    "type": "MusicalNotation",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P7600",
+    "label": "primary note",
+    "description": "most prominent note in a raga",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P7601",
+    "label": "secondary note",
+    "description": "second-most prominent note in a raga; usually a fifth from the primary note, although there are exceptions",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P767",
+    "label": "contributor to the creative work or subject",
+    "description": "person or organization that contributed to a subject: co-creator of a creative work or subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P770",
+    "label": "cause of destruction",
+    "description": "item which caused the destruction of the subject item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to structures, Wikidata property for causes and effects"
+  },
+  {
+    "id": "P7787",
+    "label": "heading",
+    "description": "direction of an object or structure (eg. building) or direction (yaw) of a camera (or the viewer), measured as clockwise angle from the North, given in degrees, radians or other units",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to mathematics, Wikidata property related to photography, Wikidata property to describe media items"
+  },
+  {
+    "id": "P7861",
+    "label": "category for files created with program",
+    "description": "Commons category for files created with that program",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to link to Commons, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P7867",
+    "label": "category for maps or plans",
+    "description": "name of the Wikimedia category specifically for maps or plans of this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to link to Commons, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P7887",
+    "label": "number of reviews/ratings",
+    "description": "qualifier on review score to state the number of user reviews, user ratings or critic reviews",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to media reviews and content ratings"
+  },
+  {
+    "id": "P7937",
+    "label": "form of creative work",
+    "description": "structure of a creative work",
+    "type": "WikibaseItem",
+    "categories": "shape, Wikidata property related to creative works"
+  },
+  {
+    "id": "P7984",
+    "label": "depicted format",
+    "description": "property to help describe the format type of depicted subject, commonly confused with genre",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art"
+  },
+  {
+    "id": "P8058",
+    "label": "symbol of",
+    "description": "item of which the image is a symbol",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P8208",
+    "label": "tilt",
+    "description": "direction of the camera, measured as an angle from the Nadir to the Zenit",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to photography, Wikidata property to describe media items"
+  },
+  {
+    "id": "P825",
+    "label": "dedicated to",
+    "description": "person or organization to whom the subject was dedicated",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to awards, prizes and honours"
+  },
+  {
+    "id": "P826",
+    "label": "tonality",
+    "description": "key of a musical composition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P8264",
+    "label": "attribution text",
+    "description": "the attribution string as specified by the licensor, that re-users are obliged to name",
+    "type": "String",
+    "categories": "Wikidata property to describe media items, Wikidata property related to copyright"
+  },
+  {
+    "id": "P8276",
+    "label": "region within image",
+    "description": "qualifier to identify a polygon within an image that the main statement applies to",
+    "type": "String",
+    "categories": "Wikidata qualifier, Wikidata property to describe media items"
+  },
+  {
+    "id": "P8306",
+    "label": "has grouping",
+    "description": "section or grouping used in the appendix, list or table",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P8307",
+    "label": "has sorting",
+    "description": "entries are sorted by this in the appendix, list or table",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P8308",
+    "label": "has column",
+    "description": "columns for entries in the appendix, list or table",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P8330",
+    "label": "file page offset",
+    "description": "offset between page numbering of the file (pdf/djvu) and the main numbering used in the reproduced work. Sample: if the book has page number 2 and that is on page 30 of the pdf: offset is 28 (30-2)",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property to describe media items, Wikidata property for items about books"
+  },
+  {
+    "id": "P8331",
+    "label": "strike tone",
+    "description": "dominant note of bell",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P8345",
+    "label": "media franchise",
+    "description": "this creative work belongs to this media franchise",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P8359",
+    "label": "Dewey Decimal Classification (works and editions)",
+    "description": "DDC number assigned to a publication",
+    "type": "String",
+    "categories": "Wikidata property related to a library classification (single works)"
+  },
+  {
+    "id": "P8360",
+    "label": "Library of Congress Classification (works and editions)",
+    "description": "Library of Congress Classification number assigned to a publication; includes both the subject portion and the shelflisting portion of a number",
+    "type": "String",
+    "categories": "Wikidata property related to a library classification (single works)"
+  },
+  {
+    "id": "P8361",
+    "label": "Universal Decimal Classification (works and editions)",
+    "description": "UDC number of the topic of this publication",
+    "type": "String",
+    "categories": "Wikidata property related to a library classification (single works)"
+  },
+  {
+    "id": "P8362",
+    "label": "Regensburg Classification (works and editions)",
+    "description": "RVK number assigned to a publication",
+    "type": "String",
+    "categories": "Wikidata property related to a library classification (single works)"
+  },
+  {
+    "id": "P8371",
+    "label": "references work, tradition or theory",
+    "description": "creative work, tradition or theory this creative work references by allusion, quote or similar means (for citations in scholarly and legal works use P2860, for other more specific properties have a look at \"see also\" on the property page)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P84",
+    "label": "architect",
+    "description": "person or architectural firm responsible for designing this building",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to architecture, Wikidata property to identify contributors to works or products"
+  },
+  {
+    "id": "P8423",
+    "label": "version control system",
+    "description": "version control system used by a content repository",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P8464",
+    "label": "content partnership category",
+    "description": "Wikimedia Commons category for media files contributed by this institution",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to link to Commons, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P85",
+    "label": "anthem",
+    "description": "subject's official anthem",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property for items about musical works"
+  },
+  {
+    "id": "P852",
+    "label": "ESRB rating",
+    "description": "North American video game content rating",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings, Wikidata property related to North America"
+  },
+  {
+    "id": "P853",
+    "label": "CERO rating",
+    "description": "Japanese video game rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings"
+  },
+  {
+    "id": "P8535",
+    "label": "tala",
+    "description": "musical meter for Indian music",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P8536",
+    "label": "raga",
+    "description": "melodic framework for Indian music",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P8570",
+    "label": "front and back matter",
+    "description": "front and back matter of a book",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property to describe media items"
+  },
+  {
+    "id": "P86",
+    "label": "composer",
+    "description": "person(s) who wrote the music [for lyricist, use \"lyrics by\" (P676)]",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P8646",
+    "label": "expansion of",
+    "description": "expansion pack of a game (video game, tabletop or board game)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to games and leisure activities, Wikidata property related to video games"
+  },
+  {
+    "id": "P8652",
+    "label": "Netflix maturity rating",
+    "description": "content rating used and determined by Netflix in countries where local ratings do not apply to streaming media",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings"
+  },
+  {
+    "id": "P8670",
+    "label": "character designer",
+    "description": "person in charge of developing the style and concept of a character in a video game, anime or other creative work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P87",
+    "label": "librettist",
+    "description": "author of the libretto (words) of an opera, operetta, oratorio or cantata, or of the book of a musical",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P870",
+    "label": "instrumentation",
+    "description": "combination of musical instruments employed in a composition or accompanying a (folk) dance",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works, Wikidata property related to musical instruments"
+  },
+  {
+    "id": "P872",
+    "label": "printed by",
+    "description": "organization or person who printed the creative work (if different from \"publisher\")",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a source, Wikidata property for items about books"
+  },
+  {
+    "id": "P8751",
+    "label": "die axis",
+    "description": "measurement of a coin that describes how the obverse and reverse dies were aligned to each other when it was struck, either in degrees (0-360) or hours (12-11)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to creative works, Wikidata property related to numismatics"
+  },
+  {
+    "id": "P8791",
+    "label": "digitised by",
+    "description": "institution or person who digitised an exemplar of this item. Qualify with \"criterion used\" (P1013) to indicate which step was done.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P88",
+    "label": "commissioned by",
+    "description": "person or organization that commissioned this work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to works or products"
+  },
+  {
+    "id": "P8874",
+    "label": "Hong Kong film rating",
+    "description": "Hong Kong film classification system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing cinema content ratings, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P8889",
+    "label": "MTRCB rating",
+    "description": "rating of a film or television program in the Philippines",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing cinema content ratings, Wikidata property representing television content ratings"
+  },
+  {
+    "id": "P8900",
+    "label": "HuijiWiki wiki ID",
+    "description": "identifier of a topic's wiki, in huijiwiki.com",
+    "type": "ExternalId",
+    "categories": "Wikidata property linking to homepages of external MediaWiki websites"
+  },
+  {
+    "id": "P8901",
+    "label": "ELSPA rating",
+    "description": "rating of a video game in the British ELSPA rating system (1994 - Spring 2003)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings"
+  },
+  {
+    "id": "P9028",
+    "label": "CCC classification",
+    "description": "Chilean video game content rating as dictated by Decree 51",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings"
+  },
+  {
+    "id": "P9052",
+    "label": "date postally canceled",
+    "description": "date of a postal marking on a postage stamp or postal stationery to deface the stamp and to prevent its reuse",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property to describe media items"
+  },
+  {
+    "id": "P908",
+    "label": "PEGI rating",
+    "description": "European video game content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings, Wikidata property representing mobile app and software content ratings"
+  },
+  {
+    "id": "P9086",
+    "label": "BAMID film rating",
+    "description": "rating in the Taiwanese movie content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing cinema content ratings"
+  },
+  {
+    "id": "P910",
+    "label": "topic's main category",
+    "description": "main Wikimedia category",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P9126",
+    "label": "Commons media contributed by",
+    "description": "which institution an image is sourced from",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to link to Commons, Wikidata property to describe media items"
+  },
+  {
+    "id": "P916",
+    "label": "GSRR rating",
+    "description": "Taiwanese video game content rating system",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings"
+  },
+  {
+    "id": "P921",
+    "label": "main subject",
+    "description": "primary topic of a work or act of communication",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P9215",
+    "label": "set during recurring event",
+    "description": "recurring event (e.g. time of day, season, month, holiday) during which this fictional work is set",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to works of fiction, Wikidata property related to in-narrative data"
+  },
+  {
+    "id": "P9234",
+    "label": "supplement to",
+    "description": "subject work or edition updates or otherwise complements the object work or edition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P9237",
+    "label": "reissue of",
+    "description": "reissue of musical work, release",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to music"
+  },
+  {
+    "id": "P9238",
+    "label": "staking percentage",
+    "description": "percentage of the funds that participates actively in a proof-of-stake network",
+    "type": "Quantity",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P9260",
+    "label": "music transcriber",
+    "description": "person who transcribed a musical work into musical notation; for composers of music, use P86",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P9302",
+    "label": "script style",
+    "description": "style of script of a document or typeface",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property for items about manuscripts"
+  },
+  {
+    "id": "P9310",
+    "label": "pHash checksum",
+    "description": "perceptual hash for file on Commons, value which tells whether two images look nearly identical",
+    "type": "String",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P9344",
+    "label": "has graphical element",
+    "description": "mark, motif, coat of arms, map, or other graphic element added to a creative work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art"
+  },
+  {
+    "id": "P9410",
+    "label": "placeholder text element ID",
+    "description": "unique identifier (id attribute) of the <text> or <tspan> element in the SVG file whose contents should be replaced by text described by the value of the P6568 claim",
+    "type": "String",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P942",
+    "label": "theme music",
+    "description": "theme music/song used by the item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P943",
+    "label": "programmer",
+    "description": "the programmer that wrote the piece of software",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to software"
+  },
+  {
+    "id": "P953",
+    "label": "work available at URL",
+    "description": "URL of a web page containing this work",
+    "type": "Url",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P9533",
+    "label": "audio transcription",
+    "description": "transcription of the word/text being spoken in this file",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P9567",
+    "label": "intended background color",
+    "description": "this transparent image is intended to be used in front of a background color",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to describe media items"
+  },
+  {
+    "id": "P9600",
+    "label": "oral history at",
+    "description": "institution holding an oral history of the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a source, Wikidata property for participating organizations"
+  },
+  {
+    "id": "P963",
+    "label": "streaming media URL",
+    "description": "URL where the subject's media stream exists",
+    "type": "Url",
+    "categories": "Wikidata property related to streaming media services, Wikidata property related to websites"
+  },
+  {
+    "id": "P9664",
+    "label": "named place on map",
+    "description": "property linking a map to a place named on it",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to link to Commons, Wikidata property to describe media items"
+  },
+  {
+    "id": "P971",
+    "label": "category combines topics",
+    "description": "this category combines (intersects) these two or more topics",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P972",
+    "label": "catalog",
+    "description": "catalog for the item, or, as a qualifier of P528 \u2013 catalog for which the 'catalog code' is valid",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works"
+  },
+  {
+    "id": "P9745",
+    "label": "translation of",
+    "description": "edition, version, or expression that this translation is translated from",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property for the relationship of the element to its class"
+  },
+  {
+    "id": "P9767",
+    "label": "edition/version",
+    "description": "the official edition or version name of a resource; this name is not considered part of the title or subtitle of the resource",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property related to creative works, Wikidata property for items about books"
+  },
+  {
+    "id": "P9793",
+    "label": "setlist",
+    "description": "performances of songs or other music at an event; concert program",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works, Wikidata property related to music"
+  },
+  {
+    "id": "P98",
+    "label": "editor",
+    "description": "person who checks and corrects a work (such as a book, newspaper, academic journal, etc.) to comply with a rules of certain genre. Also applies to person who establishes the text of an ancient written work or manuscript.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P9810",
+    "label": "remix of",
+    "description": "the song this audio track is a remix of",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works"
+  },
+  {
+    "id": "P9831",
+    "label": "release of",
+    "description": "release group this release belongs to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property for the relationship of the element to its class, Wikidata property related to music"
+  },
+  {
+    "id": "P9866",
+    "label": "GRAC rating",
+    "description": "age rating category as designated by the South Korean Game Rating and Administration Committee (GRAC)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing video game content ratings"
+  },
+  {
+    "id": "P9883",
+    "label": "created for",
+    "description": "a work, event, etc. for which the subject work was created (e.g., a presidential inauguration that a poem was written for; a competition that a play was created for; a film that a screenplay was written for)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P9895",
+    "label": "SMECCV classification",
+    "description": "Video game content rating category by the Secretariat of the Interior of Mexico",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing video game content ratings"
+  },
+  {
+    "id": "P9897",
+    "label": "App Store age rating",
+    "description": "content rating category by Apple for software published at the App Store",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property related to Apple, iOS and Classic Mac OS / OS X"
+  },
+  {
+    "id": "P9899",
+    "label": "music created for",
+    "description": "a work, event, etc. for which a musical composition was created (e.g., a play for which incidental music was composed; a ballet for which ballet music was written; a film for which motion picture music was created)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to music"
+  },
+  {
+    "id": "P9901",
+    "label": "issuing agent of work",
+    "description": "organization, agency, or other entity responsible for issuing a serial or other continuing resource, such as the official publication of the entity; distinct from commercial publisher of the resource",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works"
+  },
+  {
+    "id": "P9904",
+    "label": "free/libre open source software development policy URL",
+    "description": "URL for the free/libre open source development policy or guideline of an entity",
+    "type": "Url",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to creative works, Wikidata property related to software, Wikidata property with datatype string that is not an external identifier, Wikidata property related to websites"
+  },
+  {
+    "id": "P9926",
+    "label": "populates category",
+    "description": "Wikimedia category which is populated by this template, module or extension",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia entities"
+  }
+]

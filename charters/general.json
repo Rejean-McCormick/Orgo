@@ -1,0 +1,62 @@
+{
+  "P": [
+    { "id": "P31", "label_en": "is a type of", "wikidata_label_en": "instance of" },
+    { "id": "P279", "label_en": "is subtype of", "wikidata_label_en": "subclass of" },
+    { "id": "P10645", "label_en": "reports to", "wikidata_label_en": "reports to" },
+    { "id": "P463", "label_en": "belongs to organization", "wikidata_label_en": "member of" },
+    { "id": "P276", "label_en": "location", "wikidata_label_en": "location" },
+    { "id": "P361", "label_en": "part of", "wikidata_label_en": "part of" },
+    { "id": "P527", "label_en": "has parts", "wikidata_label_en": "has part(s)" },
+    { "id": "P155", "label_en": "follows", "wikidata_label_en": "follows" },
+    { "id": "P156", "label_en": "followed by", "wikidata_label_en": "followed by" },
+    { "id": "P921", "label_en": "has main subject", "wikidata_label_en": "main subject" },
+    { "id": "P170", "label_en": "created by", "wikidata_label_en": "creator" },
+    { "id": "P2959", "label_en": "is duplicate of", "wikidata_label_en": "permanent duplicated item" },
+    { "id": "P1552", "label_en": "has characteristic", "wikidata_label_en": "has characteristic" },
+    { "id": "P710", "label_en": "has participant", "wikidata_label_en": "participant" },
+    { "id": "P3831", "label_en": "participant has role", "wikidata_label_en": "object has role" },
+    { "id": "P580", "label_en": "opened at", "wikidata_label_en": "start time" },
+    { "id": "P582", "label_en": "closed at", "wikidata_label_en": "end time" },
+    { "id": "P585", "label_en": "due at", "wikidata_label_en": "point in time" },
+    { "id": "P127", "label_en": "is owned by", "wikidata_label_en": "owned by" },
+    { "id": "P828", "label_en": "has cause", "wikidata_label_en": "has cause" },
+    { "id": "P1542", "label_en": "has effect", "wikidata_label_en": "has effect" },
+    { "id": "P144", "label_en": "is based on", "wikidata_label_en": "based on" },
+    { "id": "P1365", "label_en": "replaces", "wikidata_label_en": "replaces" },
+    { "id": "P1366", "label_en": "is replaced by", "wikidata_label_en": "replaced by" },
+    { "id": "P2283", "label_en": "uses resource", "wikidata_label_en": "uses" },
+    { "id": "P1343", "label_en": "has document / is described by", "wikidata_label_en": "described by source" }
+  ],
+  "R": [
+    { "id": "R527001", "based_on": "P527", "label_en": "has responsibility" },
+
+    { "id": "R710001", "based_on": "P710", "label_en": "is default responsible for" },
+    { "id": "R710002", "based_on": "P710", "label_en": "assigned to" },
+    { "id": "R710003", "based_on": "P710", "label_en": "must be informed of" },
+
+    { "id": "R155001", "based_on": "P155", "label_en": "escalates to" },
+    { "id": "R155002", "based_on": "P155", "label_en": "depends on / is blocked by" },
+
+    { "id": "R276001", "based_on": "P276", "label_en": "is located in" },
+    { "id": "R276002", "based_on": "P276", "label_en": "occurs in" },
+
+    { "id": "R921001", "based_on": "P921", "label_en": "targets / concerns" },
+
+    { "id": "R1542001", "based_on": "P1542", "label_en": "impacts" }
+  ],
+  "S": [
+    { "id": "S0000001", "based_on": null, "label_en": "is visible by" },
+    { "id": "S0000002", "based_on": null, "label_en": "is editable by" },
+    { "id": "S0000003", "based_on": null, "label_en": "requires skill / capability" },
+    { "id": "S0000004", "based_on": null, "label_en": "is related to" },
+    { "id": "S0000005", "based_on": null, "label_en": "is similar to" },
+    { "id": "S0000006", "based_on": null, "label_en": "reactivity_sla_seconds" },
+    { "id": "S0000007", "based_on": null, "label_en": "task_subtype" },
+    
+    { "id": "S1552001", "based_on": "P1552", "label_en": "priority_level" },
+    { "id": "S1552002", "based_on": "P1552", "label_en": "severity_level" },
+    { "id": "S1552003", "based_on": "P1552", "label_en": "visibility_status" },
+    { "id": "S1552004", "based_on": "P1552", "label_en": "task_source" },
+    { "id": "S1552005", "based_on": "P1552", "label_en": "status_enum" }
+  ]
+}

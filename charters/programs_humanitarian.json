@@ -1,0 +1,67 @@
+{
+  "P": [
+    {
+      "id": "P749",
+      "label_en": "has parent administration",
+      "wikidata_label_en": "parent organization"
+    },
+    {
+      "id": "P1001",
+      "label_en": "applies to jurisdiction",
+      "wikidata_label_en": "applies to jurisdiction"
+    },
+    {
+      "id": "P2360",
+      "label_en": "has intended public",
+      "wikidata_label_en": "intended public"
+    },
+    {
+      "id": "P8324",
+      "label_en": "is funded by",
+      "wikidata_label_en": "funder"
+    }
+  ],
+  "R": [],
+  "S": [
+    {
+      "id": "S921901",
+      "based_on": "P921",
+      "label_en": "responds to crisis"
+    },
+    {
+      "id": "S921902",
+      "based_on": "P921",
+      "label_en": "addresses humanitarian need"
+    },
+    {
+      "id": "S361901",
+      "based_on": "P361",
+      "label_en": "operates under cluster / sector"
+    },
+    {
+      "id": "S361902",
+      "based_on": "P361",
+      "label_en": "has mission / deployment"
+    },
+    {
+      "id": "S710901",
+      "based_on": "P710",
+      "label_en": "has implementing partner"
+    },
+    {
+      "id": "S8324901",
+      "based_on": "P8324",
+      "label_en": "has donor / funding instrument"
+    },
+    {
+      "id": "S1552901",
+      "based_on": "P1552",
+      "label_en": "has response phase (preparedness/response/recovery)"
+    },
+    {
+      "id": "S1552902",
+      "based_on": "P1552",
+      "label_en": "has operational constraint (access/security/logistics)"
+    }
+  ]
+}

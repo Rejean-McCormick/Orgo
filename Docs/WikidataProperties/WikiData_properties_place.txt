@@ -1,0 +1,1163 @@
+[
+  {
+    "id": "P10229",
+    "label": "next level in hierarchy",
+    "description": "qualifier: indicates the value at the next hierarchy level which is true for this item, when more than one is possible at the next level",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to geography"
+  },
+  {
+    "id": "P10254",
+    "label": "associated cadastral district",
+    "description": "cadastral district in which a place is located or is part of. Use only if distinct from administrative entities (P131) in predefined countries",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P10280",
+    "label": "category for honorary citizens of entity",
+    "description": "category containing the honorary citizens of a settlement (administrative unit, country). Honorary citizens may or may not be citizens of the country",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P10502",
+    "label": "State Heraldic Register of the Russian Federation ID",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to places, Wikidata property with datatype string that is not an external identifier"
+  },
+  {
+    "id": "P10544",
+    "label": "cantilever sign",
+    "description": "image of a cantilever sign on the building",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P10637",
+    "label": "historic insurance number (building)",
+    "description": "insurance number affixed to a building and used to identify it, historic numbering scheme generally unique within a locality",
+    "type": "String",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P10786",
+    "label": "date of incorporation",
+    "description": "date when company, organization or city was incorporated",
+    "type": "Time",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to places, Wikidata property for items about corporations"
+  },
+  {
+    "id": "P10814",
+    "label": "number of housing units",
+    "description": "number of housing units (dwellings) in a specific place (such as city, county, state, country etc.)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P10818",
+    "label": "last entry",
+    "description": "time after which an establishment or attraction no longer admits entry, qualifier for P3025 (for closing time, use P8627)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to places"
+  },
+  {
+    "id": "P10888",
+    "label": "contains the statistical territorial entity",
+    "description": "(list of) statistical territorial entities which are direct subdivisions of another statistical or administrative territorial entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P113",
+    "label": "airline hub",
+    "description": "airport that serves as a hub for an airline",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property for items about airlines"
+  },
+  {
+    "id": "P11424",
+    "label": "service options",
+    "description": "options for eating at a restaurant, caf\u00e9, etc",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P11702",
+    "label": "information sign",
+    "description": "image of a (historical or other) information sign or board",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P119",
+    "label": "place of burial",
+    "description": "location of grave, resting place, place of ash-scattering, etc. (e.g., town/city or cemetery) for a person or animal. There may be several places: e.g., re-burials, parts of body buried separately.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for birth or death, Wikidata property for specifying the location of an event, Wikidata property related to religions and beliefs, Wikidata property related to burials, graves, and memorials"
+  },
+  {
+    "id": "P11996",
+    "label": "Cent cols ID",
+    "description": "identifier for a pass in the Cent Cols catalog",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P1259",
+    "label": "coordinates of the point of view",
+    "description": "point from which the scene depicted by the element is seen (element can be a photo, a painting, etc.)",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to photography, Wikidata property to describe media items"
+  },
+  {
+    "id": "P12686",
+    "label": "category for births in this time period",
+    "description": "category item for people who were born in this time period",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for birth or death, Wikidata property with datatype 'time', Wikidata property related to places, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P12687",
+    "label": "category for deaths in this time period",
+    "description": "category item for people who died in this time period",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for birth or death, Wikidata property with datatype 'time', Wikidata property related to places, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P131",
+    "label": "located in the administrative territorial entity",
+    "description": "the item is located on the territory of the following administrative entity. Use P276 for specifying locations that are non-administrative places and for items about events. Use P1382 if the item falls only partially into the administrative entity",
+    "type": "WikibaseItem",
+    "categories": "asymmetric Wikidata property, transitive Wikidata property, Wikidata property to indicate a location, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P1332",
+    "label": "coordinates of northernmost point",
+    "description": "northernmost point of a location. For an administrative entity this includes offshore islands",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P1333",
+    "label": "coordinates of southernmost point",
+    "description": "southernmost point of a place. For administrative entities this includes offshore islands",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P1334",
+    "label": "coordinates of easternmost point",
+    "description": "easternmost point of a location",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P1335",
+    "label": "coordinates of westernmost point",
+    "description": "westernmost point of a location",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P1336",
+    "label": "territory claimed by",
+    "description": "administrative divisions that claim control of a given area",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to government and state"
+  },
+  {
+    "id": "P13574",
+    "label": "most populous urban area",
+    "description": "city or town with the largest population in this area (country, state, county, continent, etc.)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P1376",
+    "label": "capital of",
+    "description": "country, state, department, canton or other administrative division of which the municipality is the governmental seat",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P1383",
+    "label": "contains settlement",
+    "description": "settlement which an administrative division contains",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P1427",
+    "label": "start point",
+    "description": "starting place of this journey, flight, voyage, trek, migration etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to events"
+  },
+  {
+    "id": "P1444",
+    "label": "destination point",
+    "description": "destination for this route (journey, flight, sailing, exploration, migration, etc.)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to events"
+  },
+  {
+    "id": "P1456",
+    "label": "list of monuments",
+    "description": "link to the list of heritage monuments in the place/area",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P1464",
+    "label": "category for people born here",
+    "description": "category item that groups people born in this place",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for birth or death, Wikidata property related to places, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P1465",
+    "label": "category for people who died here",
+    "description": "category item for people who died in this location",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for birth or death, Wikidata property related to places, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P150",
+    "label": "contains the administrative territorial entity",
+    "description": "(list of) direct subdivisions of an administrative territorial entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P1548",
+    "label": "maximum Strahler number",
+    "description": "highest Strahler number of a stream, creek, or river",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P1549",
+    "label": "demonym",
+    "description": "name for people or things associated with a given place, usually based off the place name",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to indicate a name, Wikidata property related to places"
+  },
+  {
+    "id": "P1589",
+    "label": "lowest point",
+    "description": "point with lowest elevation in a region or path",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P159",
+    "label": "headquarters location",
+    "description": "city or town where an organization's headquarters is or has been situated. Use P276 qualifier for specific building",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property to indicate a location"
+  },
+  {
+    "id": "P1621",
+    "label": "detail map",
+    "description": "map containing details about the entire location",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P17",
+    "label": "country",
+    "description": "sovereign state that this item is in (not to be used for human beings)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property encoding a vCard value, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P1766",
+    "label": "place name sign",
+    "description": "image of (road) sign with place name on it",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P1792",
+    "label": "category of associated people",
+    "description": "Wikimedia category for people associated with this place or organization",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property about Wikimedia categories, Wikidata property related to places"
+  },
+  {
+    "id": "P1879",
+    "label": "income classification (Philippines)",
+    "description": "classification grade of a Philippine local government unit based on income",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P189",
+    "label": "location of discovery",
+    "description": "where the item was located when discovered",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for specifying the location of an event, Wikidata property related to archaeology, Wikidata property related to science"
+  },
+  {
+    "id": "P190",
+    "label": "twinned administrative body",
+    "description": "twin towns, sister cities, twinned municipalities and other localities that have a partnership or cooperative agreement, either legally or informally acknowledged by their governments",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P1943",
+    "label": "location map",
+    "description": "blank geographic map image suitable for overlaying coordinate points, as defined at c:Category:Location maps",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P1944",
+    "label": "relief location map",
+    "description": "relief location map of place",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P206",
+    "label": "located in or next to body of water",
+    "description": "body of water on or next to which a place is located",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P2131",
+    "label": "nominal GDP",
+    "description": "market value of all officially recognized final goods and services produced within a country in a given period of time",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to economics"
+  },
+  {
+    "id": "P2132",
+    "label": "nominal GDP per capita",
+    "description": "country's total GDP divided by the population",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to economics, Wikidata property related to demography"
+  },
+  {
+    "id": "P2134",
+    "label": "total reserves",
+    "description": "total reserves comprise holdings of monetary gold, special drawing rights, reserves of IMF members held by the IMF, and holdings of foreign exchange under the control of monetary authorities",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to economics"
+  },
+  {
+    "id": "P2135",
+    "label": "total exports",
+    "description": "amount of goods and services sold to other countries",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to economics"
+  },
+  {
+    "id": "P2136",
+    "label": "total imports",
+    "description": "amount of goods and services bought from other countries",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to economics"
+  },
+  {
+    "id": "P2294",
+    "label": "balance of trade",
+    "description": "exports minus imports. not to be confused with current account balance and balance of payments",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to economics"
+  },
+  {
+    "id": "P2299",
+    "label": "PPP GDP per capita",
+    "description": "GDP divided by the population total and adjusted for CPI",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to economics, Wikidata property related to demography"
+  },
+  {
+    "id": "P242",
+    "label": "locator map image",
+    "description": "geographic map image which highlights the location of the subject within some larger entity",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P2564",
+    "label": "K\u00f6ppen climate classification",
+    "description": "indicates the characteristic climate of a place",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to climate, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P2633",
+    "label": "geography of topic",
+    "description": "item that deals with the geography of the subject. Sample: \"Rio de Janeiro\" uses this property with value \"geography of Rio de Janeiro\" (Q10288853). For the location of a subject, use \"location\" (P276).",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to geography"
+  },
+  {
+    "id": "P2647",
+    "label": "source of material",
+    "description": "place the material used was mined, quarried, found, or produced",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property to indicate a location"
+  },
+  {
+    "id": "P2659",
+    "label": "topographic isolation",
+    "description": "minimum distance to a point of higher elevation",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property for physical quantities, Wikidata property related to geology"
+  },
+  {
+    "id": "P2660",
+    "label": "topographic prominence",
+    "description": "height of a mountain or hill relative to the lowest contour line encircling it (on Earth, maximum 8,848 m)",
+    "type": "Quantity",
+    "categories": "Wikidata property for quantities, Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P276",
+    "label": "location",
+    "description": "location of the object, structure or event; use P131 to indicate the containing administrative entity, P8138 for statistical entities, or P706 for geographic entities; use P7153 for locations associated with the object",
+    "type": "WikibaseItem",
+    "categories": "transitive Wikidata property, Wikidata property to indicate a location, Wikidata property related to events, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P2786",
+    "label": "aerodrome reference point",
+    "description": "official coordinates for airport. Aeronautical publications use format with degrees, minutes and seconds concatenated",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P2795",
+    "label": "directions",
+    "description": "describe how to find the subject - directions, objects along way, comments",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to indicate a location, Wikidata property for Wikivoyage listings"
+  },
+  {
+    "id": "P2817",
+    "label": "appears in the heritage monument list",
+    "description": "heritage monument is a part of the list of heritage monuments",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property giving Wikimedia list"
+  },
+  {
+    "id": "P2825",
+    "label": "via",
+    "description": "intermediate point on a journey - stopover location, waystation or routing point",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to events"
+  },
+  {
+    "id": "P2852",
+    "label": "emergency phone number",
+    "description": "telephone number to contact emergency services",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P291",
+    "label": "place of publication",
+    "description": "geographical place of publication of the edition (use 1st edition when referring to works)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a source, Wikidata property related to creative works, Wikidata property for specifying the location of an event"
+  },
+  {
+    "id": "P2927",
+    "label": "water as percent of area",
+    "description": "which percentage of the territory of this item inside coast line and international bounderies is water. Use \"percent\" (Q11229) as unit",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property of quantity type indicating a percentage"
+  },
+  {
+    "id": "P30",
+    "label": "continent",
+    "description": "continent of which the subject is a part",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P3018",
+    "label": "located in protected area",
+    "description": "protected area where a place or geographical feature is physically located",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to protected areas"
+  },
+  {
+    "id": "P3025",
+    "label": "open days",
+    "description": "days in the week subject item is open within the opening season",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property for Wikivoyage listings"
+  },
+  {
+    "id": "P3032",
+    "label": "adjacent building",
+    "description": "building adjacent to the item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P3037",
+    "label": "spatial reference system",
+    "description": "frame of reference used to produce a map",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to geography"
+  },
+  {
+    "id": "P3096",
+    "label": "KML file",
+    "description": "item with sitelinks to wikimedia page containing text of a relevant KML file",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P3137",
+    "label": "parent peak",
+    "description": "higher peak whose territory this peak resides in, where the territory is defined by a contour line through a key col, which can be selected based on several competing approaches",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P3173",
+    "label": "offers view on",
+    "description": "things, places this place offers views on",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P3179",
+    "label": "territory overlaps",
+    "description": "part or all of the area associated with (this) entity overlaps part or all of the area associated with that entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property to describe the elements of identity"
+  },
+  {
+    "id": "P3311",
+    "label": "image of design plans",
+    "description": "image representing the plan of a building or place",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P3335",
+    "label": "associated hazard",
+    "description": "hazards implicit in the subject item: that a sign warns of; that one may encounter in this place, on this thoroughfare; that are inherent properties of (or threats to) the subject; etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to events, curated Wikidata property"
+  },
+  {
+    "id": "P3403",
+    "label": "coextensive with",
+    "description": "this item has the same boundary as the target item; area associated with (this) entity is identical with the area associated with that entity",
+    "type": "WikibaseItem",
+    "categories": "transitive Wikidata property, Wikidata property to indicate a location, Wikidata property to describe the elements of identity"
+  },
+  {
+    "id": "P36",
+    "label": "capital",
+    "description": "seat of government of a country, province, state or other type of administrative territorial entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P376",
+    "label": "located on astronomical body",
+    "description": "single astronomical body on which features or places are situated",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property for items about astronomical objects"
+  },
+  {
+    "id": "P3842",
+    "label": "located in the present-day administrative territorial entity",
+    "description": "the item was located in the territory of this present-day administrative unit; however the two did not at any point coexist in time",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P3864",
+    "label": "suicide rate",
+    "description": "amount of suicides per 100,000 people and year in the place or group",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to demography"
+  },
+  {
+    "id": "P3896",
+    "label": "geoshape",
+    "description": "geographic data from Wikimedia Commons",
+    "type": "GeoShape",
+    "categories": "Wikidata property to indicate a location, Wikidata property to link to Commons"
+  },
+  {
+    "id": "P4010",
+    "label": "GDP (PPP)",
+    "description": "gross domestic product (GDP) at purchasing power parity (current international $)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to economics, Wikidata property related to demography"
+  },
+  {
+    "id": "P403",
+    "label": "mouth of the watercourse",
+    "description": "the body of water to which the watercourse drains",
+    "type": "WikibaseItem",
+    "categories": "transitive Wikidata property, Wikidata property to indicate a location, Wikidata property for items about bodies of water"
+  },
+  {
+    "id": "P4080",
+    "label": "number of houses",
+    "description": "number of houses in given territorial entity",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to structures"
+  },
+  {
+    "id": "P4091",
+    "label": "Irish Grid Reference",
+    "description": "grid location reference from the Irish Grid reference system used in Ireland",
+    "type": "String",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P4150",
+    "label": "weather history",
+    "description": "link to a Commons tabular data file with the weather history of a certain place",
+    "type": "TabularData",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places"
+  },
+  {
+    "id": "P4179",
+    "label": "tabular population",
+    "description": "same as population (P1082); used when there is data for many different points in time",
+    "type": "TabularData",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places"
+  },
+  {
+    "id": "P421",
+    "label": "located in time zone",
+    "description": "time zone for this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to places, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P4238",
+    "label": "webcam page URL",
+    "description": "URL of a page broadcasting pictures by a webcam situated in this location or mounted on this element",
+    "type": "Url",
+    "categories": "Wikidata property related to places, Wikidata property related to websites, Wikidata property related to video files and recordings"
+  },
+  {
+    "id": "P4291",
+    "label": "panoramic view",
+    "description": "panoramic view of the object",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P4345",
+    "label": "director of archaeological fieldwork",
+    "description": "person leading the archaeological or anthropological investigation at a given site",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to archaeology"
+  },
+  {
+    "id": "P4442",
+    "label": "mean age",
+    "description": "mean age in a given place",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to age"
+  },
+  {
+    "id": "P4552",
+    "label": "mountain range",
+    "description": "range or subrange to which the geographical item belongs",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to mountains and alpine areas, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P4565",
+    "label": "electoral district number",
+    "description": "number of the constituency/electoral district established by law. Only to be used if the number is established by law, regulation, or other legally-binding decision; not to be used for database identifier numbers which lack legal force, even if contained in a government database.",
+    "type": "String",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P4647",
+    "label": "location of first performance",
+    "description": "location where a work was first debuted, performed or broadcasted",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property for specifying the location of an event"
+  },
+  {
+    "id": "P4688",
+    "label": "geomorphological unit",
+    "description": "topographic or bathymetric feature to which this geographical item belongs",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P47",
+    "label": "shares border with",
+    "description": "countries or administrative subdivisions, of equal level, that this item borders, either by land or water. A single common point is enough.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P4777",
+    "label": "has boundary",
+    "description": "element that's on the two dimensional border that surrounds the subject; the limit of an entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to medicine, Wikidata property related to biology"
+  },
+  {
+    "id": "P483",
+    "label": "recorded at studio or venue",
+    "description": "studio or location where a musical composition/release was recorded",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property for items about musical works"
+  },
+  {
+    "id": "P4856",
+    "label": "conscription number",
+    "description": "number identifying a building in one cadastral area/village/neighborhood",
+    "type": "String",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P500",
+    "label": "exclave of",
+    "description": "territory is legally or politically attached to a main territory with which it is not physically contiguous because of surrounding alien territory. It may also be an enclave.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P501",
+    "label": "enclave within",
+    "description": "territory is entirely surrounded (enclaved) by the other territory",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P5140",
+    "label": "coordinates of geographic center",
+    "description": "coordinates of the center of an area. Use qualifier \"determination method\" (P459) to indicate how",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P5141",
+    "label": "coastline",
+    "description": "length of the coastline (sea shore) of the region. Use qualifier \"determination method\" (P459) to define how it's determined/which granularity is used.",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property for physical quantities"
+  },
+  {
+    "id": "P5185",
+    "label": "grammatical gender",
+    "description": "grammatical gender of the word",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property for lexemes, Wikidata property related to gender"
+  },
+  {
+    "id": "P5203",
+    "label": "topographic map",
+    "description": "topographic map covering this geographic object",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to geography"
+  },
+  {
+    "id": "P5282",
+    "label": "ground level 360 degree view URL",
+    "description": "URL to access a service that allows to visually navigate through images at ground level in the proximity of the item",
+    "type": "Url",
+    "categories": "Wikidata property, Wikidata property related to places, Wikidata property for linking to a representative image, Wikidata property related to websites"
+  },
+  {
+    "id": "P5423",
+    "label": "floor number",
+    "description": "floor number in a street address. To be used as a qualifier of Property:P6375 \"located on street\" or as a property of a place",
+    "type": "String",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P5607",
+    "label": "located in the religious territorial entity",
+    "description": "the item is located on the territory of the following religious entity. Use P708 (diocese) for dioceses",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, transitive Wikidata property, asymmetric Wikidata property, Wikidata property related to religions and beliefs, Wikidata property related to Christianity"
+  },
+  {
+    "id": "P5623",
+    "label": "type of water supply",
+    "description": "the type of water supply for fountains, mountain huts, and other entities where water can be obtained",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P5873",
+    "label": "place of devotion",
+    "description": "place where a religious devotion was practiced and for which this devotional image (or text) was produced",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to religions and beliefs"
+  },
+  {
+    "id": "P5901",
+    "label": "official number of town quarter",
+    "description": "official number for the administrative division or section, region or part of a town",
+    "type": "String",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P5982",
+    "label": "annual number of weddings",
+    "description": "number of marriages per year in a location",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to demography"
+  },
+  {
+    "id": "P5998",
+    "label": "distributary",
+    "description": "stream that branches off and flows away from the river",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property for items about bodies of water"
+  },
+  {
+    "id": "P61",
+    "label": "discoverer or inventor",
+    "description": "subject who discovered, first described, invented, or developed this discovery or invention or scientific hypothesis or theory",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to natural science, Wikidata property related to geography, Wikidata property to identify contributors to works or products"
+  },
+  {
+    "id": "P610",
+    "label": "highest point",
+    "description": "point with highest elevation in a region or path",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to geography"
+  },
+  {
+    "id": "P625",
+    "label": "coordinate location",
+    "description": "geocoordinates of the subject. For Earth, please note that only the WGS84 geodetic datum is currently supported",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property to indicate a location, Wikidata property for Wikivoyage listings"
+  },
+  {
+    "id": "P65",
+    "label": "site of astronomical discovery",
+    "description": "the place where an astronomical object was discovered (observatory, satellite)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for specifying the location of an event, Wikidata property for items about astronomical objects"
+  },
+  {
+    "id": "P654",
+    "label": "direction relative to location",
+    "description": "qualifier for geographical locations to express relative cardinal direction from the subject location to a target location",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property to indicate a location, non-restrictive qualifier"
+  },
+  {
+    "id": "P6591",
+    "label": "maximum temperature record",
+    "description": "maximum temperature reached at this location",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P6753",
+    "label": "number of polling stations",
+    "description": "number of polling stations, and correspondively of electoral precincts, in certain electoral district or during certain elections",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property related to elections, Wikidata property for quantities"
+  },
+  {
+    "id": "P6885",
+    "label": "historical region",
+    "description": "geographic area which at some point in time had a cultural, ethnic, linguistic or political basis, regardless of present-day borders",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to geography"
+  },
+  {
+    "id": "P706",
+    "label": "located in/on physical feature",
+    "description": "located on the specified (geo)physical feature. Should not be used when the value is only political/administrative (P131) or a mountain range (P4552). Use P206 for things in/on bodies of water.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, transitive Wikidata property"
+  },
+  {
+    "id": "P708",
+    "label": "diocese",
+    "description": "administrative division of the church to which the element belongs; use P5607 for other types of ecclesiastical territorial entities",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to Christianity"
+  },
+  {
+    "id": "P7108",
+    "label": "location of the point of view",
+    "description": "geographic location of point of view, may or may not be depicted",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to describe media items, Wikidata property to indicate a location"
+  },
+  {
+    "id": "P7153",
+    "label": "significant place",
+    "description": "significant or notable places associated with the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P7309",
+    "label": "has climbing route",
+    "description": "route used to get closer to a high point",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P740",
+    "label": "location of formation",
+    "description": "location where a group or organization was formed",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property for specifying the location of an event"
+  },
+  {
+    "id": "P7422",
+    "label": "minimum temperature record",
+    "description": "lowest temperature reached at this location",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P7479",
+    "label": "key col",
+    "description": "lowest col on the highest-running ridge path connecting to an even higher point",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P7532",
+    "label": "room number",
+    "description": "number or identifier of a room, which can qualify the address (P6375) of a place to complete it",
+    "type": "String",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P78",
+    "label": "top-level Internet domain",
+    "description": "Internet domain name system top-level code",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P7938",
+    "label": "associated electoral district",
+    "description": "constituencies/electoral districts in which a place is located or is part of. If a municipality/county is split into or part of several districts: add several values. Use only if distinct from administrative entities (P131) in predefined countries",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P795",
+    "label": "located on linear feature",
+    "description": "linear feature along which distance is specified from a specified datum point",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P7959",
+    "label": "historic county",
+    "description": "traditional, geographical division of Great Britain and Ireland",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P8047",
+    "label": "country of registry",
+    "description": "country where a ship is or has been registered",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P8138",
+    "label": "located in the statistical territorial entity",
+    "description": "statistical territorial entity in which a place is located or is part of. If a municipality or county is split into or part of several regions: add several values",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P814",
+    "label": "IUCN protected areas category",
+    "description": "protected areas category by the World Commission on Protected Areas. Used with dedicated items for each category.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to protected areas"
+  },
+  {
+    "id": "P840",
+    "label": "narrative location",
+    "description": "the narrative of the work is set in this location",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to in-narrative data"
+  },
+  {
+    "id": "P8411",
+    "label": "set in environment",
+    "description": "environment (geographic feature, building type, etc.) the narrative work is set in",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to works of fiction"
+  },
+  {
+    "id": "P8450",
+    "label": "peak bagging classification",
+    "description": "recognised peak bagging classification of a mountain or hill",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to mountains and alpine areas, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P8517",
+    "label": "view",
+    "description": "view from the given site",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P8546",
+    "label": "recording location",
+    "description": "location where a media item (sound, video, etc.) was recorded",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P8627",
+    "label": "closing time",
+    "description": "time when an establishment or attraction closes, qualifier for P3025",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to places, Wikidata property for Wikivoyage listings"
+  },
+  {
+    "id": "P8667",
+    "label": "twin town sign",
+    "description": "image of sign with twin towns on it",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P8701",
+    "label": "has census",
+    "description": "general population census of the country or region",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to demography"
+  },
+  {
+    "id": "P8744",
+    "label": "economy of topic",
+    "description": "item that deals with the economy of the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to economics"
+  },
+  {
+    "id": "P8887",
+    "label": "water area",
+    "description": "area/surface of a geographical entity that is covered by water",
+    "type": "Quantity",
+    "categories": "Wikidata property related to geography"
+  },
+  {
+    "id": "P8890",
+    "label": "power consumption index",
+    "description": "value of the relative energy consumption from the energy certificate of a building",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P8891",
+    "label": "heating energy consumption index",
+    "description": "value of the relative heating consumption from the energy certificate of a building",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places"
+  },
+  {
+    "id": "P912",
+    "label": "has facility",
+    "description": "the subject item has this type of facility, e.g. toilet, car park",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to utilization and ownership"
+  },
+  {
+    "id": "P9149",
+    "label": "coordinates of depicted place",
+    "description": "coordinates of the place depicted in the work (or Commons image)",
+    "type": "GlobeCoordinate",
+    "categories": "Wikidata property to indicate a location"
+  },
+  {
+    "id": "P915",
+    "label": "filming location",
+    "description": "actual place where this scene/film was shot. For the setting, use \"narrative location\" (P840)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for specifying the location of an event, Wikidata property for items about films, Wikidata property for items about books"
+  },
+  {
+    "id": "P9241",
+    "label": "demographics of topic",
+    "description": "item that deals with demographics of the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to demography"
+  },
+  {
+    "id": "P9361",
+    "label": "external georeferencing URL",
+    "description": "URL where external georeferencing is available for a map",
+    "type": "Url",
+    "categories": "Wikidata property to describe media items, Wikidata property related to geography, Wikidata property related to websites"
+  },
+  {
+    "id": "P948",
+    "label": "page banner",
+    "description": "image at top of an article about the topic, mainly used by Wikivoyage and Women in Red",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to places, Wikidata property for Wikivoyage"
+  },
+  {
+    "id": "P9568",
+    "label": "PeakVisor peak ID",
+    "description": "identifier for a mountain or hill in PeakVisor",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P9569",
+    "label": "PeakVisor range ID",
+    "description": "identifier for a mountain range in PeakVisor",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P9571",
+    "label": "PeakVisor area ID",
+    "description": "identifier for an administrative area in PeakVisor",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P9572",
+    "label": "PeakVisor park ID",
+    "description": "identifier for a park in PeakVisor",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to mountains and alpine areas"
+  },
+  {
+    "id": "P9601",
+    "label": "official map URL",
+    "description": "URL of an official map, plan or geographic information system (GIS) for the place",
+    "type": "Url",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to places, Wikidata property related to websites, Wikidata property related to geography"
+  },
+  {
+    "id": "P9611",
+    "label": "district heating grid",
+    "description": "district heating (or cooling) grid of region/locality connecting producers and residential or commercial consumers in the area",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location"
+  }
+]

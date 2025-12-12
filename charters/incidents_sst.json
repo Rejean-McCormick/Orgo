@@ -1,0 +1,31 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S1552701",
+      "based_on": "P1552",
+      "label_en": "has safety incident type"
+    },
+    {
+      "id": "S1552702",
+      "based_on": "P1552",
+      "label_en": "has regulatory category"
+    },
+    {
+      "id": "S361701",
+      "based_on": "P361",
+      "label_en": "has investigation"
+    },
+    {
+      "id": "S1552703",
+      "based_on": "P1552",
+      "label_en": "is near-miss"
+    },
+    {
+      "id": "S1343701",
+      "based_on": "P1343",
+      "label_en": "has safety report document"
+    }
+  ]
+}

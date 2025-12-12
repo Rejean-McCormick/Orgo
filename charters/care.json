@@ -1,0 +1,46 @@
+{
+  "P": [
+    { "id": "P361", "label_en": "part of", "wikidata_label_en": "part of" },
+    { "id": "P921", "label_en": "main subject", "wikidata_label_en": "main subject" },
+    { "id": "P3831", "label_en": "object has role", "wikidata_label_en": "object has role" },
+    { "id": "P1552", "label_en": "has quality", "wikidata_label_en": "has characteristic" },
+    { "id": "P527", "label_en": "has part", "wikidata_label_en": "has part" },
+    { "id": "P585", "label_en": "point in time", "wikidata_label_en": "point in time" },
+    { "id": "P101", "label_en": "field of work", "wikidata_label_en": "field of work" },
+    { "id": "P2868", "label_en": "subject has role", "wikidata_label_en": "subject has role" }
+  ],
+  "R": [
+    { "id": "R101001", "based_on": "P101", "label_en": "relates to department" },
+    { "id": "R286801", "based_on": "P2868", "label_en": "complainant" },
+    { "id": "R286802", "based_on": "P2868", "label_en": "respondent" }
+  ],
+  "S": [
+    { "id": "S361001", "based_on": "P361", "label_en": "has case file" },
+    { "id": "S361002", "based_on": "P361", "label_en": "has plan" },
+    
+    { "id": "S921001", "based_on": "P921", "label_en": "case concerns person" },
+    
+    { "id": "S3831001", "based_on": "P3831", "label_en": "has primary worker" },
+    { "id": "S3831002", "based_on": "P3831", "label_en": "has secondary worker" },
+    
+    { "id": "S1552001", "based_on": "P1552", "label_en": "has follow-up status" },
+    { "id": "S1552101", "based_on": "P1552", "label_en": "has confidentiality level" }, 
+    
+    { "id": "S527001", "based_on": "P527", "label_en": "plan has goals" },
+    
+    { "id": "S585001", "based_on": "P585", "label_en": "has appointment / session" },
+    
+    { "id": "S0000006", "based_on": null, "label_en": "has consent / authorization" },
+    { "id": "S0000007", "based_on": null, "label_en": "has contact preferences" },
+    { "id": "S0000008", "based_on": null, "label_en": "has guardian / responsible party" },
+    { "id": "S0000201", "based_on": null, "label_en": "wellbeing_score" }
+  ],
+  "Q_Subset": [
+    { "qid": "Q43390", "label_en": "Human Resources" },
+    { "qid": "Q209718", "label_en": "Well-being" },
+    { "qid": "Q167189", "label_en": "Harassment" },
+    { "qid": "Q180684", "label_en": "Conflict (Social)" },
+    { "qid": "Q22666", "label_en": "Psychology" },
+    { "qid": "Q2890005", "label_en": "Check-in (Status)" }
+  ]
+}

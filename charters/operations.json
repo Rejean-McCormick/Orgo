@@ -1,0 +1,38 @@
+{
+  "P": [
+    { "id": "P527", "label_en": "has parts", "wikidata_label_en": "has part(s)" },
+    { "id": "P276", "label_en": "location", "wikidata_label_en": "location" },
+    { "id": "P127", "label_en": "owned by", "wikidata_label_en": "owned by" },
+    { "id": "P710", "label_en": "participant", "wikidata_label_en": "participant" },
+    { "id": "P1552", "label_en": "has characteristic", "wikidata_label_en": "has characteristic" },
+    { "id": "P361", "label_en": "part of", "wikidata_label_en": "part of" },
+    { "id": "P2283", "label_en": "uses resource", "wikidata_label_en": "uses" },
+    { "id": "P585", "label_en": "scheduled at", "wikidata_label_en": "point in time" },
+    { "id": "P1343", "label_en": "described by", "wikidata_label_en": "described by source" },
+    { "id": "P1542", "label_en": "has effect", "wikidata_label_en": "has effect" }
+  ],
+  "R": [],
+  "S": [
+    { "id": "S527002", "based_on": "P527", "label_en": "organization has assets / resources" },
+    { "id": "S276001", "based_on": "P276", "label_en": "asset is located in" },
+    { "id": "S127001", "based_on": "P127", "label_en": "asset is owned by" },
+    { "id": "S710002", "based_on": "P710", "label_en": "asset has operational responsible (person/role)" },
+    { "id": "S1552006", "based_on": "P1552", "label_en": "asset has technical profile / specifications" },
+    { "id": "S361004", "based_on": "P361", "label_en": "asset has maintenance plan" },
+    { "id": "S527003", "based_on": "P527", "label_en": "maintenance plan has maintenance tasks" },
+    { "id": "S361005", "based_on": "P361", "label_en": "work order is for asset" },
+    { "id": "S2283001", "based_on": "P2283", "label_en": "task uses asset / resource" },
+    { "id": "S585002", "based_on": "P585", "label_en": "maintenance scheduled at" },
+    { "id": "S1343002", "based_on": "P1343", "label_en": "asset has documentation" },
+    { "id": "S1542001", "based_on": "P1542", "label_en": "incident impacts asset / service" }
+  ],
+  "Q_Subset": [
+    { "qid": "Q1043452", "label_en": "Maintenance" },
+    { "qid": "Q466367", "label_en": "Asset" },
+    { "qid": "Q1062633", "label_en": "Repair" },
+    { "qid": "Q1056580", "label_en": "Inspection" },
+    { "qid": "Q41162", "label_en": "Building" },
+    { "qid": "Q180516", "label_en": "Equipment" },
+    { "qid": "Q662580", "label_en": "Ticket (Issue tracking)" }
+  ]
+}

@@ -1,0 +1,695 @@
+[
+  {
+    "id": "P10588",
+    "label": "academic calendar type",
+    "description": "academic calendar system used by an educational institution",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to education, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P11633",
+    "label": "colocated with",
+    "description": "event sharing location, facility or organization with another, typically larger event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P12044",
+    "label": "chronological designation",
+    "description": "stated scholarly journal year to which reference is made by: source cited in support of a particular statement may not be the same as the publication date or volume",
+    "type": "Time",
+    "categories": "Wikidata property to indicate a source, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P12221",
+    "label": "battery life",
+    "description": "length of time after a full charge that a device can continue to work under normal use before it needs its battery to be recharged",
+    "type": "Quantity",
+    "categories": "Wikidata property related to time and duration"
+  },
+  {
+    "id": "P12413",
+    "label": "date of application",
+    "description": "date of a application/request that led to the process of a membership in an organisation, an employment, issuance, or obtaining of the position of an identifier",
+    "type": "Time",
+    "categories": "Wikidata property to indicate a source, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P12470",
+    "label": "normal graduation time",
+    "description": "expected or typical duration of an educational program from matriculation to graduation",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to education, Wikidata property related to time and duration, Wikidata property for quantities"
+  },
+  {
+    "id": "P1249",
+    "label": "time of earliest written record",
+    "description": "first time a subject was mentioned in writing",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P12506",
+    "label": "latest end date",
+    "description": "latest date beyond which the statement could no longer be true",
+    "type": "Time",
+    "categories": "Wikidata qualifier, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P1264",
+    "label": "valid in period",
+    "description": "time period when a statement is valid",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata qualifier restricting a statement time-wise"
+  },
+  {
+    "id": "P12643",
+    "label": "date popularized",
+    "description": "point in time the subject became well known to the public, if different from its inception",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P12677",
+    "label": "timetable/schedule URL",
+    "description": "link to the timetable or the schedule (in PDF, HTML, image format) for the given service or the event schedule. The current timetable/schedule should have preferred rank.",
+    "type": "Url",
+    "categories": "Wikidata property related to time and duration"
+  },
+  {
+    "id": "P12693",
+    "label": "source of transfer",
+    "description": "entity that a transferred item is initially associated with, before this process associates it with another entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P12694",
+    "label": "destination of transfer",
+    "description": "entity that a transferred item comes to be associated with as a result of this process",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P12912",
+    "label": "object of occurrence",
+    "description": "specific object to which an occurrence or class of occurrences applies",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P12913",
+    "label": "class of object(s) of occurrence",
+    "description": "class that includes the object(s) to which this occurrence (or class of occurrence) occurs or occurred",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P12992",
+    "label": "objects of occurrence have role",
+    "description": "role that the object(s) of this occurrence take on in the context of this occurrence",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P12993",
+    "label": "role of agent(s) of action",
+    "description": "role that animate agents of this action take on in the context of this action",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P12994",
+    "label": "class of agent(s) of action",
+    "description": "class of animate items that may initiate this action or class of actions (for roles of agents, use P12993)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P12995",
+    "label": "agent of action",
+    "description": "particular animate item that initiates this action or class of actions",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P1319",
+    "label": "earliest date",
+    "description": "earliest date at which an event could have happened. Use as qualifier for other date properties",
+    "type": "Time",
+    "categories": "Wikidata qualifier, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P1326",
+    "label": "latest date",
+    "description": "latest possible time that something could have occurred. Use as qualifier for other date properties",
+    "type": "Time",
+    "categories": "Wikidata qualifier, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P13635",
+    "label": "warranty period",
+    "description": "warranty period of this product as covered by the original manufacturer or creator",
+    "type": "Quantity",
+    "categories": "Wikidata property related to time and duration, Wikidata property for quantities, Wikidata property related to commercial products"
+  },
+  {
+    "id": "P13883",
+    "label": "start work",
+    "description": "work in which this statement about a fictional entity begins to be valid",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to in-narrative data, Wikidata qualifier restricting a statement time-wise"
+  },
+  {
+    "id": "P13884",
+    "label": "end work",
+    "description": "work in which this statement about a fictional entity ceases to be valid",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to in-narrative data, Wikidata qualifier restricting a statement time-wise"
+  },
+  {
+    "id": "P1478",
+    "label": "has immediate cause",
+    "description": "nearest, proximate thing that directly resulted in the subject as outcome or effect. Used in conjunction with 'has cause' (i.e. underlying cause) and 'has contributing factor'. See 'Help:Modeling causes'.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to disasters, Wikidata property for causes and effects"
+  },
+  {
+    "id": "P1479",
+    "label": "has contributing factor",
+    "description": "thing that significantly influenced, but did not directly cause, this outcome or effect. Used in conjunction with 'has cause' and 'has immediate cause'. See '[[Help:Modeling causes]]'.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to disasters, Wikidata property for causes and effects"
+  },
+  {
+    "id": "P1534",
+    "label": "end cause",
+    "description": "qualifier used together with the end date qualifier (P582) to specify the reason for the end",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to events, Wikidata property for causes and effects"
+  },
+  {
+    "id": "P1536",
+    "label": "immediate cause of",
+    "description": "immediate effect of this cause",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property for causes and effects"
+  },
+  {
+    "id": "P1537",
+    "label": "contributing factor of",
+    "description": "thing that is significantly influenced by this cause, but does not directly result from it. See 'Help:Modeling causes' for examples and discussion.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property for causes and effects"
+  },
+  {
+    "id": "P154",
+    "label": "logo image",
+    "description": "graphic mark or emblem commonly used by commercial enterprises, organizations and products",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property for items about organizations, Wikidata property encoding a vCard value, Wikidata property for linking to a representative image, Wikidata property with a single value that generally evolves over time, Wikidata property related to commercial brands, curated Wikidata property"
+  },
+  {
+    "id": "P1619",
+    "label": "date of official opening",
+    "description": "date or point in time a place, organization, or event officially opened",
+    "type": "Time",
+    "categories": "Wikidata property for items about organizations, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P1903",
+    "label": "volcanic explosivity index",
+    "description": "scale indicating size of an explosive volcanic eruption",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to geology"
+  },
+  {
+    "id": "P2114",
+    "label": "half-life",
+    "description": "time required for the amount of something to fall to half its initial value",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P2127",
+    "label": "International Nuclear Event Scale",
+    "description": "international scale for rating nuclear events and accidents",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P2257",
+    "label": "event interval",
+    "description": "standard nominal interval between scheduled or regularly recurring events. Include unit of time, e.g. \"year\" (Q577). 1/(event frequency). Time period of periodically occurring event",
+    "type": "Quantity",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P2285",
+    "label": "periapsis date (DEPRECATED)",
+    "description": "time for perihelion/perigee in each orbit for an astronomical object (Deprecated property. Use P11796 instead.)",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property for items about astronomical objects"
+  },
+  {
+    "id": "P2318",
+    "label": "debut participant",
+    "description": "participant for whom this is their debut appearance in a series of events",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P2320",
+    "label": "aftershocks",
+    "description": "number of smaller earthquakes which follow a significant earthquake",
+    "type": "Quantity",
+    "categories": "Wikidata property related to events, Wikidata property related to seismology"
+  },
+  {
+    "id": "P2348",
+    "label": "time period",
+    "description": "time period (historic period or era, sports season, theatre season, legislative period etc.) in which the subject occurred or with which it is associated",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to time and duration, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P2630",
+    "label": "cost of damage",
+    "description": "monetary value of damage caused by this event",
+    "type": "Quantity",
+    "categories": "Wikidata property related to economics, Wikidata property related to events, Wikidata property related to disasters"
+  },
+  {
+    "id": "P2669",
+    "label": "discontinued date",
+    "description": "date that the availability of a product or service was discontinued; see also \"dissolved, abolished or demolished\" (P576) and \"service retirement\" (P730) for pieces or classes of equipment",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to commercial products"
+  },
+  {
+    "id": "P2894",
+    "label": "day of week",
+    "description": "day of the week on which this item occurs, applies to or is valid",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to time and duration"
+  },
+  {
+    "id": "P2896",
+    "label": "publication interval",
+    "description": "standard publication interval for daily or periodical publications",
+    "type": "Quantity",
+    "categories": "Wikidata property related to time and duration, Wikidata property for quantities"
+  },
+  {
+    "id": "P2922",
+    "label": "month of the year",
+    "description": "month of the year during which this item occurs, applies to or is valid in",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to time and duration"
+  },
+  {
+    "id": "P3020",
+    "label": "residence time of water",
+    "description": "time water remains in a lake or sea",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P3081",
+    "label": "damaged",
+    "description": "physical items damaged by this event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to disasters, Wikidata property related to events"
+  },
+  {
+    "id": "P3082",
+    "label": "destroyed",
+    "description": "physical items destroyed by this event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to disasters, Wikidata property related to events"
+  },
+  {
+    "id": "P3157",
+    "label": "event distance",
+    "description": "distance over which a race or other event is conducted or was achieved",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to events"
+  },
+  {
+    "id": "P3415",
+    "label": "start period",
+    "description": "initial period in which the statement is valid (including the period-value)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier restricting a statement time-wise"
+  },
+  {
+    "id": "P3416",
+    "label": "end period",
+    "description": "last period in which the statement is still valid (including the period-value)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier restricting a statement time-wise"
+  },
+  {
+    "id": "P3886",
+    "label": "number of perpetrators",
+    "description": "number of perpetrators in an event, as reported by reliable sources",
+    "type": "Quantity",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P3999",
+    "label": "date of official closure",
+    "description": "date of official closure of a building or event",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P4214",
+    "label": "longest observed lifespan",
+    "description": "age of the oldest specimen of a taxon for which the age can be verified",
+    "type": "Quantity",
+    "categories": "Wikidata property related to taxa, Wikidata property related to time and duration, Wikidata property for quantities"
+  },
+  {
+    "id": "P4218",
+    "label": "shelf life",
+    "description": "length of time that a commodity may be stored without becoming unfit for use or consumption",
+    "type": "Quantity",
+    "categories": "Wikidata property related to time and duration"
+  },
+  {
+    "id": "P4220",
+    "label": "order of battle",
+    "description": "arrangement of units and hierarchical organization of the armed forces involved in the specified military action",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property for items about military"
+  },
+  {
+    "id": "P4895",
+    "label": "time index",
+    "description": "indicate when something happens relative to its beginning",
+    "type": "Quantity",
+    "categories": "Wikidata property for quantities, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P5027",
+    "label": "number of representations",
+    "description": "number of shows (including the premiere) of a concert tour or a performing arts production",
+    "type": "Quantity",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P5069",
+    "label": "service life",
+    "description": "product's total life in use from the point of sale to the point of discard",
+    "type": "Quantity",
+    "categories": "Wikidata property related to time and duration, Wikidata property related to commercial products"
+  },
+  {
+    "id": "P5072",
+    "label": "presented in",
+    "description": "event at which a talk, film, paper, or poster was presented",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P5204",
+    "label": "date of commercialization",
+    "description": "date when an invention was first commercialized",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to commercial products"
+  },
+  {
+    "id": "P523",
+    "label": "temporal range start",
+    "description": "the start of a process or appearance of a life form or geological unit relative to the geologic time scale",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to time and duration, Wikidata property related to taxa, Wikidata property related to geology"
+  },
+  {
+    "id": "P524",
+    "label": "temporal range end",
+    "description": "the end of a process such as a geological unit or extinction of a life form relative to the geologic time scale",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to taxa, Wikidata property related to geology, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P533",
+    "label": "target",
+    "description": "target of an attack or military operation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P542",
+    "label": "officially opened by",
+    "description": "person that officially opened the event or place",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P5444",
+    "label": "model year",
+    "description": "year a specific model of a product (such as a car) was released, likely different from the actual year of production",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to time and duration, Wikidata property related to processes and manufacturing"
+  },
+  {
+    "id": "P571",
+    "label": "inception",
+    "description": "time when an entity begins to exist; for date of official opening use P1619",
+    "type": "Time",
+    "categories": "Wikidata property for items about organizations, Wikidata property with datatype 'time', Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P574",
+    "label": "year of publication of scientific name for taxon",
+    "description": "year when this taxon was formally described (for animals); year when this taxon name was formally established (for plants)",
+    "type": "Time",
+    "categories": "Wikidata qualifier, Wikidata property related to taxa, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P575",
+    "label": "time of discovery or invention",
+    "description": "date or point in time when the item was discovered or invented",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P576",
+    "label": "dissolved, abolished or demolished date",
+    "description": "point in time at which the subject (organisation, building) ceased to exist; see \"date of official closure\" (P3999) for closing a facility, \"service retirement\" (P730) for retiring equipment, \"discontinued date\" (P2669) for stopping a product",
+    "type": "Time",
+    "categories": "Wikidata property for items about organizations, Wikidata property with datatype 'time', Wikidata property for Wikivoyage listings"
+  },
+  {
+    "id": "P580",
+    "label": "start time",
+    "description": "time an entity begins to exist or a statement starts being valid",
+    "type": "Time",
+    "categories": "Wikidata property for items about organizations, Wikidata property with datatype 'time', Wikidata qualifier restricting a statement time-wise"
+  },
+  {
+    "id": "P582",
+    "label": "end time",
+    "description": "moment when an entity ceases to exist and a statement stops being entirely valid or no longer be true",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata qualifier restricting a statement time-wise"
+  },
+  {
+    "id": "P585",
+    "label": "point in time",
+    "description": "date something took place, existed or a statement was true; for providing time use the \"refine date\" property (P4241)",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata qualifier restricting a statement time-wise, restrictive or non-restrictive qualifier"
+  },
+  {
+    "id": "P606",
+    "label": "first flight",
+    "description": "date or point in time on which aircraft, rocket, or airline first flew",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to aircraft"
+  },
+  {
+    "id": "P619",
+    "label": "UTC date of spacecraft launch",
+    "description": "date of spacecraft launch in UTC",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to spacecraft"
+  },
+  {
+    "id": "P620",
+    "label": "UTC date of spacecraft landing",
+    "description": "date of spacecraft landing in UTC",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to spacecraft"
+  },
+  {
+    "id": "P621",
+    "label": "time of object orbit decay",
+    "description": "point in time for when an object previously in planetary orbit enters dense enough atmosphere to rapidly aerobrake and deorbit; on Earth considered to be at the entry interface at about 400,000 feet AMSL.",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to spacecraft"
+  },
+  {
+    "id": "P622",
+    "label": "spacecraft docking/undocking date",
+    "description": "date and time of spacecraft docking or undocking event, in UTC",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to spacecraft"
+  },
+  {
+    "id": "P6259",
+    "label": "epoch",
+    "description": "epoch of an astronomical object coordinate",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about astronomical objects, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P6818",
+    "label": "calendar feed URL",
+    "description": "calendar feed (iCal, ICS, etc.) of this object",
+    "type": "Url",
+    "categories": "Wikidata property related to events, Wikidata property related to data communication, storage, and retrieval, Wikidata property related to websites"
+  },
+  {
+    "id": "P7103",
+    "label": "start of covered period",
+    "description": "start of period covered by an archive set, a historical book, or a collection",
+    "type": "Time",
+    "categories": "Wikidata property related to archives, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P7104",
+    "label": "end of covered period",
+    "description": "end of period covered by an archive set, a historical book, or a collection",
+    "type": "Time",
+    "categories": "Wikidata property related to archives, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P7124",
+    "label": "date of the first one",
+    "description": "qualifier: when the first element of a quantity appeared/took place",
+    "type": "Time",
+    "categories": "Wikidata qualifier, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P7125",
+    "label": "date of the latest one",
+    "description": "qualifier: when the latest element of a quantity appeared/took place",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', non-restrictive qualifier"
+  },
+  {
+    "id": "P729",
+    "label": "service entry",
+    "description": "date or point in time on which a piece or class of equipment entered operational service",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P730",
+    "label": "service retirement",
+    "description": "date or point in time on which a piece or class of equipment was retired from operational service ; use P2669 for end of a public service",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P746",
+    "label": "date of disappearance",
+    "description": "date or point of time a missing person was seen or otherwise known to be alive for the last time",
+    "type": "Time",
+    "categories": "Wikidata property for birth or death, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P7643",
+    "label": "covered period",
+    "description": "historical period covered, for instance by a source",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to time and duration"
+  },
+  {
+    "id": "P7862",
+    "label": "period of lactation",
+    "description": "the interval from the onset of milk production to weaning",
+    "type": "Quantity",
+    "categories": "Wikidata property related to time and duration, Wikidata property for quantities, Wikidata property related to the life of an animal"
+  },
+  {
+    "id": "P793",
+    "label": "significant event",
+    "description": "significant or notable events associated with the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P8004",
+    "label": "ordered by",
+    "description": "subject that ordered the act",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P813",
+    "label": "retrieved",
+    "description": "date or point in time that information was retrieved from a database or website (for use in online sources)",
+    "type": "Time",
+    "categories": "Wikidata property to indicate a source, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P832",
+    "label": "public holiday",
+    "description": "official public holiday that occurs in this place in its honor, usually a non-working day",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events"
+  },
+  {
+    "id": "P837",
+    "label": "day in year for periodic occurrence",
+    "description": "when a specific holiday or periodic event occurs. It can be used as statement or qualifier",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to time and duration"
+  },
+  {
+    "id": "P8554",
+    "label": "earliest end date",
+    "description": "(qualifier) earliest date on which the statement could have begun to no longer be true",
+    "type": "Time",
+    "categories": "Wikidata qualifier, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P8555",
+    "label": "latest start date",
+    "description": "(qualifier) latest date on which the statement could have started to be true",
+    "type": "Time",
+    "categories": "Wikidata qualifier, Wikidata property with datatype 'time'"
+  },
+  {
+    "id": "P8556",
+    "label": "extinction date",
+    "description": "date that a species or language is thought to have gone extinct",
+    "type": "Time",
+    "categories": "Wikidata property related to taxa, Wikidata property with datatype 'time', Wikidata property for items about languages"
+  },
+  {
+    "id": "P9566",
+    "label": "diel cycle",
+    "description": "pattern of diel activity in animals, such as \"nocturnal\" (Q101029366), \"diurnal\" (Q4284186)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to taxa, Wikidata property related to animals and zoology, Wikidata property related to time and duration, Wikidata property related to the life of an animal"
+  },
+  {
+    "id": "P9667",
+    "label": "date of resignation",
+    "description": "date of official resignation of the head of a government in parliamentary-based states, triggering the government to stay in place until the formation of a new executive",
+    "type": "Time",
+    "categories": "Wikidata property with datatype 'time', Wikidata property related to government and state"
+  },
+  {
+    "id": "P967",
+    "label": "guest of honor",
+    "description": "guest(s) of honor invited to an event, e.g. a convention",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to events, Wikidata property related to awards, prizes and honours"
+  }
+]

@@ -19,16 +19,15 @@ COPY --from=builder /app/turbo.json ./turbo.json
 
 RUN yarn install --frozen-lockfile
 
-# 3) Copy full pruned source and build web via Turbo
+# 3) Copy full pruned source and build web (no turbo run here)
 FROM base AS sourcer
 WORKDIR /app
 
 COPY --from=installer /app/ ./
 COPY --from=builder /app/out/full/ ./
 
-
 # Build only web app and its dependencies
-RUN yarn turbo run build --scope=web --include-dependencies --no-deps
+RUN cd apps/web && yarn build
 
 # 4) Runtime image: Next.js production server
 FROM node:20-alpine AS runner

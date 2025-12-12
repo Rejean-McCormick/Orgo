@@ -1,0 +1,56 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S463002",
+      "based_on": "P463",
+      "label_en": "student is enrolled in school"
+    },
+    {
+      "id": "S361009",
+      "based_on": "P361",
+      "label_en": "student is enrolled in class / cohort"
+    },
+    {
+      "id": "S361010",
+      "based_on": "P361",
+      "label_en": "student takes course"
+    },
+    {
+      "id": "S710005",
+      "based_on": "P710",
+      "label_en": "teacher is responsible for class / course"
+    },
+    {
+      "id": "S361011",
+      "based_on": "P361",
+      "label_en": "student has intervention plan"
+    },
+    {
+      "id": "S361012",
+      "based_on": "P361",
+      "label_en": "school incident concerns student"
+    },
+    {
+      "id": "S361013",
+      "based_on": "P361",
+      "label_en": "school incident concerns staff"
+    },
+    {
+      "id": "S1552013",
+      "based_on": "P1552",
+      "label_en": "school incident has disciplinary measure"
+    },
+    {
+      "id": "S1552014",
+      "based_on": "P1552",
+      "label_en": "student has academic result / evaluation"
+    },
+    {
+      "id": "S710006",
+      "based_on": "P710",
+      "label_en": "student follow-up with specialist (counsellor/psychologist)"
+    }
+  ]
+}

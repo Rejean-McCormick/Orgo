@@ -1,0 +1,77 @@
+{
+  "P": [
+    {
+      "id": "P3205",
+      "label_en": "is patient of",
+      "wikidata_label_en": "patient of"
+    },
+    {
+      "id": "P793",
+      "label_en": "care episode event",
+      "wikidata_label_en": "significant event"
+    },
+    {
+      "id": "P924",
+      "label_en": "has possible treatment",
+      "wikidata_label_en": "possible treatment"
+    },
+    {
+      "id": "P2176",
+      "label_en": "has drug or therapy used for treatment",
+      "wikidata_label_en": "drug or therapy used for treatment"
+    },
+    {
+      "id": "P5642",
+      "label_en": "has risk factor",
+      "wikidata_label_en": "risk factor"
+    },
+    {
+      "id": "P2868",
+      "label_en": "subject has role",
+      "wikidata_label_en": "subject has role"
+    }
+  ],
+  "R": [],
+  "S": [
+    {
+      "id": "S793001",
+      "based_on": "P793",
+      "label_en": "has care episode"
+    },
+    {
+      "id": "S921001",
+      "based_on": "P921",
+      "label_en": "has primary diagnosis"
+    },
+    {
+      "id": "S921002",
+      "based_on": "P921",
+      "label_en": "has secondary diagnosis"
+    },
+    {
+      "id": "S924001",
+      "based_on": "P924",
+      "label_en": "has treatment / intervention"
+    },
+    {
+      "id": "S2868001",
+      "based_on": "P2868",
+      "label_en": "has responsible clinician"
+    },
+    {
+      "id": "S1552001",
+      "based_on": "P1552",
+      "label_en": "has triage level"
+    },
+    {
+      "id": "S1552002",
+      "based_on": "P1552",
+      "label_en": "has confidentiality restriction"
+    },
+    {
+      "id": "S155001",
+      "based_on": "P155",
+      "label_en": "handover to"
+    }
+  ]
+}

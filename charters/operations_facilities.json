@@ -1,0 +1,46 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S361401",
+      "based_on": "P361",
+      "label_en": "has building"
+    },
+    {
+      "id": "S276401",
+      "based_on": "P276",
+      "label_en": "has room / area"
+    },
+    {
+      "id": "S361402",
+      "based_on": "P361",
+      "label_en": "has equipment"
+    },
+    {
+      "id": "S361403",
+      "based_on": "P361",
+      "label_en": "has work order"
+    },
+    {
+      "id": "S1552401",
+      "based_on": "P1552",
+      "label_en": "has work order type"
+    },
+    {
+      "id": "S1552402",
+      "based_on": "P1552",
+      "label_en": "has inspection type"
+    },
+    {
+      "id": "S5854401",
+      "based_on": "P585",
+      "label_en": "inspection scheduled at"
+    },
+    {
+      "id": "S1343401",
+      "based_on": "P1343",
+      "label_en": "has inspection report document"
+    }
+  ]
+}

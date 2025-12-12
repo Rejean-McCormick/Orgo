@@ -1,0 +1,31 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S1552801",
+      "based_on": "P1552",
+      "label_en": "has ticket category"
+    },
+    {
+      "id": "S1552802",
+      "based_on": "P1552",
+      "label_en": "has SLA / response target"
+    },
+    {
+      "id": "S361801",
+      "based_on": "P361",
+      "label_en": "has service component"
+    },
+    {
+      "id": "S1552803",
+      "based_on": "P1552",
+      "label_en": "has outage type"
+    },
+    {
+      "id": "S1552804",
+      "based_on": "P1552",
+      "label_en": "has escalation path"
+    }
+  ]
+}

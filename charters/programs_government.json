@@ -1,0 +1,52 @@
+{
+  "P": [
+    {
+      "id": "P749",
+      "label_en": "has parent administration",
+      "wikidata_label_en": "parent organization"
+    },
+    {
+      "id": "P1001",
+      "label_en": "applies to jurisdiction",
+      "wikidata_label_en": "applies to jurisdiction"
+    },
+    {
+      "id": "P2360",
+      "label_en": "has intended public",
+      "wikidata_label_en": "intended public"
+    },
+    {
+      "id": "P8324",
+      "label_en": "is funded by",
+      "wikidata_label_en": "funder"
+    }
+  ],
+  "R": [],
+  "S": [
+    {
+      "id": "S361003",
+      "based_on": "P361",
+      "label_en": "implements policy / regulation"
+    },
+    {
+      "id": "S1343001",
+      "based_on": "P1343",
+      "label_en": "is mandated by legal text"
+    },
+    {
+      "id": "S1552003",
+      "based_on": "P1552",
+      "label_en": "has administrative handling level"
+    },
+    {
+      "id": "S582001",
+      "based_on": "P582",
+      "label_en": "has legal deadline"
+    },
+    {
+      "id": "S2360001",
+      "based_on": "P2360",
+      "label_en": "receives request from population / actor type"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S463001",
+      "based_on": "P463",
+      "label_en": "person is member of group"
+    },
+    {
+      "id": "S361006",
+      "based_on": "P361",
+      "label_en": "group is part of organization"
+    },
+    {
+      "id": "S527004",
+      "based_on": "P527",
+      "label_en": "group has activities / sessions"
+    },
+    {
+      "id": "S710003",
+      "based_on": "P710",
+      "label_en": "activity has participants"
+    },
+    {
+      "id": "S710004",
+      "based_on": "P710",
+      "label_en": "activity has leader / facilitator"
+    },
+    {
+      "id": "S585003",
+      "based_on": "P585",
+      "label_en": "activity scheduled at"
+    },
+    {
+      "id": "S276002",
+      "based_on": "P276",
+      "label_en": "activity occurs in location"
+    },
+    {
+      "id": "S1552007",
+      "based_on": "P1552",
+      "label_en": "activity has attendance status"
+    }
+  ]
+}

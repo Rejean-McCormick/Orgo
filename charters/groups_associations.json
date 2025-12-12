@@ -1,0 +1,31 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S1552601",
+      "based_on": "P1552",
+      "label_en": "has membership type"
+    },
+    {
+      "id": "S3831601",
+      "based_on": "P3831",
+      "label_en": "has mandate / officer role"
+    },
+    {
+      "id": "S361601",
+      "based_on": "P361",
+      "label_en": "has assembly / meeting"
+    },
+    {
+      "id": "S1552602",
+      "based_on": "P1552",
+      "label_en": "has vote / decision outcome"
+    },
+    {
+      "id": "S1343601",
+      "based_on": "P1343",
+      "label_en": "has bylaws / governing document"
+    }
+  ]
+}

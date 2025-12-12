@@ -1,7 +1,13 @@
 // apps/web/src/screens/admin/tasks/AdminTaskOverviewPage.tsx
 
 import { useMemo, useState, useEffect, ChangeEvent } from "react";
-import { useAdminTaskOverviewQuery } from "../../../store/services/orgoApi";
+import {
+  useAdminTaskOverviewQuery,
+} from "../../../store/services/orgoApi";
+import type {
+  AdminTaskOverviewQueryArgs as AdminTaskOverviewQueryArgsApi,
+} from "../../../store/services/orgoApi";
+
 
 type TaskStatus =
   | "PENDING"
@@ -67,22 +73,13 @@ interface AdminTaskOverviewResponse {
   pageSize: number;
 }
 
+
 /**
  * Query args passed to useAdminTaskOverviewQuery.
- * The orgoApi slice should accept this shape and translate it
- * to the backend /api/v3/tasks admin listing with filters.
+ * Keep this in sync with the orgoApi slice definition.
  */
-interface AdminTaskOverviewQueryArgs {
-  page: number;
-  pageSize: number;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  severity?: TaskSeverity;
-  category?: TaskCategory;
-  type?: string;
-  role?: string;
-  labelSearch?: string;
-}
+type AdminTaskOverviewQueryArgs = AdminTaskOverviewQueryArgsApi;
+
 
 const DEFAULT_PAGE_SIZE = 25;
 
@@ -248,63 +245,65 @@ const AdminTaskOverviewPage = () => {
   const debouncedRole = useDebouncedValue(filters.role, 300);
   const debouncedLabelSearch = useDebouncedValue(filters.labelSearch, 300);
 
-  const queryArgs: AdminTaskOverviewQueryArgs = useMemo(() => {
-    const args: AdminTaskOverviewQueryArgs = {
-      page,
-      pageSize: DEFAULT_PAGE_SIZE,
-    };
-
-    if (filters.status !== "ALL") {
-      args.status = filters.status;
-    }
-
-    if (filters.priority !== "ALL") {
-      args.priority = filters.priority;
-    }
-
-    if (filters.severity !== "ALL") {
-      args.severity = filters.severity;
-    }
-
-    if (filters.category !== "ALL") {
-      args.category = filters.category;
-    }
-
-    if (debouncedType.trim()) {
-      args.type = debouncedType.trim();
-    }
-
-    if (debouncedRole.trim()) {
-      args.role = debouncedRole.trim();
-    }
-
-    if (debouncedLabelSearch.trim()) {
-      args.labelSearch = debouncedLabelSearch.trim();
-    }
-
-    return args;
-  }, [
+  const queryArgs = useMemo<Partial<AdminTaskOverviewQueryArgs>>(() => {
+  const args: Partial<AdminTaskOverviewQueryArgs> = {
     page,
-    filters.status,
-    filters.priority,
-    filters.severity,
-    filters.category,
-    debouncedType,
-    debouncedRole,
-    debouncedLabelSearch,
-  ]);
+    pageSize: DEFAULT_PAGE_SIZE,
+  };
+
+  if (filters.status !== "ALL") {
+    args.status = filters.status;
+  }
+
+  if (filters.priority !== "ALL") {
+    args.priority = filters.priority;
+  }
+
+  if (filters.severity !== "ALL") {
+    args.severity = filters.severity;
+  }
+
+  if (filters.category !== "ALL") {
+    args.category = filters.category;
+  }
+
+  if (debouncedType.trim()) {
+    args.type = debouncedType.trim();
+  }
+
+  if (debouncedRole.trim()) {
+    args.role = debouncedRole.trim();
+  }
+
+  if (debouncedLabelSearch.trim()) {
+    args.labelSearch = debouncedLabelSearch.trim();
+  }
+
+  return args;
+}, [
+  page,
+  filters.status,
+  filters.priority,
+  filters.severity,
+  filters.category,
+  debouncedType,
+  debouncedRole,
+  debouncedLabelSearch,
+]);
+
 
   // Cast to the expected response type for local usage; the orgoApi slice
   // should be implemented so that this cast matches the real response.
-  const { data, isLoading, isError, refetch, isFetching } = useAdminTaskOverviewQuery(
-    queryArgs,
-  ) as {
-    data?: AdminTaskOverviewResponse;
-    isLoading: boolean;
-    isError: boolean;
-    isFetching: boolean;
-    refetch: () => void;
-  };
+const { data, isLoading, isError, refetch, isFetching } = useAdminTaskOverviewQuery(
+  queryArgs as AdminTaskOverviewQueryArgs,
+) as {
+  data?: AdminTaskOverviewResponse;
+  isLoading: boolean;
+  isError: boolean;
+  isFetching: boolean;
+  refetch: () => void;
+};
+
 
   const tasks = data?.tasks ?? [];
   const total = data?.total ?? 0;

@@ -72,13 +72,14 @@ function formatSeconds(value?: number): string {
 /**
  * Small badge component for enum-like values.
  */
-function Pill(props: { children: React.ReactNode }) {
+function Pill(props: { children?: any }) {
   return (
     <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium">
       {props.children}
     </span>
   );
 }
+
 
 /**
  * Admin view to inspect and edit organization profiles and preview their impact.

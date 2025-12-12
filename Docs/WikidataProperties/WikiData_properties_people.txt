@@ -1,0 +1,3507 @@
+[
+  {
+    "id": "P1000",
+    "label": "record held",
+    "description": "notable record achieved by a person or entity, include qualifiers for dates held",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P10032",
+    "label": "Museu da Pessoa History file",
+    "description": "Wikimedia Commons PDF file of a story in the Museu da Pessoa about or by the subject",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property for items about people, Wikidata property to link to Commons"
+  },
+  {
+    "id": "P10067",
+    "label": "train melody",
+    "description": "music that tells you that a train is leaving or arriving at a train station",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport, Wikidata property related to music"
+  },
+  {
+    "id": "P101",
+    "label": "field of work",
+    "description": "specialization of a person or organization; see P106 for the occupation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about positions, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P102",
+    "label": "member of political party",
+    "description": "the political party of which a person is or has been a member or otherwise affiliated",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P1026",
+    "label": "academic thesis",
+    "description": "thesis or dissertation written for a degree",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people, Wikidata property related to education, Wikidata property related to theses and dissertations"
+  },
+  {
+    "id": "P1029",
+    "label": "crew member",
+    "description": "person that participated operating or serving aboard this vehicle",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport, Wikidata property associated with people"
+  },
+  {
+    "id": "P103",
+    "label": "native language",
+    "description": "language or languages a person (or group) has learned from early childhood",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a language"
+  },
+  {
+    "id": "P1035",
+    "label": "honorific suffix",
+    "description": "word or expression with connotations conveying esteem or respect when used, after a name, in addressing or referring to a person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P10367",
+    "label": "number of lanes",
+    "description": "number of lanes on this road in a given direction",
+    "type": "Quantity",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P1038",
+    "label": "relative",
+    "description": "family member (qualify with \"kinship to subject\", P1039; for direct family member please use specific property)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P1039",
+    "label": "kinship to subject",
+    "description": "qualifier of \"relative\" (P1038) to indicate less usual family relationships (ancestor, son-in-law, adoptions, etc); indicate how the qualificator item is related to the main item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P10422",
+    "label": "Ghana Place Names URL",
+    "description": "URL for an entry in the \"Ghana Place Names\" website. Format: URL starting with \"https://sites.google.com/site/ghanaplacenames/\" or \"https://sites.google.com/view/ghanaplacenames/\"",
+    "type": "Url",
+    "categories": "Wikidata property related to places, Wikidata property for items about languages, Wikidata property related to ethnic groups or indigenous people"
+  },
+  {
+    "id": "P10449",
+    "label": "trained by",
+    "description": "person who trained the subject, a human or an animal",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports people"
+  },
+  {
+    "id": "P1049",
+    "label": "worshipped by",
+    "description": "religion or group/civilization that worships a given deity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to religions and beliefs"
+  },
+  {
+    "id": "P1050",
+    "label": "medical condition",
+    "description": "any state relevant to the health of an organism, including diseases and positive conditions",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to medicine"
+  },
+  {
+    "id": "P106",
+    "label": "occupation",
+    "description": "occupation of a person. See also \"field of work\" (Property:P101), \"position held\" (Property:P39). Not for groups of people. There, use \"field of work\" (Property:P101), \"industry\" (Property:P452), \"members have occupation\" (Property:P3989).",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P10606",
+    "label": "notable role",
+    "description": "role in a theatrical, motion picture, television, or other work that a performer is particularly known for",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to music, Wikidata property related to theater, Wikidata property related to movies and television shows, curated Wikidata property"
+  },
+  {
+    "id": "P10607",
+    "label": "athletics program",
+    "description": "the name of a school's athletics program, as opposed to individual teams in particular sports",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport, Wikidata property related to education"
+  },
+  {
+    "id": "P10610",
+    "label": "number of teachers",
+    "description": "number of teachers at an educational facility",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to education, Wikidata property for number of people"
+  },
+  {
+    "id": "P10611",
+    "label": "has certification",
+    "description": "states that an item has a certain certification",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to awards, prizes and honours, Wikidata property for items about buildings, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P10623",
+    "label": "number of blood donors",
+    "description": "number of people that have donated blood for an organization at a particular time",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property for number of people"
+  },
+  {
+    "id": "P10624",
+    "label": "official observer status in organization",
+    "description": "organization by which the subject is granted observer status",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P10636",
+    "label": "number of conferences",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P1064",
+    "label": "track gauge",
+    "description": "spacing of the rails on a railway track",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P10640",
+    "label": "pole positions",
+    "description": "number of races started in pole position",
+    "type": "Quantity",
+    "categories": "Wikidata property related to motorsports, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P10645",
+    "label": "reports to",
+    "description": "the subject position reports to this position",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P10648",
+    "label": "podium finishes",
+    "description": "number of podium finishes a participant achieved",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport, Wikidata property for quantities, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P10655",
+    "label": "oeconym",
+    "description": "name of a family farm legally used as a personal name",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P10659",
+    "label": "number of medals",
+    "description": "sports awards",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P1066",
+    "label": "student of",
+    "description": "person who has taught this person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education, Wikidata property related to theses and dissertations"
+  },
+  {
+    "id": "P10741",
+    "label": "dance style",
+    "description": "dance style that the subject participates or participated in or is associated with",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata property related to dance"
+  },
+  {
+    "id": "P10777",
+    "label": "candidate position",
+    "description": "numeric qualifier for position of a candidate in a particular election",
+    "type": "String",
+    "categories": "Wikidata qualifier, Wikidata property for items about people, Wikidata property related to elections"
+  },
+  {
+    "id": "P10788",
+    "label": "in operation on service",
+    "description": "service that a vehicle is operating on",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P1079",
+    "label": "launch contractor",
+    "description": "organization contracted to launch the rocket",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport, Wikidata property related to spacecraft"
+  },
+  {
+    "id": "P108",
+    "label": "employer",
+    "description": "person or organization for which the subject works or worked",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P10808",
+    "label": "preceding halt on service",
+    "description": "(qualifier) halt prior to this one at which the service stops",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to rail transport"
+  },
+  {
+    "id": "P10809",
+    "label": "following halt on service",
+    "description": "(qualifier) halt immediately following this one at which the service stops",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to rail transport"
+  },
+  {
+    "id": "P1082",
+    "label": "population",
+    "description": "number of people inhabiting the place; number of people of subject",
+    "type": "Quantity",
+    "categories": "Wikidata property related to demography, Wikidata property for number of people"
+  },
+  {
+    "id": "P10823",
+    "label": "fastest laps",
+    "description": "number of fastest laps a driver is credited with over a series, season, or career",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sports people"
+  },
+  {
+    "id": "P1083",
+    "label": "maximum capacity",
+    "description": "number of people allowed for a venue or vehicle",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property for number of people"
+  },
+  {
+    "id": "P1087",
+    "label": "Elo rating",
+    "description": "quantitative measure of one's game-playing ability, particularly in classical chess",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sports people, Wikidata property related to chess"
+  },
+  {
+    "id": "P109",
+    "label": "signature",
+    "description": "image of a person's signature",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property for items about people, Wikidata property to link to Commons, Wikidata property for linking to a representative image, curated Wikidata property"
+  },
+  {
+    "id": "P1093",
+    "label": "gross tonnage",
+    "description": "unitless index related to a ship's overall internal volume",
+    "type": "Quantity",
+    "categories": "Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P1098",
+    "label": "number of speakers, writers, or signers",
+    "description": "number of people who use a language",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about languages, Wikidata property related to demography, Wikidata property for number of people"
+  },
+  {
+    "id": "P1099",
+    "label": "number of masts",
+    "description": "number of masts a ship has",
+    "type": "Quantity",
+    "categories": "Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P110",
+    "label": "illustrator",
+    "description": "person drawing the pictures or taking the photographs in a book or similar work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about books, Wikidata property associated with people, Wikidata property for items about manuscripts"
+  },
+  {
+    "id": "P1103",
+    "label": "number of platform tracks",
+    "description": "number of tracks served by the platforms at a railway station",
+    "type": "Quantity",
+    "categories": "Wikidata property related to transport, Wikidata property related to rail transport"
+  },
+  {
+    "id": "P11081",
+    "label": "won sets",
+    "description": "number of sets won",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P1110",
+    "label": "attendance",
+    "description": "number of people (spectators, ticket holders) at an event or exhibition",
+    "type": "Quantity",
+    "categories": "Wikidata property related to events, Wikidata property related to sports events, Wikidata property for number of people"
+  },
+  {
+    "id": "P1111",
+    "label": "votes received",
+    "description": "qualifier stating the number of votes for a candidate in an election",
+    "type": "Quantity",
+    "categories": "Wikidata property related to elections, non-restrictive qualifier, Wikidata property associated with people, Wikidata property of quantity type able to indicate an absolute amount as well as a percentage"
+  },
+  {
+    "id": "P1128",
+    "label": "employees",
+    "description": "total number of employees of a company at a given \"point in time\" (P585). Most recent data would generally have preferred rank; data for previous years normal rank (not deprecated rank). Add data for recent years, don't overwrite",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about corporations, Wikidata property for number of people"
+  },
+  {
+    "id": "P1129",
+    "label": "national team appearances",
+    "description": "total number of games officially played by a sportsman for national team",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sports people"
+  },
+  {
+    "id": "P1132",
+    "label": "number of participants",
+    "description": "number of participants of an event, e.g. people or groups of people that take part in the event (NO units)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to events, Wikidata property for number of people"
+  },
+  {
+    "id": "P1136",
+    "label": "solved by",
+    "description": "person that solved a scientific question",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to science"
+  },
+  {
+    "id": "P1142",
+    "label": "political ideology",
+    "description": "political ideology of an organization or person or of a work (such as a newspaper)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to politics, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P11463",
+    "label": "travel advisory category",
+    "description": "advisory category issued by a government regarding travel to another country or territory",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P11491",
+    "label": "member of Roman tribe",
+    "description": "Roman tribe in which one was inscribed",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to the Ancient World"
+  },
+  {
+    "id": "P115",
+    "label": "home venue",
+    "description": "home stadium or venue of a sports team or performing arts organization",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to events, Wikidata property related to music, Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P1158",
+    "label": "location of landing",
+    "description": "location where the craft landed",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for specifying the location of an event, Wikidata property related to transport, Wikidata property related to spacecraft"
+  },
+  {
+    "id": "P1174",
+    "label": "visitors per year",
+    "description": "number of people visiting a location or an event each year",
+    "type": "Quantity",
+    "categories": "Wikidata property related to places, Wikidata property for number of people"
+  },
+  {
+    "id": "P11747",
+    "label": "holds diplomatic passport of",
+    "description": "country of the diplomatic passport held by the person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P118",
+    "label": "league or competition",
+    "description": "league or competition in which team or player has played, or in which an event occurs",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports people, Wikidata property related to sports teams/clubs, Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P1192",
+    "label": "connecting service",
+    "description": "service stopping at a station",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P1196",
+    "label": "manner of death",
+    "description": "general circumstances of a person's death; e.g. natural causes, accident, suicide, homicide, etc. Use 'cause of death' (P509) for the specific physiological mechanism, e.g. heart attack, trauma, pneumonia etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to describe the death of the subject"
+  },
+  {
+    "id": "P11964",
+    "label": "tournament type",
+    "description": "significance or status of a sports competition for a league, tour, association, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P12004",
+    "label": "towing capacity",
+    "description": "the maximum sustainable force with which this vehicle can pull or push another object. Alternatively for road- or track-vehicles, the maximum weight of an object on wheels that this vehicle can reliably and safely pull given usual slopes",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to transport"
+  },
+  {
+    "id": "P12011",
+    "label": "tribe",
+    "description": "recognised membership in a society, mainly denoted by shared cultural heritage; for ethnicity use P172",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P1202",
+    "label": "carries scientific instrument",
+    "description": "scientific instruments carried by a vessel, satellite, or device that are not required for propelling or navigating",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport, Wikidata property related to spacecraft"
+  },
+  {
+    "id": "P12089",
+    "label": "self-identified name",
+    "description": "name by which a group of humans refers to itself (endonym)",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, curated Wikidata property"
+  },
+  {
+    "id": "P12090",
+    "label": "non-self-identified name",
+    "description": "name used to identify a group of humans as opposed to their self-determination",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, curated Wikidata property"
+  },
+  {
+    "id": "P123",
+    "label": "publisher",
+    "description": "organization or person responsible for publishing a work, such as a book, periodical, printed music, podcast, game or software",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a source, Wikidata property related to software, Wikidata property for items about people or organisations, Wikidata property for items about books"
+  },
+  {
+    "id": "P12330",
+    "label": "Philippine middle name",
+    "description": "maternal surname generally placed in the middle of this person's name",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P12363",
+    "label": "clerked for",
+    "description": "this person has held a clerkship with the judge",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P12439",
+    "label": "civil rank",
+    "description": "non-military rank of a civil office holder in Russian Empire",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P12475",
+    "label": "top scorer",
+    "description": "best scorer of a single season of a team sport's competition or the best ever scorer of the history of a competition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P12621",
+    "label": "beneficial owner",
+    "description": "natural person or persons who ultimately owns or controls a company or organisation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to utilization and ownership, Wikidata property associated with people"
+  },
+  {
+    "id": "P12650",
+    "label": "electoral symbol",
+    "description": "symbol allocated to a political party or candidate for use on ballots",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to politics, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P127",
+    "label": "owned by",
+    "description": "owner of the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property associated with people, Wikidata property related to slavery, Wikidata property related to utilization and ownership"
+  },
+  {
+    "id": "P12712",
+    "label": "population by native language",
+    "description": "native language population of a place",
+    "type": "Quantity",
+    "categories": "Wikidata property related to demography, Wikidata property for number of people"
+  },
+  {
+    "id": "P1283",
+    "label": "filmography",
+    "description": "item for the list of films a person has contributed to. Don't use it to add film items. Instead, add actors as \"cast member\" (P161) on items for films, directors with \"director\" (P57)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P1290",
+    "label": "godparent",
+    "description": "person who is the godparent of a given person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships"
+  },
+  {
+    "id": "P1301",
+    "label": "number of elevators",
+    "description": "number of elevators in a building",
+    "type": "Quantity",
+    "categories": "Wikidata property related to transport, Wikidata property related to structures"
+  },
+  {
+    "id": "P1302",
+    "label": "primary destinations",
+    "description": "major towns and cities that a road serves",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to transport"
+  },
+  {
+    "id": "P1303",
+    "label": "instrument",
+    "description": "musical instrument that a person plays or teaches or used in a music occupation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to musical instruments"
+  },
+  {
+    "id": "P1308",
+    "label": "position holder",
+    "description": "persons who hold and/or held the position",
+    "type": "WikibaseItem",
+    "categories": "noble title, position, Wikidata property for items about people, Wikidata property for items about organizations, fictional office, position, or title"
+  },
+  {
+    "id": "P1317",
+    "label": "floruit",
+    "description": "date when the person was known to be active or alive, when birth or death not documented",
+    "type": "Time",
+    "categories": "Wikidata property for birth or death, Wikidata property for items about people with datatype 'time'"
+  },
+  {
+    "id": "P1318",
+    "label": "proved by",
+    "description": "person who proved something",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P13187",
+    "label": "role named in credits as",
+    "description": "use as qualifier to indicate how the object's role was named in the credits of its respective work",
+    "type": "String",
+    "categories": "Wikidata property for items about people, Wikidata property related to creative works"
+  },
+  {
+    "id": "P1321",
+    "label": "municipal affiliation of a Swiss national",
+    "description": "lieu d'origine/Heimatort/luogo d'origine of a Swiss national. Not be confused with place of birth or place of residence",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a location"
+  },
+  {
+    "id": "P13238",
+    "label": "entry height",
+    "description": "height of the entrance above ground level for boarding vehicles",
+    "type": "Quantity",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P13260",
+    "label": "romantic orientation",
+    "description": "pattern of romantic attraction of this person or fictional character \u2014 use ONLY IF they have stated it themselves, unambiguously, or it has been widely agreed upon by historians after their death",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to LGBT"
+  },
+  {
+    "id": "P1327",
+    "label": "partner in business or sport",
+    "description": "professional collaborator",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P13282",
+    "label": "land acknowledgement URL",
+    "description": "acknowledgement of indigenous or native people who live and whose ancestors lived at a location",
+    "type": "Url",
+    "categories": "Wikidata property related to education, Wikidata property related to Native American faith and the Native American people and tribes"
+  },
+  {
+    "id": "P13361",
+    "label": "number of goals scored in penalty shootouts",
+    "description": "total number of goals scored by a team in a penalty shootout",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to association football, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P1340",
+    "label": "eye color",
+    "description": "color of the irises of a person's eyes",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to color, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P1342",
+    "label": "number of seats",
+    "description": "total number of seats/members in an assembly (legislative house or similar)",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property for number of people"
+  },
+  {
+    "id": "P1344",
+    "label": "participant in",
+    "description": "event in which a person, organization or creative work was/is a participant; inverse of P710 or P1923",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations, Wikidata property to describe media items"
+  },
+  {
+    "id": "P1346",
+    "label": "winner",
+    "description": "winner of a competition or similar event, not to be used for awards (instead use \"award received\" (P166) on awardee's item, possibly qualified with \"for work\" (P1686)) or for wars or battles",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to events, Wikidata property related to sports events"
+  },
+  {
+    "id": "P13464",
+    "label": "terminal speaker",
+    "description": "the last person able to speak the language fluently",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to linguistics"
+  },
+  {
+    "id": "P13497",
+    "label": "interior designer",
+    "description": "person responsible for the interior design of this room, building, or structure",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P135",
+    "label": "movement",
+    "description": "literary, artistic, scientific or philosophical movement or scene associated with this person or work. For political ideologies use P1142.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations, Wikidata property related to creative works"
+  },
+  {
+    "id": "P1350",
+    "label": "number of matches played/races/starts",
+    "description": "matches or games a player or a team played during an event. Also a total number of matches a player officially appeared in during the whole career",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about people, Wikidata property related to sports people, Wikidata property related to sports teams/clubs, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P1351",
+    "label": "number of points/goals/set scored",
+    "description": "goals / points scored in a match or an event used as qualifier to the participant. Use P1358 for league points.",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sport organizations, Wikidata property related to sports people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P1352",
+    "label": "ranking",
+    "description": "subject's ordinal position as qualitatively evaluated relative to other members of a group",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport organizations, Wikidata property for items about musical works, Wikidata property related to sports people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P1355",
+    "label": "number of wins",
+    "description": "number of sporting matches, games or events won",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sport organizations, Wikidata property related to sports people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P1356",
+    "label": "number of losses",
+    "description": "number of sporting matches, games or events lost",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport organizations, Wikidata property related to sports people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P1357",
+    "label": "number of draws/ties",
+    "description": "number of matches or games drawn or tied in a league or an event",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sport organizations, Wikidata property related to sports people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P1358",
+    "label": "points for",
+    "description": "number of points in a league table or decathlon. (Use P1351 for goals/points in a match)",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sport organizations, Wikidata property related to sports people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P1359",
+    "label": "number of points/goals conceded",
+    "description": "points conceded or goals against (use in league table items)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport organizations, Wikidata property related to sports people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P136",
+    "label": "genre",
+    "description": "creative work's genre or an artist's field of work (P101). Use main subject (P921) to relate creative works to their topic",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to creative works, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P1363",
+    "label": "points/goal scored by",
+    "description": "person who scored a point or goal in a game",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people or organisations, Wikidata property related to sports events"
+  },
+  {
+    "id": "P1373",
+    "label": "daily patronage",
+    "description": "number of daily passengers, patrons or visitors in specified time period",
+    "type": "Quantity",
+    "categories": "Wikidata property for number of people, Wikidata property related to transport"
+  },
+  {
+    "id": "P13783",
+    "label": "designed for handedness",
+    "description": "hand(s) that this object is intended to be used with",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to human anatomy, Wikidata property related to commercial products, Wikidata property related to method, methodology or mode of actions"
+  },
+  {
+    "id": "P13814",
+    "label": "calligraphy",
+    "description": "calligraphy of this person",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property for items about people, Wikidata property to link to Commons, Wikidata property for linking to a representative image, Wikidata property related to Islam"
+  },
+  {
+    "id": "P1387",
+    "label": "political alignment",
+    "description": "political position within the left\u2013right political spectrum",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people or organisations, Wikidata property related to politics"
+  },
+  {
+    "id": "P1390",
+    "label": "match time of event",
+    "description": "time into a game when an event occurs (use with a unit)",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to time and duration, Wikidata property related to sports events"
+  },
+  {
+    "id": "P1393",
+    "label": "proxy",
+    "description": "person authorized to act for another",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P13939",
+    "label": "Commonwealth Sport country code",
+    "description": "code for countries participating in Commonwealth Sport events",
+    "type": "String",
+    "categories": "Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P13975",
+    "label": "GBFS feed URL",
+    "description": "URL of a GBFS feed for the bicycle-sharing system",
+    "type": "Url",
+    "categories": "Wikidata property related to transport, Wikidata property related to websites"
+  },
+  {
+    "id": "P14",
+    "label": "traffic sign",
+    "description": "graphic symbol describing the item, used at the side of or above roads to give instructions or provide information to road users",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to road transport, Wikidata property for linking to a representative image, curated Wikidata property"
+  },
+  {
+    "id": "P140",
+    "label": "religion or worldview",
+    "description": "religion of a person, organization or religious building, or associated with this subject",
+    "type": "WikibaseItem",
+    "categories": "personal data, Wikidata property for items about people, Wikidata property related to religions and beliefs"
+  },
+  {
+    "id": "P1410",
+    "label": "number of seats in assembly",
+    "description": "number of seats a political party, faction, or group has in a given assembly",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to politics, Wikidata property for number of people"
+  },
+  {
+    "id": "P1411",
+    "label": "nominated for",
+    "description": "award nomination received by a person, organisation or creative work (inspired from \"award received\" (Property:P166))",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to awards, prizes and honours, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P1412",
+    "label": "languages spoken, written or signed",
+    "description": "language(s) that a person or a people speaks, writes or signs, including the native language(s)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a language, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P1416",
+    "label": "affiliation",
+    "description": "organization that a person or organization is affiliated with (not necessarily member of or employed by)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P1418",
+    "label": "orbits completed",
+    "description": "number of orbits a spacecraft has done around a body",
+    "type": "Quantity",
+    "categories": "Wikidata property related to spacecraft, Wikidata property related to transport"
+  },
+  {
+    "id": "P1429",
+    "label": "has pet",
+    "description": "pet that a person owns",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P1443",
+    "label": "score method",
+    "description": "qualifier of \"points/goal scored by (P1363)\"",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to sports events, Wikidata property associated with people"
+  },
+  {
+    "id": "P1446",
+    "label": "number of missing",
+    "description": "number of people missing after an event - qualify with \"point in time (P585)\"",
+    "type": "Quantity",
+    "categories": "Wikidata property related to events, Wikidata property related to disasters, Wikidata property for number of people"
+  },
+  {
+    "id": "P1449",
+    "label": "nickname",
+    "description": "informal name (for a pseudonym use P742)",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations, Wikidata property to indicate a name, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P1455",
+    "label": "list of works",
+    "description": "link to the article with the works of a person; use P358 for discographies",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P1477",
+    "label": "birth name",
+    "description": "full name of a person at birth, if different from their current, generally used name",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P15",
+    "label": "route map",
+    "description": "image of route map at Wikimedia Commons",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to transport, Wikidata property for linking to a representative image, curated Wikidata property"
+  },
+  {
+    "id": "P1532",
+    "label": "country for sport",
+    "description": "country a person or a team represents when playing a sport",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports people, Wikidata property related to sports teams/clubs"
+  },
+  {
+    "id": "P1539",
+    "label": "female population",
+    "description": "number of female people inhabiting the place; number of female people of subject",
+    "type": "Quantity",
+    "categories": "Wikidata property implying third-parties\u2019 gender, Wikidata property for number of people, Wikidata property related to women and feminism, Wikidata property related to demography"
+  },
+  {
+    "id": "P1540",
+    "label": "male population",
+    "description": "number of male people inhabiting the place; number of male people of subject",
+    "type": "Quantity",
+    "categories": "Wikidata property related to demography, Wikidata property implying third-parties\u2019 gender, Wikidata property for number of people"
+  },
+  {
+    "id": "P1543",
+    "label": "monogram",
+    "description": "image of the monogram identifying the person or institution (stamp, publisher mark...), often affixed to another item to trace its origin, authenticity or certification, often in a dated stamp or seal",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property for items about people, Wikidata property to link to Commons, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P1559",
+    "label": "name in native language",
+    "description": "name of a person in their native language",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property for properties"
+  },
+  {
+    "id": "P1561",
+    "label": "number of survivors",
+    "description": "number of people surviving an event",
+    "type": "Quantity",
+    "categories": "Wikidata property related to events, Wikidata property related to disasters, Wikidata property for number of people"
+  },
+  {
+    "id": "P1576",
+    "label": "lifestyle",
+    "description": "typical way of life of an individual, group, or culture",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P1598",
+    "label": "consecrator",
+    "description": "bishop who presided as consecrator or co-consecrator of this bishop",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to Christianity"
+  },
+  {
+    "id": "P16",
+    "label": "transport network",
+    "description": "network the infrastructure is a part of",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P1611",
+    "label": "NATO code for grade",
+    "description": "NATO Code for Grades of Military Personnel",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about military"
+  },
+  {
+    "id": "P1613",
+    "label": "IRC channel URL",
+    "description": "official IRC channel of an institution or project",
+    "type": "Url",
+    "categories": "Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P1618",
+    "label": "sport number",
+    "description": "number worn on a player's (competitor's) uniform, equipment, etc",
+    "type": "String",
+    "categories": "Wikidata qualifier, Wikidata property with datatype string that is not an external identifier, Wikidata property related to sports people"
+  },
+  {
+    "id": "P1622",
+    "label": "driving side",
+    "description": "side of the road that vehicles drive on in a given jurisdiction",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to road transport"
+  },
+  {
+    "id": "P1635",
+    "label": "religious name",
+    "description": "name taken or used as a member of a religious community",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property related to religions and beliefs"
+  },
+  {
+    "id": "P1636",
+    "label": "date of baptism",
+    "description": "date when a person was baptized. For times when only baptism records were available, this can be a good substitute for date of birth.",
+    "type": "Time",
+    "categories": "Wikidata property for birth or death, Wikidata property for a person-related event, Wikidata property related to Christianity"
+  },
+  {
+    "id": "P1642",
+    "label": "acquisition transaction",
+    "description": "how the player was acquired; qualifier for P54 (member of sports team)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people, Wikidata property related to sports people"
+  },
+  {
+    "id": "P1643",
+    "label": "departure transaction",
+    "description": "how the player was released or transferred from the roster; qualifier for P54 (member of sports team)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people, Wikidata property related to sports people"
+  },
+  {
+    "id": "P1652",
+    "label": "referee",
+    "description": "referee or umpire of a match",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P166",
+    "label": "award received",
+    "description": "award or recognition received by a person, organization or creative work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, Wikidata property for items about people or organisations, Wikidata property related to awards, prizes and honours"
+  },
+  {
+    "id": "P1677",
+    "label": "index case of",
+    "description": "primary case, patient zero: initial patient in the population of an epidemiological investigation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to medicine"
+  },
+  {
+    "id": "P1686",
+    "label": "for work",
+    "description": "qualifier of award received (P166) to specify the work that an award was given to the creator for",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to awards, prizes and honours, non-restrictive qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P1706",
+    "label": "together with",
+    "description": "qualifier to specify the item that this property is shared with",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, non-restrictive qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P172",
+    "label": "ethnic group",
+    "description": "subject's ethnicity (consensus is that a VERY high standard of proof is needed for this field to be used. In general this means 1) the subject claims it themselves, or 2) it is widely agreed on by scholars, or 3) is fictional and portrayed as such)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P1731",
+    "label": "Fach vocal classification",
+    "description": "method of classifying opera singers according to the range, weight, and color of their voices",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to music"
+  },
+  {
+    "id": "P1734",
+    "label": "oath of office date",
+    "description": "when person swore the oath and assume or start the office of a position",
+    "type": "Time",
+    "categories": "Wikidata property for items about people with datatype 'time'"
+  },
+  {
+    "id": "P175",
+    "label": "performer",
+    "description": "actor, musician, band or other performer associated with this role or musical work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about fictional characters, Wikidata property to identify contributors to creative works"
+  },
+  {
+    "id": "P177",
+    "label": "crosses",
+    "description": "obstacle (body of water, road, railway...) which this bridge (ferry, ford) crosses over or this tunnel goes under",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport, Wikidata property related to bridges"
+  },
+  {
+    "id": "P1774",
+    "label": "workshop of",
+    "description": "artist whose work group are the likely creator of an artwork",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to creative works, Wikidata property associated with people, Wikidata property related to art"
+  },
+  {
+    "id": "P1775",
+    "label": "follower of",
+    "description": "for unknown artists who work in the manner of the named artist",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people, Wikidata property related to art"
+  },
+  {
+    "id": "P1776",
+    "label": "circle of",
+    "description": "for unknown artists who lived in the same time as the named author in a similar style, possibly a follower or someone who had contact with the named artist",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people, Wikidata property related to art"
+  },
+  {
+    "id": "P1777",
+    "label": "manner of",
+    "description": "for unknown artists who worked in a similar style as the named author, but not necessary from the same period",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people, Wikidata property related to art"
+  },
+  {
+    "id": "P1778",
+    "label": "forgery after",
+    "description": "for an artwork trying to appear to be the work of the named author",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people, Wikidata property related to art"
+  },
+  {
+    "id": "P1780",
+    "label": "school of",
+    "description": "for a creative work with author with a style influenced by the known author or circle, active in the same period, but a student or follower",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people, Wikidata property to indicate a location, Wikidata property related to art"
+  },
+  {
+    "id": "P1782",
+    "label": "courtesy name",
+    "description": "name bestowed upon a person at adulthood in addition to one's given name, mostly in East Asia",
+    "type": "String",
+    "categories": "Wikidata property for items about people, Wikidata property with datatype string that is not an external identifier, Wikidata property to indicate a name, Wikidata property related to Asia"
+  },
+  {
+    "id": "P1785",
+    "label": "temple name",
+    "description": "name bestowed to a monarch after death (East Asia)",
+    "type": "String",
+    "categories": "Wikidata property for items about people, Wikidata property with datatype string that is not an external identifier, Wikidata property to indicate a name, Wikidata property related to Asia"
+  },
+  {
+    "id": "P1786",
+    "label": "posthumous name",
+    "description": "name given to a person after death (East Asia)",
+    "type": "String",
+    "categories": "Wikidata property for items about people, Wikidata property with datatype string that is not an external identifier, Wikidata property to indicate a name, Wikidata property related to Asia"
+  },
+  {
+    "id": "P1787",
+    "label": "art name",
+    "description": "type of pseudonym traditionally adopted by writers and artists in East Asia",
+    "type": "String",
+    "categories": "Wikidata property to indicate a name, Wikidata property with datatype string that is not an external identifier, Wikidata property related to art, Wikidata property for items about people"
+  },
+  {
+    "id": "P1813",
+    "label": "short name",
+    "description": "short name of a place, organisation, person, journal, Wikidata property, etc. Used by some Wikipedia templates",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P1831",
+    "label": "electorate",
+    "description": "number of persons qualified to vote during elections",
+    "type": "Quantity",
+    "categories": "Wikidata property related to politics, Wikidata property for number of people"
+  },
+  {
+    "id": "P1833",
+    "label": "number of registered users/contributors",
+    "description": "number of registered users on a website",
+    "type": "Quantity",
+    "categories": "Wikidata property related to utilization and ownership, Wikidata property for number of people"
+  },
+  {
+    "id": "P1836",
+    "label": "draft pick number",
+    "description": "overall pick number with which a player is selected in a sports draft",
+    "type": "String",
+    "categories": "Wikidata property for items about people, Wikidata qualifier, Wikidata property with datatype string that is not an external identifier, Wikidata property related to sport"
+  },
+  {
+    "id": "P184",
+    "label": "doctoral advisor",
+    "description": "person who supervised the doctorate or PhD thesis of the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education, Wikidata property related to theses and dissertations"
+  },
+  {
+    "id": "P185",
+    "label": "doctoral student",
+    "description": "doctoral student(s) of a professor",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P1853",
+    "label": "blood type",
+    "description": "blood type of the human or animal",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to animals and zoology, Wikidata property with a single value, but different precisions and references can lead to multiple values"
+  },
+  {
+    "id": "P1867",
+    "label": "eligible voters",
+    "description": "number of eligible voters for a particular election",
+    "type": "Quantity",
+    "categories": "Wikidata property related to politics, Wikidata property related to elections, Wikidata property for number of people"
+  },
+  {
+    "id": "P1875",
+    "label": "represented by",
+    "description": "person or agency that represents or manages the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P1876",
+    "label": "vessel",
+    "description": "vessel involved in this mission, navigation or event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P1884",
+    "label": "hair color",
+    "description": "person's hair color. Use P585 as qualifier if there's more than one value",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to color, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P19",
+    "label": "place of birth",
+    "description": "most specific known birth location of a person, animal or fictional character",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for birth or death, Wikidata property for items about people, Wikidata property for specifying the location of an event, Wikidata property encoding a vCard value, Wikidata property with a single value, but different precisions and references can lead to multiple values"
+  },
+  {
+    "id": "P1923",
+    "label": "participating team",
+    "description": "like 'Participant' (P710) but for teams. For an event like a cycle race or a football match you can use this property to list the teams and P710 to list the individuals (with 'member of sports team' (P54) as a qualifier for the individuals)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about organizations, Wikidata property related to sports events"
+  },
+  {
+    "id": "P1950",
+    "label": "second family name in Spanish name",
+    "description": "second (generally maternal) family name in Spanish names (do not use for other double barrelled names) and in some French names.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P197",
+    "label": "adjacent station",
+    "description": "the stations next to this station, sharing the same line(s)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P1971",
+    "label": "number of children",
+    "description": "number of children of the person, animal, or character",
+    "type": "Quantity",
+    "categories": "Wikidata property for human relationships, Wikidata property for number of people"
+  },
+  {
+    "id": "P20",
+    "label": "place of death",
+    "description": "most specific known (e.g. city instead of country, or hospital instead of city) death location of a person, animal or fictional character",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for specifying the location of an event, Wikidata property encoding a vCard value, Wikidata property to describe the death of the subject, Wikidata property with a single value, but different precisions and references can lead to multiple values"
+  },
+  {
+    "id": "P2021",
+    "label": "Erd\u0151s number",
+    "description": "the \"collaborative distance\" between mathematician Paul Erd\u0151s and another person. Use point in time (P585) as qualifier and should be used with a source.",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about people, Wikidata property related to mathematics, Wikidata property with a single value that generally evolves over time"
+  },
+  {
+    "id": "P2031",
+    "label": "work period (start)",
+    "description": "start of period during which a person or group flourished (fl. = \"floruit\") in their professional activity",
+    "type": "Time",
+    "categories": "Wikidata property for items about people with datatype 'time'"
+  },
+  {
+    "id": "P2032",
+    "label": "work period (end)",
+    "description": "end of period during which a person or group flourished (fl. = \"floruit\") in their professional activity",
+    "type": "Time",
+    "categories": "Wikidata property for items about people with datatype 'time'"
+  },
+  {
+    "id": "P2067",
+    "label": "mass",
+    "description": "mass (in colloquial usage also known as weight) of the item",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about people, Wikidata property for physical quantities, Wikidata property related to animals and zoology"
+  },
+  {
+    "id": "P2094",
+    "label": "competition class",
+    "description": "official classification by a regulating body under which the subject (events, teams, participants, or equipment) qualifies for inclusion",
+    "type": "WikibaseItem",
+    "categories": "transitive Wikidata property, Wikidata property related to sport, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P2095",
+    "label": "co-driver",
+    "description": "rally team member who performs as a co-driver or co-pilot",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to motorsports"
+  },
+  {
+    "id": "P2097",
+    "label": "term length of position",
+    "description": "length of time in years (unit: Q577) a person (usually a politician) is to serve in a particular position. Do not add bounds.",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about people, Wikidata property for physical quantities"
+  },
+  {
+    "id": "P21",
+    "label": "sex or gender",
+    "description": "sex or gender identity of human or animal. For human: male, female, non-binary, intersex, transgender female, transgender male, agender, etc. For animal: male organism, female organism. Groups of same gender use subclass of (P279)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property encoding a vCard value, Wikidata property related to LGBT, Wikidata property used as \"depicts\" (P180) qualifier on Commons, Wikidata property about subject\u2019s gender, curated Wikidata property"
+  },
+  {
+    "id": "P2103",
+    "label": "size of team at start",
+    "description": "number of players/sled dogs/etc. in a team at the start of a match or race",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P2105",
+    "label": "size of team at finish",
+    "description": "number of players/sled dogs/etc. in a team at the end of the race or match",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P2124",
+    "label": "member count",
+    "description": "number of entities that are part of an organization at a particular time",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property for number of people"
+  },
+  {
+    "id": "P2196",
+    "label": "count of students",
+    "description": "number of pupils or students of any type in an educational organization. Qualify with \" point in time\" (P585). The most recent count would generally have preferred rank; data for previous years normal rank (not deprecated rank). Don't overwrite.",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property for number of people, Wikidata property related to education"
+  },
+  {
+    "id": "P22",
+    "label": "father",
+    "description": "male parent of the subject. For stepfather, use \"stepparent\" (P3448)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships, asymmetric Wikidata property, Wikidata property encoding a vCard value, Wikidata property with a single value, but different precisions and references can lead to multiple values"
+  },
+  {
+    "id": "P2218",
+    "label": "net worth",
+    "description": "totality of wealth possessed by a person",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about people, Wikidata property related to economics, Wikidata property for quantities"
+  },
+  {
+    "id": "P2261",
+    "label": "beam",
+    "description": "width of a ship at its widest point measured at its nominal waterline",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P2262",
+    "label": "draft",
+    "description": "depth below the water line to the bottom of a vessel's hull; summer draft is implied unless stated otherwise.",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P2321",
+    "label": "general classification of race participants",
+    "description": "classification of race participants",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P2358",
+    "label": "praenomen",
+    "description": "standard part of the name of a Roman (and related cultures), link to items for specific Roman praenomen only",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property related to the Ancient World"
+  },
+  {
+    "id": "P2359",
+    "label": "nomen gentilicium",
+    "description": "standard part of the name of a Roman (and related cultures), link to items about the Roman gens only",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property related to the Ancient World"
+  },
+  {
+    "id": "P2365",
+    "label": "cognomen",
+    "description": "standard part of the name of a Roman (and related cultures), link to items about specific Roman cognomen only",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property related to the Ancient World"
+  },
+  {
+    "id": "P2366",
+    "label": "agnomen",
+    "description": "optional part of the name of a Roman (and related cultures), link to items for specific Roman agnomen only",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property related to the Ancient World"
+  },
+  {
+    "id": "P2389",
+    "label": "organization directed by the office or position",
+    "description": "organization or project which is directed by this office",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations"
+  },
+  {
+    "id": "P2415",
+    "label": "personal best",
+    "description": "an individual's best performance in a given discipline",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sports people"
+  },
+  {
+    "id": "P2416",
+    "label": "sports discipline competed in",
+    "description": "discipline an athlete competed in within a sport",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to sport"
+  },
+  {
+    "id": "P2417",
+    "label": "stage classification",
+    "description": "stage results and ranking of a stage race",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P2443",
+    "label": "stage reached",
+    "description": "ultimate point in an event or competition reached by a participant",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to sport, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P2453",
+    "label": "nominee",
+    "description": "qualifier used with \u201cnominated for\u201d to specify which person or organization was nominated",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P2462",
+    "label": "member of the deme",
+    "description": "name of the deme in Ancient Attica to which the item belonged",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to the Ancient World"
+  },
+  {
+    "id": "P2499",
+    "label": "league level above",
+    "description": "the league above this sports league",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P25",
+    "label": "mother",
+    "description": "female parent of the subject. For stepmother, use \"stepparent\" (P3448)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships, asymmetric Wikidata property, Wikidata property related to women and feminism, Wikidata property with a single value, but different precisions and references can lead to multiple values"
+  },
+  {
+    "id": "P2500",
+    "label": "league level below",
+    "description": "the league below this sports league",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P2501",
+    "label": "results",
+    "description": "results of a competition such as sports or elections",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to elections, Wikidata property related to sports events"
+  },
+  {
+    "id": "P2502",
+    "label": "classification of race",
+    "description": "race for which this classification applies",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P2505",
+    "label": "carries thoroughfare",
+    "description": "thoroughfare carried by a bridge, tunnel, or mountain pass",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to transport, Wikidata property related to bridges"
+  },
+  {
+    "id": "P2522",
+    "label": "competition won",
+    "description": "competition or sports event won by the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport organizations, Wikidata property related to sports people"
+  },
+  {
+    "id": "P2545",
+    "label": "bowling style",
+    "description": "type of bowling employed by a cricketer",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports people, Wikidata property related to cricket"
+  },
+  {
+    "id": "P2561",
+    "label": "name",
+    "description": "name the subject is known by; preferably use a more specific subproperty if available",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property to indicate a name, Wikidata property for items about people, Wikidata property related to places, Wikidata property for properties, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P2573",
+    "label": "number of out-of-school children",
+    "description": "number of out-of-school children reported for a place",
+    "type": "Quantity",
+    "categories": "Wikidata property related to demography, Wikidata property related to education, Wikidata property for number of people"
+  },
+  {
+    "id": "P2595",
+    "label": "maximum gradient",
+    "description": "maximum gradient on a route, expressed as a percentage",
+    "type": "Quantity",
+    "categories": "maximum, Wikidata property related to places, Wikidata property related to rail transport, Wikidata property of quantity type indicating a percentage"
+  },
+  {
+    "id": "P26",
+    "label": "spouse",
+    "description": "the subject has the object as their spouse (husband, wife, partner, etc.). Use \"unmarried partner\" (P451) for non-married companions",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P263",
+    "label": "official residence",
+    "description": "the residence at which heads of government and other senior figures officially reside",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to politics"
+  },
+  {
+    "id": "P264",
+    "label": "record label",
+    "description": "brand and trademark associated with the marketing of subject music recordings and music videos",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations, Wikidata property for items about musical works"
+  },
+  {
+    "id": "P2650",
+    "label": "interested in",
+    "description": "item of special or vested interest to this person or organisation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations"
+  },
+  {
+    "id": "P2673",
+    "label": "next crossing upstream",
+    "description": "next crossing of this river, canal, etc. upstream of this subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to maritime and inland waterway transport, Wikidata property related to bridges"
+  },
+  {
+    "id": "P2674",
+    "label": "next crossing downstream",
+    "description": "next crossing of this river, canal, etc. downstream of this subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to maritime and inland waterway transport, Wikidata property related to bridges"
+  },
+  {
+    "id": "P2679",
+    "label": "author of foreword",
+    "description": "person who wrote the preface, foreword, or introduction of the book but who isn't an author of the rest of the book",
+    "type": "WikibaseItem",
+    "categories": "occupation, Wikidata property associated with people, Wikidata property for items about books"
+  },
+  {
+    "id": "P2680",
+    "label": "author of afterword",
+    "description": "person who wrote the postface, afterword, or conclusion of the book but who isn't an author of the rest of the book",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property associated with people, Wikidata property for items about books"
+  },
+  {
+    "id": "P27",
+    "label": "country of citizenship",
+    "description": "the object is a country that recognizes the subject as its citizen",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P2770",
+    "label": "source of income",
+    "description": "source of income of an organization or person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property for items about people, Wikidata property related to economics"
+  },
+  {
+    "id": "P2781",
+    "label": "race time",
+    "description": "officially recorded time elapsed in a sports race",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property for physical quantities, Wikidata property related to sports people, Wikidata property related to sports events"
+  },
+  {
+    "id": "P2789",
+    "label": "connects with",
+    "description": "item with which the item is physically connected",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to medicine, Wikidata property related to road transport, Wikidata property related to computing"
+  },
+  {
+    "id": "P2790",
+    "label": "net tonnage",
+    "description": "dimensionless index calculated from the total moulded volume of the ship's cargo spaces by using a mathematical formula",
+    "type": "Quantity",
+    "categories": "Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P2793",
+    "label": "clearance",
+    "description": "distance between surface under bridge and bottom of a bridge deck",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to maritime and inland waterway transport, Wikidata property related to bridges"
+  },
+  {
+    "id": "P2802",
+    "label": "fleet or registration number",
+    "description": "the fleet number or registration of the vehicle",
+    "type": "String",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P2831",
+    "label": "totem",
+    "description": "in many indigenous cultures an individual or group has a particular totem (e.g. a type of animal)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to religions and beliefs"
+  },
+  {
+    "id": "P2835",
+    "label": "lowest income threshold",
+    "description": "lowest income for which the tax rate applies, qualifier for P2834 (individual tax rate)",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to economics, Wikidata property associated with people"
+  },
+  {
+    "id": "P2836",
+    "label": "highest income threshold",
+    "description": "highest income for which the tax rate applies, qualifier for P2834 (individual tax rate)",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to economics, Wikidata property associated with people"
+  },
+  {
+    "id": "P2838",
+    "label": "professional name",
+    "description": "name passed down by generation assumed by a master of a traditional Japanese art or sport such as kabuki or sumo",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P2842",
+    "label": "place of marriage",
+    "description": "location where the marriage was celebrated. Use as qualifier for property \"spouse\" (P26)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for specifying the location of an event, Wikidata property associated with people"
+  },
+  {
+    "id": "P286",
+    "label": "head coach",
+    "description": "on-field manager or head coach of a sports club (not to be confused with a general manager P505, which is not a coaching position) or person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport organizations, Wikidata qualifier to describe the object of a statement"
+  },
+  {
+    "id": "P2869",
+    "label": "record or record progression",
+    "description": "links to item on the record or record progression",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P2873",
+    "label": "time in space",
+    "description": "time in space by an astronaut or cosmonaut",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about people, Wikidata property for physical quantities, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P2881",
+    "label": "promoted",
+    "description": "competitor or team promoted during competition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P2882",
+    "label": "relegated",
+    "description": "competitor or team relegated during competition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P289",
+    "label": "vessel class",
+    "description": "series of vessels or other watercraft built to the same design of which this vessel is a member",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P2911",
+    "label": "time gap",
+    "description": "time gap to winner time (P2781)",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property for physical quantities, Wikidata property related to sport"
+  },
+  {
+    "id": "P2937",
+    "label": "parliamentary term",
+    "description": "term of a parliament or any deliberative assembly",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P2955",
+    "label": "point of penalty",
+    "description": "point of penalty in a tournament",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P2957",
+    "label": "throughput",
+    "description": "volume of units that do or can pass through or be transported by the object",
+    "type": "Quantity",
+    "categories": "Wikidata property related to software, Wikidata property related to transport, Wikidata property for physical quantities, Wikidata property related to engineering, Wikidata property for items about computer hardware"
+  },
+  {
+    "id": "P2978",
+    "label": "wheel arrangement",
+    "description": "wheel/axle arrangement for locomotives, railcars and other rolling stock",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P3019",
+    "label": "railway signalling system",
+    "description": "type of signalling used on this railway line",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P3022",
+    "label": "flag bearer",
+    "description": "person who carries the national flag of their country at an opening or closing ceremony",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P3039",
+    "label": "wheelbase",
+    "description": "horizontal distance between the centers of the front and rear wheels",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to road transport"
+  },
+  {
+    "id": "P3085",
+    "label": "qualifies for event",
+    "description": "this event qualifies for that event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P3086",
+    "label": "speed limit",
+    "description": "maximum speed allowed on a transport route or in a certain area",
+    "type": "Quantity",
+    "categories": "Wikidata property related to rail transport, Wikidata property related to road transport, Wikidata property for quantities"
+  },
+  {
+    "id": "P3090",
+    "label": "flight number",
+    "description": "identifier for a specific flight",
+    "type": "String",
+    "categories": "Wikidata property related to air transport"
+  },
+  {
+    "id": "P3091",
+    "label": "mount",
+    "description": "creature ridden by the subject, for instance a horse",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to transport"
+  },
+  {
+    "id": "P3195",
+    "label": "league points system",
+    "description": "point system of an e.g. sports league",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P3205",
+    "label": "patient of",
+    "description": "was treated or studied as a patient by this person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to medicine"
+  },
+  {
+    "id": "P3260",
+    "label": "points awarded",
+    "description": "points awarded to the winning person, team or work for a win, draw, tie or loss. If no points are awarded for some category of finish (e.g. loss) use value 0 not ''no value''.",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P3279",
+    "label": "statistical leader",
+    "description": "leader of a sports tournament in one of statistical qualities (points, assists, rebounds etc.).",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P3301",
+    "label": "broadcast by",
+    "description": "channel, network, website or service that broadcast this item over radio, television or the Internet",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to sports events, Wikidata property related to radio, Wikidata property related to television"
+  },
+  {
+    "id": "P3323",
+    "label": "opponent during disputation",
+    "description": "participant in the defense of a doctoral thesis",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people, Wikidata property related to theses and dissertations"
+  },
+  {
+    "id": "P3342",
+    "label": "significant person",
+    "description": "person linked to the item in any possible way",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property associated with people, Wikidata qualifier to describe the object of a statement"
+  },
+  {
+    "id": "P3349",
+    "label": "designed to carry",
+    "description": "what the vehicle or class of vehicles is or was designed to carry",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P3373",
+    "label": "sibling",
+    "description": "the subject and the object have at least one common parent (brother, sister, etc. including half-siblings); use \"relative\" (P1038) for siblings-in-law (brother-in-law, sister-in-law, etc.) and step-siblings (step-brothers, step-sisters, etc.)",
+    "type": "WikibaseItem",
+    "categories": "symmetric property, Wikidata property for human relationships, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P3437",
+    "label": "carries passengers or cargo",
+    "description": "type of passengers or cargo a vehicle, transport network, or operator carries",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P3438",
+    "label": "vehicle normally used",
+    "description": "vehicle the subject normally uses",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to transport"
+  },
+  {
+    "id": "P3448",
+    "label": "stepparent",
+    "description": "subject has the object as their stepparent",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships"
+  },
+  {
+    "id": "P3450",
+    "label": "sports season of league or competition",
+    "description": "property that shows the competition of which the item is a season. Use P5138 for \"season of club or team\".",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P3494",
+    "label": "points classification",
+    "description": "classification established according to points scored by runners",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P3496",
+    "label": "teams classification by points",
+    "description": "Wikidata property related to sport",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P3497",
+    "label": "teams classification by time",
+    "description": "classification established by team with the criterion of the race time taken from a certain number of runners in the team",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P3512",
+    "label": "means of locomotion",
+    "description": "method that the subject uses to move from one place to another",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to taxa, Wikidata property related to transport"
+  },
+  {
+    "id": "P3530",
+    "label": "par",
+    "description": "predetermined number of strokes a 0-handicap golfer should require to complete a hole, a round or a tournament",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport facilities, Wikidata property related to golf"
+  },
+  {
+    "id": "P358",
+    "label": "discography",
+    "description": "item for list pages with discography of artist or band",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about musical works"
+  },
+  {
+    "id": "P3602",
+    "label": "candidacy in election",
+    "description": "election where the subject is a candidate",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to elections"
+  },
+  {
+    "id": "P361",
+    "label": "part of",
+    "description": "object of which the subject is a part (if this subject is already part of object A which is a part of object B, then please only make the subject part of object A), inverse property of \"has part\" (P527, see also \"has parts of the class\" (P2670))",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, asymmetric Wikidata property, transitive Wikidata property, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P3610",
+    "label": "fare zone",
+    "description": "fare zone that the station is in",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P3629",
+    "label": "age of subject at event",
+    "description": "the age of the subject according to the cited source at the time of an event. Used as a qualifier of significant event property",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property for a person-related event, Wikidata property related to events, Wikidata property related to age"
+  },
+  {
+    "id": "P3716",
+    "label": "social classification",
+    "description": "social class as recognized in traditional or state law",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to classification schemes, Wikidata property related to slavery"
+  },
+  {
+    "id": "P3744",
+    "label": "number of subscribers",
+    "description": "number of subscribers for subscription-based companies, e.g. telecommunication companies, newspapers, pay-TV channels, software, etc.",
+    "type": "Quantity",
+    "categories": "Wikidata property related to economics, Wikidata property for number of people"
+  },
+  {
+    "id": "P375",
+    "label": "space launch vehicle",
+    "description": "type of rocket or other vehicle for launching subject payload into outer space",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport, Wikidata property related to spacecraft"
+  },
+  {
+    "id": "P3764",
+    "label": "pole position",
+    "description": "person, who starts race at first row (leader in the starting grid)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to motorsports"
+  },
+  {
+    "id": "P3813",
+    "label": "Bivouac.com pass ID",
+    "description": "identifier of a North American mountain pass, at Bivouac.com",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to transport, Wikidata property related to mountains and alpine areas, Wikidata property related to North America"
+  },
+  {
+    "id": "P3822",
+    "label": "rules for classification",
+    "description": "the rules for classification of a sports league",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P3833",
+    "label": "diaspora",
+    "description": "diaspora that a cultural group belongs to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P3840",
+    "label": "slope rating",
+    "description": "the slope rating of a golf course is a measure of its difficulty for bogey golfers",
+    "type": "Quantity",
+    "categories": "Wikidata property related to golf, Wikidata property related to sport facilities"
+  },
+  {
+    "id": "P3858",
+    "label": "route diagram template",
+    "description": "Wikimedia template with route diagram",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P3872",
+    "label": "patronage",
+    "description": "number of passengers, patrons or visitors in specified time period",
+    "type": "Quantity",
+    "categories": "Wikidata property related to transport, Wikidata property for number of people"
+  },
+  {
+    "id": "P39",
+    "label": "position held",
+    "description": "subject currently or formerly holds the object position or public office",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, title of authority, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P3902",
+    "label": "had as last meal",
+    "description": "components of the last meal had by a person before death",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to food and eating"
+  },
+  {
+    "id": "P3909",
+    "label": "last words",
+    "description": "last words attributed to a person before their death",
+    "type": "Monolingualtext",
+    "categories": "Wikidata property for items about people, Wikidata property for birth or death"
+  },
+  {
+    "id": "P3919",
+    "label": "contributed to creative work",
+    "description": "person is cited as contributing to some creative or published work or series (qualify with \"subject has role\", P2868)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P3938",
+    "label": "named by",
+    "description": "person or organisation that coined the name; use as qualifier for P2561 and its subproperties",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P3967",
+    "label": "final event",
+    "description": "final event of a competition",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P3983",
+    "label": "sports league level",
+    "description": "the level of the sport league in the sport league system",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P3994",
+    "label": "racon signal",
+    "description": "signal that a radar beacon responds in morse code, when triggered by radar",
+    "type": "String",
+    "categories": "Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P40",
+    "label": "child",
+    "description": "subject has object as child. Do not use for stepchildren\u2014use \"relative\" (P1038), qualified with \"type of kinship\" (P1039)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships, asymmetric Wikidata property, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P405",
+    "label": "taxon author",
+    "description": "the author(s) that (optionally) may be cited with the scientific name",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to taxa, Wikidata property associated with people"
+  },
+  {
+    "id": "P4092",
+    "label": "checksum",
+    "description": "small-sized datum derived from a block of digital data for the purpose of detecting errors. Use qualifier \"determination method\" (P459) to indicate how it's calculated, e.g. MD5.",
+    "type": "String",
+    "categories": "Wikidata property related to software, Wikidata property with datatype string that is not an external identifier, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P410",
+    "label": "military or police rank",
+    "description": "military or police rank achieved by a person (should usually have a \"start time\" qualifier), or military or police rank associated with a position",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about military"
+  },
+  {
+    "id": "P4105",
+    "label": "EGF rating",
+    "description": "rating given by EGF (European Go Federation) to European go players",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P411",
+    "label": "canonization status",
+    "description": "formal stage in the process of attaining sainthood per the subject's religious organization",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to Christianity"
+  },
+  {
+    "id": "P412",
+    "label": "voice type",
+    "description": "person's voice type. expected values: soprano, mezzo-soprano, contralto, countertenor, tenor, baritone, bass (and derivatives)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to music"
+  },
+  {
+    "id": "P413",
+    "label": "position played on team / speciality",
+    "description": "position or specialism of a player on a team",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata qualifier, Wikidata property related to sports people"
+  },
+  {
+    "id": "P423",
+    "label": "shooting handedness",
+    "description": "whether the hockey player passes or shoots left- or right-handed",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports people, Wikidata property related to ice hockey"
+  },
+  {
+    "id": "P4242",
+    "label": "maximal rate of climb",
+    "description": "maximum rate of positive altitude change with respect to time for an aircraft",
+    "type": "Quantity",
+    "categories": "Wikidata property related to air transport, Wikidata property related to ratios and proportions"
+  },
+  {
+    "id": "P425",
+    "label": "field of this occupation",
+    "description": "field corresponding to this occupation or profession (use only for occupations/professions - for people use Property:P101, for companies use P452)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about occupations"
+  },
+  {
+    "id": "P4292",
+    "label": "possessed by spirit",
+    "description": "item which is spiritually possessing this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to religions and beliefs, Wikidata property for items about people"
+  },
+  {
+    "id": "P4295",
+    "label": "readership",
+    "description": "average number of readers of a newspaper or other periodical, per issue",
+    "type": "Quantity",
+    "categories": "Wikidata property for number of people"
+  },
+  {
+    "id": "P4353",
+    "label": "nominated by",
+    "description": "who nominated a person for an office or award; can be used as a qualifier",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people, Wikidata property for items about organizations, Wikidata property for items about occupations"
+  },
+  {
+    "id": "P450",
+    "label": "astronaut mission",
+    "description": "space mission that the subject is or has been a member of (do not include future missions)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P4500",
+    "label": "family relationship degree",
+    "description": "kinship degree, degree of consanguinity, generation of people with this kinship type when clearly identifiable.",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P451",
+    "label": "unmarried partner",
+    "description": "someone with whom the person is in a relationship without being married. Use \"spouse\" (P26) for married couples",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships"
+  },
+  {
+    "id": "P4519",
+    "label": "payload mass",
+    "description": "amount of mass that can be transported by the vehicle",
+    "type": "Quantity",
+    "categories": "Wikidata property related to transport, Wikidata property for quantities"
+  },
+  {
+    "id": "P4602",
+    "label": "date of burial or cremation",
+    "description": "date on which the person was buried or cremated soon after death",
+    "type": "Time",
+    "categories": "Wikidata property for birth or death, Wikidata property for items about people with datatype 'time'"
+  },
+  {
+    "id": "P4624",
+    "label": "squadron embarked",
+    "description": "the aircraft squadrons that served/serving on an aircraft carrier",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about military, Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P463",
+    "label": "member of",
+    "description": "organization, club or musical group to which the subject belongs. Do not use for membership in ethnic or social groups, nor for holding a political position, such as a member of parliament (use P39 for that)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property encoding a vCard value, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P468",
+    "label": "dan/kyu rank",
+    "description": "rank system used in several board games (e.g. go, shogi, renju), martial arts (e.g. judo, kendo, wushu) and some other games",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to sports people"
+  },
+  {
+    "id": "P470",
+    "label": "Eight Banner register",
+    "description": "Manchu household register for people of the Qing Dynasty",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P4794",
+    "label": "season starts",
+    "description": "month or season when sports competition begins",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P4909",
+    "label": "number of players in region",
+    "description": "number of registered players in a sport or people practicing a sport in a region",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport, Wikidata property for number of people"
+  },
+  {
+    "id": "P4999",
+    "label": "number of clubs",
+    "description": "number of clubs active in a given sport for a region",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P5021",
+    "label": "assessment",
+    "description": "subject took the test or exam, or was assessed per test or method",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P5028",
+    "label": "sound designer",
+    "description": "person responsible for the sound on a stage, in a film or in a radio drama",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works, Wikidata property associated with people"
+  },
+  {
+    "id": "P5030",
+    "label": "talk show guest",
+    "description": "person invited in a talk show",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property, Wikidata property associated with people"
+  },
+  {
+    "id": "P504",
+    "label": "shipping port",
+    "description": "shipping port of the vessel (if different from \"ship registry\"): For civilian ships, the primary port from which the ship operates. Port of registry \u2192P532 should be listed in \"Ship registry\". For warships, this will be the ship's assigned naval base",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P505",
+    "label": "general manager",
+    "description": "general manager of a sports team. If they are also an on-field manager use P286 instead",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport organizations, Wikidata property related to sports people"
+  },
+  {
+    "id": "P5051",
+    "label": "towards",
+    "description": "qualifier for \"adjacent station\" (P197) to indicate the terminal station(s) of a transportation line or service in that direction",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to transport"
+  },
+  {
+    "id": "P5053",
+    "label": "fastest lap",
+    "description": "person who does the fastest lap during a motorsport race",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to motorsports"
+  },
+  {
+    "id": "P5054",
+    "label": "member of cabinet",
+    "description": "qualifier for \"position held\" (P39) to indicate the cabinet to which a minister belongs",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about organizations, Wikidata property for items about people, Wikidata property related to politics"
+  },
+  {
+    "id": "P5065",
+    "label": "wind speed",
+    "description": "wind flow velocity recorded during a given moment or period of time",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport, Wikidata property for quantities, Wikidata property related to science"
+  },
+  {
+    "id": "P5096",
+    "label": "member of the crew of",
+    "description": "person who has been a member of a crew associated with the vessel or spacecraft. For spacecraft, inverse of crew member (P1029), backup or reserve team or crew (P3015)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to transport"
+  },
+  {
+    "id": "P511",
+    "label": "honorific prefix",
+    "description": "word or expression used before a name, in addressing or referring to a person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P512",
+    "label": "academic degree",
+    "description": "academic degree that the person holds",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P5138",
+    "label": "season of club or team",
+    "description": "club or team that played the season",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports teams/clubs"
+  },
+  {
+    "id": "P5167",
+    "label": "vehicles per thousand people",
+    "description": "number of vehicles per 1000 people. Use qualifier determination method (P459) to describe how it's done.",
+    "type": "Quantity",
+    "categories": "Wikidata property related to road transport"
+  },
+  {
+    "id": "P5202",
+    "label": "adapted by",
+    "description": "person responsible for the arrangement or adaptation resulting in this version of the original work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P521",
+    "label": "scheduled service destination",
+    "description": "airport or station connected by regular direct service to the subject; for the destination of a trip see P1444",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P5249",
+    "label": "sports competition competed at",
+    "description": "edition of sports competitions at which the club or team that played a season competed at. Use this to link items for team seasons to items for specific seasons of competitions.Sample: 2012\u201313 FC Barcelona season \u2192 2012\u201313 UEFA Champions League",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P529",
+    "label": "runway",
+    "description": "name (direction) of runway at airport/airfield/airstrip",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to air transport"
+  },
+  {
+    "id": "P53",
+    "label": "family",
+    "description": "family, including dynasty and nobility houses. Not family name (use P734 for family name).",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P531",
+    "label": "diplomatic mission sent",
+    "description": "location of diplomatic mission, i.e. consulate of A in the capital city of B",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people, Wikidata property related to politics"
+  },
+  {
+    "id": "P532",
+    "label": "port of registry",
+    "description": "ship's port of registry. This is generally painted on the ship's stern (for the \"home port\", see Property:P504)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P5349",
+    "label": "laps completed",
+    "description": "number of laps completed by a race participant",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P5389",
+    "label": "permanent resident of",
+    "description": "country or region where a person has the legal status of permanent resident",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P54",
+    "label": "member of sports team",
+    "description": "sports teams or clubs that the subject represents or represented",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata qualifier, Wikidata property encoding a vCard value, Wikidata property related to sports teams/clubs"
+  },
+  {
+    "id": "P543",
+    "label": "oath made by",
+    "description": "person(s) that made the oath at an event, like the Olympic Games",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events, Wikidata property related to Olympism"
+  },
+  {
+    "id": "P5436",
+    "label": "number of viewers/listeners",
+    "description": "number of viewers of a television or broadcasting program; web traffic on websites",
+    "type": "Quantity",
+    "categories": "Wikidata property related to online communities, Wikidata property for number of people"
+  },
+  {
+    "id": "P545",
+    "label": "torch lit by",
+    "description": "person that lit the torch at an event, like the Olympic Games",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events, Wikidata property related to Olympism"
+  },
+  {
+    "id": "P546",
+    "label": "docking port",
+    "description": "intended docking port for a spacecraft",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P5461",
+    "label": "model year code",
+    "description": "letter or digit in position 10 of a vehicle identification number (VIN) indicating the model year (MY) for years 1980 to 2009, repeating for 2010 to 2039, etc. Format: not I,O,Q,U,Z,0. Year 2024 is R.",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to road transport, Wikidata property related to time and duration"
+  },
+  {
+    "id": "P5474",
+    "label": "section number",
+    "description": "number assigned to a section of sportspeople in a sporting competition; e.g. \"3\" for a \"quarter-final 3\"; use together with property \"stage reached\" (P2443)",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sport"
+  },
+  {
+    "id": "P550",
+    "label": "chivalric order",
+    "description": "the chivalric order which a person belongs to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P551",
+    "label": "residence",
+    "description": "the place where the person is or has been, resident",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a location"
+  },
+  {
+    "id": "P552",
+    "label": "handedness",
+    "description": "handedness of the person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P555",
+    "label": "doubles record",
+    "description": "win/lose balance for a player in doubles tournaments",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to sports people, Wikidata property related to racket sports"
+  },
+  {
+    "id": "P559",
+    "label": "terminus",
+    "description": "the feature (intersecting road, train station, etc.) at the end of a linear feature",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P5595",
+    "label": "number of platform faces",
+    "description": "number of continuous platform edges facing a track or vehicle guideway in a station (often, but not always, the same as P1103 and the number of platform numbers). See property talk page for illustrated samples",
+    "type": "Quantity",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P5606",
+    "label": "class of station",
+    "description": "class of a railway station, assigned by its operator; \"issued by\" is a mandatory qualifier.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P564",
+    "label": "singles record",
+    "description": "win/lose balance for a player in singles tournaments",
+    "type": "String",
+    "categories": "Wikidata property with datatype string that is not an external identifier, Wikidata property related to sports people, Wikidata property related to racket sports"
+  },
+  {
+    "id": "P5658",
+    "label": "railway traffic side",
+    "description": "indicates for a country or a railway line whether rail traffic usually runs on the left or right hand side",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P569",
+    "label": "date of birth",
+    "description": "date on which the subject was born",
+    "type": "Time",
+    "categories": "Wikidata property for items about people, Wikidata property for birth or death, Wikidata property with datatype 'time', orderable Wikidata property, Wikidata property encoding a vCard value, Wikidata property with a single value, but different precisions and references can lead to multiple values"
+  },
+  {
+    "id": "P570",
+    "label": "date of death",
+    "description": "date on which the subject died",
+    "type": "Time",
+    "categories": "Wikidata property for items about people, Wikidata property with datatype 'time', Wikidata property with a single value, but different precisions and references can lead to multiple values, Wikidata property to describe the death of the subject"
+  },
+  {
+    "id": "P5703",
+    "label": "airline accounting code",
+    "description": "number, referenced by IATA and unique among all the airlines, used to identify the airline in various accounting activities such as ticketing",
+    "type": "String",
+    "categories": "Wikidata property related to air transport"
+  },
+  {
+    "id": "P5769",
+    "label": "editor-in-chief",
+    "description": "a publication's editorial leader who has final responsibility for its operations and policies and the selection of authors, translators, illustrators, and formats for publishing articles or books in collections or periodical papers",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property associated with people"
+  },
+  {
+    "id": "P5804",
+    "label": "has program committee member",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property, Wikidata property associated with people"
+  },
+  {
+    "id": "P5828",
+    "label": "seed",
+    "description": "qualifier for a participant of a sports event showing his seeding",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to sport"
+  },
+  {
+    "id": "P5962",
+    "label": "sail emblem",
+    "description": "image of figure placed on the sail of sailing boats to mark the boat type",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property to link to Commons, Wikidata property related to maritime and inland waterway transport, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P598",
+    "label": "commander of (DEPRECATED)",
+    "description": "for persons who are notable as commanding officers, the units they commanded",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, obsolete Wikidata property, Wikidata property for items about military, Wikidata property for items about positions"
+  },
+  {
+    "id": "P5995",
+    "label": "kit supplier",
+    "description": "official supplier of sports goods to a given sports club, sportsperson or a national sports team",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport, Wikidata property related to fashion"
+  },
+  {
+    "id": "P6001",
+    "label": "applies to people",
+    "description": "qualifier to a specific group of people, members of a group or organization",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, restrictive qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P607",
+    "label": "participated in conflict",
+    "description": "battles, wars or other military engagements in which the person or item participated",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about military"
+  },
+  {
+    "id": "P608",
+    "label": "exhibition history",
+    "description": "exhibitions where the item is or was displayed",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to creative works"
+  },
+  {
+    "id": "P6087",
+    "label": "coach of sports team",
+    "description": "sports club or team for which this person is or was on-field manager or coach",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to sports teams/clubs"
+  },
+  {
+    "id": "P609",
+    "label": "terminus location",
+    "description": "location of the terminus of a linear feature",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to transport"
+  },
+  {
+    "id": "P611",
+    "label": "religious order",
+    "description": "order of monks or nuns to which an individual, religious house, or rule belongs",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to religions and beliefs, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P6112",
+    "label": "category for members of a team",
+    "description": "Wikimedia category for players playing for a sports team",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport organizations, Wikidata property about Wikimedia categories"
+  },
+  {
+    "id": "P6118",
+    "label": "season ends",
+    "description": "to indicate what month of the year a sports season ends",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports events"
+  },
+  {
+    "id": "P6125",
+    "label": "number of volunteers",
+    "description": "number of people who volunteer for an organization at a particular time",
+    "type": "Quantity",
+    "categories": "Wikidata property for items about organizations, Wikidata property for number of people"
+  },
+  {
+    "id": "P618",
+    "label": "source of energy",
+    "description": "describes the source of energy an animated object (machine or animal) uses",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport, Wikidata property related to engineering"
+  },
+  {
+    "id": "P6275",
+    "label": "copyright representative",
+    "description": "person or organisation who represents the copyright for this person or work of art",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to copyright, Wikidata property for items about people, Wikidata property related to art"
+  },
+  {
+    "id": "P6322",
+    "label": "vehicle identification number",
+    "description": "identifier of an individual vehicle (17 alphanumeric characters excluding letters I, O, Q)",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to road transport, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P6338",
+    "label": "colorist",
+    "description": "artist in charge of adding colors to drawings, comics, movie film, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property associated with people, Wikidata property related to comics"
+  },
+  {
+    "id": "P634",
+    "label": "team captain",
+    "description": "captain of this sports team",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P6343",
+    "label": "urban population",
+    "description": "number of people living within the territorial entity who live in its urban parts",
+    "type": "Quantity",
+    "categories": "Wikidata property related to demography, Wikidata property for number of people"
+  },
+  {
+    "id": "P6344",
+    "label": "rural population",
+    "description": "number of people living within the territorial entity who live in its rural parts",
+    "type": "Quantity",
+    "categories": "Wikidata property related to demography, Wikidata property for number of people"
+  },
+  {
+    "id": "P641",
+    "label": "sport",
+    "description": "sport that the subject participates or participated in or is associated with",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations, Wikidata property related to sport"
+  },
+  {
+    "id": "P647",
+    "label": "drafted by",
+    "description": "which team the player was drafted by",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports people"
+  },
+  {
+    "id": "P6498",
+    "label": "illiterate population",
+    "description": "number of illiterate people within a territorial entity (typically determined during a census)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to education, Wikidata property related to demography, Wikidata property for number of people"
+  },
+  {
+    "id": "P6499",
+    "label": "literate population",
+    "description": "number of literate people within a territorial entity (typically determined during a census)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to education, Wikidata property related to demography, Wikidata property for number of people"
+  },
+  {
+    "id": "P6509",
+    "label": "total goals in career",
+    "description": "goalscoring statistic",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport, Wikidata property associated with people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P6543",
+    "label": "total shots in career",
+    "description": "sports statistic",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport, Wikidata property associated with people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P6544",
+    "label": "total points in career",
+    "description": "sports statistic",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport, Wikidata property associated with people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P6545",
+    "label": "total assists in career",
+    "description": "goalscoring statistic",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport, Wikidata property associated with people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P6546",
+    "label": "penalty minutes in career",
+    "description": "sports statistic",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport, Wikidata property associated with people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P6547",
+    "label": "career plus-minus rating",
+    "description": "sports statistic",
+    "type": "Quantity",
+    "categories": "Wikidata property associated with people, Wikidata property for a sports statistic"
+  },
+  {
+    "id": "P6553",
+    "label": "personal pronoun",
+    "description": "personal pronoun(s) this person goes by",
+    "type": "WikibaseLexeme",
+    "categories": "Wikidata property for items about people, Wikidata property for lexicographical data, Wikidata property related to LGBT"
+  },
+  {
+    "id": "P6587",
+    "label": "league system",
+    "description": "league system the league belongs to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P6590",
+    "label": "highest break",
+    "description": "highest break made by a snooker player in their career or in a tournament",
+    "type": "Quantity",
+    "categories": "Wikidata property for a sports statistic, Wikidata property related to snooker"
+  },
+  {
+    "id": "P66",
+    "label": "ancestral home",
+    "description": "place of origin for ancestors of subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a location"
+  },
+  {
+    "id": "P664",
+    "label": "organizer",
+    "description": "person or institution organizing an event",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport, Wikidata property related to events"
+  },
+  {
+    "id": "P669",
+    "label": "located on street",
+    "description": "street, road, square, or trail, where the item is located. To add the number, use Property:P670 \"house number\" as qualifier. Use property P6375 \"street address\", if there is no item for the street",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to transport, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P6697",
+    "label": "Football Money League rank",
+    "description": "rank in the Deloitte Football Money League",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport organizations, Wikidata property related to association football"
+  },
+  {
+    "id": "P6707",
+    "label": "approach angle",
+    "description": "maximum angle of a ramp on which a vehicle can climb, use degree (Q28390) as unit",
+    "type": "Quantity",
+    "categories": "Wikidata property related to road transport"
+  },
+  {
+    "id": "P6708",
+    "label": "departure angle",
+    "description": "maximum angle of a ramp from which a vehicle can descend, use degree (Q28390) as unit",
+    "type": "Quantity",
+    "categories": "Wikidata property related to road transport"
+  },
+  {
+    "id": "P6758",
+    "label": "supported sports team",
+    "description": "sports team for which a person or a group is a supporter",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sports teams/clubs"
+  },
+  {
+    "id": "P6819",
+    "label": "calligrapher",
+    "description": "calligrapher of a work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to art, Wikidata property associated with people"
+  },
+  {
+    "id": "P6856",
+    "label": "average speed",
+    "description": "average speed of a transport line, service or network, or of a vehicle when used on such a line, service or network",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to road transport, Wikidata property related to rail transport"
+  },
+  {
+    "id": "P6872",
+    "label": "has written for",
+    "description": "publication an author has contributed to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property associated with people"
+  },
+  {
+    "id": "P6886",
+    "label": "writing language",
+    "description": "language in which the writer has written their work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to literature, Wikidata property associated with people"
+  },
+  {
+    "id": "P6887",
+    "label": "match interval",
+    "description": "the part of a sporting match when an event takes place",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to sports events"
+  },
+  {
+    "id": "P69",
+    "label": "educated at",
+    "description": "educational institution attended by subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P697",
+    "label": "ex taxon author",
+    "description": "person(s) whom the author(s) of a name credited for the idea, followed in an author citation by \"ex\" (via P405)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to taxa, Wikidata qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P700",
+    "label": "Kemler code",
+    "description": "code describing the hazards of a chemical in transport",
+    "type": "ExternalId",
+    "categories": "Wikidata property related to chemistry, Wikidata property with datatype string that is not an external identifier, Wikidata property related to transport"
+  },
+  {
+    "id": "P7045",
+    "label": "chassis",
+    "description": "chassis type for cars, buses, trucks, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P710",
+    "label": "participant",
+    "description": "person, group of people or organization (object) that actively takes/took part in an event or process (subject). Preferably qualify with \"object has role\" (P3831). Use P1923 for participants that are teams.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to events, Wikidata property associated with people, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P734",
+    "label": "family name",
+    "description": "part of full name of person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P735",
+    "label": "given name",
+    "description": "first name or another given name of this person; values used with the property should not link disambiguations nor family names",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P736",
+    "label": "cover art by",
+    "description": "name of person or team creating cover artwork for book, record album, single record etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about musical works, Wikidata property related to art, Wikidata property associated with people"
+  },
+  {
+    "id": "P737",
+    "label": "influenced by",
+    "description": "the subject (person, idea, etc.) was influenced or inspired by this object entity, e.g. \"Heidegger was influenced by Aristotle\"",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to creative works"
+  },
+  {
+    "id": "P7383",
+    "label": "name in hiero markup",
+    "description": "hieroglyphs written in Wikihiero syntax",
+    "type": "String",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property related to places"
+  },
+  {
+    "id": "P7406",
+    "label": "style of karate",
+    "description": "style of karate of the element",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to karate"
+  },
+  {
+    "id": "P741",
+    "label": "playing hand",
+    "description": "hand used to play a racket sport, cricket, fencing, or curling",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to racket sports, Wikidata property related to sports people"
+  },
+  {
+    "id": "P742",
+    "label": "pseudonym",
+    "description": "alias used by someone (for nickname use P1449)",
+    "type": "String",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name, Wikidata property with datatype string that is not an external identifier"
+  },
+  {
+    "id": "P748",
+    "label": "appointed by",
+    "description": "who appointed the person to the position, can be used as a qualifier",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property associated with people"
+  },
+  {
+    "id": "P765",
+    "label": "surface played on",
+    "description": "the surface on which a sporting event is played",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport facilities, Wikidata property related to sports events"
+  },
+  {
+    "id": "P768",
+    "label": "electoral district",
+    "description": "electoral district this person is representing, or of the office that is being contested. Use as qualifier for \"position held\" (P39) or \"office contested\" (P541) or \"candidacy in election\" (P3602)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property for items about people"
+  },
+  {
+    "id": "P7782",
+    "label": "category for ship name",
+    "description": "Commons category for a name of a ship",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to link to Commons, Wikidata property about Wikimedia categories, Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P800",
+    "label": "notable work",
+    "description": "notable scientific, artistic or literary work, or other work of significance among subject's works",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to creative works, curated Wikidata property"
+  },
+  {
+    "id": "P8006",
+    "label": "footedness",
+    "description": "dominant foot or preferred stance of this person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to sports people"
+  },
+  {
+    "id": "P802",
+    "label": "student",
+    "description": "notable student(s) of the subject individual",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P803",
+    "label": "professorship",
+    "description": "professorship position held by this academic person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P81",
+    "label": "connecting line",
+    "description": "railway line(s) subject is directly connected to",
+    "type": "WikibaseItem",
+    "categories": "Wikidata qualifier, Wikidata property related to road transport, Wikidata property related to rail transport"
+  },
+  {
+    "id": "P811",
+    "label": "academic minor",
+    "description": "minor someone studied at college/university",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P812",
+    "label": "academic major",
+    "description": "major someone studied at college/university",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P8127",
+    "label": "tournament format",
+    "description": "format of a sports tournament",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P822",
+    "label": "mascot",
+    "description": "mascot of an organization, e.g. a sports team or university",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about organizations, Wikidata property related to sport organizations, Wikidata property related to commercial products"
+  },
+  {
+    "id": "P823",
+    "label": "speaker",
+    "description": "person who is speaker for this event, ceremony, keynote, presentation or in a literary work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to events"
+  },
+  {
+    "id": "P8258",
+    "label": "field of training",
+    "description": "profession, position or activity someone learnt during a training, traineeship or apprenticeship",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P8274",
+    "label": "living people protection class",
+    "description": "when used with living people this project falls under the category described in Wikidata's Living People policy",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for documentation of properties"
+  },
+  {
+    "id": "P831",
+    "label": "parent club",
+    "description": "parent club of this team",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport organizations"
+  },
+  {
+    "id": "P833",
+    "label": "interchange station",
+    "description": "station to which passengers can transfer from this station, normally without extra expense",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport, Wikidata property related to rail transport"
+  },
+  {
+    "id": "P834",
+    "label": "train depot",
+    "description": "depot which serves this railway line, not public stations",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P8403",
+    "label": "theorized by",
+    "description": "subject who suggested or proposed this concept or immaterial invention",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to natural science, Wikidata property related to research"
+  },
+  {
+    "id": "P841",
+    "label": "feast day",
+    "description": "saint's principal feast day",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P8413",
+    "label": "academic appointment",
+    "description": "this person has been appointed to a role within the given higher education institution or department; distinct from employment or affiliation",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to education"
+  },
+  {
+    "id": "P8453",
+    "label": "public transport stop",
+    "description": "general (e.g. nearest) public transport stop (bus, tram, train, subway)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P8458",
+    "label": "ANZSCO 2013 ID",
+    "description": "the Australian and New Zealand Standard Classification of Occupations, 2013, by the Australian Bureau of Statistics and Stats NZ",
+    "type": "ExternalId",
+    "categories": "Wikidata property for items about occupations"
+  },
+  {
+    "id": "P8470",
+    "label": "order number",
+    "description": "identifier given to rolling stock at the point of purchase, sale, or manufacturing",
+    "type": "String",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P8500",
+    "label": "Vietnamese middle name",
+    "description": "middle name of a Vietnamese person; use P735 qualified by P1545 for the middle name of a partially westernized name",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P8505",
+    "label": "traffic sign template image",
+    "description": "image used as a template for creating traffic sign images (P14) for specific instances of this sign or members of this highway system",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property related to road transport, Wikidata property for linking to a representative image"
+  },
+  {
+    "id": "P856",
+    "label": "official website",
+    "description": "URL of the official page of an item (current or former). Usage: If a listed URL no longer points to the official website, do not remove it, but see the \"Hijacked or dead websites\" section of the Talk page",
+    "type": "Url",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations, Wikidata property related to creative works, Wikidata property for Wikivoyage listings, Wikidata property related to websites, Wikidata property encoding a vCard value"
+  },
+  {
+    "id": "P859",
+    "label": "sponsor",
+    "description": "organization or individual that sponsors this item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport organizations, Wikidata property related to sports events, Wikidata property related to research, Wikidata property related to sports people"
+  },
+  {
+    "id": "P8594",
+    "label": "ride height",
+    "description": "ground clearance of vehicle or distance between the base of a vehicle tire and the lowest point",
+    "type": "Quantity",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P8597",
+    "label": "axle track",
+    "description": "distance between the centerline of two roadwheels on the same axle",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to road transport"
+  },
+  {
+    "id": "P8620",
+    "label": "construction point",
+    "description": "a reference point on a ski jumping hill",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P8621",
+    "label": "turning radius",
+    "description": "radius of smallest circle a particular automobile or similar vehicle can turn along",
+    "type": "Quantity",
+    "categories": "Wikidata property related to road transport"
+  },
+  {
+    "id": "P8622",
+    "label": "hill size",
+    "description": "ski jumping hill size",
+    "type": "Quantity",
+    "categories": "Wikidata property related to sport"
+  },
+  {
+    "id": "P8628",
+    "label": "engine displacement",
+    "description": "measure of the cylinder volume of an engine",
+    "type": "Quantity",
+    "categories": "Wikidata property for physical quantities, Wikidata property related to engineering, Wikidata property related to road transport"
+  },
+  {
+    "id": "P8687",
+    "label": "social media followers",
+    "description": "number of subscribers on a particular social media website (use as main statement only; see P3744 instead for qualifier). Qualify with \"point in time\" and property for account. For Twitter, use numeric id.",
+    "type": "Quantity",
+    "categories": "Wikidata property related to online communities, Wikidata property for number of people"
+  },
+  {
+    "id": "P8702",
+    "label": "parallel street",
+    "description": "closest street(s) that run parallel to the item",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to places, Wikidata property related to road transport"
+  },
+  {
+    "id": "P874",
+    "label": "UN class",
+    "description": "UN hazard classification code",
+    "type": "String",
+    "categories": "Wikidata property related to transport, Wikidata property related to chemistry, Wikidata property related to the United Nations, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P875",
+    "label": "UN classification code",
+    "description": "code for classification of dangerous goods defined by UN",
+    "type": "String",
+    "categories": "Wikidata property related to transport, Wikidata property related to chemistry, Wikidata property related to the United Nations, Wikidata property related to classification schemes"
+  },
+  {
+    "id": "P8753",
+    "label": "annual average daily traffic",
+    "description": "daily traffic through a certain point, as yearly average",
+    "type": "Quantity",
+    "categories": "Wikidata property related to transport"
+  },
+  {
+    "id": "P876",
+    "label": "UN packaging group",
+    "description": "packaging code according to UN transportation rules",
+    "type": "String",
+    "categories": "Wikidata property related to transport, Wikidata property related to chemistry, Wikidata property related to the United Nations"
+  },
+  {
+    "id": "P8764",
+    "label": "port calls",
+    "description": "harbor or port at which the ship stopped; port of call",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to maritime and inland waterway transport"
+  },
+  {
+    "id": "P8810",
+    "label": "parent",
+    "description": "parent of the subject. Only use if neither father (P22) nor mother (P25) nor stepparent (P3448) is applicable.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for human relationships"
+  },
+  {
+    "id": "P8822",
+    "label": "epithet",
+    "description": "has an epithet (byname), for a human, a character or a deity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P8839",
+    "label": "hairstyle / hairlength",
+    "description": "style or length of cutting, arranging, or combing the hair on the subject's scalp",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property used as \"depicts\" (P180) qualifier on Commons"
+  },
+  {
+    "id": "P8852",
+    "label": "facial hair",
+    "description": "style of cutting, arranging, or combing the hair on the subject's face (usually on the chin, cheeks, and upper lip region); beard",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P8884",
+    "label": "number of points/goals attempted",
+    "description": "shots or other attempts to score points in a sporting event",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sport"
+  },
+  {
+    "id": "P8927",
+    "label": "kunya",
+    "description": "teknonym in Arabic names, the name of an adult derived from their eldest child or from their characteristics",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property to indicate a name"
+  },
+  {
+    "id": "P9077",
+    "label": "number of aid beneficiaries",
+    "description": "number of people reached with international aid programmes, actions and humanitarian activities. Qualify with \"point in time\" (P585) where appropriate",
+    "type": "Quantity",
+    "categories": "Wikidata property for number of people"
+  },
+  {
+    "id": "P91",
+    "label": "sexual orientation",
+    "description": "the sexual orientation of the person relative to their declared gender \u2014 use ONLY IF they have stated it themselves, unambiguously, or it has been widely agreed upon by historians after their death",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to LGBT"
+  },
+  {
+    "id": "P9107",
+    "label": "number of vaccinations",
+    "description": "number of people vaccinated, qualify with \"point in time\" (P585)",
+    "type": "Quantity",
+    "categories": "Wikidata property related to medicine, Wikidata property for number of people"
+  },
+  {
+    "id": "P9139",
+    "label": "first family name in Portuguese name",
+    "description": "first (generally maternal) family name in Portuguese names",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a name, Wikidata property for items about people"
+  },
+  {
+    "id": "P914",
+    "label": "USK rating",
+    "description": "German video game content rating - see talk page for appropriate values",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property representing media content ratings, Wikidata property representing video game content ratings, Wikidata property for properties that use personal computer (PC) as a platform, Wikidata property representing trailer, commercial and advertisement content ratings, Wikidata property representing mobile app and software content ratings"
+  },
+  {
+    "id": "P9140",
+    "label": "time played",
+    "description": "time (usually minutes) played by a participant in a sporting event",
+    "type": "Quantity",
+    "categories": "Wikidata qualifier, Wikidata property related to sport"
+  },
+  {
+    "id": "P9191",
+    "label": "letterer",
+    "description": "person responsible for drawing the comic book's text, word balloons, etc.",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property related to comics, Wikidata property associated with people"
+  },
+  {
+    "id": "P930",
+    "label": "type of electrification",
+    "description": "electrification system scheme and/or voltage",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to rail transport"
+  },
+  {
+    "id": "P931",
+    "label": "place served by transport hub",
+    "description": "territorial entity or entities served by this transport hub (airport, train station, etc.)",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property to indicate a location, Wikidata property related to transport"
+  },
+  {
+    "id": "P937",
+    "label": "work location",
+    "description": "location where persons or organisations were actively participating in employment, business or other work",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property for items about organizations, Wikidata property for specifying the location of an event"
+  },
+  {
+    "id": "P941",
+    "label": "inspired by",
+    "description": "work, human, place or event which inspired this creative work or fictional entity",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people, Wikidata property related to creative works"
+  },
+  {
+    "id": "P9419",
+    "label": "personal library at",
+    "description": "institution holding the subject\u2019s personal library",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P9493",
+    "label": "artist files at",
+    "description": "institution or collection that holds artist files about the subject",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to creative works, Wikidata property for participating organizations, Wikidata property related to art, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P9549",
+    "label": "official podcast",
+    "description": "official podcast of this person or organization",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to podcasts, Wikidata property for items about people or organisations"
+  },
+  {
+    "id": "P97",
+    "label": "noble title",
+    "description": "titles held by the person",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property for items about people"
+  },
+  {
+    "id": "P9740",
+    "label": "number of request signatories",
+    "description": "number of persons who signed a given petition, initiative, request for a referendum, or other large scale proposal/request",
+    "type": "Quantity",
+    "categories": "Wikidata property related to politics, Wikidata property for number of people"
+  },
+  {
+    "id": "P9803",
+    "label": "UEFA stadium category",
+    "description": "Category of the sports facility according to the UEFA Stadium Infrastructure Regulations",
+    "type": "WikibaseItem",
+    "categories": "Wikidata property related to sport facilities, Wikidata property related to association football"
+  },
+  {
+    "id": "P990",
+    "label": "audio recording of the subject's spoken voice",
+    "description": "audio file representing the speaking voice of a person; or of an animated cartoon or other fictitious character",
+    "type": "CommonsMedia",
+    "categories": "Wikidata property for items about people, Wikidata property to link to Commons, Wikidata property encoding a vCard value, Wikidata property related to audio files and recordings"
+  },
+  {
+    "id": "P9946",
+    "label": "date of probate",
+    "description": "date on which the person's will was proved",
+    "type": "Time",
+    "categories": "Wikidata property with a single value, but different precisions and references can lead to multiple values, Wikidata property for a person-related event, Wikidata property for items about people with datatype 'time'"
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "P": [],
+  "R": [],
+  "S": [
+    {
+      "id": "S361201",
+      "based_on": "P361",
+      "label_en": "has production line"
+    },
+    {
+      "id": "S361202",
+      "based_on": "P361",
+      "label_en": "has workstation"
+    },
+    {
+      "id": "S1552201",
+      "based_on": "P1552",
+      "label_en": "has batch / lot identifier"
+    },
+    {
+      "id": "S1552202",
+      "based_on": "P1552",
+      "label_en": "has quality check type"
+    },
+    {
+      "id": "S1552203",
+      "based_on": "P1552",
+      "label_en": "has nonconformity type"
+    },
+    {
+      "id": "S361203",
+      "based_on": "P361",
+      "label_en": "has quality inspection record"
+    },
+    {
+      "id": "S1542201",
+      "based_on": "P1542",
+      "label_en": "nonconformity impacts production output"
+    }
+  ]
+}

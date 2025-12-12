@@ -434,7 +434,7 @@ const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity }) => {
 
 interface HeaderMetaProps {
   label: string;
-  value: React.ReactNode;
+  value: any;
 }
 
 const HeaderMeta: React.FC<HeaderMetaProps> = ({ label, value }) => (
@@ -446,7 +446,7 @@ const HeaderMeta: React.FC<HeaderMetaProps> = ({ label, value }) => (
 
 interface SectionCardProps {
   title: string;
-  children: React.ReactNode;
+  children: any;
 }
 
 const SectionCard: React.FC<SectionCardProps> = ({ title, children }) => (
@@ -458,7 +458,7 @@ const SectionCard: React.FC<SectionCardProps> = ({ title, children }) => (
 
 interface KeyValueRowProps {
   label: string;
-  value: React.ReactNode;
+  value: any;
 }
 
 const KeyValueRow: React.FC<KeyValueRowProps> = ({ label, value }) => (
