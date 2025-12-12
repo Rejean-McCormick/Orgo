@@ -2,14 +2,14 @@
 
 > Multi-tenant “nervous system” for organizations: capture signals, turn them into structured Cases and Tasks, route work by labels & roles, and surface patterns over time.
 
----
+-----
 
 ## Status
 
-Orgo is early-stage / experimental.  
-APIs, schema and UI are subject to change; do not treat this as a stable product yet.
+**Experimental / Pre-Alpha.**
+APIs, schema, and UI are subject to change. Do not treat this as a stable product yet.
 
----
+-----
 
 ## What Orgo does
 
@@ -17,104 +17,107 @@ Orgo is a shared backbone for operational work across many organizations and dom
 
 It:
 
-- ingests signals from email, APIs, UIs and offline imports;
-- normalizes everything into a strict Case / Task schema;
-- routes work using a standardized label + role system;
-- tracks escalation, visibility and review cycles across organizations;
-- feeds an Insights layer (star schema + ETL) for analytics and cyclic reviews.
+  - **Ingests signals** from email, APIs, UIs, and offline imports.
+  - **Normalizes** everything into a strict **Case** (situation) and **Task** (action) schema.
+  - **Routes work** using a standardized **Label** + **Role** system.
+  - **Tracks** escalation, visibility, and review cycles against configurable "Reactivity Time".
+  - **Feeds Insights** (Star Schema + ETL) for analytics and cyclic pattern detection.
 
 Instead of every department reinventing its own ticketing spreadsheet or inbox rules, Orgo provides one schema-driven engine that multiple domains can plug into.
 
----
+-----
 
 ## When you would use Orgo
 
 Typical use-cases:
 
-- incident / safety / maintenance tracking across many sites;
-- HR & wellbeing cases that must stay auditable and privacy-aware;
-- education or NGO workflows (student wellbeing, community incidents, campaigns);
-- cross-cutting “pattern detection” (repeated harassment, safety issues, failure modes);
-- any context where you want:
-  - a single Case/Task model,
-  - strong routing and escalation rules,
-  - clear review loops and analytics.
+  - **Operations:** Incident / safety / maintenance tracking across many sites.
+  - **Care:** HR & wellbeing cases that must stay auditable and privacy-aware.
+  - **Community:** Education or NGO workflows (student wellbeing, community incidents, campaigns).
+  - **Pattern Detection:** Cross-cutting analysis (repeated harassment, safety issues, failure modes).
 
----
+Use Orgo when you want:
 
-## Core concepts (short version)
+  - A single Case/Task model.
+  - Strong routing and escalation rules.
+  - Clear review loops and analytics.
 
-- **Multi-tenant backbone**  
-  One deployment can serve many organizations. Everything is scoped by `organization_id` and governed by RBAC (roles, permissions, profiles).
+-----
 
-- **Signals → Cases → Tasks**  
-  Messy input (email, API call, form, offline import) becomes a structured Case plus one or more Tasks. Tasks are the atomic unit of work; Cases are long-lived containers for situations, incidents, audits, or patterns.
+## Core concepts
 
-- **Labels & routing**  
-  A structured label encodes “where this lives in the org” and “what kind of signal it is”.  
-  Example label format: `BASE.CATEGORY.SUBCATEGORY.HORIZONTAL_ROLE`  
-  Example value: `1001.91.Operations.Safety`  
+  - **Multi-tenant backbone**
+    One deployment can serve many organizations. Everything is scoped by `organization_id` and governed by RBAC (roles, permissions, profiles).
 
-  The label drives routing, default visibility and how analytics are grouped.
+  - **Signals → Cases → Tasks**
+    Messy input (email, API call, form, offline import) becomes a structured Case plus one or more Tasks. Tasks are the atomic unit of work; Cases are long-lived containers for situations, incidents, audits, or patterns.
 
-- **Profiles**  
-  Profiles tune behaviour per org type (friend group, school, hospital, NGO, retail chain, etc.): reactivity / escalation timings, privacy defaults, notification scope, logging depth, pattern sensitivity, and review cadence.
+  - **Labels & routing**
+    A structured label encodes "where this lives in the org" and "what kind of signal it is".
 
-- **Insights & cyclic overview**  
-  A read-optimized layer (star schema + ETL jobs) powers dashboards and scheduled reviews (weekly / monthly / yearly). Thresholds (“≥ N similar incidents in X days”) can automatically open new audit or review Cases instead of being just charts.
+      * **Format:** `BASE.CATEGORY.SUBCATEGORY.HORIZONTAL_ROLE`
+      * **Example:** `1001.91.Operations.Safety`
+        The label drives routing, default visibility, and how analytics are grouped.
 
-For a deeper conceptual tour, see the Orgo wiki.
+  - **Profiles**
+    Profiles tune behavior per org type (e.g., "Friend Group" vs. "Hospital" vs. "Retail Chain"). They control:
 
----
+      * Reactivity / Escalation timing (e.g., 1 hour vs. 3 days).
+      * Privacy defaults (Open vs. Need-to-know).
+      * Notification scope.
+      * Pattern sensitivity.
+
+  - **Insights & cyclic overview**
+    A read-optimized layer (star schema + ETL jobs) powers dashboards and scheduled reviews (weekly / monthly / yearly). Thresholds (e.g., "≥ 5 similar incidents in 30 days") can automatically open new audit or review Cases instead of just generating charts.
+
+-----
 
 ## High-level architecture
 
 Orgo is implemented as a TypeScript monorepo:
 
-- **API (`apps/api`)** – NestJS backend with modules for:
-  - multi-tenant orgs, users and persons;
-  - email gateway & workflow engine;
-  - task and case services;
-  - notifications, logging, and configuration.
+  - **API (`apps/api`)** – NestJS backend with modules for:
 
-- **Web UI (`apps/web`)** – Next.js frontend using RTK Query:
-  - queues / views over Tasks and Cases;
-  - org / profile administration screens;
-  - Insights and review dashboards.
+      - Multi-tenant orgs, users, and persons.
+      - Email gateway & Workflow engine.
+      - Task and Case services.
+      - Notifications, Logging, and Configuration.
 
-- **Database / config** – relational database (PostgreSQL/SQLite) plus YAML-driven configuration under `config/` for environments, organizations, domain modules, and insights.
+  - **Web UI (`apps/web`)** – Next.js frontend using RTK Query:
 
-- **Insights** – ETL jobs hydrate `insights.dim_*` and `insights.fact_*` tables used by reports and cyclic review logic.
+      - Queues / Views over Tasks and Cases.
+      - Org / Profile administration screens.
+      - Insights and review dashboards.
 
-The `Documentation/` directory contains the more formal Orgo v3 spec (schema reference, core services, insights config, profiles and cyclic overview.
+  - **Database / Config** – Relational database (PostgreSQL/SQLite) plus YAML-driven configuration under `config/` for environments, organizations, domain modules, and insights.
 
----
+  - **Insights** – ETL jobs hydrate `insights.dim_*` and `insights.fact_*` tables used by reports and cyclic review logic.
+
+-----
 
 ## Repository layout
 
-Common top-level paths:
+  - `apps/api/` – NestJS API (core services, domain modules)
+  - `apps/web/` – Next.js web UI (queues, cases, tasks, insights)
+  - `Docs/` – Orgo v3 specification (DB schema, invariants, services, insights, profiles)
+  - `charters/` – Wikidata-based property definitions (`properties_core.json`, etc.)
+  - `config/` – Environment/org/module configuration (YAML), validated on startup
+  - `package-scripts.js` – Monorepo scripts (dev, build, test)
+  - `turbo.json` – Turbo configuration for orchestrating tasks
+  - `docker-compose.yml` – Draft Docker orchestration
 
-- `apps/api/` – NestJS API (core services, domain modules)  
-- `apps/web/` – Next.js web UI (queues, cases, tasks, insights)  
-- `Documentation/` – Orgo v3 specification (DB schema, invariants, services, insights, profiles, cyclic overview)  
-- `config/` – Environment/org/module configuration (YAML), validated on startup  
-- `package-scripts.js` – Monorepo scripts (dev, build, test)  
-- `turbo.json` – Turbo configuration for orchestrating tasks  
-- `docker-compose.yml` – Draft Docker orchestration (WIP / may change)  
-- `ai_dumps/` – Internal AI planning / design artefacts (not required for usage)
-
----
+-----
 
 ## Getting started (local dev)
 
 ### Prerequisites
 
-- Node.js (recent LTS)  
-- Yarn classic 1.x (the repo is wired to `yarn@1.22.x`)  
-- A running PostgreSQL or SQLite instance for dev (depending on your local config)  
-- Git  
+  - Node.js (recent LTS)
+  - Yarn classic 1.x (repo is wired to `yarn@1.22.x`)
+  - A running PostgreSQL or SQLite instance
+  - Git
 
-### 1. Clone and install
+### 1\. Clone and install
 
 ```bash
 git clone https://github.com/Rejean-McCormick/Orgo.git
@@ -124,7 +127,7 @@ cd Orgo
 yarn install
 ```
 
-### 2. Run everything in dev
+### 2\. Run everything in dev
 
 From the repo root:
 
@@ -135,64 +138,48 @@ yarn dev
 
 This runs the monorepo dev scripts (Turbo) which start:
 
-- API on `http://localhost:5002`  
-- Web UI on `http://localhost:3000`  
+  - API on `http://localhost:5002`
+  - Web UI on `http://localhost:3000`
 
 Then:
 
-- open the web app: `http://localhost:3000/`  
-- open the API docs (Swagger): `http://localhost:5002/docs`
+  - Open the web app: `http://localhost:3000/`
+  - Open the API docs (Swagger): `http://localhost:5002/docs`
 
-### 3. Run apps separately (optional)
+### 3\. Run apps separately (optional)
 
 If you prefer separate terminals:
 
-API (NestJS):
+**API (NestJS):**
 
 ```bash
 cd apps/api
 yarn dev
 ```
 
-Web UI (Next.js):
+**Web UI (Next.js):**
 
 ```bash
 cd apps/web
 yarn dev
 ```
 
-Ports are the same as above (5002 for API, 3000 for web).
-
----
+-----
 
 ## Configuration & environments
 
 Orgo treats configuration as code and uses YAML files per environment and organization.
 
-- **Environments**: `dev`, `staging`, `prod`, `offline`
+  - **Environments**: `dev`, `staging`, `prod`, `offline`
+  - **Layers:**
+    1.  Global defaults (logging, timezones).
+    2.  Environment overrides.
+    3.  Per-organization config (profile selection, label sets).
+    4.  Domain module config.
 
-- **Configuration layers**
+Validation scripts enforce allowed environments, version ranges, and required metadata on startup.
 
-  - global defaults (logging, timezones, base reactivity windows);  
-  - environment overrides (dev / staging / prod / offline);  
-  - per-organization config (profile selection, routing ranges, label sets);  
-  - domain module config (maintenance, HR, education, etc.).  
-
-Each YAML config typically includes metadata like:
-
-```yaml
-metadata:
-  config_name: "email_config"
-  version: "3.x"
-  environment: "<dev|staging|prod|offline>"
-  last_updated: "YYYY-MM-DD"
-  owner: "team-or-role"
-  organization_id: "default"  # or specific org slug/id
-```
-
-Validation scripts enforce allowed environments, version ranges and required metadata, and will fail fast or fall back to safe defaults if something is invalid.
-
----
+-----
 
 ## Extending Orgo
 
@@ -200,56 +187,27 @@ You can extend Orgo without forking the whole engine.
 
 ### New domain workflow
 
-1. **Define labels & task types**  
-   Decide which label patterns and task types/subtypes the domain cares about.
-
-2. **Add domain config**  
-   Under `domain_modules/<domain>/rules/*.yaml`, specify:
-   - label matches;
-   - default severity, reactivity windows and visibility;
-   - assignment rules and optional auto-created tasks.
-
-3. **Hook into core services (optional)**  
-   Implement callbacks like `on_task_create`, `on_task_update`, `on_escalation` if the domain needs extra behaviour.
-
-4. **Templates & notifications**  
-   Add email/report templates under `domain_modules/<domain>/templates`.
-
-5. **Tests**  
-   Add unit tests for rule matching and integration tests for end-to-end flows (signal → case → tasks → escalation → resolution).
+1.  **Define labels & task types:** Decide which label patterns and task types/subtypes the domain cares about.
+2.  **Add domain config:** Specify label matches, default severity, and assignment rules in `domain_modules/<domain>/rules/*.yaml`.
+3.  **Hook into core services (optional):** Implement callbacks like `on_task_create` if the domain needs extra behavior.
+4.  **Templates:** Add email/report templates.
 
 ### New profile
 
-1. Start from a reference profile (e.g. “hospital”, “school”, “retail chain”).  
-2. Override:
-   - reactivity windows,
-   - privacy defaults,
-   - notification scope,
-   - logging depth,
-   - pattern sensitivity.  
-3. Attach the profile to an organization via its org config.
+1.  **Start from reference:** Copy an existing profile (e.g., "Hospital").
+2.  **Override:** Change reactivity windows, privacy defaults, and pattern sensitivity.
+3.  **Attach:** Link the profile to an organization via its org config.
 
----
+-----
 
-## Documentation & wiki
+## Documentation & Wiki
 
-- **Docs bundle (in-repo)** – see `Documentation/` for:
-  - database schema reference;
-  - global invariants & enums (status, priority, severity, visibility, log categories);
-  - core services specification (workflow engine, email gateway, notification & logging);
-  - insights module configuration;
-  - profiles & cyclic overview.
+  - **Docs bundle (`Docs/`)**: Formal technical specs (schema, invariants, enums).
+  - **Wiki (Online)**: Narrative overview of concepts and architecture.
+  - **Charters (`charters/`)**: The JSON definitions of the semantic graph properties (Wikidata standards).
 
-- **Wiki (online)** – the Orgo wiki provides a narrative overview:
-  - conceptual model (multi-tenant backbone, signals → Cases → Tasks, labels, profiles);
-  - architecture overview and data contracts;
-  - cyclic review & pattern detection;
-  - example profiles and use cases.
-
-- **External explainer** – a broader civic/organizational context for Orgo lives on the public site that explains how Orgo fits into larger knowledge and coordination workflows.
-
----
+-----
 
 ## License
 
-MIT. See [`LICENSE`](./LICENSE).
+MIT. See [`LICENSE`](https://www.google.com/search?q=./LICENSE).
