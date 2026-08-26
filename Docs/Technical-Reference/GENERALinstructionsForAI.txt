@@ -1,0 +1,70 @@
+ORGO — AI IMPLEMENTATION RULES
+==============================
+
+1. IDENTITY
+
+Orgo is an ecosystem system for workflow and operational coordination.
+Task is the canonical unit of work. Case is the durable work/context container.
+
+2. TENANCY
+
+Every Task/Case/domain operation must resolve and enforce organization scope.
+Do not treat a caller-supplied organization ID as authorization by itself.
+
+3. TASK
+
+Canonical DB status:
+PENDING, IN_PROGRESS, ON_HOLD, COMPLETED, FAILED, ESCALATED, CANCELLED
+
+Canonical category:
+request, incident, update, report, distribution
+
+Do not create a second Task table/lifecycle inside a domain module.
+
+4. CASE
+
+Canonical status:
+open, in_progress, resolved, archived
+
+Case is not identical to a Konnaxion topic, external ticket, Kristal artifact or
+any other external object.
+
+5. DOMAIN MODULES
+
+Maintenance, HR and Education are adapters/extensions over Task/Case.
+Use TaskService/CaseService for canonical work mutations.
+Domain extension tables may store only domain-specific state/linkage.
+
+6. WORKFLOW
+
+WorkflowEngineService evaluates rules and emits resolved actions.
+Apply side effects through owner services. Simulation must not persist changes.
+
+7. LABELS
+
+Format:
+<BASE>.<CATEGORY><SUBCATEGORY>[.<HORIZONTAL_ROLE>]
+
+Broadcast bases 10/100/1000 are informational unless an explicit workflow
+creates work.
+
+8. INSIGHTS
+
+Analytics/read models are derived. A pattern becomes operational only through
+explicit Task/Case creation.
+
+9. EXTERNAL SYSTEMS
+
+Konnaxion, Kristal, SemantiK Architect and kOA-Linux are independently owned
+ecosystem systems. Never import their internal persistence models as Orgo core
+state and never write their stores directly.
+
+10. PUBLIC/API TYPES
+
+Public JSON casing and internal service casing must be mapped explicitly.
+Do not bypass mappings with `as any` at API boundaries.
+
+11. BEFORE GENERATING CODE
+
+Inspect the real Prisma model and the owning core service first.
+Prefer extending the current owner over creating a parallel service/lifecycle.
