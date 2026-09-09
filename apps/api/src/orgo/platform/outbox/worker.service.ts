@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { OutboxMessage } from '@prisma/client';
 import { createTransport } from 'nodemailer';
+import { parseConnectionUrl } from 'nodemailer/lib/shared';
 import { z } from 'zod';
 import { Database, json, lock, recordEvent, Tx } from '../database';
 import { DomainError, ExecutionContext, parse, uuid } from '../contracts';
@@ -208,7 +209,8 @@ export class OutboxWorker {
           z.object({ subject: z.string(), body: z.string() }),
           notification.payload,
         );
-        const smtp = createTransport(process.env.SMTP_URL, {
+        const smtp = createTransport({
+          ...parseConnectionUrl(process.env.SMTP_URL),
           connectionTimeout: 10000,
           socketTimeout: 15000,
         });
