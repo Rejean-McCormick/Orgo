@@ -219,3 +219,29 @@ SyncResolutionStrategy
 ```
 
 Public JSON casing may differ at explicit boundaries, but each enum has one semantic vocabulary.
+## 14. Target architecture additions (not yet physical schema authority)
+
+The target architecture requires several models/records that are **not present as canonical Prisma models in the supplied snapshot**. They must be introduced by explicit migrations before code/docs may treat them as implemented.
+
+### `Signal`
+
+First-class accepted intake/evidence record, organization-scoped and idempotent at retry-prone boundaries. It should be linkable to the Case/Tasks/actions it caused or enriched.
+
+### `WorkflowVersion`
+
+Immutable/versioned runtime ruleset linked to `WorkflowDefinition`. `WorkflowInstance` should pin the exact version/hash used. YAML remains import/export/authoring material.
+
+### `OutboxMessage`
+
+Durable post-commit message written atomically with a business mutation. Used by the Orgo worker for notifications, integrations, retries and projection work.
+
+### `IntegrationOperation`
+
+Orgo-owned record of an external request/result/receipt. External lifecycle status must not be encoded into `Task.status` or `Case.status`.
+
+### Idempotency storage
+
+A dedicated record or equivalent unique constraints are required where a stable `(organization, operation/source, idempotency_key)` boundary cannot be enforced directly on the target aggregate.
+
+`ExecutionContext` is primarily an application/platform contract and need not be a single database table; correlation/causation/idempotency fields should be persisted on the records that require durable traceability.
+

@@ -1,0 +1,1759 @@
+{
+  "schema": "orgo-delivery/v2",
+  "date": "2026-09-09",
+  "kind": "full-source-archive",
+  "final_validation": "delegated-to-owner-not-executed",
+  "routes": 114,
+  "files": [
+    {
+      "path": ".dockerignore",
+      "bytes": 112,
+      "sha256": "eb3d499ac28e34bd07f10e2c0c18a0a9ace5cd29da0e45595a9905a55ca5b28b"
+    },
+    {
+      "path": ".env.example",
+      "bytes": 1212,
+      "sha256": "d5ddf2c5c720b24b922e24fdf828d9bdbcb292e1ce8b22b7274318761d8b1903"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 990,
+      "sha256": "8565a944d9752c215836b3d7556b88592bd7e82ab0273937d46b5499124dc4a5"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 444,
+      "sha256": "454bd880bd4af5a144a18bde505df3444d75ce8ff93a3a73133f49bc6024a6cd"
+    },
+    {
+      "path": "CODE_SNAPSHOT_MANIFEST.md",
+      "bytes": 15646,
+      "sha256": "3adeddce2bb6fc26e6bb2013744bed7c12bb464ac4c50f953d1cde7a7a28a728"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 688,
+      "sha256": "bb30f23173e348305d859db33908e7d7334241af72e18a4f0e201fc671eff354"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5948,
+      "sha256": "9e445a4bc067878821f73bbcd0d973f448cb2c228d2dea663c2103e286353483"
+    },
+    {
+      "path": "apps/api/.prettierrc",
+      "bytes": 54,
+      "sha256": "87d8d7b26315af3ade1f003f8e2370be66065f67cf5dbc2dec9a1c8c5125dc1c"
+    },
+    {
+      "path": "apps/api/Dockerfile",
+      "bytes": 548,
+      "sha256": "454c2734f44410e542ac6cf051e7a83e6e8ce43b9525ff1e5b3b790ddcd2eba7"
+    },
+    {
+      "path": "apps/api/README.md",
+      "bytes": 206,
+      "sha256": "edd1819af6b8f652719c0a4f0b71905fe35b80e9bfd24ae5f9433b916b400c50"
+    },
+    {
+      "path": "apps/api/package.json",
+      "bytes": 1130,
+      "sha256": "9fb2dbf6ec4458b114022c8411f01d4b3bf5a716e53d8f659744816c6a9aadc8"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20220307034109_initial_migrate/migration.sql",
+      "bytes": 241,
+      "sha256": "6e931be1690b6e79f4e4b8cfcee28908c1747d9115ac75be1c7f5999175c7e02"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20251127134632_init/migration.sql",
+      "bytes": 69937,
+      "sha256": "608f82c48cf226958b7de30604886be5fff5e4e2c55b272985d356e053f6470d"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260908220000_work_foundations/migration.sql",
+      "bytes": 11557,
+      "sha256": "1cd2c6b374a267015bbed9fe48a27f170fe069470df77f2832d96061ca24d0ab"
+    },
+    {
+      "path": "apps/api/prisma/migrations/20260909160000_product_completion/migration.sql",
+      "bytes": 13225,
+      "sha256": "cb8c702c211fa67fe1045e62c5943b260cae3752ca9cdd674ab37a0455007a64"
+    },
+    {
+      "path": "apps/api/prisma/migrations/migration_lock.toml",
+      "bytes": 128,
+      "sha256": "74a9137885ce73d3ff088d79d658f8066e05e680fb51c0800a290c91c0c01d48"
+    },
+    {
+      "path": "apps/api/prisma/schema.prisma",
+      "bytes": 66792,
+      "sha256": "fcd1c54073fef2a727d3c11ff85d293d69ff9cc117e9e872303bc8f38cf7d2c0"
+    },
+    {
+      "path": "apps/api/prisma/seed.ts",
+      "bytes": 3402,
+      "sha256": "e4fc2307720abf636ff92b5a9aef983d0f54a3f0085cc417c180942e3614699f"
+    },
+    {
+      "path": "apps/api/src/app.module.ts",
+      "bytes": 1741,
+      "sha256": "b13937a1008bdc2f8b627b85167b943bfeb381459cf5c2529a7d590b34fe516c"
+    },
+    {
+      "path": "apps/api/src/bootstrap.ts",
+      "bytes": 1351,
+      "sha256": "4c7f7e44fa637c3d266dc8850e467da468e6f2794df5e6e061a051a1f6ae6f90"
+    },
+    {
+      "path": "apps/api/src/main.ts",
+      "bytes": 384,
+      "sha256": "1fcc0f7305003668b24fa6bb4a01276e2c9a1027aa1439605c56fc916a56179b"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/admin.controller.ts",
+      "bytes": 11658,
+      "sha256": "46673576b15054591b7d00491edb31bb33cd4e4e8632b55a76e9684a821c85d6"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/auth.controller.ts",
+      "bytes": 1354,
+      "sha256": "ddaa3842da4ece508b86563a63d019064c7596d48bf2bb956b41b80c59971c39"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/boundary.ts",
+      "bytes": 3635,
+      "sha256": "7a021debb3d1e2e7c3f9004ffc1dd46ac64bc56796ae860eb6ce1f09beb3f215"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/completion.controller.ts",
+      "bytes": 15711,
+      "sha256": "273a4b819a069695f8b228af0d7b20e8c06be194574fcad30e768a9f33e5bda9"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/health.controller.ts",
+      "bytes": 788,
+      "sha256": "0c9aa96861bae086089d8b8738c84337323f9777c9c379a61675df9d907c2a0b"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/ingress.controller.ts",
+      "bytes": 5212,
+      "sha256": "d42ddac019a3ce68abcf34e90febb67247cab4659bcebc9934b67571f7b06067"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/operations.controller.ts",
+      "bytes": 5697,
+      "sha256": "7106c3dc121f30bf663cbea528f0d158157c167dcba07d7afc643ed431f978cf"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/process.controller.ts",
+      "bytes": 5220,
+      "sha256": "68f354f3b2a4ee885cc639d44466fcd8594b803cfd26cfb34d0e9c0709b3d885"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/product-operations.controller.ts",
+      "bytes": 11142,
+      "sha256": "8f1ebbf4a92c75663c7891e9126e4e894e1c46212f02e98b88c285155fa842f2"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/routing.controller.ts",
+      "bytes": 1329,
+      "sha256": "1f164b1775888a5a8cf6db94f0cff0935806bd12c97a470809cc2b5b9f61621d"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/sso.controller.ts",
+      "bytes": 4727,
+      "sha256": "e41a19617a12dbcf804be74c9b25b5861eadad1a7c9a7ec51245d86e8c8d3ad8"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/sync.controller.ts",
+      "bytes": 2823,
+      "sha256": "71bb117ee843c62711e7cb86fe54c9e7f40d49e01f0f1cd65d3a542491204f0e"
+    },
+    {
+      "path": "apps/api/src/orgo/adapters/inbound/http/work.controller.ts",
+      "bytes": 6079,
+      "sha256": "c8b4e942e9262b7bd93c3bbefe484cf9de6a10bd9ad76ac0c2e3abf27c0e9d5a"
+    },
+    {
+      "path": "apps/api/src/orgo/integrations/architect/architect.adapter.ts",
+      "bytes": 240,
+      "sha256": "07cadb4289193b15790f7144dc8e2d85b431fcc812e51939e9a53a32cd7bd1c2"
+    },
+    {
+      "path": "apps/api/src/orgo/integrations/http-bridge.ts",
+      "bytes": 3301,
+      "sha256": "f8f098af64b302f918cbb9e88473b20fe8ca3bdaf6659d752d503ae11fa3cb88"
+    },
+    {
+      "path": "apps/api/src/orgo/integrations/koa/koa.adapter.ts",
+      "bytes": 209,
+      "sha256": "74bc008a7cf13da3d54654d812da5b391519722ab11e45b4ecd389b1c11aacdd"
+    },
+    {
+      "path": "apps/api/src/orgo/integrations/konnaxion/konnaxion.adapter.ts",
+      "bytes": 253,
+      "sha256": "6bf1ef16551e9765de29d82b556424685ed3be9e4f358776afa96f6ed049e551"
+    },
+    {
+      "path": "apps/api/src/orgo/integrations/kristal/kristal.adapter.ts",
+      "bytes": 222,
+      "sha256": "6e1ee70cf1c1362cfe6e71eed1602b004d78d1dbafeee4853ac3adfdaaf95d99"
+    },
+    {
+      "path": "apps/api/src/orgo/integrations/port.ts",
+      "bytes": 611,
+      "sha256": "6ab612125b18b81e7c67aeb8c694610e61f1ec71ab8bc654d5cadad673da79d6"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/communications/channels/http-delivery.ts",
+      "bytes": 2218,
+      "sha256": "64f203ddb327216a107bac4e51f782770eef0479a23e4671e9a6e1b88c8d410d"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/communications/communications.service.ts",
+      "bytes": 2563,
+      "sha256": "0a97bde0d94c599107d910e7c0bdad1c9fbae637f77bb3c29d4c513fb0ba3e35"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/communications/templates.ts",
+      "bytes": 581,
+      "sha256": "e35a7ac07f2f8bbbe76a445151eaae16691493b38532d98f955ef788322b2619"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/domains/domain-management.service.ts",
+      "bytes": 11057,
+      "sha256": "74592a93d57e3b3c39c476fe332cdd0541e07469a86f5291bb5a8be306b00d40"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/domains/domains.service.ts",
+      "bytes": 4310,
+      "sha256": "986a918a23ae2ad93b266e439e6f10b416f009693de6ff7179ead1b7ca87f2ec"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/identity/identity-admin.service.ts",
+      "bytes": 12713,
+      "sha256": "ebc7b11b2607a9389b8078a57141ec1f681863be22477a0319f5bb01c6a07f43"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/identity/identity.module.ts",
+      "bytes": 361,
+      "sha256": "a1e34c28014d32f5d3e81c04b7cd79afd620ccbad5b579d1974cb71ae7b6f41c"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/identity/identity.service.ts",
+      "bytes": 6588,
+      "sha256": "03432e20e79010fd96f4ad6bc50728b7bebfe98ad67bbef889c85ea2fe821556"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/identity/oidc.service.ts",
+      "bytes": 7910,
+      "sha256": "fc4db9e64799fa50eac02f22baf4013fd7f151fa98825b38abec96ed19139e9d"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/insights/insights.service.ts",
+      "bytes": 1874,
+      "sha256": "c9888538df66390834381c97bdaa7ba08b40e275158a43206e09027e12354394"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/intake/intake.module.ts",
+      "bytes": 364,
+      "sha256": "24d9d2b0b360e665c08dc4e8384672531843c8f0e1460fd63c8d94120b3e2207"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/intake/intake.service.ts",
+      "bytes": 6575,
+      "sha256": "db78cb623641ccf47c6a6cbd328a51e354ee59c8fa06a271f99b0541c00b82c1"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/integrations/operations.service.ts",
+      "bytes": 4033,
+      "sha256": "58c84b429839b7cc42e741834093e5841f49ae85a6b3eb2a4b0018993800f06a"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/actions.ts",
+      "bytes": 4863,
+      "sha256": "29f5ce8964d220cbded3824505549d242c326a088916301c1367681da1c9c32f"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/escalation.service.ts",
+      "bytes": 1450,
+      "sha256": "5a483c051f1c1989e924c077701dab2ac91fc0da609071281fa2d2298f6f5172"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/evaluator.ts",
+      "bytes": 2175,
+      "sha256": "cc3690ab1bfd08cedc8e8cba2127c3b75d5f2d117e611486241cee9eadea7123"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/orchestration.module.ts",
+      "bytes": 887,
+      "sha256": "74eb2c4a5f1ad513de5a1fde61b9b49a4d5a58c096089c941d91b96fa7ff67e2"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/process-manager.service.ts",
+      "bytes": 16261,
+      "sha256": "463121ad8e1281c2f86e453b792242c552a45bb4f7f38815554a3eb9a8197477"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/public.ts",
+      "bytes": 187,
+      "sha256": "3e3af5c37623c861d555882378748bd9e8b3d6efebb287bb29552818d0a99edb"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/routing.service.ts",
+      "bytes": 2788,
+      "sha256": "11992fb8b0a9cface34351617f3455f2ed612ecd4e115bce6a3841329f758415"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/workflow.contract.ts",
+      "bytes": 2111,
+      "sha256": "b12e30e6b25bc0cc0747509b5abd7619cdbf03fd6d0e19504cafe8f49298ada1"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/orchestration/workflow.service.ts",
+      "bytes": 5531,
+      "sha256": "982808e13415d8a2cd7a4f5c96148ae7a4a1f7dab0454d6803b385120ddc95c7"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/work/evidence.service.ts",
+      "bytes": 7134,
+      "sha256": "6bcd4f57c95f6979ed34ef25c626a57d4612e972821fb5a8b9bad13665f0ab36"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/work/public.ts",
+      "bytes": 99,
+      "sha256": "8702ba0fa25281506a2f94138eedfee2ba88849aa894d8db904a969488121da8"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/work/work.contract.ts",
+      "bytes": 1745,
+      "sha256": "dcebf2f6773ea101b699714bca3810591c47f0d52f80f551ff3907a70d949f25"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/work/work.module.ts",
+      "bytes": 176,
+      "sha256": "881f7af54f125195f3b4dc88becd0ec126a142d2912bcdcb7626fa7d2a20aa8b"
+    },
+    {
+      "path": "apps/api/src/orgo/modules/work/work.service.ts",
+      "bytes": 24120,
+      "sha256": "a38397abacd8d25d97af711473e910760b930e72cb57d9b53cd1b19145f2bf94"
+    },
+    {
+      "path": "apps/api/src/orgo/platform/contracts.ts",
+      "bytes": 4447,
+      "sha256": "a5b9c7742c4f47f350607ffec8771d35accc073c26b4cd08ef908bb249593e71"
+    },
+    {
+      "path": "apps/api/src/orgo/platform/database.ts",
+      "bytes": 3779,
+      "sha256": "8d90e2811cc8352810ee8527f5f50dda872b66ce80d19d6821beaee547bce9f5"
+    },
+    {
+      "path": "apps/api/src/orgo/platform/outbox/worker.service.ts",
+      "bytes": 12082,
+      "sha256": "d5f77f3acf58fa1ba56ed094723f5be9e821903efb73d39dccf36fbd87a016e4"
+    },
+    {
+      "path": "apps/api/src/orgo/platform/platform.module.ts",
+      "bytes": 215,
+      "sha256": "6619f8496748836aa09285bf94b9c3c4d0d555af189e5a9af62b2210fc73512a"
+    },
+    {
+      "path": "apps/api/src/orgo/platform/telemetry.ts",
+      "bytes": 1297,
+      "sha256": "42ee980ba48de1c3f80d09c634ca5ceb771e40b78b85b44b76fc128a1b27ba52"
+    },
+    {
+      "path": "apps/api/src/orgo/runtime.module.ts",
+      "bytes": 1435,
+      "sha256": "93872dc5d9e5ec689507d5a85b20f8574b27b2f26b4175910df9d2148e7468c6"
+    },
+    {
+      "path": "apps/api/src/worker.ts",
+      "bytes": 2465,
+      "sha256": "7f16d5942f5dfa1b56f18c0026205be9acf84af167175f55b59c1d4cce26fabe"
+    },
+    {
+      "path": "apps/api/test/integration/runtime.test.ts",
+      "bytes": 33262,
+      "sha256": "997d4e0915784274c384e7c2629e3bde301afdbe55682ebef9a762f282c50428"
+    },
+    {
+      "path": "apps/api/test/unit/client.test.ts",
+      "bytes": 1300,
+      "sha256": "1949967f75a85324ef003ffd049213b5a204354c32e9139e963ae738144227ea"
+    },
+    {
+      "path": "apps/api/test/unit/contracts.test.ts",
+      "bytes": 5133,
+      "sha256": "79e317adf494e0ffbdfe60a8a77703b398b4804dfdc24b590e8e98cf84a36218"
+    },
+    {
+      "path": "apps/api/test/unit/templates.test.ts",
+      "bytes": 673,
+      "sha256": "d0628eb545721de71913c44cb64edaa66b3aeed73dd2fbd309b2cd2d5f467098"
+    },
+    {
+      "path": "apps/api/tsconfig.build.json",
+      "bytes": 155,
+      "sha256": "ba3f70d921bbd5cc899117721e134ea6ffecb5bdf8150df60f628868f15c4612"
+    },
+    {
+      "path": "apps/api/tsconfig.json",
+      "bytes": 367,
+      "sha256": "2927fa8f66253f17408bd332dc371c1b62f7b4c8ff5e58ebd46c370e383e80e3"
+    },
+    {
+      "path": "apps/web/.env.example",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "apps/web/.eslintrc.js",
+      "bytes": 50,
+      "sha256": "56141138cc7528a37658319bdfed8f33f60fbe9a753f35b93ac5add2a9154a90"
+    },
+    {
+      "path": "apps/web/Dockerfile",
+      "bytes": 708,
+      "sha256": "c8af9f6f1a13342a20cfb8ae12f407738c241e8a92cbf3f40bf27883fc5234d1"
+    },
+    {
+      "path": "apps/web/README.md",
+      "bytes": 289,
+      "sha256": "e47c0bb330e89cd9c0e4a244509de0ac6967c7d20be5f54692738e2856fa3933"
+    },
+    {
+      "path": "apps/web/next-env.d.ts",
+      "bytes": 297,
+      "sha256": "04b12614f3a2adb99247304d86ed8c88eae4a95ee6e95b8e9fca94e66fc8c8bc"
+    },
+    {
+      "path": "apps/web/next.config.js",
+      "bytes": 255,
+      "sha256": "896179f5ecff39c94a9b9c12973041bafe674ebd65fa5971a97bf965757629fd"
+    },
+    {
+      "path": "apps/web/package.json",
+      "bytes": 461,
+      "sha256": "fed559352efbe44154d2be06e96270b1a0ca5eed9e4de6d7957986c47555a830"
+    },
+    {
+      "path": "apps/web/pages/[[...path]].tsx",
+      "bytes": 604,
+      "sha256": "b5dadd85e6994ca6ece766b63bf08ed5b0e2456ed07c7bf14882c12265011294"
+    },
+    {
+      "path": "apps/web/pages/_app.tsx",
+      "bytes": 177,
+      "sha256": "62f4bec0a3ede77daf705bd5d4055859a8cfc426589e92e5b0048802eb45ca1d"
+    },
+    {
+      "path": "apps/web/pages/account.tsx",
+      "bytes": 3263,
+      "sha256": "0d9391ddb694e34c31155c94618bcf78c09f5991a121232c12070b2649a51a72"
+    },
+    {
+      "path": "apps/web/postcss.config.js",
+      "bytes": 34,
+      "sha256": "9ecec6ba1e5e93a1dfb5b7ead59614bec3a1cf1ca7018bff52ed864a5ff734cf"
+    },
+    {
+      "path": "apps/web/src/orgo/Extensions.tsx",
+      "bytes": 48220,
+      "sha256": "72cd32f104707421a7980ded46adfbc47acb56a70a873c05dd96e8022a0edf21"
+    },
+    {
+      "path": "apps/web/src/orgo/OrgoApp.tsx",
+      "bytes": 44846,
+      "sha256": "f86a88800dc3552f70de4aa391fb53f9a0e2b58ffdaba1c66ac4bfad74419dbd"
+    },
+    {
+      "path": "apps/web/src/orgo/api.ts",
+      "bytes": 2632,
+      "sha256": "d2c32ab8a858adbf667045cd5139bf8ff204d574213f885842fa952f1d9777c4"
+    },
+    {
+      "path": "apps/web/src/orgo/hosted-entry.tsx",
+      "bytes": 240,
+      "sha256": "ecd3c5e1fa2802052178c3e270bf09abfbfb4ef3b57a79a2209a4b1e3978ac4f"
+    },
+    {
+      "path": "apps/web/src/orgo/offline.ts",
+      "bytes": 2840,
+      "sha256": "da3458a5d0bb1940a09584524bd4225f67c673c4400e5da2b8f395ace7897a4f"
+    },
+    {
+      "path": "apps/web/src/orgo/profiles.ts",
+      "bytes": 4362,
+      "sha256": "3ca18d3ad192cc140a4d5cb7e0acdc052533ec2f363575a1aec65bef9dff28b2"
+    },
+    {
+      "path": "apps/web/src/orgo/public-contract.ts",
+      "bytes": 959,
+      "sha256": "3baf398540463d63a0e73733056b586be0fafa7b96708b20a78084cbdc10d195"
+    },
+    {
+      "path": "apps/web/src/styles.css",
+      "bytes": 13449,
+      "sha256": "3ec19d8e7609dffa2e4401d73f2e31f4008f5c9e7fc9ef05e01518eb251b12e9"
+    },
+    {
+      "path": "apps/web/tsconfig.json",
+      "bytes": 496,
+      "sha256": "b610cd40bef123058d2b2da59f8435dcf1fb55c3eafb959fa21e554ea6811c9b"
+    },
+    {
+      "path": "charters/care.json",
+      "bytes": 2455,
+      "sha256": "54c6279970427f2638aa6a814fa9bead54132a69f8ea185cd6ea653fadff3ea4"
+    },
+    {
+      "path": "charters/care_hospital.json",
+      "bytes": 1700,
+      "sha256": "89f5439fe64a828fa366ce0ff78b4bac18528ac7456cfd0b20c52c5d17161927"
+    },
+    {
+      "path": "charters/care_nursing_home.json",
+      "bytes": 986,
+      "sha256": "6f14b0fc548efe3f4e426fdb1c08bf6757353dd587717022722a7c70b31019ad"
+    },
+    {
+      "path": "charters/care_school.json",
+      "bytes": 1285,
+      "sha256": "2c0a88a7b17aa30ad524f8ab0a5606851ab9f66941d55d3809b4e973d649dd7a"
+    },
+    {
+      "path": "charters/care_social_services.json",
+      "bytes": 852,
+      "sha256": "59836c1b63560a406744732b21455a0dfe1b599364b152ea9f1b874036158386"
+    },
+    {
+      "path": "charters/general.json",
+      "bytes": 4051,
+      "sha256": "ed0aeee88aa01edb31e9007d34a46c13b086ac25519900120cfe7323b3445450"
+    },
+    {
+      "path": "charters/groups.json",
+      "bytes": 971,
+      "sha256": "9a71744f429cf258435c35480af2639293699b539b781d5d2f3f308799e23790"
+    },
+    {
+      "path": "charters/groups_associations.json",
+      "bytes": 617,
+      "sha256": "7211e9a7ded22831826b426d7f6c6a23ba13b10d247ad194cf6e662e03c750c6"
+    },
+    {
+      "path": "charters/groups_sports.json",
+      "bytes": 796,
+      "sha256": "241b74efa1da3710b26634402862ee646cd2a234d2549b2aae78083f7024b2eb"
+    },
+    {
+      "path": "charters/incidents.json",
+      "bytes": 1535,
+      "sha256": "fd38868acfb0d741ed7909dc7d0c6daaf23fd784b014dbb0dbdeafe062ed1725"
+    },
+    {
+      "path": "charters/incidents_it_helpdesk.json",
+      "bytes": 591,
+      "sha256": "eefa3f6620681f7d78e89ab9b85582d0d01208b6e8b414839dc161fa527e2102"
+    },
+    {
+      "path": "charters/incidents_sst.json",
+      "bytes": 594,
+      "sha256": "9894485b692a6a92805e750c0d589589536aa5d9561686ab22a7c1989f22893b"
+    },
+    {
+      "path": "charters/operations.json",
+      "bytes": 2409,
+      "sha256": "45413adf3e29302960533528dfbf88dd2575751a62c27da9b54fc75506d317de"
+    },
+    {
+      "path": "charters/operations_facilities.json",
+      "bytes": 900,
+      "sha256": "3cc0ea5f5aac25129a08282731837f8dbdbab857620d4fc9425d41341d261a20"
+    },
+    {
+      "path": "charters/operations_manufacturing.json",
+      "bytes": 840,
+      "sha256": "3a5f27730629e6b90417f08f39049d1d818dd91e2dd06edf45a9d28949149c8a"
+    },
+    {
+      "path": "charters/operations_transport_logistics.json",
+      "bytes": 1028,
+      "sha256": "d5036b6c5543017cd48b6ff942a346043b5df502c47cd2ef0d2941fdd5be5fc5"
+    },
+    {
+      "path": "charters/programs.json",
+      "bytes": 1734,
+      "sha256": "eb507d0a92b766337e068fabe423dfa0e38b6b331d23a8d18faa61993009a090"
+    },
+    {
+      "path": "charters/programs_government.json",
+      "bytes": 1149,
+      "sha256": "3fc52dc909040c246f99d4b60bb6d52f6dde2c91ca1115f5afe359d7cf1ab7a2"
+    },
+    {
+      "path": "charters/programs_humanitarian.json",
+      "bytes": 1521,
+      "sha256": "2fe8b117e030466169fa9b28de094557b79899ebe8744b4c3b2140465bfda7bd"
+    },
+    {
+      "path": "concat_orgo.py",
+      "bytes": 8319,
+      "sha256": "d1b63acd09f9ad1a563050f6bb33ae708ce1157ebbdbf44afdfd1b3119c55188"
+    },
+    {
+      "path": "docker-compose.yml",
+      "bytes": 3107,
+      "sha256": "6a5239caf8634315e85405895a6434a1570acdb7bff15208f0eb4c85efad4d63"
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 4316,
+      "sha256": "cde22c1b878242baf6d6111bc50491319a6d90e1dc3101d6b330c5c4e7f48208"
+    },
+    {
+      "path": "docs/Technical-Reference/API_IMPLEMENTED.md",
+      "bytes": 8057,
+      "sha256": "d210e31589cc6f69f31c1b396322c6ec8cf33885c4f4aa53a8a58bc593169121"
+    },
+    {
+      "path": "docs/Technical-Reference/ARCHITECTURE_TO_CODE.md",
+      "bytes": 4304,
+      "sha256": "0c1a272d26262c0ccab0b8eaadc34347c0ec7bb48db9aecc0a39bd54b408f67a"
+    },
+    {
+      "path": "docs/Technical-Reference/Architecture upgrade(to do)/OPS-001_AI_Resilience_Strategy.md",
+      "bytes": 6356,
+      "sha256": "cb9630ee78f0fea035b4bca8bba5e0533ba0e92795db068607ff32ac7d3b5406"
+    },
+    {
+      "path": "docs/Technical-Reference/Architecture upgrade(to do)/REF-001_Configuration_Manifest.md",
+      "bytes": 5200,
+      "sha256": "063606238ff3bc975232d0e8d9c8782afa387d144c6ed2f3cc2ec78ebbea50c7"
+    },
+    {
+      "path": "docs/Technical-Reference/Architecture upgrade(to do)/RFC-001_Nervous_System_Upgrade.md",
+      "bytes": 7988,
+      "sha256": "f7b23bc23c945d7909d8f5d8046ad4ecc4fcd011ff912069be979b92d4d6744e"
+    },
+    {
+      "path": "docs/Technical-Reference/Architecture upgrade(to do)/SPEC-001_Input_SenTient_ACL.md",
+      "bytes": 6937,
+      "sha256": "aa1d525047ad14b143550cffc40af71d0d15af6b6dcf582aeb9fb9ff4199509c"
+    },
+    {
+      "path": "docs/Technical-Reference/Architecture upgrade(to do)/SPEC-002_Output_Architect_Outbox.md",
+      "bytes": 8052,
+      "sha256": "5f6223c7194e3a787586ac0f4f3c6869cc2f819fa5f7fda108967527a0ffe53a"
+    },
+    {
+      "path": "docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md",
+      "bytes": 5599,
+      "sha256": "05b795abf97d9bcde6be22db82a4e87b67bff86318f1f04be9cce4c0e230433e"
+    },
+    {
+      "path": "docs/Technical-Reference/Boilerplate_Turborepo.md",
+      "bytes": 2348,
+      "sha256": "f664b113689d512d7f59575b49cbf41f4434a6749562174fc7ebdcc212ffbcf8"
+    },
+    {
+      "path": "docs/Technical-Reference/CODE_ALIGNMENT_NOTES.md",
+      "bytes": 19551,
+      "sha256": "95888ecb2db987dc0ce5e6913d97e823877a877af330913fbef004ba5133f351"
+    },
+    {
+      "path": "docs/Technical-Reference/COMPLETION_DECISIONS.md",
+      "bytes": 9200,
+      "sha256": "4ef41a73829d18a5c7b99ccfbe74bb1e8b693b7843d1533d566fa492143030e6"
+    },
+    {
+      "path": "docs/Technical-Reference/CONTRACTS.md",
+      "bytes": 7155,
+      "sha256": "41d8aa0a6d96ad8a3cd973c8cec981b28ac062622c9898e1dad5fdb938edcebe"
+    },
+    {
+      "path": "docs/Technical-Reference/GENERALinstructionsForAI.txt",
+      "bytes": 4209,
+      "sha256": "3e7c2d7e1d1c31f0aa92850467cec982599b6f54f0fcf0b16a0eead43d9286d6"
+    },
+    {
+      "path": "docs/Technical-Reference/GLOSSARY.md",
+      "bytes": 5487,
+      "sha256": "5c8356720877b3bb21330e7d6811f80782c54a2064f811bd596250d1083dce25"
+    },
+    {
+      "path": "docs/Technical-Reference/Glossary-Letters.txt",
+      "bytes": 2905,
+      "sha256": "fefa026821c1973368ca9ae319c76fc15e184a6f6588afca2fb30f879b174e7d"
+    },
+    {
+      "path": "docs/Technical-Reference/HowToStartAndEnter.txt",
+      "bytes": 1212,
+      "sha256": "2ac3a908b14ca6b721380fb8c2b9e78e4c33c1216f140ed979dc1577227d891d"
+    },
+    {
+      "path": "docs/Technical-Reference/IMPLEMENTATION_DECISIONS.md",
+      "bytes": 9038,
+      "sha256": "0fe33a3a2e70e8fc5bb05ad3745bf025e7ee39e2304785455eb20de796e220f3"
+    },
+    {
+      "path": "docs/Technical-Reference/IMPLEMENTATION_STATUS.md",
+      "bytes": 6763,
+      "sha256": "ce086cef2e1c743c027689741cf9b661bd13923c4f39127ecc392764838cba1c"
+    },
+    {
+      "path": "docs/Technical-Reference/INTEGRATION_BRIDGE.md",
+      "bytes": 4218,
+      "sha256": "0da629b20f824ea1745da1cf040cd397e8863e3449827fa8174ce887a6365762"
+    },
+    {
+      "path": "docs/Technical-Reference/LOCAL_VALIDATION.md",
+      "bytes": 5403,
+      "sha256": "2773d9d3298d4fc43b442cdf88d5b806ee8bca0fd7fbabcce2f8d53118e7acbc"
+    },
+    {
+      "path": "docs/Technical-Reference/Semantic-Charters.md",
+      "bytes": 7138,
+      "sha256": "c8f875ec5505e5f1c251fbed2b3c2a3358d6ceca707077aeb03fe477e3e420bc"
+    },
+    {
+      "path": "docs/Technical-Reference/TARGET_ARCHITECTURE.md",
+      "bytes": 17758,
+      "sha256": "ddb637b0e2b09ee3be3b9ba961bbaf1e5a47ad4192d49221f4d6ae68e9b2f453"
+    },
+    {
+      "path": "docs/Technical-Reference/UI_AND_KOALI_INTEGRATION.md",
+      "bytes": 11959,
+      "sha256": "dc142c599a095d89cd95f60640634fc9f855d5cd47b5293c6b0fd6971a0186ca"
+    },
+    {
+      "path": "docs/Technical-Reference/WikiData-Orgo_Chart.md",
+      "bytes": 6970,
+      "sha256": "4fdd7eaea27828f3d95369214591d9edc774af676e5fdacb6176b3daa84a35b0"
+    },
+    {
+      "path": "docs/Technical-Reference/eliteUserList_clean.csv",
+      "bytes": 39039,
+      "sha256": "6d149eabd4171839dab76e9504a4995977cdeab31510fe257f12b5f79a99914d"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/1-Orgo v3 - Database Schema Reference.md",
+      "bytes": 5612,
+      "sha256": "10861e0285e48059c31914e79e7f7d02a4caa8f6c39f5ad475afb8da15daf05f"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/1-orgo-database-schema-reference.md",
+      "bytes": 47606,
+      "sha256": "1d5d33ee1859e5dbb0ab4349c8118de6358c23a8575400c3495382c382b29cbb"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/2-Orgo v3 - Architecture and Invariants.md",
+      "bytes": 8752,
+      "sha256": "32fb353b996b3127d47b1c506182aef0d9b7ea36179d2bbb880db4997570d0f8"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/2-orgo-documentation-index.md",
+      "bytes": 31142,
+      "sha256": "5d152ae988f8141eb42ef7cbf98a987895bc9f9b478425eae7ac72680f659963"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/3-Orgo v3 - Task Case and Workflow Contract.md",
+      "bytes": 6078,
+      "sha256": "58731c133f3be8823076978de7ec658c33ad8d3fd63a45f200511aeaae775cf2"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/3-orgo-full-stack-technical-spec.md",
+      "bytes": 28392,
+      "sha256": "153f921c269a3b6e2dd83fbbfcd2380f765edd3d23bfa9f2104f275b6732723d"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/4-Orgo v3 - Domain Modules.md",
+      "bytes": 3091,
+      "sha256": "3218eca4e4b8dddca16a36b73ee7efdad46f77865605e396deb9f04381785daf"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/4-orgo-functional-code-name-inventory.md",
+      "bytes": 46327,
+      "sha256": "5de0d2ab0491fd01ba482678977e49f265da25e4caeb7a11963239ac13c3dd48"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/5-Orgo v3 - Labels Profiles and Cyclic Overview.md",
+      "bytes": 1931,
+      "sha256": "17f1b6c211135258ad1eb5b6d128e52855a45542b9bafa0221a492d9273a9281"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/5-orgo-Core-Services-Specification.md",
+      "bytes": 40973,
+      "sha256": "1f78e6f73f4c1aa21715d2f3b74c81c0fbfa5de1656649f53728c6b6d2e7d02d"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/6-Orgo v3 - Insights and Analytics.md",
+      "bytes": 1969,
+      "sha256": "629c53ebcab194b0a908102faa7abb93c0a3bf0e91d9d2bc7475bb1f1715af37"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/6-orgo-insights-module-config-parameters.md",
+      "bytes": 29951,
+      "sha256": "7183935cc369671486769060758e2baa7ff46b591147659bcfa89f0dc5250d3e"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/7-Orgo v3 - API Surface.md",
+      "bytes": 3706,
+      "sha256": "85155be5e53283eb4c1bc983ad0c01a85cffc561d68032cbc5a8694b33f73d7b"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/7-orgo-organization-profiles-and-cyclic-overview.md",
+      "bytes": 21619,
+      "sha256": "01ec9e77a8968bcd78a8fab691ce6f42ca3fd9e0d5d2fba5fd8acd138fdfa4e5"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/8-Orgo v3 - Documentation Index.md",
+      "bytes": 1543,
+      "sha256": "5bc04cd7a75ca6980a603a7f44b857c474de2f5c82213c058d9546c5e0e976c7"
+    },
+    {
+      "path": "docs/Technical-Reference/v3/8-orgo-cyclic-overview-labels-and-flow-rules.md",
+      "bytes": 29606,
+      "sha256": "f144c92bf18d6fc23f730bd829d35ebbbf5fa54ce5878967ba4649fea2c61282"
+    },
+    {
+      "path": "examples/intake-incidents.json",
+      "bytes": 693,
+      "sha256": "9ebe1cabd0a7de7628234f90dfdf1a3fb7d005ba982af76e52a271619aaeb686"
+    },
+    {
+      "path": "examples/process-validate-publish.json",
+      "bytes": 639,
+      "sha256": "61892d5ab8a14808e1bfc4f8c13e8426c304469ca11a85113930e1cb603cf4ea"
+    },
+    {
+      "path": "legacy/README.md",
+      "bytes": 252,
+      "sha256": "95c071ccbff8226ae71f49e8406dc307247e46eabd54619974767616a8dfdc44"
+    },
+    {
+      "path": "legacy/api-src/app.controller.spec.ts",
+      "bytes": 791,
+      "sha256": "75d429ad04e6707809365efb7ae6305edb83e8a798f84af62c8771d2fa08e039"
+    },
+    {
+      "path": "legacy/api-src/app.controller.ts",
+      "bytes": 320,
+      "sha256": "222c1a774a8053aea88b15e5464e68d68bf796529a5b4ec3a94e4bcd9540ebf2"
+    },
+    {
+      "path": "legacy/api-src/app.module.ts",
+      "bytes": 2627,
+      "sha256": "acb024d03362ed239e2a9da4cb5333fd720d9485d9098ce6275d1d334993205b"
+    },
+    {
+      "path": "legacy/api-src/app.service.ts",
+      "bytes": 190,
+      "sha256": "f9f6d1e024b6fd30c98470929fa94bcff00cf6f6e919895a08c265077592d5a9"
+    },
+    {
+      "path": "legacy/api-src/config/environment-variables.ts",
+      "bytes": 229,
+      "sha256": "946cfd5f863618bfe89ece3487b95fbde375cef4534b386f8c090d64aed91d51"
+    },
+    {
+      "path": "legacy/api-src/main.ts",
+      "bytes": 860,
+      "sha256": "19fbbd8f9022a5034c369a5e07b8b42be2bbdba730810e6f21d0cede48b8e43a"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/identity/dto/link-user-person.dto.ts",
+      "bytes": 1066,
+      "sha256": "8cf48e9987dd6e9a1fb99215fda128ff5263bfa02a93fe520028bcb18320b03c"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/identity/identity-link.controller.ts",
+      "bytes": 6636,
+      "sha256": "c38dd16d3586d343276f491442c7d7f523478726ffe451b905a2ab06087fc50c"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/identity/identity-link.module.ts",
+      "bytes": 890,
+      "sha256": "71dfb43f0e85ef144f3ddf3dc3eb0b0ed9a01ac03e7ebfaa4e3f614e9039764e"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/identity/identity-link.service.ts",
+      "bytes": 19091,
+      "sha256": "f485e8d05dad4276e2cdaaeea132af420b03c9438a570f5b70a8d8351770b0b0"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/organizations/dto/create-organization.dto.ts",
+      "bytes": 2971,
+      "sha256": "dccc2c1b2577a37c197d274fed14307ad16228591ffee22362d2814dd0deb31d"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/organizations/dto/update-organization.dto.ts",
+      "bytes": 2915,
+      "sha256": "394047ca1aa3d47072aa860e63d69ce629908f51bce66eb77a667b3085904146"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/organizations/organization.controller.ts",
+      "bytes": 3382,
+      "sha256": "c99fced0ed61268cf0461cb8ad7c4d1645723369702f7ff124fc995bb01aeda0"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/organizations/organization.module.ts",
+      "bytes": 1114,
+      "sha256": "aea1bae6c6becf756032bfedc43c8f57df2ab0b5dec1bb18ac239e7aba0e4e8a"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/organizations/organization.service.ts",
+      "bytes": 18102,
+      "sha256": "b8c1d4f43802f1d5a4a296bd1cc555099f2bfc5f9717e12065024706a9c08ecf"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/persons/dto/upsert-person-profile.dto.ts",
+      "bytes": 2288,
+      "sha256": "089bbf16e246cc3150d205a13368af5aed111f45c0b624c5014d4c6ad8278669"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/persons/person-profile.controller.ts",
+      "bytes": 11977,
+      "sha256": "51bc767cd110094ecc0101599bcf2854f6866b063ae425eceb7cb771ae160747"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/persons/person-profile.module.ts",
+      "bytes": 709,
+      "sha256": "af56fd2b4895cad6f9eb7547a84c3e5407625e279ea2c62b3920073ffd59ae1c"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/persons/person-profile.service.ts",
+      "bytes": 11024,
+      "sha256": "e0a13d71a8c83e91f2ed17b55f22815f572a7dae585b1bc25a694e4b22d7d542"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/rbac/dto/assign-permission.dto.ts",
+      "bytes": 857,
+      "sha256": "fc6a958beff4fe00c1558a8f166ac6f74ad3ea0abe986e3ccc65f99d9ead70e0"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/rbac/dto/create-role.dto.ts",
+      "bytes": 1645,
+      "sha256": "97c52705fdcf0c165165e2e3ec108abe078dde1995c3cc78513a1efde103b415"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/rbac/permission.service.ts",
+      "bytes": 7586,
+      "sha256": "7303532e11c1e419643508ec503903184ebb421ab38ddd0782fd2e7378a6a181"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/rbac/rbac.controller.ts",
+      "bytes": 10827,
+      "sha256": "0b2fb1c4450d6ef8963891199a1a108178a118b9dc1e9943915a5978115aac90"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/rbac/rbac.module.ts",
+      "bytes": 1330,
+      "sha256": "9fb12b905856f7ea2472be1fbf8af28fcac5ec8511989e25458bb5062fac0be9"
+    },
+    {
+      "path": "legacy/api-src/orgo/backbone/rbac/role.service.ts",
+      "bytes": 6374,
+      "sha256": "db462487a8b000bdbb24c6adbeef8c89f1caed8620c44d7dfb63fbb26adc1fc7"
+    },
+    {
+      "path": "legacy/api-src/orgo/config/config.controller.ts",
+      "bytes": 10865,
+      "sha256": "9598f27b87993985da2201b3719f2d22793644702230bfc425eb432d73cf9044"
+    },
+    {
+      "path": "legacy/api-src/orgo/config/config.module.ts",
+      "bytes": 987,
+      "sha256": "4ad39baf9a22cf749b668cd072d3d5c970d36d3184e9cccbfbba65492eac72b4"
+    },
+    {
+      "path": "legacy/api-src/orgo/config/config.service.ts",
+      "bytes": 22876,
+      "sha256": "69b2bff86c0cd071be9f9ea07da74f928c2993d488ef576ff591e551208aef54"
+    },
+    {
+      "path": "legacy/api-src/orgo/config/feature-flag.controller.ts",
+      "bytes": 11395,
+      "sha256": "de3b4831247b8191516b77f8350d17048fa2bae51fe365bb0af2ff82857d7a52"
+    },
+    {
+      "path": "legacy/api-src/orgo/config/feature-flag.service.ts",
+      "bytes": 24522,
+      "sha256": "d0cc31f59c7109ef8a3fadd2f9331f64ccdfe80fe27a6468ddc8fcaa814e10e6"
+    },
+    {
+      "path": "legacy/api-src/orgo/config/org-profile.controller.ts",
+      "bytes": 12376,
+      "sha256": "672401970c38253a19140fe22951cde121a13c95c7837ac8f2ba4d4a635d9177"
+    },
+    {
+      "path": "legacy/api-src/orgo/config/org-profile.service.ts",
+      "bytes": 36849,
+      "sha256": "efadf42381b757f874828b131013c208d51687e7d619468d2bf6ae2add7a986b"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/alerts/alerting.service.ts",
+      "bytes": 11912,
+      "sha256": "f90758b4f08de4b00614715a80354891969939741644b8c50b588caac256257f"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/cases/case.controller.ts",
+      "bytes": 14451,
+      "sha256": "b39f0e94a263bbb3f640c15376beda8451dee16f9073d13128578fac7e12a45d"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/cases/case.module.ts",
+      "bytes": 788,
+      "sha256": "923b7b3f9cbda2cddce5f1cf28a3bd73ae653a85cc49ff88979a51892a4eba37"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/cases/case.service.ts",
+      "bytes": 15902,
+      "sha256": "23f22ad9a3f364c3892861d5d9db2b76c84f7de75d175a9eb907957166fced64"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/cases/dto/create-case.dto.ts",
+      "bytes": 5748,
+      "sha256": "c7b8aad144a1a45491244c79722991b6861edea5320f0b382c3d311567d4ad72"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/cases/dto/update-case-status.dto.ts",
+      "bytes": 939,
+      "sha256": "0511502d4387965f478219de7cd1f50be829cdf5ae68947b06cea18bb26a6539"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/database/database.service.ts",
+      "bytes": 10819,
+      "sha256": "67d163b9aa01e816fed4af80c1c3053baaaa15fb2fa8e7b72c2bfd9222374f8e"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/database/repository-factory.service.ts",
+      "bytes": 10787,
+      "sha256": "2ecc3e11db599472a3860b4e425ca9cbefeec4827cbc8da3f5d73a798fb1775f"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/email/email-ingest.service.ts",
+      "bytes": 27711,
+      "sha256": "332027af92870b7dac371ed23ababcf7412240a665f7ca506e50800c62517ab6"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/email/email-parser.service.ts",
+      "bytes": 20208,
+      "sha256": "218c7d20d5cdea5a2ec4147ae7d28db08c61ccbdb317d6196c41c511e8e0b555"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/email/email-router.service.ts",
+      "bytes": 33688,
+      "sha256": "6be1f19084f1ceabf99106d260d40bc23ee67579c62b4a750ad7a5ec26975be4"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/email/email-validator.service.ts",
+      "bytes": 10616,
+      "sha256": "773d31d9820267348c519ae6047deb863d94daa8a51358ae11b523127c477957"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/email/email.controller.ts",
+      "bytes": 9657,
+      "sha256": "7f81c45f0f4d92ae12a540b8ce94cb8d9b153113e4a20503b18d853b7c5f83d3"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/email/email.module.ts",
+      "bytes": 1956,
+      "sha256": "70c3044ce0e18ba1777698af6055164987043e4a2bf7eb95651ae6e13960923e"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/email/email.service.ts",
+      "bytes": 15865,
+      "sha256": "649e471f9fa7a42cc7651bc2d469708a7e1f019ab774c8157d772120b2c91cb8"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/functional-ids.ts",
+      "bytes": 14065,
+      "sha256": "2255ef6cc3e9a5e0d2553951222317d0dd9c4e316e4a71799d876c89ff40ab9e"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/health/health.controller.ts",
+      "bytes": 3641,
+      "sha256": "26924c1cfd6cd3df09f49d3ca52ce11b7fdbe97eba3627cda86255a727eecbf6"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/health/worker-health.service.ts",
+      "bytes": 8624,
+      "sha256": "cc71e8ebb5a20c67b8ad1d8109fbcd84ef018d733a320696c635a6b2cd0d33be"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/labels/label-routing.service.ts",
+      "bytes": 10509,
+      "sha256": "ad9fe50bc01c0b92ef75ba66e701abd6ec21e696cc5607e2a80f83a9b838a063"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/labels/label.service.ts",
+      "bytes": 11260,
+      "sha256": "101b3898ffbc6a7dc071503b931bccee1ff658cf989dcb672612f64bc9fb4bf1"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/labels/labels.module.ts",
+      "bytes": 515,
+      "sha256": "30ca89172f829ee5f6cf2bc53bb7f8d570c97853d0f7477e97efd5cd7b91b9d0"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/labels/routing-rule.service.ts",
+      "bytes": 11961,
+      "sha256": "978221741bba9f54684d8364eb41cfb9ccc6f240d18fe0ae1fc50b84bb1895e1"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/logging/log.service.ts",
+      "bytes": 25894,
+      "sha256": "3b2b70caeafdd25fffc48049a2d6629667bb8873afe14f1b2371f55992b92892"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/logging/logger.module.ts",
+      "bytes": 1462,
+      "sha256": "427f39dbdfd313e5d56f25c999d66b1028f010b70efd6304aaf376b7f91df32d"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/metrics/metrics.service.ts",
+      "bytes": 17956,
+      "sha256": "47fadc2b9c63548bcb6ed96fd34359fa9d77d8e3fa61a34da0f98c854253f9e8"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/notifications/notification.controller.ts",
+      "bytes": 7002,
+      "sha256": "73f7551daaef9ea5769ae22c81cb4425b0dee0e3ee86f8414690cf1c046303af"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/notifications/notification.module.ts",
+      "bytes": 841,
+      "sha256": "2860c8119ed15950bf4e8df9fcaf15be3ead282a00d1b8c850ba541d40cfa6a7"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/notifications/notification.service.ts",
+      "bytes": 40229,
+      "sha256": "e7cb500c30df25825309805ebb552faa4415bf8be709636bea32ee8a7181017f"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/offline/offline-sync.module.ts",
+      "bytes": 716,
+      "sha256": "bbb42175941dad70e84d08363c440abe4a124361572e98c1e2c882cc434aa22c"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/offline/sync.service.ts",
+      "bytes": 19601,
+      "sha256": "790e540d56f3e714220afae2202e3406bb8a472a0312d958d3ad4edc011a6538"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/signals/dto/create-signal.dto.ts",
+      "bytes": 6108,
+      "sha256": "bd82ff0fcb9ffcfe7c01bd16e5529f387741d2122919a080bb59ed8338622a6b"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/signals/signal-ingest.service.ts",
+      "bytes": 20108,
+      "sha256": "f89da4d36847f68fb1baaa5d8b92a73f9dee852d0ed40a0de31c3f7b098587ce"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/signals/signal.controller.ts",
+      "bytes": 3791,
+      "sha256": "3c5198158f036ee512987974daf53ee3ed7f8b6cc6769540107a2631b6c3e997"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/signals/signals.module.ts",
+      "bytes": 599,
+      "sha256": "0b3c94cd215b359fe96f2a5f1b14f436a92aeebcdec8b583b229ca9893b9d376"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/tasks/dto/create-task.dto.ts",
+      "bytes": 5785,
+      "sha256": "85e43d1f34a721f638f1db25b9313d17020eafab7fd651ccec03bfe6047fe8ed"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/tasks/dto/update-task-status.dto.ts",
+      "bytes": 1251,
+      "sha256": "99500d1051ea986c7565b4baf1b5e5c5a6aaf6f38adde8727b244978e1162d81"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/tasks/task-events.gateway.ts",
+      "bytes": 10833,
+      "sha256": "976f6369480e9ae2c084c9e13f2be591b24cae9ecafef8d425ae7f2786f8f613"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/tasks/task-events.service.ts",
+      "bytes": 13927,
+      "sha256": "1158a7b57089e42963891ed0fa1fd5df0b655717b634674674f3ff327f87d96c"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/tasks/task.controller.ts",
+      "bytes": 9449,
+      "sha256": "5bbed9b43f9ad01e524ccecf179d31a44df927a67857b683d709ef430ce3c10e"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/tasks/task.module.ts",
+      "bytes": 388,
+      "sha256": "957cea11341ba63ef4428a5ab8c3d281de6a40f3952fb5dc200a79a3460b0672"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/tasks/task.service.ts",
+      "bytes": 36897,
+      "sha256": "c1c8646d349e901e969c1b40063e578f8e69e74519049212b41f45eb15b3361e"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/validation/config-validation.service.ts",
+      "bytes": 8937,
+      "sha256": "4ed6c51a29dce0546da7556f57818d11f0b0bc1ec51fad5312d88aff6536c741"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/validation/metadata.service.ts",
+      "bytes": 7906,
+      "sha256": "671e2d8d5d764490ed613f4d187add2d376b240eb3c33acc4120207592547771"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/validation/payload-validation.pipe.ts",
+      "bytes": 12286,
+      "sha256": "9e3f6f1a45b0dfafbb07ba5aa63227eb27fa089f528aaa58b9ba8d31d2bf4d00"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/workflow/escalation.service.ts",
+      "bytes": 32655,
+      "sha256": "bfbe97469f646c1df00a4ca6f3b8d2e605bdfe57c94709428d671117a670f93c"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/workflow/workflow-engine.service.ts",
+      "bytes": 36604,
+      "sha256": "e4de44ad2b7f55dbb2a6dd2c44c7243aa1b0109b1847479e0ab2a6f6cb58472b"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/workflow/workflow.controller.ts",
+      "bytes": 5957,
+      "sha256": "9eb473756c473a8b9d9c9e2d15acb4bf24af88bd3485bda555babe68cb542844"
+    },
+    {
+      "path": "legacy/api-src/orgo/core/workflow/workflow.module.ts",
+      "bytes": 652,
+      "sha256": "d4516c39dbcf70af003a8a2bf53b2ad867c23ae9f8428a914e8b1d36f7ed5b72"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/domain-task.factory.ts",
+      "bytes": 7711,
+      "sha256": "3ecad438518ce83d77b10cd39873522437fece9005cfd221693481ac2e7c1ff9"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/domain-workflow.service.ts",
+      "bytes": 17516,
+      "sha256": "3aac4fa033bd92cdd1a4f3b980d57b24fc3d404017d9d8811ad085953e5a286b"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/education/education.controller.ts",
+      "bytes": 12104,
+      "sha256": "579a31614fda390535392e7a30bc9955a97ff67786d67574c5ccdf6d3736014f"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/education/education.module.ts",
+      "bytes": 342,
+      "sha256": "2f5153605d453dcbc41d12c536834c3b340b87ed68a282ab070e2bc0b1c6f3c3"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/education/education.service.ts",
+      "bytes": 29771,
+      "sha256": "02e52220e723ee7f45722d28929a0b7a5b57e3b270a1381650bc2489342e960d"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/hr/hr.controller.ts",
+      "bytes": 6971,
+      "sha256": "b33f22f4af2dbccfb86166f24cfdfc53eef1dfe1ab7d2536e96161f6c5d46643"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/hr/hr.module.ts",
+      "bytes": 551,
+      "sha256": "5eececed99eccdf020d2d153ed8be60aa8930ab807acc7a398cc344ff8e76a9f"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/hr/hr.service.ts",
+      "bytes": 24680,
+      "sha256": "3a1f0c8d751821f3a5bbd2ead994152f7e6f5a0c05e90a65ec00b520045feab2"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/hr/hr.service.ts.BAK",
+      "bytes": 29187,
+      "sha256": "11b373b83faabcba176e9de387bc80331ef6b93acaf2de3837ce90705ee36f3d"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/maintenance/maintenance.controller.ts",
+      "bytes": 2634,
+      "sha256": "f9d3e7416fdf305ab151b63cec263d702732242396cd47f64ca55be1ab9c6bd1"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/maintenance/maintenance.module.ts",
+      "bytes": 5329,
+      "sha256": "2536e783bd0a7968b44474c41f1193021bc6ca53e1aa90aa58b39404aac89c41"
+    },
+    {
+      "path": "legacy/api-src/orgo/domain/maintenance/maintenance.service.ts",
+      "bytes": 19075,
+      "sha256": "71b9df9a88da81119f7af0f316672a96a0fd304be4a3c5d3eda7e593284f0f79"
+    },
+    {
+      "path": "legacy/api-src/orgo/insights/cache/insights-cache-warmup.service.ts",
+      "bytes": 8155,
+      "sha256": "bef4dc3415e02cf6da2412fe496fe16d5da8872de8befbc99138cfc987f9e958"
+    },
+    {
+      "path": "legacy/api-src/orgo/insights/export/analytics-export.service.ts",
+      "bytes": 10912,
+      "sha256": "11809eb8cafd544ea46ff115401d19d882cac3defe9fe81ff839fcc446435b88"
+    },
+    {
+      "path": "legacy/api-src/orgo/insights/insights-cache-warmup.service.ts",
+      "bytes": 10855,
+      "sha256": "4e04ac52436eda422d99e15dc92629cf0f1fdfe450c29f6e6c21314027a2cf65"
+    },
+    {
+      "path": "legacy/api-src/orgo/insights/insights.module.ts",
+      "bytes": 1417,
+      "sha256": "79e3f847128d6656408c479799e5fcef7005fdb4e605e715cda5cd301a3198d5"
+    },
+    {
+      "path": "legacy/api-src/orgo/insights/pattern-detection.service.ts",
+      "bytes": 26889,
+      "sha256": "3dc47abcc4cf41c984cd1857d2127326db79421c4d9340fd3fe6db57a784d873"
+    },
+    {
+      "path": "legacy/api-src/orgo/insights/patterns/pattern-detection.service.ts",
+      "bytes": 26394,
+      "sha256": "893b0a56226bfa6df9130eb5eda226d090316cbad1d62c2603e99fa1e0278ad2"
+    },
+    {
+      "path": "legacy/api-src/orgo/insights/reports/reports.controller.ts",
+      "bytes": 5979,
+      "sha256": "3d4aa73490a53ddc73efbc1fc6878dfd2c60ebc62acefbe6d5527c8a19e6ffc0"
+    },
+    {
+      "path": "legacy/api-src/orgo/insights/reports/reports.service.ts",
+      "bytes": 19965,
+      "sha256": "23633e87f508182970576d00214b504dcc2b48354d493a63fec64cc477032450"
+    },
+    {
+      "path": "legacy/api-src/orgo/orgo.module.ts",
+      "bytes": 1496,
+      "sha256": "4e1f20e006a9161751d6260e2d466fee3ef08f0a953435416e55b9ed80f84365"
+    },
+    {
+      "path": "legacy/api-src/orgo/security/audit/audit-trail.service.ts",
+      "bytes": 7357,
+      "sha256": "7f0b8857a09e6cd9e4ab625eed68c90edd39ff23bd2a146c61e44197df835791"
+    },
+    {
+      "path": "legacy/api-src/orgo/security/auth/auth.guard.ts",
+      "bytes": 7632,
+      "sha256": "144db0244f117df8174bba44576a3b9309c94ef11ee0e42cd26b825f1fbb8b48"
+    },
+    {
+      "path": "legacy/api-src/orgo/security/auth/auth.module.ts",
+      "bytes": 2286,
+      "sha256": "8fe833cef0533c6e65dfe884d64a6e80546e63663faaeeaa3bcbef67487d17b6"
+    },
+    {
+      "path": "legacy/api-src/orgo/security/auth/auth.service.ts",
+      "bytes": 15032,
+      "sha256": "d7b3ef0e1aa7241e9d5647bcf187e0e85a1113847932cd302529eec99e31e292"
+    },
+    {
+      "path": "legacy/api-src/orgo/security/compliance/compliance-export.service.ts",
+      "bytes": 13754,
+      "sha256": "4f2ef15573d0112775dbdb1d41882cbcf4beb9ab1b7105c69402f36a32d7dacb"
+    },
+    {
+      "path": "legacy/api-src/orgo/security/logging/log-query.service.ts",
+      "bytes": 12925,
+      "sha256": "874d60ce3dff5554103883899cf646209f94c38d8e9a991a3285b27dc7e88ee5"
+    },
+    {
+      "path": "legacy/api-src/orgo/security/privacy/privacy.service.ts",
+      "bytes": 12846,
+      "sha256": "8a71a8a4b0ad67c40d6af5947dd08909383fd3b0a730310a1e4b9699db7822dc"
+    },
+    {
+      "path": "legacy/api-src/orgo/security/rbac/rbac.service.ts",
+      "bytes": 10735,
+      "sha256": "d9744f3eb60cc365c8d739b2ad35d7566278cce3489ce1adb614988fefec144d"
+    },
+    {
+      "path": "legacy/api-src/persistence/persistence.module.ts",
+      "bytes": 212,
+      "sha256": "138363dcd36e32ab2a9b75a730cc570d3db8981b8b2519ab995ad2ea77937581"
+    },
+    {
+      "path": "legacy/api-src/persistence/prisma/prisma.service.spec.ts",
+      "bytes": 478,
+      "sha256": "333da827f16490fa699e08dd3afc595847284ef100973d0c04b34cf895589e5b"
+    },
+    {
+      "path": "legacy/api-src/persistence/prisma/prisma.service.ts",
+      "bytes": 262,
+      "sha256": "fdea731dfcbcc32ed16afa4aabbc1361d02885c153fdb65e197923b607e3d3f7"
+    },
+    {
+      "path": "legacy/api-test/app.e2e-spec.ts",
+      "bytes": 654,
+      "sha256": "5b0a1515e0e8742be82b50bdb4f35060b02bf323abaad22f32d3df482ae670b5"
+    },
+    {
+      "path": "legacy/api-test/jest-e2e.json",
+      "bytes": 192,
+      "sha256": "e5964a7412493afd594979b94374dd8e5fd87e96d23a514163bdb72198fda0ba"
+    },
+    {
+      "path": "legacy/tooling/apps/api/.eslintrc.js",
+      "bytes": 688,
+      "sha256": "649eb21decb5deb75f0499a27c44cd4263c77cd72154f6b210f43801d5a51003"
+    },
+    {
+      "path": "legacy/tooling/apps/api/nest-cli.json",
+      "bytes": 64,
+      "sha256": "935632ba397740587d24b6566887263f92d31a0915b8d5f3f16169b469bf9c36"
+    },
+    {
+      "path": "legacy/tooling/apps/api/webpack-hmr.config.js",
+      "bytes": 739,
+      "sha256": "a681e1ad0a7b0e3d45ec7e62111f5b4aa29a2b3f48c19915b3f9a376396e8835"
+    },
+    {
+      "path": "legacy/tooling/apps/web/jest.config.js",
+      "bytes": 751,
+      "sha256": "b6f14064e3c368aea219ebf4c2d6fcb9f939827ba4ca3aba5bbf716594a1c1d4"
+    },
+    {
+      "path": "legacy/tooling/apps/web/jest.setup.js",
+      "bytes": 300,
+      "sha256": "6a79fed0e48cb707d2f5b276339660bc06718c67e6c7cf4dbdb0f31848ba7a4d"
+    },
+    {
+      "path": "legacy/tooling/apps/web/tailwind.config.js",
+      "bytes": 52,
+      "sha256": "3a93f23e6ee5e98d9a69c4836abc66d068dba5b88da3eec5ee1e0b1a47afe4c8"
+    },
+    {
+      "path": "legacy/tooling/package-scripts.js",
+      "bytes": 1998,
+      "sha256": "8f89fa8bb4b97ac554f948813a623c9cb3de2914d3189d4ad92c7bd78c5a9c36"
+    },
+    {
+      "path": "legacy/tooling/turbo.json",
+      "bytes": 430,
+      "sha256": "c7927820bc52a208a615cad96810d3be29f3d83d25b6bc5cf43ef12853aa02db"
+    },
+    {
+      "path": "legacy/web-pages/_app.tsx",
+      "bytes": 1034,
+      "sha256": "116461ed13b186096f4ba0181bc991e888c0e175e93cce2673e376345354fee0"
+    },
+    {
+      "path": "legacy/web-pages/index.tsx",
+      "bytes": 364,
+      "sha256": "c9a618ac3256f0c6a9257404510f8e438442c7f9a55c42179e6e1a6a2c657153"
+    },
+    {
+      "path": "legacy/web-src/common/.gitkeep",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy/web-src/orgo/core/functional-ids.ts",
+      "bytes": 4861,
+      "sha256": "90d9125ac44c26958fc06490e9eb4b45bc52c56f808d549c311aa46abb9c1ad0"
+    },
+    {
+      "path": "legacy/web-src/orgo/hooks/useTaskEventStream.ts",
+      "bytes": 10335,
+      "sha256": "fc5b2813633124f2d60d042003659025fb79cfeea6152bc274bb21d3722951b8"
+    },
+    {
+      "path": "legacy/web-src/orgo/types/case.ts",
+      "bytes": 2876,
+      "sha256": "d1c15b9bf90020519fc877d681732f1e3d5df5dbf4d31c447033ec3b21341d0f"
+    },
+    {
+      "path": "legacy/web-src/orgo/types/insights.ts",
+      "bytes": 11796,
+      "sha256": "fb33fd2f5e54d36adf30d0743ac3d2b56fc4db61826aaa4a04d30ea55049ec09"
+    },
+    {
+      "path": "legacy/web-src/orgo/types/organization.ts",
+      "bytes": 7892,
+      "sha256": "c5db14a8f8e8d02d4534dfa3bc8df813799da94b70c9177c0d2f6b1ab9eea317"
+    },
+    {
+      "path": "legacy/web-src/orgo/types/permission.ts",
+      "bytes": 3596,
+      "sha256": "1c24e783ce69377362e174e76aafec920f590973ffc87887a9ba353950782fec"
+    },
+    {
+      "path": "legacy/web-src/orgo/types/person.ts",
+      "bytes": 2670,
+      "sha256": "85566a4e3592accaed99bd5d8396b0d9f0fd7cd315b651b8afb8ec75373da630"
+    },
+    {
+      "path": "legacy/web-src/orgo/types/profile.ts",
+      "bytes": 10024,
+      "sha256": "72bd72d83e1db49f5c672fd69608aa819a7f669091130d6b8f883615a6d09b96"
+    },
+    {
+      "path": "legacy/web-src/orgo/types/role.ts",
+      "bytes": 4382,
+      "sha256": "3ba6daa502f5986175a44ac6742b29cf01aa3ca51c3320ba86d2c434302ecb7b"
+    },
+    {
+      "path": "legacy/web-src/orgo/types/task.ts",
+      "bytes": 4196,
+      "sha256": "abde8cbeadb7f1a8dca503cda0d3a8f501aeec9a4531bff19cdbdfc18daece87"
+    },
+    {
+      "path": "legacy/web-src/providers/AppProviders.tsx",
+      "bytes": 530,
+      "sha256": "187bd59682c756ceadcbe592b924abd0a0835f6e6ca4c17dbe9a208d47ba0a6f"
+    },
+    {
+      "path": "legacy/web-src/screens/admin/.gitkeep",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy/web-src/screens/admin/cases/AdminCaseOverviewPage.tsx",
+      "bytes": 22076,
+      "sha256": "8d3038105d8af3b7478edfdd731463a2720d115bcc5360b55a1e79f44e1bb4bb"
+    },
+    {
+      "path": "legacy/web-src/screens/admin/insights/InsightsOverviewPage.tsx",
+      "bytes": 13230,
+      "sha256": "60f52fd1e7aa7fa94aaa862bb6eeef9fbf86025789323792d6fba833a695572c"
+    },
+    {
+      "path": "legacy/web-src/screens/admin/org/OrgProfileSettingsPage.tsx",
+      "bytes": 15068,
+      "sha256": "f158562924240ebe15d4075cbdeefc5dda1e00b13ee9c5ff3f533c166d7536ef"
+    },
+    {
+      "path": "legacy/web-src/screens/admin/profiles/OrgProfileSettingsPage.tsx",
+      "bytes": 16563,
+      "sha256": "1291d2819297198732e789a71e4d0cd8e4834a7ee7ef98dd803ef64c8f63f3ce"
+    },
+    {
+      "path": "legacy/web-src/screens/admin/tasks/AdminTaskOverviewPage.tsx",
+      "bytes": 26129,
+      "sha256": "5b13c67616fa1a3a68c04f15b42fcab5420db20134a8bc3c5a0411295daab86b"
+    },
+    {
+      "path": "legacy/web-src/screens/auth/login/login.test.tsx",
+      "bytes": 165,
+      "sha256": "a98d0585e8cd7b1c4f7ffc156dc65579d7c12ea31cfe1462fd541e0259171e22"
+    },
+    {
+      "path": "legacy/web-src/screens/auth/login/login.tsx",
+      "bytes": 1752,
+      "sha256": "61686f00f662bb3bbe580be55ac70b1564464d34c10b007f5d86c662c35d18b5"
+    },
+    {
+      "path": "legacy/web-src/screens/common/.gitkeep",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy/web-src/screens/employee/.gitkeep",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "legacy/web-src/screens/insights/InsightsOverviewPage.tsx",
+      "bytes": 19550,
+      "sha256": "8b4ba5cfda509f40a85c60e2694396f2ded3504971fde95581adb94239a874a6"
+    },
+    {
+      "path": "legacy/web-src/store/index.ts",
+      "bytes": 719,
+      "sha256": "ac31dedd9c8b11290bce49106d478f02a342324512886d5676c5ee70faaa203a"
+    },
+    {
+      "path": "legacy/web-src/store/services/api.ts",
+      "bytes": 412,
+      "sha256": "78ac86755ceb4b0cb7a20632093779b9a6bdd6dd6e15853bb79859598a243b6d"
+    },
+    {
+      "path": "legacy/web-src/store/services/orgoApi.ts",
+      "bytes": 31562,
+      "sha256": "188cb4c5a8ed355497c400c66562f93aa04e16813699ff99b4c9023f06515b23"
+    },
+    {
+      "path": "legacy/web-src/styles/global.css",
+      "bytes": 62,
+      "sha256": "7a8b07838661bed82405f51991a10179ba7782d7c2acaff54777b49f020bae77"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 114825,
+      "sha256": "ca3710419e6384ce18d1edbdaa46b98eb268b2cd676f294cdb5036311877804b"
+    },
+    {
+      "path": "package.json",
+      "bytes": 1026,
+      "sha256": "f4941ad859f6aec5cb49e71303bf8f0f8ccb4e173af59cb010a6caca19e092c0"
+    },
+    {
+      "path": "packages/README.md",
+      "bytes": 229,
+      "sha256": "3194cfb55b18cd7fc9bec28fe853673f13e24090ce37e6eba1505be95d5767cb"
+    },
+    {
+      "path": "packages/config/eslint-preset.js",
+      "bytes": 240,
+      "sha256": "ea0516b32ce32e346bc8a2130983f505b8a82e7c823073e34db4ee9feb1288c8"
+    },
+    {
+      "path": "packages/config/nginx.conf",
+      "bytes": 1491,
+      "sha256": "c9c5e996da19e751d8daf7ec0ebc988ad13442b0e7000a974538465faa5cacfb"
+    },
+    {
+      "path": "packages/config/package.json",
+      "bytes": 281,
+      "sha256": "bd22b1828a8574bad1900cbeea840cec43a90e10734ceb02b4bcef3376626e90"
+    },
+    {
+      "path": "packages/config/postcss.config.js",
+      "bytes": 89,
+      "sha256": "b78f5d0a0a449ecf58b6b6252e26cd2216c7aa41235e2d6d01a26b9a065cd439"
+    },
+    {
+      "path": "packages/config/tailwind.config.js",
+      "bytes": 221,
+      "sha256": "0c4a0cb5d085f2a608e52ed169b6e3655881a182d981137ff45c0e619ea099a7"
+    },
+    {
+      "path": "packages/tsconfig/README.md",
+      "bytes": 109,
+      "sha256": "0b981b832ee5cd4e4b2fea374dbdc1ea9b330295390d93c8f8f284ad1e409ade"
+    },
+    {
+      "path": "packages/tsconfig/base.json",
+      "bytes": 541,
+      "sha256": "e6b2fbdbc6cbed8ec9f0573d4d2e156dae3796068cd27e8e62ed8fec0e9c9d3b"
+    },
+    {
+      "path": "packages/tsconfig/nestjs.json",
+      "bytes": 604,
+      "sha256": "d62db8eb413ddf2bee7db5f03857a9fdc1f572724d34bb7c4f3f28bf5b4c4466"
+    },
+    {
+      "path": "packages/tsconfig/nextjs.json",
+      "bytes": 590,
+      "sha256": "298c42831300d137d0e0dfb79b0508c31443723899b88e26d8729f3a5e87235c"
+    },
+    {
+      "path": "packages/tsconfig/package.json",
+      "bytes": 178,
+      "sha256": "2b554cf5c4eaf637109c9e21c23297c7e5d4fd58e90295f9732b34cb608ec742"
+    },
+    {
+      "path": "packages/tsconfig/react-library.json",
+      "bytes": 245,
+      "sha256": "7de2bcd7c12ca8758363a849f77c2498e56e89fd75fc90b8582df61a8393a21d"
+    },
+    {
+      "path": "packages/ui/components/Button/Button.tsx",
+      "bytes": 98,
+      "sha256": "d320404d54914dcb24f46063e503d4e1160882cf9c9e222eed6bceffc44bf873"
+    },
+    {
+      "path": "packages/ui/index.tsx",
+      "bytes": 45,
+      "sha256": "9b2d0f5a280e15fbb68078ae4df5176ec4b04e34cf84f23d28f226a65f59705a"
+    },
+    {
+      "path": "packages/ui/package.json",
+      "bytes": 479,
+      "sha256": "89db5448eb0715869fe2e19322477de7f16b69bbbb40cd1899d62c2ce1579feb"
+    },
+    {
+      "path": "packages/ui/tsconfig.json",
+      "bytes": 120,
+      "sha256": "6a8d00b2aaad1233275e6f814bc07a0d0c7bdb221d40fa328911435dbba2f501"
+    },
+    {
+      "path": "scripts/check-architecture.mjs",
+      "bytes": 2120,
+      "sha256": "46a04dcb9f4e2b7af352a79587fc70b6e3f89a7699e75e1781d532ce385f76fc"
+    },
+    {
+      "path": "scripts/email-ingress.py",
+      "bytes": 6240,
+      "sha256": "545cc6908458aba8878e7c3dd5ecec3a8c5c3f0c7bf4f0af15086570f71ebdea"
+    },
+    {
+      "path": "scripts/legacy-preflight.mjs",
+      "bytes": 1543,
+      "sha256": "95f3ab5c532e2db13cef07e0a45ec9ae4876895981ebe76f01d7c3de701509f0"
+    },
+    {
+      "path": "scripts/operations/backup.sh",
+      "bytes": 510,
+      "sha256": "29fe89511a31746f5c51f46e20638323028b3821cf5cbf7a1662157c8f49a157"
+    },
+    {
+      "path": "scripts/operations/restore.sh",
+      "bytes": 467,
+      "sha256": "1150be5fa728a27734edf5781cdf75630ee711f2207b95de6fc0d78f0ba7c9e0"
+    },
+    {
+      "path": "scripts/test-pglite.mjs",
+      "bytes": 1459,
+      "sha256": "3bd1f8f924c3ea1e173efe663d3586809c7b0d78905dfbc733439879ec274ae7"
+    },
+    {
+      "path": "scripts/validate-local.mjs",
+      "bytes": 1813,
+      "sha256": "55797680c59b289c7ac63454e03d9653a929cfb3fe744dc9fc7d463ecbea7e58"
+    },
+    {
+      "path": "validation/README.md",
+      "bytes": 296,
+      "sha256": "bbb8609f65d9da277774b5461f9b7abff436cdd80898360c74c0cc0a6ce385d3"
+    },
+    {
+      "path": "validation/completion/STATUS.md",
+      "bytes": 438,
+      "sha256": "f6c47d66c878ada27597ec5d566515a525c11e0ff281b50d93293687a463bcf3"
+    },
+    {
+      "path": "validation/completion/architecture.log",
+      "bytes": 199,
+      "sha256": "2e59ad3f632e7e7323eb31887f8d89f44f58da56cdf255f3524faa1824178b50"
+    },
+    {
+      "path": "validation/completion/prisma-generation.log",
+      "bytes": 1139,
+      "sha256": "ff79c5c28bdd3d1313d5c3c6379e7f862a2ecebfbbc057c2749ca6688a154f97"
+    },
+    {
+      "path": "validation/completion/typecheck.log",
+      "bytes": 455,
+      "sha256": "4e26445d7c8a725e9e0044ad4cbc6f2fde0c0469c741180d72dc48fede0bb52b"
+    },
+    {
+      "path": "validation/previous-delivery/build.log",
+      "bytes": 1196,
+      "sha256": "3bc69aa508a6c08eb8088ea2bec8ca522c7663b3a2dfd4910d77f45eaf183047"
+    },
+    {
+      "path": "validation/previous-delivery/integration.log",
+      "bytes": 2862,
+      "sha256": "9d8bb5add7e9468c830bc58665d7fa441ac4088b70dbf99668c7fcb7688767a9"
+    },
+    {
+      "path": "validation/previous-delivery/unit.log",
+      "bytes": 1366,
+      "sha256": "657e9511c2cdd65232cfe9c5f72c0248beadcae1170dfa2f048face1a19ed4a5"
+    }
+  ]
+}

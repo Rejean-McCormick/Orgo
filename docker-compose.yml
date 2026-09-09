@@ -1,68 +1,85 @@
 services:
   postgres:
-    image: postgres:15
-    container_name: orgo-postgres
+    image: postgres:16
     environment:
-      POSTGRES_DB: mydb
-      POSTGRES_USER: test
-      POSTGRES_PASSWORD: test
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    networks:
-      - orgo-net
-    ports:
-      # Expose for debugging / external tools if you want
-      - "5432:5432"
-
-  api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    container_name: orgo-api
+      POSTGRES_DB: orgo
+      POSTGRES_USER: orgo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes: ['orgo_data:/var/lib/postgresql/data']
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U orgo -d orgo']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    build: {context: ., dockerfile: apps/api/Dockerfile}
+    environment:
+      DATABASE_URL: postgresql://orgo:${POSTGRES_PASSWORD}@postgres:5432/orgo
     depends_on:
-      - postgres
+      postgres: {condition: service_healthy}
+    command: [npm, run, db:migrate]
+  api:
+    build: {context: ., dockerfile: apps/api/Dockerfile}
     environment:
-      # Prisma + Orgo API DB URL
-      DATABASE_URL: "postgresql://test:test@postgres:5432/mydb?schema=public"
-      # If you ever add a separate insights DB, wire it here too:
-      # INSIGHTS_WAREHOUSE_URL: "postgresql://test:test@postgres:5432/mydb?schema=insights"
       NODE_ENV: production
-    networks:
-      - orgo-net
-    ports:
-      - "5002:5002"
-
+      ORGO_PUBLIC_URL: ${ORGO_PUBLIC_URL:-}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      PORT: 4000
+      DATABASE_URL: postgresql://orgo:${POSTGRES_PASSWORD}@postgres:5432/orgo
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    ports: ['127.0.0.1:4000:4000']
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://localhost:4000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  worker:
+    build: {context: ., dockerfile: apps/api/Dockerfile}
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://orgo:${POSTGRES_PASSWORD}@postgres:5432/orgo
+      SMS_GATEWAY_URL: ${SMS_GATEWAY_URL:-}
+      SMS_GATEWAY_TOKEN: ${SMS_GATEWAY_TOKEN:-}
+      WEBHOOK_GATEWAY_URL: ${WEBHOOK_GATEWAY_URL:-}
+      WEBHOOK_GATEWAY_TOKEN: ${WEBHOOK_GATEWAY_TOKEN:-}
+      SMTP_URL: ${SMTP_URL:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      KRISTAL_BRIDGE_URL: ${KRISTAL_BRIDGE_URL:-}
+      KRISTAL_BRIDGE_TOKEN: ${KRISTAL_BRIDGE_TOKEN:-}
+      KONNAXION_BRIDGE_URL: ${KONNAXION_BRIDGE_URL:-}
+      KONNAXION_BRIDGE_TOKEN: ${KONNAXION_BRIDGE_TOKEN:-}
+      ARCHITECT_BRIDGE_URL: ${ARCHITECT_BRIDGE_URL:-}
+      ARCHITECT_BRIDGE_TOKEN: ${ARCHITECT_BRIDGE_TOKEN:-}
+      KOA_BRIDGE_URL: ${KOA_BRIDGE_URL:-}
+      KOA_BRIDGE_TOKEN: ${KOA_BRIDGE_TOKEN:-}
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    command: [node, apps/api/dist/worker.js]
+    restart: unless-stopped
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-    container_name: orgo-web
+      args: {ORGO_API_URL: 'http://api:4000'}
+    ports: ['127.0.0.1:3000:3000']
     depends_on:
-      - api
+      api: {condition: service_healthy}
+    restart: unless-stopped
+  seed:
+    profiles: [setup]
+    build: {context: ., dockerfile: apps/api/Dockerfile}
     environment:
-      NODE_ENV: production
-      # Next.js will default to 3000 if PORT is unset; set explicitly for clarity
-      PORT: "3000"
-    networks:
-      - orgo-net
-    ports:
-      - "3000:3000"
-
-  reverse-proxy:
-    image: nginx:latest
-    container_name: orgo-nginx
+      DATABASE_URL: postgresql://orgo:${POSTGRES_PASSWORD}@postgres:5432/orgo
+      ORGO_ADMIN_PASSWORD: ${ORGO_ADMIN_PASSWORD:-}
+      ORGO_ADMIN_EMAIL: ${ORGO_ADMIN_EMAIL:-admin@example.test}
+      ORGO_ORGANIZATION: ${ORGO_ORGANIZATION:-orgo}
     depends_on:
-      - web
-      - api
-    ports:
-      - "80:80"
-    volumes:
-      - ./packages/config/nginx.conf:/etc/nginx/nginx.conf:ro
-    networks:
-      - orgo-net
-
-networks:
-  orgo-net:
-
+      migrate: {condition: service_completed_successfully}
+    command: [npm, run, db:seed]
 volumes:
-  db_data:
+  orgo_data:

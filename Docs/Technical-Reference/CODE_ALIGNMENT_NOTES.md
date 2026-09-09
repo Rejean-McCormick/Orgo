@@ -1,8 +1,12 @@
 # Orgo — Code Alignment Notes
 
+> **Implementation update (2026-09-09):** The detailed findings below describe the supplied pre-migration snapshot, now retained under `legacy/`. They are not a list of defects claimed to remain in the new active runtime. See `IMPLEMENTATION_STATUS.md`, `IMPLEMENTATION_DECISIONS.md` and `API_IMPLEMENTED.md` for current delivery evidence.
+
 ## Purpose
 
 This note identifies code areas that should be changed so the implementation matches the current Orgo architecture. It is not a project-management log.
+
+The canonical target is `TARGET_ARCHITECTURE.md`. Migration is incremental: repair the existing snapshot first, then establish module boundaries and introduce new durable primitives without a rewrite.
 
 ## 1. Repair the Nest module/import graph first
 
@@ -132,11 +136,11 @@ Add a clear executor/dispatcher layer:
 ```text
 resolved action
 → action executor
-→ TaskService / CaseService / NotificationService / external adapter
-→ receipt/result
+   ├── internal action -> Work/owner service -> ACID transaction
+   └── external/long action -> OutboxMessage -> worker -> adapter -> receipt
 ```
 
-Do not put persistence side effects back into the pure evaluator.
+Do not put persistence side effects back into the pure evaluator and do not synchronously couple a Work transaction to a remote integration.
 
 ## 8. Reconcile filesystem workflow rules with DB workflow models
 
@@ -150,14 +154,15 @@ WorkflowTransitionEvent
 
 while the active Workflow Engine loads rules from the filesystem/YAML.
 
-Define the relationship explicitly:
+Converge on the target relationship:
 
-- which representation is configuration/source;
-- what is persisted runtime state;
-- how versions are pinned;
-- how a running instance refers to the exact ruleset used.
+```text
+WorkflowDefinition
+→ immutable WorkflowVersion
+→ WorkflowInstance pins exact version/hash
+```
 
-Do not keep two unrelated workflow sources of truth.
+Use YAML/filesystem definitions for authoring/import/export/seed/test fixtures. Do not keep them as an unrelated mutable runtime source of truth.
 
 ## 9. Fix Maintenance before treating it as an active domain module
 
@@ -259,11 +264,25 @@ Offline operation is not exempt from core invariants. Ensure synchronized Task c
 
 If direct persistence is necessary for replay, isolate it behind a dedicated replay/import boundary with equivalent validation.
 
-## 15. Frontend scope is currently small
+## 15. Build the frontend as an Orgo-owned application with composable presentation profiles
 
-The supplied web route tree currently has a root page that renders `InsightsOverviewPage`; it does not evidence a complete UI route set for Tasks, Cases, admin, HR, Education, etc.
+The supplied web route tree currently has a root page that renders `InsightsOverviewPage`; it does not evidence a complete UI route set for Tasks, Cases, admin, HR, Education, etc. Keep current-state documentation truthful while implementing the target architecture.
 
-Keep docs truthful and add UI routes only when implemented.
+The target is one Orgo UI codebase with two entry modes:
+
+```text
+Orgo UI
+├── standalone entry
+└── Koali module entry -> local_module_surface
+```
+
+Do not create separate standalone and Koali page implementations.
+
+Internally, compose the UI from shared routes/components/actions/panels into Orgo presentation profiles (Full Control Panel, Operations, My Work, Supervisor, Intake, Workflow Admin, Executive, Embedded). A reduced profile must not be implemented merely by mounting the full Control Panel and hiding most of it.
+
+Treat `Case` as the primary operational workspace and Tasks/Signals as first-class transverse views. Add a contextual Orgo Inspector for quick context/actions, with deep links to full workspaces for complex work.
+
+Konnaxion may be reused selectively for layout mechanics, sidebar/header/drawer/page-shell patterns and ergonomics. Do not extract Konnaxion into a new global Koali shell; Koali already owns `GlobalShell`.
 
 Also verify `_app.tsx` style import and other web imports against files actually present in the repo.
 
@@ -272,6 +291,12 @@ Also verify `_app.tsx` style import and other web imports against files actually
 No concrete Konnaxion, Kristal or SemantiK Architect adapter is present in the current snapshot.
 
 When added:
+
+### Koali Spaces
+
+Integrate Orgo as a removable/standalone-capable owner-managed module surface. Use the canonical Module Interface Manifest and `local_module_surface` model. Preserve Orgo routing, state and business authorization.
+
+Koali capability projections may influence presentation only. Every protected mutation must be reauthorized by Orgo. Do not assume global SSO unless an explicit identity contract exists. Do not build a second `KoaliShell`.
 
 ### Konnaxion
 
@@ -302,3 +327,151 @@ Treat host trust/resources/lifecycle as platform concerns. Track them in Orgo on
 - Profile-derived Task defaults.
 - Prisma schema linking domain extensions back to canonical Tasks/Cases.
 - Insights as a distinct read/analytics layer.
+
+## 18. Refactor physical boundaries toward Intake / Work / Orchestration
+
+The current `Backbone / Core / Domain / Insights` tree is useful documentation but does not enforce ownership strongly enough in code. Migrate incrementally toward these logical boundaries:
+
+```text
+Intake        -> Signals and inbound normalization
+Work          -> Cases + Tasks + assignments/comments/events
+Orchestration -> Workflow + routing + escalation + action dispatch
+```
+
+Do not perform a repository-wide rewrite. Move ownership/public APIs first, then relocate files only when it clarifies dependency direction.
+
+## 19. Persist Signal as a first-class intake object
+
+The current snapshot contains Signal ingestion code but no canonical Prisma `Signal` model. Add an organization-scoped persisted Signal model with source/external reference/idempotency identity, normalized classification, payload/reference, processing status and timestamps.
+
+Target intake flow:
+
+```text
+raw source
+→ adapter/normalize
+→ deduplicate/idempotency
+→ persist Signal
+→ orchestration evaluation
+→ explicit Work actions
+```
+
+Link Signal to the Case/Tasks/actions it creates or enriches. Several Signals may relate to one Case.
+
+## 20. Introduce one ExecutionContext boundary
+
+Controllers and adapters currently resolve organization/actor context inconsistently. Add a common application context carrying at least organization, actor, authorization reference, correlation/causation IDs, source and optional idempotency key.
+
+Resolve it once at the entry boundary and pass it into application services. Do not allow DTO/body tenancy to become authorization.
+
+## 21. Add first-class idempotency for retry-prone operations
+
+Apply stable idempotency semantics to:
+
+- Signal/email/webhook intake;
+- offline replay;
+- outbox consumers;
+- external integration operations;
+- workflow actions that can be retried.
+
+Prefer unique constraints/records scoped by organization + operation/source + idempotency key. Retries must not create duplicate Work or external effects.
+
+## 22. Add a transactional outbox and Orgo worker
+
+External or long-running effects should not run inline inside the Work transaction. Introduce an `OutboxMessage` model and worker process sharing the same Orgo code/release/database contract.
+
+```text
+business mutation + outbox row
+→ commit
+→ worker claim/process
+→ retry/backoff
+→ completed or terminal/manual state
+```
+
+Start with a Postgres-backed poller (`FOR UPDATE SKIP LOCKED` or equivalent). Do not introduce Kafka/RabbitMQ/Redis solely to satisfy the pattern.
+
+## 23. Add IntegrationOperation and per-system ACLs
+
+Add an Orgo-owned external-operation record for provider, operation, Work subject, idempotency/correlation, status, external reference, receipt/error and timestamps.
+
+Implement separate ports/adapters/Anti-Corruption Layers for Kristal, Konnaxion, Architect and other independently owned systems. External SDK/domain models must stop at the adapter boundary.
+
+Never overload Task/Case status with external lifecycle state.
+
+## 24. Separate inbound email from outbound communications
+
+The current Email area mixes ingestion and delivery concerns. Target split:
+
+```text
+inbound email -> Intake adapter -> Signal
+Notification -> outbound email channel adapter
+```
+
+This removes avoidable coupling between parsing/intake and notification delivery.
+
+## 25. Normalize event semantics
+
+The snapshot contains TaskEvent, WorkflowTransitionEvent, ActivityLog, SecurityEvent and logger-only event recording patterns. Define and enforce three categories:
+
+```text
+domain/work event
+audit/security event
+integration message
+```
+
+Unify important Task/Case transition persistence so equivalent mutations do not sometimes create durable events and sometimes only write logs.
+
+## 26. Keep Insights as light CQRS/read projections
+
+Consolidate the current duplicate Insights implementations and define a read/projection interface. Do not require a separate ORM/warehouse for architectural purity. Use the existing database/materialized views first when sufficient; separate storage is an optimization when measured needs justify it.
+
+Read models may optimize My Work, Supervisor, Operations dashboards and reporting, but must never write operational state directly.
+
+## 27. Apply resilience only at faillible boundaries
+
+For external/async adapters use, as appropriate:
+
+- timeouts;
+- bounded retry;
+- exponential backoff with jitter;
+- circuit breakers;
+- concurrency/bulkhead limits;
+- DLQ/manual redrive for poison/permanent async failures.
+
+Fallback/degradation must preserve semantics. Required validation/recognition may become waiting/blocked/degraded, never silently approved.
+
+## 28. Add structured observability and health semantics
+
+Propagate request/correlation/causation and relevant organization/Signal/Case/Task/workflow/integration-operation identifiers across logs and traces. Add metrics for queues/outbox, failures, retries and workflow/integration latency.
+
+Expose distinct liveness/readiness semantics. Optional hosts such as Koali Spaces must not make standalone Orgo unhealthy when absent.
+
+## 29. Enforce architecture boundaries in CI
+
+Documentation alone will not preserve a modular monolith. Add dependency tests/lint rules that reject patterns such as:
+
+```text
+domain -> raw Task/Case persistence
+Insights -> operational mutation
+integration -> Prisma mutation of Orgo core
+Work -> domain-internal implementation
+core -> external provider model
+```
+
+Permit modules to depend on explicit public contracts/APIs rather than internal implementation paths.
+
+## 30. Do not prematurely distribute the monolith
+
+Do not introduce Task, Case, Workflow or Notification network services, Event Sourcing, mandatory broker infrastructure, service mesh, sharding or cell architecture as part of the current alignment. Reconsider them only after measured scale/reliability requirements show that the modular monolith is the limiting factor.
+
+## Recommended implementation order
+
+```text
+0  build/test/boot truth + imports/routes/config
+1  Work ownership + module dependency enforcement
+2  ExecutionContext + persisted Signal + idempotency
+3  ActionExecutor + WorkflowVersion + Outbox/worker
+4  IntegrationOperation + ACL adapters
+5  Insights/read projections + observability/resilience
+6  Case-centered product UI + external ecosystem workflows
+```
+

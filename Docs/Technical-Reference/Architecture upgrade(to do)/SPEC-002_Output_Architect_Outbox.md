@@ -1,3 +1,5 @@
+> **Status note (2026-09-08): historical design draft.** The canonical target architecture is `../TARGET_ARCHITECTURE.md`. Preserve useful patterns from this draft only where they fit that target. Provider choices, SenTient/Architect role assumptions, Redis/BullMQ queues, BFF/Pub/Sub, concrete timeout values and similar implementation details are **not canonical requirements** unless adopted by a later explicit decision. The current target starts with a modular monolith, persisted Signal intake, selective ACLs, transactional outbox + Orgo worker, and no mandatory broker.
+
 SPEC-002: Architect Integration (Output & Expression)
 Meta Field	Value
 Status	DRAFT

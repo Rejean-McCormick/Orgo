@@ -367,6 +367,11 @@ enum EmailArchiveSourceType {
 // -----------------------------------------------------------------------------
 
 model Organization {
+  signals Signal[]
+  idempotency_records IdempotencyRecord[]
+  work_events WorkEvent[]
+  outbox_messages OutboxMessage[]
+  integration_operations IntegrationOperation[]
   id             String  @id @default(uuid()) @db.Uuid
   slug           String  @unique
   display_name   String
@@ -484,6 +489,7 @@ model UserAccount {
   
   routing_rules_as_target RoutingRule[] @relation("RoutingRuleTargetUser")
 
+  @@unique([organization_id, id])
   @@map("user_accounts")
   @@unique([organization_id, email])
   @@schema("public")
@@ -514,6 +520,7 @@ model PersonProfile {
   learning_group_memberships LearningGroupMembership[]
   education_task_links      EducationTaskLink[]
 
+  @@unique([organization_id, id])
   @@map("person_profiles")
   @@schema("public")
 }
@@ -541,6 +548,7 @@ model Role {
   task_events_as_actor                TaskEvent[]
   workflow_transition_events_as_actor WorkflowTransitionEvent[]
 
+  @@unique([organization_id, id])
   @@map("roles")
   @@unique([organization_id, code])
   @@schema("public")
@@ -605,6 +613,7 @@ model UserRoleAssignment {
 }
 
 model LoginSession {
+  token_hash String? @unique
   id                String                @id @default(uuid()) @db.Uuid
   user_id           String                @db.Uuid
   organization_id   String                @db.Uuid
@@ -818,6 +827,11 @@ model EmailProcessingEvent {
 // -----------------------------------------------------------------------------
 
 model Task {
+  access_scope_type String?
+  access_scope_reference String?
+
+  revision Int @default(0)
+  signal_links SignalTask[]
   id                     String        @id @default(uuid()) @db.Uuid
   organization_id        String        @db.Uuid
   case_id                String?       @db.Uuid
@@ -870,6 +884,7 @@ model Task {
   education_links            EducationTaskLink[]
   hr_primary_cases           HrCase[]        // HrCase.primary_task
 
+  @@unique([organization_id, id])
   @@map("tasks")
   @@index([organization_id])
   @@index([case_id])
@@ -982,6 +997,7 @@ model WorkflowDefinition {
   organization    Organization? @relation(fields: [organization_id], references: [id])
 
   // Back-relations
+  versions WorkflowVersion[]
   instances       WorkflowInstance[]
 
   @@map("workflow_definitions")
@@ -991,9 +1007,14 @@ model WorkflowDefinition {
 }
 
 model WorkflowInstance {
+  workflow_version_id String? @db.Uuid
+  signal_id String? @db.Uuid
+  resolved_actions Json @default("[]") @db.JsonB
+  workflow_version WorkflowVersion? @relation(fields: [workflow_version_id], references: [id])
+  signal Signal? @relation(fields: [signal_id], references: [id])
   id                     String                @id @default(uuid()) @db.Uuid
   workflow_definition_id String                @db.Uuid
-  task_id                String                @db.Uuid
+  task_id                String?               @db.Uuid
   organization_id        String                @db.Uuid
   status                 WorkflowInstanceStatus
   current_state          String
@@ -1004,7 +1025,7 @@ model WorkflowInstance {
   updated_at             DateTime              @updatedAt @db.Timestamptz(6)
 
   workflow_definition    WorkflowDefinition    @relation(fields: [workflow_definition_id], references: [id])
-  task                   Task                  @relation(fields: [task_id], references: [id])
+  task                   Task?                 @relation(fields: [task_id], references: [id])
   organization           Organization          @relation(fields: [organization_id], references: [id])
 
   // Back-relations
@@ -1236,6 +1257,7 @@ model NotificationTemplate {
 }
 
 model Notification {
+  read_at DateTime? @db.Timestamptz(6)
   id                String             @id @default(uuid()) @db.Uuid
   organization_id   String             @db.Uuid
   channel           NotificationChannel
@@ -1339,6 +1361,12 @@ model SystemMetricSnapshot {
 // -----------------------------------------------------------------------------
 
 model Case {
+  access_scope_type String?
+  access_scope_reference String?
+
+  revision Int @default(0)
+  visibility Visibility @default(INTERNAL)
+  signals Signal[]
   id                    String        @id @default(uuid()) @db.Uuid
   organization_id       String        @db.Uuid
   source_type           TaskSource
@@ -1365,6 +1393,7 @@ model Case {
   hr_cases              HrCase[]
   wellbeing_checkins    WellbeingCheckin[]
 
+  @@unique([organization_id, id])
   @@map("cases")
   @@index([organization_id])
   @@schema("public")
@@ -1857,4 +1886,273 @@ model FactWellbeingCheckin {
   @@map("fact_wellbeing_checkins")
   @@index([organization_id])
   @@index([person_id])
+}
+
+// Durable intake and effects. Work continues to use the existing tasks/cases tables.
+enum SignalStatus {
+  RECEIVED
+  PROCESSED
+  REJECTED
+  @@schema("public")
+}
+enum DeliveryStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  DEAD
+  @@schema("public")
+}
+enum IntegrationStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  @@schema("public")
+}
+model Signal {
+  request_hash String
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  case_id String? @db.Uuid
+  source TaskSource
+  external_reference String?
+  idempotency_key String
+  type String
+  category TaskCategory
+  classification String?
+  severity TaskSeverity
+  label String
+  title String
+  description String
+  payload Json @db.JsonB
+  status SignalStatus @default(RECEIVED)
+  received_at DateTime @default(now()) @db.Timestamptz(6)
+  processed_at DateTime? @db.Timestamptz(6)
+  correlation_id String
+  organization Organization @relation(fields: [organization_id], references: [id])
+  case Case? @relation(fields: [organization_id, case_id], references: [organization_id, id])
+  tasks SignalTask[]
+  workflow_instances WorkflowInstance[]
+  @@unique([organization_id, source, idempotency_key])
+  @@unique([organization_id, source, external_reference])
+  @@unique([organization_id, id])
+  @@index([organization_id, received_at])
+  @@map("signals")
+  @@schema("public")
+}
+model SignalTask {
+  organization_id String @db.Uuid
+  signal_id String @db.Uuid
+  task_id String @db.Uuid
+  signal Signal @relation(fields: [organization_id, signal_id], references: [organization_id, id])
+  task Task @relation(fields: [organization_id, task_id], references: [organization_id, id])
+  @@id([signal_id, task_id])
+  @@map("signal_tasks")
+  @@schema("public")
+}
+model WorkflowVersion {
+  id String @id @default(uuid()) @db.Uuid
+  workflow_definition_id String @db.Uuid
+  version Int
+  content Json @db.JsonB
+  content_hash String
+  published_at DateTime @default(now()) @db.Timestamptz(6)
+  definition WorkflowDefinition @relation(fields: [workflow_definition_id], references: [id])
+  instances WorkflowInstance[]
+  @@unique([workflow_definition_id, version])
+  @@map("workflow_versions")
+  @@schema("public")
+}
+model IdempotencyRecord {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  operation String
+  key String
+  request_hash String
+  response Json @db.JsonB
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [organization_id], references: [id])
+  @@unique([organization_id, operation, key])
+  @@map("idempotency_records")
+  @@schema("public")
+}
+model WorkEvent {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  aggregate_type String
+  aggregate_id String @db.Uuid
+  event_type String
+  actor_user_id String? @db.Uuid
+  correlation_id String
+  causation_id String?
+  payload Json @db.JsonB
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [organization_id], references: [id])
+  @@index([organization_id, aggregate_type, aggregate_id, created_at])
+  @@map("work_events")
+  @@schema("public")
+}
+model OutboxMessage {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  type String
+  aggregate_id String @db.Uuid
+  payload Json @db.JsonB
+  status DeliveryStatus @default(PENDING)
+  attempts Int @default(0)
+  available_at DateTime @default(now()) @db.Timestamptz(6)
+  locked_until DateTime? @db.Timestamptz(6)
+  lock_token String? @db.Uuid
+  last_error String?
+  correlation_id String
+  causation_id String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  completed_at DateTime? @db.Timestamptz(6)
+  organization Organization @relation(fields: [organization_id], references: [id])
+  @@index([status, available_at])
+  @@map("outbox_messages")
+  @@schema("public")
+}
+model IntegrationOperation {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  provider String
+  operation String
+  subject_type String
+  subject_id String @db.Uuid
+  external_reference String?
+  status IntegrationStatus @default(PENDING)
+  idempotency_key String
+  correlation_id String
+  request_metadata Json @db.JsonB
+  receipt Json? @db.JsonB
+  error String?
+  started_at DateTime? @db.Timestamptz(6)
+  completed_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [organization_id], references: [id])
+  @@unique([organization_id, provider, operation, idempotency_key])
+  @@index([organization_id, subject_type, subject_id])
+  @@map("integration_operations")
+  @@schema("public")
+}
+
+// Durable product extensions. Polymorphic subjects are checked by Work before access.
+model WorkAttachment {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  subject_type String
+  subject_id String @db.Uuid
+  filename String
+  media_type String
+  byte_length Int
+  sha256 String
+  content Bytes @db.ByteA
+  created_by String? @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+  @@index([organization_id, subject_type, subject_id, created_at])
+  @@map("work_attachments")
+  @@schema("public")
+}
+model WorkRelation {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  source_type String
+  source_id String @db.Uuid
+  target_type String
+  target_id String @db.Uuid
+  kind String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  @@unique([organization_id, source_type, source_id, target_type, target_id, kind])
+  @@index([organization_id, target_id])
+  @@map("work_relations")
+  @@schema("public")
+}
+model DurableProcess {
+  compensates_id String? @unique @db.Uuid
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  subject_type String
+  subject_id String @db.Uuid
+  title String
+  plan Json @db.JsonB
+  plan_hash String
+  step_index Int @default(0)
+  status String @default("RUNNING")
+  revision Int @default(0)
+  operation_id String? @db.Uuid
+  wake_at DateTime? @db.Timestamptz(6)
+  results Json @default("[]") @db.JsonB
+  error String?
+  actor_user_id String? @db.Uuid
+  api_token_id String? @db.Uuid
+  correlation_id String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  completed_at DateTime? @db.Timestamptz(6)
+  @@index([organization_id, created_at])
+  @@index([status, updated_at])
+  @@map("durable_processes")
+  @@schema("public")
+}
+model IdentityChallenge {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  user_id String @db.Uuid
+  kind String
+  token_hash String @unique
+  expires_at DateTime @db.Timestamptz(6)
+  consumed_at DateTime? @db.Timestamptz(6)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  @@index([organization_id, user_id])
+  @@map("identity_challenges")
+  @@schema("public")
+}
+model RateLimitBucket {
+  key String @id
+  window_start DateTime @db.Timestamptz(6)
+  count Int
+  @@map("rate_limit_buckets")
+  @@schema("public")
+}
+model WorkerHeartbeat {
+  id String @id
+  last_seen_at DateTime @db.Timestamptz(6)
+  started_at DateTime @db.Timestamptz(6)
+  processed Int @default(0)
+  @@map("worker_heartbeats")
+  @@schema("public")
+}
+model InboxEmail {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  signal_id String @unique @db.Uuid
+  envelope Json @db.JsonB
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  @@index([organization_id, created_at])
+  @@map("inbox_emails")
+  @@schema("public")
+}
+model SsoIdentity {
+  id String @id @default(uuid()) @db.Uuid
+  organization_id String @db.Uuid
+  user_id String @db.Uuid
+  issuer String
+  subject String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  @@unique([organization_id, issuer, subject])
+  @@map("sso_identities")
+  @@schema("public")
+}
+model OidcAttempt {
+  state_hash String @id
+  organization_id String @db.Uuid
+  browser_hash String
+  verifier String
+  nonce_hash String
+  expires_at DateTime @db.Timestamptz(6)
+  consumed_at DateTime? @db.Timestamptz(6)
+  @@map("oidc_attempts")
+  @@schema("public")
 }

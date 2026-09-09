@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Domain modules adapt specialized work to the common Orgo Task/Case engine.
+Domain modules adapt specialized work to the common Orgo **Work** bounded context (Case + Task ownership).
 
 Implemented domain families in the current snapshot include Maintenance, HR and Education.
 
@@ -13,7 +13,7 @@ domain work object
 ≠ independent Task lifecycle
 ```
 
-A domain module may own domain-specific extension tables, validation and projections. The canonical unit of work remains `Task`; durable shared context remains `Case` when used.
+A domain module may own domain-specific extension tables, validation and projections. The canonical executable unit remains `Task`; durable shared context remains `Case` when used. Canonical mutations enter through Work public APIs.
 
 ## 3. DomainTask
 
@@ -47,7 +47,7 @@ Correct architectural flow:
 
 ```text
 maintenance request
-→ TaskService creates canonical Task(type=maintenance)
+→ Work/Task public API creates canonical Task(type=maintenance)
 → maintenance link/asset/calendar extension
 → Task lifecycle remains core-owned
 ```
@@ -78,7 +78,7 @@ Correct flow:
 
 ```text
 education incident/support request
-→ TaskService
+→ Work/Task public API
 → canonical Task(type=education_support)
 → EducationTaskLink + learning-group/person context
 ```
@@ -98,3 +98,16 @@ A new domain module declares:
 - authorization and visibility requirements.
 
 It does not declare a new global Task status enum.
+
+
+## 8. Dependency rule
+
+Domain modules must not import raw Work persistence or external integration implementations.
+
+```text
+Domain module -> Work public API
+Domain module -X-> Prisma Task/Case writes
+Work -X-> domain-internal service/model
+```
+
+When a domain operation must atomically create canonical Work and domain extension state, define an explicit transaction/application boundary rather than passing arbitrary Prisma clients through mismatched service signatures.

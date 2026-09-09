@@ -1,0 +1,32 @@
+{
+  "rules": [
+    {
+      "id": "incident",
+      "enabled": true,
+      "match": {
+        "category": "incident"
+      },
+      "actions": [
+        {
+          "type": "CREATE_CASE",
+          "input": {
+            "title": "$signal.title",
+            "description": "$signal.description",
+            "label": "$signal.label",
+            "severity": "$signal.severity"
+          }
+        },
+        {
+          "type": "CREATE_TASK",
+          "input": {
+            "title": "$signal.title",
+            "label": "$signal.label",
+            "type": "$signal.type",
+            "category": "$signal.category",
+            "case_id": "$case"
+          }
+        }
+      ]
+    }
+  ]
+}

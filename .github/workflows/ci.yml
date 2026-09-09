@@ -1,0 +1,31 @@
+name: Orgo contracts and runtime
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: orgo_test
+          POSTGRES_USER: orgo
+          POSTGRES_PASSWORD: test-only-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U orgo -d orgo_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://orgo:test-only-password@localhost:5432/orgo_test?connection_limit=5
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22, cache: npm}
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run db:migrate
+      - run: npm run check:architecture
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:integration
+      - run: npm run build

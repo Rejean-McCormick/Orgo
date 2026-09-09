@@ -1,23 +1,12 @@
-# Node / Yarn noise
 node_modules
 **/node_modules
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Next / build artefacts
-.next
-**/.next
-dist
 **/dist
-out
-.turbo
-**/.turbo
-
-# VCS
+**/.next
 .git
-.git/**/*
-
-# Local env
 .env
-.env.*
+legacy
+validation-*.log
+docs
+upload
+*.zip
+*.tsbuildinfo

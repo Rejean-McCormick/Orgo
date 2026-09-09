@@ -33,5 +33,10 @@ yarn-error.log*
 .env.production.local
 
 # turbo
-.turbo
-GitSink.bat
+.turbo
+
+GitSink.bat
+
+
+*.tsbuildinfo
+validation-*.log

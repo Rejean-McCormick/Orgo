@@ -1,5 +1,7 @@
 # Orgo v3 — API Surface
 
+> **Historical snapshot route inventory.** The active API now uses a single `/api/v3` prefix. Use `../API_IMPLEMENTED.md` for the implemented routes; the older mixed-route analysis below is retained for migration reference.
+
 ## 1. Routing note
 
 The current NestJS application has no global `api` prefix in `main.ts`. Controller decorators therefore matter directly. Some controllers already include `api/v3`, while others use shorter paths and assume reverse-proxy mapping.
@@ -89,3 +91,28 @@ Their existence in source does not mean the current `AppModule` exposes every co
 ## 4. Tenant rule
 
 Every Task/Case API operation must resolve and enforce the organization consistently. Public API DTO casing and internal service casing must be explicitly mapped rather than passed through `as any`.
+
+
+## 5. Frontend and hosted-module route boundary
+
+Orgo owns its application routes and inner navigation in both standalone and Koali-hosted modes.
+
+Koali's canonical outer application route family is `/apps/[moduleId]/...`; this is a hosting/navigation boundary, not a replacement for Orgo's internal router or business authorization.
+
+The hosted Orgo entry must expose the same business application through the canonical Koali module/interface manifest as a `local_module_surface`. Do not maintain a second Koali-specific implementation of Orgo pages.
+
+See `../UI_AND_KOALI_INTEGRATION.md` for the UI composition and authorization boundary.
+
+
+## 6. Target application boundary
+
+As the modular-monolith migration proceeds, controllers/adapters should enter application modules rather than owning tenant/workflow semantics themselves:
+
+```text
+HTTP/email/webhook/offline adapter
+→ ExecutionContext + DTO mapping
+→ Intake / Work / Orchestration public API
+→ owner transaction
+```
+
+Signal persistence, idempotency, outbox processing and integration-operation APIs are target contracts and must not be advertised as implemented until their schema/services/routes exist.

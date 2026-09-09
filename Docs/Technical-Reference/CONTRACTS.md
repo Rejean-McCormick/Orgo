@@ -1,5 +1,6 @@
-# Orgo — Current Contract Surface
+# Orgo — Contract Surface
 
+> **Delivery reference (2026-09-09):** `IMPLEMENTATION_STATUS.md` distinguishes implemented behavior from the remaining target; `IMPLEMENTATION_DECISIONS.md` defines the adopted action syntax and migration refinements.
 ## 1. Public Task JSON boundary
 
 The intended public JSON contract uses snake_case:
@@ -163,3 +164,134 @@ Failure:
 Any Task/Case mutation or sensitive lookup must resolve an organization explicitly and enforce it in the service query.
 
 A caller-provided header/body organization ID is an input to tenant scoping, not proof of authorization by itself.
+
+
+## 8. Koali hosting and capability-projection contract
+
+Orgo must support standalone operation and Koali-hosted presentation without duplicating the business application.
+
+When hosted by Koali:
+
+```text
+installed/admitted module manifest
+  -> Koali GlobalShell
+  -> Orgo local_module_surface
+  -> Orgo router/UI
+```
+
+Koali capability projections are presentation data, not mutation authorization. A protected Orgo command must independently resolve and validate:
+
+```text
+identity
+organization/tenant
+RBAC
+policy
+```
+
+The Orgo-to-Koali boundary may contribute routes, sidebar entries, widgets, required capability references and surface references using the canonical Koali module interface. It must not redefine a parallel global `Product/SurfaceProfile/Capability` taxonomy.
+
+## 9. Orgo presentation-profile contract
+
+Presentation profiles are Orgo-internal UX compositions. They may select:
+
+- a home route;
+- navigation groups;
+- exposed actions/widgets;
+- search or command scopes;
+- Inspector policy;
+- density/presentation defaults.
+
+They do not grant business permission.
+
+Canonical initial profile vocabulary:
+
+```text
+Full Control Panel
+Operations
+My Work
+Supervisor
+Intake
+Workflow Admin
+Executive
+Embedded
+```
+
+Exact profile names/configuration may evolve, but the composition-vs-authorization separation is invariant.
+## 10. Execution-context contract
+
+Protected entry paths resolve a common application context before invoking owner services:
+
+```text
+organization_id
+actor_user_id / actor_type
+authorization reference
+correlation_id
+causation_id
+idempotency_key (when applicable)
+source
+```
+
+The exact transport representation may differ by adapter. The semantic context must not be independently reconstructed with different rules in every controller.
+
+## 11. Target Signal contract
+
+Signal is a first-class accepted intake object in the target architecture. The delivered Prisma schema now provides the canonical model; the historical snapshot did not.
+
+Target public/internal mappings should preserve at least:
+
+```text
+signal_id
+organization_id
+source
+external_reference
+idempotency_key
+type/classification/severity
+title/description
+payload or payload_ref
+status
+received_at
+processed_at
+```
+
+Acceptance flow:
+
+```text
+normalize -> idempotency/deduplication -> persist -> orchestrate
+```
+
+## 12. Reliable-effect contract
+
+Internal transactional effects execute through owner services. External or long-running effects are committed durably before execution.
+
+```text
+business mutation + OutboxMessage
+→ commit
+→ worker
+→ adapter
+→ receipt
+```
+
+An `IntegrationOperation` tracks the Orgo-side lifecycle of an external request independently of Task/Case status.
+
+## 13. Event taxonomy contract
+
+Do not conflate:
+
+- domain/work event — accepted business fact;
+- audit/security event — actor/compliance/security evidence;
+- integration message — durable request/result across an async/external boundary.
+
+## 14. Workflow-version contract
+
+The target runtime truth is persisted and version-pinned:
+
+```text
+WorkflowDefinition -> WorkflowVersion -> WorkflowInstance
+```
+
+A WorkflowInstance identifies the exact immutable version/hash used. YAML/filesystem definitions are import/export/authoring/seed artifacts, not a second runtime authority.
+
+
+## Completion delivery reference — 2026-09-09
+
+The active implementation and its remaining external-contract boundaries are recorded in `IMPLEMENTATION_STATUS.md`. See `COMPLETION_DECISIONS.md` for durable processes, receipt predicates, Work scopes, identity and evidence semantics; `ARCHITECTURE_TO_CODE.md` for source ownership; `LOCAL_VALIDATION.md` for the final acceptance to run locally. Historical validation results do not validate the completion changes.

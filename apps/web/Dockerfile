@@ -1,44 +1,19 @@
-# Shared base
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat bash
+FROM node:22-bookworm-slim AS build
 WORKDIR /app
-
-# 1) Prune monorepo down to web + deps
-FROM base AS builder
-RUN yarn global add turbo
-COPY . .
-RUN turbo prune --scope=web --docker
-
-# 2) Install dependencies for pruned workspace
-FROM base AS installer
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/package.json
+COPY apps/web/package.json ./apps/web/package.json
+RUN npm ci --no-audit --no-fund
+COPY apps/web ./apps/web
+ARG ORGO_API_URL=http://api:4000
+ENV ORGO_API_URL=$ORGO_API_URL
+RUN npm run build -w web
+FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
-
-COPY --from=builder /app/out/json/ ./
-COPY --from=builder /app/out/yarn.lock ./yarn.lock
-COPY --from=builder /app/turbo.json ./turbo.json
-
-RUN yarn install --frozen-lockfile
-
-# 3) Copy full pruned source and build web (no turbo run here)
-FROM base AS sourcer
-WORKDIR /app
-
-COPY --from=installer /app/ ./
-COPY --from=builder /app/out/full/ ./
-
-# Build only web app and its dependencies
-RUN cd apps/web && yarn build
-
-# 4) Runtime image: Next.js production server
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-
-COPY --from=sourcer /app/ ./
-
-# Next will read PORT; default 3000
-ENV PORT=3000
+ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
+COPY --from=build --chown=node:node /app/apps/web/.next/standalone ./
+COPY --from=build --chown=node:node /app/apps/web/.next/static ./apps/web/.next/static
+USER node
 EXPOSE 3000
-
-# Use workspace-aware start script from apps/web/package.json
-CMD ["yarn", "workspace", "web", "start"]
+CMD ["node", "apps/web/server.js"]

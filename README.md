@@ -1,213 +1,95 @@
 # Orgo
 
-> Multi-tenant “nervous system” for organizations: capture signals, turn them into structured Cases and Tasks, route work by labels & roles, and surface patterns over time.
+Orgo est un monolithe modulaire de coordination opérationnelle : **Intake → Work (Case + Task) → Orchestration**, avec PostgreSQL, une API NestJS, un worker de la même release et une interface Next/React autonome.
 
------
+Cette livraison étend le socle avec processus durables, pièces jointes, permissions par périmètre, gestion des comptes/SSO, opérations de domaine, email, vues produit et travail hors ligne. La validation finale sera exécutée localement par le propriétaire. Voir [la couverture réelle](docs/Technical-Reference/IMPLEMENTATION_STATUS.md), [les décisions](docs/Technical-Reference/COMPLETION_DECISIONS.md) et [la correspondance architecture/code](docs/Technical-Reference/ARCHITECTURE_TO_CODE.md).
 
-## Status
+## Installer cette archive
 
-**Experimental / Pre-Alpha.**
-APIs, schema, and UI are subject to change. Do not treat this as a stable product yet.
+Extraire cette **archive complète dans un nouveau répertoire**. Ce n’est pas un overlay à décompresser aveuglément sur l’ancien dépôt : les anciennes sources actives ont été déplacées sous `legacy/`. Pour conserver un historique Git existant, remplacer les arbres `apps/api/src`, `apps/api/test`, `apps/web/src` et `apps/web/pages` par ceux de cette livraison, puis examiner le diff.
 
------
+## Démarrer avec Docker Compose
 
-## What Orgo does
+1. Copier `.env.example` vers `.env`.
+2. Renseigner `POSTGRES_PASSWORD` (une valeur aléatoire hexadécimale convient), `ORGO_ADMIN_PASSWORD` (au moins 12 caractères), `ORGO_ADMIN_EMAIL` et `ORGO_ORGANIZATION`.
+3. Exécuter :
 
-Orgo is a shared backbone for operational work across many organizations and domains.
-
-It:
-
-  - **Ingests signals** from email, APIs, UIs, and offline imports.
-  - **Normalizes** everything into a strict **Case** (situation) and **Task** (action) schema.
-  - **Routes work** using a standardized **Label** + **Role** system.
-  - **Tracks** escalation, visibility, and review cycles against configurable "Reactivity Time".
-  - **Feeds Insights** (Star Schema + ETL) for analytics and cyclic pattern detection.
-
-Instead of every department reinventing its own ticketing spreadsheet or inbox rules, Orgo provides one schema-driven engine that multiple domains can plug into.
-
------
-
-## When you would use Orgo
-
-Typical use-cases:
-
-  - **Operations:** Incident / safety / maintenance tracking across many sites.
-  - **Care:** HR & wellbeing cases that must stay auditable and privacy-aware.
-  - **Community:** Education or NGO workflows (student wellbeing, community incidents, campaigns).
-  - **Pattern Detection:** Cross-cutting analysis (repeated harassment, safety issues, failure modes).
-
-Use Orgo when you want:
-
-  - A single Case/Task model.
-  - Strong routing and escalation rules.
-  - Clear review loops and analytics.
-
------
-
-## Core concepts
-
-  - **Multi-tenant backbone**
-    One deployment can serve many organizations. Everything is scoped by `organization_id` and governed by RBAC (roles, permissions, profiles).
-
-  - **Signals → Cases → Tasks**
-    Messy input (email, API call, form, offline import) becomes a structured Case plus one or more Tasks. Tasks are the atomic unit of work; Cases are long-lived containers for situations, incidents, audits, or patterns.
-
-  - **Labels & routing**
-    A structured label encodes "where this lives in the org" and "what kind of signal it is".
-
-      * **Format:** `BASE.CATEGORY.SUBCATEGORY.HORIZONTAL_ROLE`
-      * **Example:** `1001.91.Operations.Safety`
-        The label drives routing, default visibility, and how analytics are grouped.
-
-  - **Profiles**
-    Profiles tune behavior per org type (e.g., "Friend Group" vs. "Hospital" vs. "Retail Chain"). They control:
-
-      * Reactivity / Escalation timing (e.g., 1 hour vs. 3 days).
-      * Privacy defaults (Open vs. Need-to-know).
-      * Notification scope.
-      * Pattern sensitivity.
-
-  - **Insights & cyclic overview**
-    A read-optimized layer (star schema + ETL jobs) powers dashboards and scheduled reviews (weekly / monthly / yearly). Thresholds (e.g., "≥ 5 similar incidents in 30 days") can automatically open new audit or review Cases instead of just generating charts.
-
------
-
-## High-level architecture
-
-Orgo is implemented as a TypeScript monorepo:
-
-  - **API (`apps/api`)** – NestJS backend with modules for:
-
-      - Multi-tenant orgs, users, and persons.
-      - Email gateway & Workflow engine.
-      - Task and Case services.
-      - Notifications, Logging, and Configuration.
-
-  - **Web UI (`apps/web`)** – Next.js frontend using RTK Query:
-
-      - Queues / Views over Tasks and Cases.
-      - Org / Profile administration screens.
-      - Insights and review dashboards.
-
-  - **Database / Config** – Relational database (PostgreSQL/SQLite) plus YAML-driven configuration under `config/` for environments, organizations, domain modules, and insights.
-
-  - **Insights** – ETL jobs hydrate `insights.dim_*` and `insights.fact_*` tables used by reports and cyclic review logic.
-
------
-
-## Repository layout
-
-  - `apps/api/` – NestJS API (core services, domain modules)
-  - `apps/web/` – Next.js web UI (queues, cases, tasks, insights)
-  - `Docs/` – Orgo v3 specification (DB schema, invariants, services, insights, profiles)
-  - `charters/` – Wikidata-based property definitions (`properties_core.json`, etc.)
-  - `config/` – Environment/org/module configuration (YAML), validated on startup
-  - `package-scripts.js` – Monorepo scripts (dev, build, test)
-  - `turbo.json` – Turbo configuration for orchestrating tasks
-  - `docker-compose.yml` – Draft Docker orchestration
-
------
-
-## Getting started (local dev)
-
-### Prerequisites
-
-  - Node.js (recent LTS)
-  - Yarn classic 1.x (repo is wired to `yarn@1.22.x`)
-  - A running PostgreSQL or SQLite instance
-  - Git
-
-### 1\. Clone and install
-
-```bash
-git clone https://github.com/Rejean-McCormick/Orgo.git
-cd Orgo
-
-# Install dependencies with Yarn 1.x
-yarn install
+```sh
+docker compose up --build -d
+docker compose --profile setup run --rm seed
 ```
 
-### 2\. Run everything in dev
+Ouvrir `http://localhost:3000`. Utiliser le slug `ORGO_ORGANIZATION`, l'adresse et le mot de passe choisis. Le seed est répétable et ne remplace pas le mot de passe d'un compte existant.
 
-From the repo root:
+L'API écoute sur `http://localhost:4000/api/v3`. Le worker partage la base et le code métier avec elle. Les ports Compose sont liés à localhost ; une exposition externe nécessite votre terminaison TLS habituelle.
 
-```bash
-# API + web in parallel (via Turbo)
-yarn dev
+## Développement local
+
+Prérequis : Node 22 ou supérieur, npm et PostgreSQL 16. Exporter `DATABASE_URL` et les variables de provisionnement dans le shell ; les processus Node ne chargent pas automatiquement le `.env` racine.
+
+```sh
+npm ci
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run dev:api
 ```
 
-This runs the monorepo dev scripts (Turbo) which start:
+Dans deux autres terminaux, avec le même environnement :
 
-  - API on `http://localhost:5002`
-  - Web UI on `http://localhost:3000`
-
-Then:
-
-  - Open the web app: `http://localhost:3000/`
-  - Open the API docs (Swagger): `http://localhost:5002/docs`
-
-### 3\. Run apps separately (optional)
-
-If you prefer separate terminals:
-
-**API (NestJS):**
-
-```bash
-cd apps/api
-yarn dev
+```sh
+npm run worker
+npm run dev:web
 ```
 
-**Web UI (Next.js):**
+`ORGO_API_URL` est lu lors du démarrage/build de Next ; sa valeur par défaut est `http://localhost:4000`. Les requêtes du navigateur passent par `/api/v3` sur la même origine. La session navigateur est conservée en mémoire : recharger la page demande une nouvelle connexion.
 
-```bash
-cd apps/web
-yarn dev
+## Validation finale locale
+
+La nouvelle livraison n’a pas subi de recette finale ici. Pour exécuter les contrôles et tests sur PostgreSQL natif :
+
+```sh
+export TEST_DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/orgo_test?connection_limit=5'
+npm run validate:local
 ```
 
------
+Voir [LOCAL_VALIDATION.md](docs/Technical-Reference/LOCAL_VALIDATION.md) pour la recette navigateur, les intégrations et la restauration. Les commandes individuelles restent disponibles :
 
-## Configuration & environments
+```sh
+npm run check:architecture
+npm run typecheck
+npm test
+npm run test:pglite
+npm run build
+```
 
-Orgo treats configuration as code and uses YAML files per environment and organization.
+`test:pglite` crée une base éphémère PostgreSQL WASM, applique toutes les migrations et teste les vraies routes HTTP, services, transactions et worker. Un test de verrouillage interconnexion est réservé à PostgreSQL natif.
 
-  - **Environments**: `dev`, `staging`, `prod`, `offline`
-  - **Layers:**
-    1.  Global defaults (logging, timezones).
-    2.  Environment overrides.
-    3.  Per-organization config (profile selection, label sets).
-    4.  Domain module config.
+Pour PostgreSQL natif, utiliser **une base dédiée aux tests**, appliquer les migrations puis lancer `npm run test:integration`. La CI fournie le fait avec PostgreSQL 16 et plusieurs connexions. La CI n'a pas été exécutée dans cet environnement.
 
-Validation scripts enforce allowed environments, version ranges, and required metadata on startup.
+## Fichiers charnières
 
------
+| Responsabilité | Entrée |
+| --- | --- |
+| Schéma et migration | `apps/api/prisma/schema.prisma`, `prisma/migrations/20260908220000_work_foundations` |
+| Contexte, erreurs, invariants | `apps/api/src/orgo/platform/contracts.ts` |
+| Transactions, idempotence, événements, outbox | `apps/api/src/orgo/platform/database.ts` |
+| Propriétaire Cases/Tasks | `apps/api/src/orgo/modules/work/public.ts` |
+| Intake persistant | `apps/api/src/orgo/modules/intake/intake.service.ts` |
+| Évaluation pure | `apps/api/src/orgo/modules/orchestration/evaluator.ts` |
+| Versions et application des effets | `workflow.service.ts`, `actions.ts` dans Orchestration |
+| Processus longs | `apps/api/src/orgo/modules/orchestration/process-manager.service.ts` |
+| Pièces jointes et historique | `apps/api/src/orgo/modules/work/evidence.service.ts` |
+| Accès, scopes et SSO | `apps/api/src/orgo/modules/identity/` |
+| Vues complémentaires et hors ligne | `apps/web/src/orgo/Extensions.tsx`, `offline.ts` |
+| Migration complémentaire | `apps/api/prisma/migrations/20260909160000_product_completion/migration.sql` |
+| Worker et reprise | `apps/api/src/orgo/platform/outbox/worker.service.ts` |
+| Composition des processus | `apps/api/src/orgo/runtime.module.ts`, `src/main.ts`, `src/worker.ts` |
+| Application et profils | `apps/web/src/orgo/OrgoApp.tsx`, `profiles.ts` |
+| Entrée embarquable | `apps/web/src/orgo/hosted-entry.tsx` |
 
-## Extending Orgo
+Les sources remplacées sont conservées sous `legacy/`. Elles ne sont ni compilées ni montées. Les tables historiques utiles restent dans le schéma ; il n'y a pas de seconde table Task/Case.
 
-You can extend Orgo without forking the whole engine.
+Les intégrations externes sont optionnelles. Le protocole de passerelle, ses limites et les variables de configuration sont décrits dans [INTEGRATION_BRIDGE.md](docs/Technical-Reference/INTEGRATION_BRIDGE.md). Aucun fournisseur ni Spaces n'est nécessaire pour démarrer Orgo.
 
-### New domain workflow
-
-1.  **Define labels & task types:** Decide which label patterns and task types/subtypes the domain cares about.
-2.  **Add domain config:** Specify label matches, default severity, and assignment rules in `domain_modules/<domain>/rules/*.yaml`.
-3.  **Hook into core services (optional):** Implement callbacks like `on_task_create` if the domain needs extra behavior.
-4.  **Templates:** Add email/report templates.
-
-### New profile
-
-1.  **Start from reference:** Copy an existing profile (e.g., "Hospital").
-2.  **Override:** Change reactivity windows, privacy defaults, and pattern sensitivity.
-3.  **Attach:** Link the profile to an organization via its org config.
-
------
-
-## Documentation & Wiki
-
-  - **Docs bundle (`Docs/`)**: Formal technical specs (schema, invariants, enums).
-  - **Wiki (Online)**: Narrative overview of concepts and architecture.
-  - **Charters (`charters/`)**: The JSON definitions of the semantic graph properties (Wikidata standards).
-
------
-
-## License
-
-MIT. See [`LICENSE`](https://www.google.com/search?q=./LICENSE).
+Pour importer des emails : `python3 scripts/email-ingress.py --eml message.eml`, `--mbox archive.mbox` ou `--imap --watch`, avec les variables de `.env.example`. Configurer `ORGO_PUBLIC_URL` en HTTPS pour les liens d’accès et OIDC. Les gateways SMS/webhook sont optionnelles et doivent respecter le contrat décrit dans `COMPLETION_DECISIONS.md`.

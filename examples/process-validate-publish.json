@@ -1,0 +1,21 @@
+{
+  "title": "Validation puis publication",
+  "subject_type": "case",
+  "subject_id": "REPLACE_WITH_CASE_UUID",
+  "steps": [
+    {
+      "kind": "integration",
+      "title": "Validation requise",
+      "request": {"provider": "kristal", "operation": "validate", "request": {}},
+      "expect": {"validated": true},
+      "timeout_seconds": 86400
+    },
+    {"kind": "approval", "title": "Autoriser la publication", "permission": "workflows:approve"},
+    {
+      "kind": "integration",
+      "title": "Publier",
+      "request": {"provider": "konnaxion", "operation": "publish", "request": {}},
+      "timeout_seconds": 86400
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> orgo@0.1.0 build
+> npm run build -w api && npm run build -w web
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> api@0.1.0 build
+> tsc -p tsconfig.build.json
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> web@0.1.0 build
+> next build --webpack
+
+▲ Next.js 16.3.4 (webpack)
+✓ Running next.config.js took 17ms
+
+  Running TypeScript ...
+  Finished TypeScript in 2.5s ...
+  Creating an optimized production build ...
+✓ Compiled successfully in 1853ms
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/3) ...
+✓ Generating static pages using 1 worker (3/3) in 183ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (pages)
+┌   /_app
+├ ○ /[[...path]]
+└ ○ /404
+
+○  (Static)  prerendered as static content
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.0.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+npm notice To update run: npm install -g npm@12.0.2
+npm notice

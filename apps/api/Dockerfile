@@ -1,52 +1,14 @@
-# Shared base image
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat bash
+FROM node:22-bookworm-slim AS build
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-
-# 1) Prune monorepo down to the api + deps
-FROM base AS builder
-RUN yarn global add turbo
-COPY . .
-# Creates /app/out with pruned workspace for "api"
-RUN turbo prune --scope=api --docker
-
-# 2) Install dependencies in pruned workspace + Prisma client
-FROM base AS installer
-WORKDIR /app
-
-# Minimal package.json tree and lockfile
-COPY --from=builder /app/out/json/ ./
-COPY --from=builder /app/out/yarn.lock ./yarn.lock
-COPY --from=builder /app/turbo.json ./turbo.json
-
-# Prisma schema for the API
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-
-RUN yarn install --frozen-lockfile
-
-# Prisma generate – uses the schema, no DB connection required
-RUN cd apps/api && npx prisma generate
-
-# 3) Copy full pruned source and build the api (no turbo run here)
-FROM base AS sourcer
-WORKDIR /app
-
-COPY --from=installer /app/ ./
-COPY --from=builder /app/out/full/ ./
-
-# Build only the api (and whatever it depends on)
-RUN cd apps/api && yarn build
-
-# 4) Runtime image
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-
-# Copy built artifacts + node_modules from sourcer
-COPY --from=sourcer /app/ ./
-
-# API listens on 5002 in main.ts
-ENV PORT=5002
-EXPOSE 5002
-
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY apps/api/prisma ./apps/api/prisma
+RUN npm ci --no-audit --no-fund
+COPY apps/api ./apps/api
+RUN npm run db:generate && npm run build -w api
+ENV NODE_ENV=production PORT=4000
+USER node
+EXPOSE 4000
 CMD ["node", "apps/api/dist/main.js"]

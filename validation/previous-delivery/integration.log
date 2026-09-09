@@ -1,0 +1,36 @@
+✔ runtime boots and readiness does not depend on Spaces or external providers (389.649704ms)
+✔ authentication and tenant boundary reject unauthenticated and spoofed input (59.697508ms)
+✔ creation is idempotent, request conflicts do not duplicate tasks or events (101.884585ms)
+✔ concurrent retries resolve to a single work identity (87.200027ms)
+✔ cross-tenant ownership is blocked in the owner service and database (73.545242ms)
+✔ status changes enforce lifecycle, revision and immutable events (211.178895ms)
+✔ assignments and comments persist through canonical Work paths (120.291517ms)
+✔ restricted cases and their tasks do not leak in lists, details or search (99.194936ms)
+✔ simulation has no effects; ingestion commits before processing and pins a version (196.810846ms)
+✔ external reference deduplication rejects changed signal content (70.512082ms)
+{"event":"outbox.delivery_failed","message_id":"d56b3bf6-b4e0-43b2-b50a-33cd510f2a29","correlation_id":"61af1fbb-fd3d-40f5-abda-2703f33d35e4","code":"UNBOUND_REFERENCE","dead":true}
+✔ failed orchestration rolls back work but preserves accepted signal and dead message (135.820353ms)
+✔ integration success stores a receipt without changing Case lifecycle (71.661942ms)
+{"event":"outbox.delivery_failed","message_id":"348509c7-bd92-4b18-9e27-de32def49d26","correlation_id":"eabcdf6a-c861-4eef-b6b6-2e974f0eb3a5","code":"PERMANENT","dead":true}
+✔ retry and redrive retain the same integration identity (92.503216ms)
+✔ stale worker cannot acknowledge another worker lease (80.572328ms)
+{"event":"outbox.delivery_failed","message_id":"ad5809c4-3e7f-44a2-b499-6eaed59e1650","correlation_id":"c57b30c6-7865-48e8-a15c-6618f132965c","code":"UNAUTHENTICATED","dead":true}
+✔ deactivated intake actor cannot execute previously queued privileges (111.521867ms)
+✔ HR extension is atomic with canonical restricted work (72.403531ms)
+✔ SLA escalation respects lifecycle; pending tasks remain pending (102.861098ms)
+✔ offline replay is idempotent and reports revision conflicts per command (34.358418ms)
+﹣ native workers skip locked rows on independent connections (0.190469ms) # PGlite multiplexes connections; native PostgreSQL CI covers simultaneous locks
+✔ API and worker restart rediscover durable state (175.700774ms)
+✔ email ingress uses authenticated tenancy and deduplicates message identity (40.079489ms)
+✔ routing applies deterministic configured ownership through Work (93.780567ms)
+✔ maintenance and education persist extension links with canonical tasks (91.292567ms)
+✔ in-app notifications are queued then delivered to their organization user (44.040808ms)
+✔ email provenance and additive labels survive workflow execution (116.999364ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 3678.653384

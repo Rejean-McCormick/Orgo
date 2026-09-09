@@ -1,0 +1,30 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> orgo@0.1.0 test
+> npm run test -w api
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> api@0.1.0 test
+> node --import tsx --test test/unit/*.test.ts
+
+✔ browser retries an uncertain mutation with its original idempotency key (7.102077ms)
+✔ related entities retain their own identity in case and task inspectors (0.27388ms)
+✔ canonical fingerprint ignores object order but preserves arrays (2.197974ms)
+✔ task lifecycle terminal states and illegal escalation are rejected (0.478464ms)
+✔ case lifecycle permits reopening but archived is terminal (0.113833ms)
+✔ labels validate category/subcategory and broadcast bases (0.956898ms)
+✔ workflow evaluation is deterministic and leaves inputs unchanged (2.242498ms)
+✔ unknown actions, duplicate rule ids and unknown criteria are rejected (0.908552ms)
+✔ references are explicit; inherited properties are never bindings (0.302491ms)
+✔ retry backoff is bounded and jittered (0.38886ms)
+✔ passwords use salted hashes and verify correctly (178.853281ms)
+✔ unconfigured provider and false approval receipts fail closed (4.740393ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1062.149366

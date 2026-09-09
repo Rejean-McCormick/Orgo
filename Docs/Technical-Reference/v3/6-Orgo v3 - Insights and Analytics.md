@@ -45,8 +45,20 @@ Pattern code must not create an alternative Case/Task persistence path.
 
 The current Next.js web entrypoint routes `/` to `InsightsOverviewPage`. The supplied snapshot does not contain a mature route tree for all Orgo functions; documentation must not present unimplemented pages as active routes.
 
-## 6. Data warehouse connection
+## 6. Current data-access implementation
 
-The current `AppModule` configures a TypeORM datasource for Insights using `INSIGHTS_WAREHOUSE_URL` with `DATABASE_URL` fallback, while operational core persistence is Prisma-based.
+The current `AppModule` configures a TypeORM datasource for Insights using `INSIGHTS_WAREHOUSE_URL` with `DATABASE_URL` fallback, while operational core persistence is Prisma-based. This is a current implementation choice, not a required architectural split.
 
-This is a deliberate read/analytics separation if both paths are wired consistently.
+## 7. Target read-side architecture
+
+Use light CQRS where read shapes materially differ from operational writes:
+
+```text
+Work/Intake operational state
+→ events/projection update
+→ My Work / Supervisor / dashboards / reports
+```
+
+The target contract is an `InsightsQuery`/projection boundary. A separate warehouse, TypeORM datasource, cache or broker is optional and should be justified by scale/latency requirements.
+
+Insights may never mutate Work directly; actionable patterns re-enter through explicit Work actions.

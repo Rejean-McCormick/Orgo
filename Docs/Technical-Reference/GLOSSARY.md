@@ -28,11 +28,15 @@ The tenant/operational boundary. Orgo work belongs to an organization unless a c
 
 These identities are not interchangeable.
 
+## Work
+
+The central operational bounded context that owns canonical Cases, Tasks, assignments, comments and work events. `Work` is an architecture/ownership boundary, not a new database row replacing Case or Task.
+
 ## Signal
 
-An incoming fact/request/envelope that may lead to work. Examples include API input, email, UI input, offline synchronization or system/timer events.
+An accepted incoming fact/request/evidence object that may lead to or enrich work. Examples include API input, email, UI input, offline synchronization or system/timer events.
 
-A signal is not automatically a Task or Case until the Orgo workflow/core accepts and maps it.
+In the target architecture Signal is persisted as a first-class Orgo object before retry-prone orchestration. The current Prisma snapshot does not yet contain that canonical Signal model. A Signal is not automatically a Task or Case.
 
 ## Task
 
@@ -109,3 +113,20 @@ A reference to an artifact owned by another system. Orgo may store the reference
 ## Receipt
 
 Structured evidence that an operation was accepted, rejected or executed. A receipt supports workflow reconciliation; it is not the external system's authoritative state.
+
+
+## ExecutionContext
+
+The resolved tenant/actor/request context passed into protected application operations. It carries organization identity, actor identity/type, authorization reference, correlation/causation identifiers, source and optional idempotency key.
+
+## OutboxMessage
+
+A durable infrastructure record written atomically with a business transaction so a post-commit action/event can be processed reliably by the Orgo worker. It is not the business status of the external operation.
+
+## IntegrationOperation
+
+An Orgo-owned operational record for a request to an external system, including provider/operation, Orgo subject, idempotency/correlation identity, status, receipt and error. It prevents external lifecycle states from being folded into Task/Case status.
+
+## Domain event
+
+A business fact emitted after an accepted Orgo state transition, such as `TaskAssigned` or `CaseResolved`. Domain events are distinct from audit/security evidence and integration messages.

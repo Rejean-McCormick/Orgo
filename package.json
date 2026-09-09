@@ -1,31 +1,33 @@
 {
-  "name": "turborepo-basic-shared",
-  "version": "0.0.0",
+  "name": "orgo",
+  "version": "0.1.0",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/api",
+    "apps/web"
   ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "build": "npm run build -w api && npm run build -w web",
+    "typecheck": "npm run typecheck -w api && npm run typecheck -w web",
+    "test": "npm run test -w api",
+    "test:integration": "npm run test:integration -w api",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web",
+    "worker": "npm run worker -w api",
+    "db:generate": "npm run db:generate -w api",
+    "db:migrate": "npm run db:migrate -w api",
+    "db:seed": "npm run db:seed -w api",
+    "test:pglite": "node scripts/test-pglite.mjs",
+    "validate:local": "node scripts/validate-local.mjs",
+    "migration:preflight": "node scripts/legacy-preflight.mjs"
   },
   "devDependencies": {
-    "prettier": "^3.0.0",
-    "prisma": "^5.1.0",
-    "turbo": "1.10.12"
-  },
-  "resolutions": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "@types/react": "18.2.37",
-    "@types/react-dom": "18.2.15"
-  },
-  "engines": {
-    "npm": ">=7.0.0",
-    "node": ">=14.0.0"
-  },
-  "packageManager": "yarn@1.22.17"
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-socket": "^0.2.11",
+    "prettier": "^3.6.2"
+  }
 }

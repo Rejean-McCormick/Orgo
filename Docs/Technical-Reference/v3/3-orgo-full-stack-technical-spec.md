@@ -1,3 +1,5 @@
+> **Legacy/reference document.** This file is retained for historical detail and may describe earlier implementation assumptions. For current architecture, use `../TARGET_ARCHITECTURE.md` plus the concise canonical v3 files whose names begin with `1-Orgo`, `2-Orgo`, etc. When this document conflicts with those sources or the physical code/schema authority, it is non-canonical.
+
 ﻿<!-- INDEX: Doc 3 – Domain Modules (Orgo v3) -->
 Index
 
