@@ -1,0 +1,12 @@
+
+> orgo@0.1.0 typecheck
+> npm run typecheck -w api && npm run typecheck -w web
+
+
+> api@0.1.0 typecheck
+> tsc --noEmit
+
+
+> web@0.1.0 typecheck
+> tsc --noEmit
+

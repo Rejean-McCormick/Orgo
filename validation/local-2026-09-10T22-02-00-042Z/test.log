@@ -1,0 +1,83 @@
+
+> orgo@0.1.0 test
+> npm run test -w api
+
+
+> api@0.1.0 test
+> node --import tsx --test test/unit/*.test.ts
+
+TAP version 13
+# Subtest: browser retries an uncertain mutation with its original idempotency key
+ok 1 - browser retries an uncertain mutation with its original idempotency key
+  ---
+  duration_ms: 19.6052
+  ...
+# Subtest: related entities retain their own identity in case and task inspectors
+ok 2 - related entities retain their own identity in case and task inspectors
+  ---
+  duration_ms: 0.1948
+  ...
+# Subtest: canonical fingerprint ignores object order but preserves arrays
+ok 3 - canonical fingerprint ignores object order but preserves arrays
+  ---
+  duration_ms: 1.8098
+  ...
+# Subtest: task lifecycle terminal states and illegal escalation are rejected
+ok 4 - task lifecycle terminal states and illegal escalation are rejected
+  ---
+  duration_ms: 0.4973
+  ...
+# Subtest: case lifecycle permits reopening but archived is terminal
+ok 5 - case lifecycle permits reopening but archived is terminal
+  ---
+  duration_ms: 0.1284
+  ...
+# Subtest: labels validate category/subcategory and broadcast bases
+ok 6 - labels validate category/subcategory and broadcast bases
+  ---
+  duration_ms: 1.0469
+  ...
+# Subtest: workflow evaluation is deterministic and leaves inputs unchanged
+ok 7 - workflow evaluation is deterministic and leaves inputs unchanged
+  ---
+  duration_ms: 2.3558
+  ...
+# Subtest: unknown actions, duplicate rule ids and unknown criteria are rejected
+ok 8 - unknown actions, duplicate rule ids and unknown criteria are rejected
+  ---
+  duration_ms: 1.0779
+  ...
+# Subtest: references are explicit; inherited properties are never bindings
+ok 9 - references are explicit; inherited properties are never bindings
+  ---
+  duration_ms: 0.319
+  ...
+# Subtest: retry backoff is bounded and jittered
+ok 10 - retry backoff is bounded and jittered
+  ---
+  duration_ms: 0.2083
+  ...
+# Subtest: passwords use salted hashes and verify correctly
+ok 11 - passwords use salted hashes and verify correctly
+  ---
+  duration_ms: 255.7951
+  ...
+# Subtest: unconfigured provider and false approval receipts fail closed
+ok 12 - unconfigured provider and false approval receipts fail closed
+  ---
+  duration_ms: 15.7355
+  ...
+# Subtest: message templates interpolate declared values without evaluating expressions
+ok 13 - message templates interpolate declared values without evaluating expressions
+  ---
+  duration_ms: 1.0834
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1561.261

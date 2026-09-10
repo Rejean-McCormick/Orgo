@@ -1,0 +1,31 @@
+
+> orgo@0.1.0 db:migrate
+> npm run db:migrate -w api
+
+
+> api@0.1.0 db:migrate
+> prisma migrate deploy
+
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "orgo_validation_rc", schemas "insights, public" at "127.0.0.1:55432"
+
+4 migrations found in prisma/migrations
+
+Applying migration `20220307034109_initial_migrate`
+Applying migration `20251127134632_init`
+Applying migration `20260908220000_work_foundations`
+Applying migration `20260909160000_product_completion`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20220307034109_initial_migrate/
+    └─ migration.sql
+  └─ 20251127134632_init/
+    └─ migration.sql
+  └─ 20260908220000_work_foundations/
+    └─ migration.sql
+  └─ 20260909160000_product_completion/
+    └─ migration.sql
+      
+All migrations have been successfully applied.

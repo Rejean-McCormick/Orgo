@@ -1,0 +1,5 @@
+
+> orgo@0.1.0 check:architecture
+> node scripts/check-architecture.mjs
+
+Architecture checks passed.

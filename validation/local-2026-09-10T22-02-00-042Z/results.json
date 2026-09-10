@@ -1,0 +1,33 @@
+{
+  "created_at": "2026-09-10T22-02-00-042Z",
+  "results": [
+    {
+      "step": "db:generate",
+      "status": 0
+    },
+    {
+      "step": "db:migrate",
+      "status": 0
+    },
+    {
+      "step": "check:architecture",
+      "status": 0
+    },
+    {
+      "step": "typecheck",
+      "status": 0
+    },
+    {
+      "step": "test",
+      "status": 0
+    },
+    {
+      "step": "test:integration",
+      "status": 0
+    },
+    {
+      "step": "build",
+      "status": 0
+    }
+  ]
+}

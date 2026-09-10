@@ -1,0 +1,288 @@
+
+> orgo@0.1.0 test:integration
+> npm run test:integration -w api
+
+
+> api@0.1.0 test:integration
+> node --import tsx --test --test-concurrency=1 test/integration/*.test.ts
+
+TAP version 13
+# {"event":"http.request","trace_id":"897b8ba9005cc376696cacfe16b744b1","method":"POST","route":"/api/v3/auth/login","status":201,"duration_ms":118.6083}
+# {"event":"http.request","trace_id":"4aecb4e0e406c879a5a96cfb7e1f318f","method":"GET","route":"/health/ready","status":200,"duration_ms":5.0872}
+# Subtest: runtime boots and readiness does not depend on Spaces or external providers
+ok 1 - runtime boots and readiness does not depend on Spaces or external providers
+  ---
+  duration_ms: 1017.365
+  ...
+# {"event":"http.request","trace_id":"3d4bd908684b9a6ef3a18b5e76def0ab","method":"GET","route":"/api/v3/tasks","status":401,"duration_ms":1.0381}
+# {"event":"http.request","trace_id":"110a3f88635b4fc6350d920b3900b8a8","method":"GET","route":"/api/v3/tasks","status":403,"duration_ms":8.9286}
+# {"event":"http.request","trace_id":"c027a90a6aa851f7e2be97349a5ca9f0","correlation_id":"a58069e1-4349-4eb6-bb48-9c38fabb3be1","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":400,"duration_ms":16.8369}
+# Subtest: authentication and tenant boundary reject unauthenticated and spoofed input
+ok 2 - authentication and tenant boundary reject unauthenticated and spoofed input
+  ---
+  duration_ms: 41.6875
+  ...
+# {"event":"http.request","trace_id":"cd795021eb8d3c51ec274b14b1f2dbad","correlation_id":"59be79a2-a68d-4c25-945f-304396d96928","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":34.312}
+# {"event":"http.request","trace_id":"f26c75f30ae3751cc6fb10c109175700","correlation_id":"44c3d901-ee03-402d-b9ff-5713d63e2d1b","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":12.4248}
+# {"event":"http.request","trace_id":"c158b6fc5462e116c8480a95a2b66c70","correlation_id":"3d7a44f9-69e8-4d56-a55b-84e02dc48919","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":409,"duration_ms":11.8244}
+# {"event":"http.request","trace_id":"ac62a7e1b2edc106026aa8feddc3e8f3","correlation_id":"289c24cf-e32a-4cd7-8940-603d85f14400","organization_id":"73ea41ce-14f7-4346-beb6-a66eeb3e66c4","actor_id":null,"method":"GET","route":"/api/v3/tasks/:id","status":404,"duration_ms":13.3772}
+# Subtest: creation is idempotent, request conflicts do not duplicate tasks or events
+ok 3 - creation is idempotent, request conflicts do not duplicate tasks or events
+  ---
+  duration_ms: 84.9088
+  ...
+# {"event":"http.request","trace_id":"51c520c804cf960c94e81b47f34b85f8","correlation_id":"ca4ed448-8db1-4088-b87f-abba45116aef","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":24.7861}
+# {"event":"http.request","trace_id":"09c47b6737b84696a72108e066a2662a","correlation_id":"1e8c65c3-b022-4ccd-9287-cb1d860199d6","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":37.9213}
+# {"event":"http.request","trace_id":"079acac711234288e918f354f7afc611","correlation_id":"e04ed4ea-e9b1-466e-9077-8d12c738594c","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":38.4072}
+# {"event":"http.request","trace_id":"b127d2133c36ee804250a80337e8c535","correlation_id":"907a908d-10ca-4729-8a16-fa3cd8b98e12","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":41.6003}
+# Subtest: concurrent retries resolve to a single work identity
+ok 4 - concurrent retries resolve to a single work identity
+  ---
+  duration_ms: 62.3039
+  ...
+# {"event":"http.request","trace_id":"eaa3a790680f99bc55818c749b79fba2","correlation_id":"6be1ca61-2663-4655-b20a-4a52c505ec5e","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":400,"duration_ms":14.2179}
+# {"event":"http.request","trace_id":"9691a1ca4c4c0fed542b15cfa2ddbe98","correlation_id":"ea9ef601-7c2f-4c40-ae7d-f136dcb3fa87","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":29.0426}
+# Subtest: cross-tenant ownership is blocked in the owner service and database
+ok 5 - cross-tenant ownership is blocked in the owner service and database
+  ---
+  duration_ms: 58.3914
+  ...
+# {"event":"http.request","trace_id":"d397dfaa26ba77869fc31d857b5162e9","correlation_id":"f7d439e6-2f07-48a7-95fb-4710d1074653","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":20.6433}
+# {"event":"http.request","trace_id":"1b101c521f2dff51c9b5f209716f73ad","correlation_id":"e0c01737-1dd3-4d34-b0bb-06e87f984d1a","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"PATCH","route":"/api/v3/tasks/:id/status","status":409,"duration_ms":18.2496}
+# {"event":"http.request","trace_id":"e9b983614460853581dcee4b14fc9d72","correlation_id":"20c25ee8-5839-4b42-ac52-3af9caad111d","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"PATCH","route":"/api/v3/tasks/:id/status","status":200,"duration_ms":27.2794}
+# {"event":"http.request","trace_id":"19917065a0f791569e0500e7ab422a4d","correlation_id":"846e6d71-057e-4ae6-a931-2b59641f1bff","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"PATCH","route":"/api/v3/tasks/:id/status","status":409,"duration_ms":16.7676}
+# {"event":"http.request","trace_id":"9d2322f9b93d00ce2fd88ad492f016dd","correlation_id":"336b7d4c-f8fc-45cf-8e97-3a5e55fe6252","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"PATCH","route":"/api/v3/tasks/:id/status","status":200,"duration_ms":26.8071}
+# {"event":"http.request","trace_id":"3170ad36b46fa5786d1003124a8e1271","correlation_id":"55742412-d2af-48a0-b15a-b8e2e58da5b3","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"PATCH","route":"/api/v3/tasks/:id/status","status":409,"duration_ms":15.5045}
+# Subtest: status changes enforce lifecycle, revision and immutable events
+ok 6 - status changes enforce lifecycle, revision and immutable events
+  ---
+  duration_ms: 141.5028
+  ...
+# {"event":"http.request","trace_id":"da9dcb8aface48df029dc04b424fb56a","correlation_id":"668abe7a-1e4a-4523-ab96-6570b9f88d8b","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":21.0199}
+# {"event":"http.request","trace_id":"1bb4d8f4925e4131eadd8ba3b079d35b","correlation_id":"eaadeb3e-334f-47e7-8519-e50fa957ad6e","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"PATCH","route":"/api/v3/tasks/:id/assignment","status":200,"duration_ms":34.1785}
+# {"event":"http.request","trace_id":"1df90c81d63efaba2b52f1cf71331805","correlation_id":"1347e735-7ce5-4255-a1de-a8c0be25ad75","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks/:id/comments","status":201,"duration_ms":24.1686}
+# {"event":"http.request","trace_id":"6e1511df0094e91ce0c893a239a225cd","correlation_id":"ef6d03f9-e48b-44f9-bcda-ce97932116b7","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/tasks/:id","status":200,"duration_ms":11.5009}
+# Subtest: assignments and comments persist through canonical Work paths
+ok 7 - assignments and comments persist through canonical Work paths
+  ---
+  duration_ms: 99.0002
+  ...
+# {"event":"http.request","trace_id":"9bee4d27018ab2b385acf9a17a249aae","correlation_id":"c9abd547-1353-4d3c-81e8-edbe77d51eae","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/cases","status":201,"duration_ms":23.916}
+# {"event":"http.request","trace_id":"d99258a7b2748b492149ef77193aa9e1","correlation_id":"fe4e1e21-d3bc-4ad9-82f5-626a97f501a5","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":32.5257}
+# {"event":"http.request","trace_id":"47eb7f830a18ea7a66a164b12aa7ad7a","correlation_id":"b8656024-4388-4d76-86b3-402c2285e6f9","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":null,"method":"GET","route":"/api/v3/cases/:id","status":404,"duration_ms":10.7321}
+# {"event":"http.request","trace_id":"5b4de259447f3639ddd8125d9317190f","correlation_id":"63fc6e36-a887-4461-a30f-46660a45e069","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":null,"method":"GET","route":"/api/v3/tasks/:id","status":404,"duration_ms":10.3887}
+# {"event":"http.request","trace_id":"abae76b47504ad3e7a7ebcef554af764","correlation_id":"ae7776c9-b0e2-4a6d-90ae-88debef0d6ce","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":null,"method":"GET","route":"/api/v3/tasks","status":200,"duration_ms":15.1065}
+# Subtest: restricted cases and their tasks do not leak in lists, details or search
+ok 8 - restricted cases and their tasks do not leak in lists, details or search
+  ---
+  duration_ms: 103.6988
+  ...
+# {"event":"http.request","trace_id":"6a910af9f83886f96ef9adfe274df5de","correlation_id":"3b656106-ea27-4270-a703-8e91d37ee297","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/workflows/:code/versions","status":201,"duration_ms":25.5808}
+# {"event":"http.request","trace_id":"4c3d26ee926e349b60db4b56c00d1f05","correlation_id":"a38a0d25-1707-4470-a4a5-e749d1eaaa5f","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/workflow-versions/:id/simulate","status":201,"duration_ms":11.5909}
+# {"event":"http.request","trace_id":"72e4c2a32c44a1df078808b8608d6bab","correlation_id":"e73021d8-2372-493c-a3f9-ac8a0e2f09eb","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/signals","status":201,"duration_ms":31.4758}
+# Subtest: simulation has no effects; ingestion commits before processing and pins a version
+ok 9 - simulation has no effects; ingestion commits before processing and pins a version
+  ---
+  duration_ms: 162.004
+  ...
+# {"event":"http.request","trace_id":"a44b7ab252acc61bc5d1fc6d0f9a6c93","correlation_id":"2ee5c20d-d342-437e-8757-054ef2b2d6c5","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/signals","status":201,"duration_ms":23.1605}
+# {"event":"http.request","trace_id":"79fdef4a4f9b742f6339f0188e200606","correlation_id":"d4e747f5-b944-4ba7-959c-3256928909f9","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/signals","status":201,"duration_ms":17.0263}
+# {"event":"http.request","trace_id":"da92a95ed1eda2bbd108cd2ab7ee0ea1","correlation_id":"6d663990-2878-4925-8df3-79e2cf76fc18","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/signals","status":409,"duration_ms":13.9987}
+# Subtest: external reference deduplication rejects changed signal content
+ok 10 - external reference deduplication rejects changed signal content
+  ---
+  duration_ms: 58.7997
+  ...
+# {"event":"http.request","trace_id":"7bc39aab08d4a5aa858a8462b7758dd1","correlation_id":"0c36353c-7d7c-443c-9a7b-f8b9a42d8c24","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/workflows/:code/versions","status":201,"duration_ms":24.3241}
+# {"event":"http.request","trace_id":"6b61c58fc8ce852e70ca04cbb573580b","correlation_id":"c777bad9-4f82-4612-b46c-71e1fe449f07","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/signals","status":201,"duration_ms":22.9376}
+# {"event":"outbox.delivery_failed","message_id":"fabaa548-77ba-4917-a2f2-40348c5ed752","correlation_id":"c777bad9-4f82-4612-b46c-71e1fe449f07","code":"UNBOUND_REFERENCE","dead":true}
+# Subtest: failed orchestration rolls back work but preserves accepted signal and dead message
+ok 11 - failed orchestration rolls back work but preserves accepted signal and dead message
+  ---
+  duration_ms: 95.2423
+  ...
+# {"event":"http.request","trace_id":"dfcc3a7df1003808bc569ff75817abcc","correlation_id":"c5d3432a-0bb6-4ba2-8ee9-e3ce462a57c1","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/cases","status":201,"duration_ms":18.2513}
+# {"event":"http.request","trace_id":"61d132b83264b8e01b2d34f6394e2f26","correlation_id":"3f42e57a-4322-415b-be10-cad3f1c74318","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/integration-operations","status":201,"duration_ms":22.4767}
+# Subtest: integration success stores a receipt without changing Case lifecycle
+ok 12 - integration success stores a receipt without changing Case lifecycle
+  ---
+  duration_ms: 71.3454
+  ...
+# {"event":"http.request","trace_id":"33ee13e277c2f484411a6324ff6f9b40","correlation_id":"f70e1c80-fc8c-48a0-ad33-22b4c4fc46d7","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/cases","status":201,"duration_ms":18.0089}
+# {"event":"http.request","trace_id":"c8841a5750584be26e1731cc5ef326d6","correlation_id":"d8952470-dfe3-41df-bb04-fe507b5ad840","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/integration-operations","status":201,"duration_ms":26.0426}
+# {"event":"outbox.delivery_failed","message_id":"30be8b1b-c40f-4978-a5ca-5582850315f4","correlation_id":"d8952470-dfe3-41df-bb04-fe507b5ad840","code":"PERMANENT","dead":true}
+# {"event":"http.request","trace_id":"5156bff331651f323ad84a83f2d78c51","correlation_id":"acc9dd02-dcd0-4530-9b0f-b090d208a724","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/outbox/:id/redrive","status":201,"duration_ms":21.4795}
+# Subtest: retry and redrive retain the same integration identity
+ok 13 - retry and redrive retain the same integration identity
+  ---
+  duration_ms: 109.3237
+  ...
+# {"event":"http.request","trace_id":"335f71e4ef42315c15249e0846db0ef7","correlation_id":"c336d33a-b53d-4b3d-aa8b-3a3b402ceb60","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/cases","status":201,"duration_ms":17.8954}
+# {"event":"http.request","trace_id":"4baa3696aec4b2dfa9db505be7fd528a","correlation_id":"4d9cf0fa-f120-4f91-a1bb-30d9ab74b706","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/integration-operations","status":201,"duration_ms":20.0203}
+# Subtest: stale worker cannot acknowledge another worker lease
+ok 14 - stale worker cannot acknowledge another worker lease
+  ---
+  duration_ms: 82.2644
+  ...
+# {"event":"http.request","trace_id":"99c57c480752d4e9ea08224be8545ac8","correlation_id":"dbe3861d-5c55-44b0-ada0-c10eb9882187","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/workflows/:code/versions","status":201,"duration_ms":21.1361}
+# {"event":"http.request","trace_id":"70ebffdd99f5b2c60148f1c0df83c257","correlation_id":"47c0e937-5e70-4721-9188-80b77bfc35c9","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/signals","status":201,"duration_ms":25.8539}
+# {"event":"outbox.delivery_failed","message_id":"fafdde3a-42b6-4f48-ad0a-2316c0a2a7d5","correlation_id":"47c0e937-5e70-4721-9188-80b77bfc35c9","code":"UNAUTHENTICATED","dead":true}
+# Subtest: deactivated intake actor cannot execute previously queued privileges
+ok 15 - deactivated intake actor cannot execute previously queued privileges
+  ---
+  duration_ms: 68.9239
+  ...
+# {"event":"http.request","trace_id":"644b24eb5938883b5d3b3686d3441804","correlation_id":"a2dda7ae-b8b9-4d36-ab0b-aa64dcefb7e6","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/hr/cases","status":201,"duration_ms":32.545}
+# {"event":"http.request","trace_id":"390e8580ab64ea9609c33569d28ad62d","correlation_id":"48463e8c-2634-44c3-9296-4ad97d6d30e8","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/hr/cases","status":404,"duration_ms":12.6717}
+# Subtest: HR extension is atomic with canonical restricted work
+ok 16 - HR extension is atomic with canonical restricted work
+  ---
+  duration_ms: 53.2565
+  ...
+# {"event":"http.request","trace_id":"8c60cff27a880dac95ade5d65595ad87","correlation_id":"c702bd38-6be2-45e2-b788-7f58c283e431","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":21.5311}
+# {"event":"http.request","trace_id":"38a96eaf9a16a1a5e2cf98fcae79e762","correlation_id":"ef221b7f-4716-4bba-8907-c4c6b9731dfa","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":19.8915}
+# {"event":"http.request","trace_id":"d952a102b4b936c1a365bff7f18b8beb","correlation_id":"8b88770c-b259-499f-a19c-6a39a36db3bb","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"PATCH","route":"/api/v3/tasks/:id/status","status":200,"duration_ms":28.1988}
+# Subtest: SLA escalation respects lifecycle; pending tasks remain pending
+ok 17 - SLA escalation respects lifecycle; pending tasks remain pending
+  ---
+  duration_ms: 98.6652
+  ...
+# {"event":"http.request","trace_id":"ee29ee84814c828bf5586671fcf40896","correlation_id":"2b941613-09ec-4c71-98a8-61732076ef37","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/sync/replay","status":201,"duration_ms":21.2533}
+# {"event":"http.request","trace_id":"4f196998378d00d9432cd44da18a9bc0","correlation_id":"8aa210d6-c99e-41d5-8b4d-daabb1be0767","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/sync/replay","status":201,"duration_ms":11.5621}
+# Subtest: offline replay is idempotent and reports revision conflicts per command
+ok 18 - offline replay is idempotent and reports revision conflicts per command
+  ---
+  duration_ms: 36.1583
+  ...
+# Subtest: native workers skip locked rows on independent connections
+ok 19 - native workers skip locked rows on independent connections
+  ---
+  duration_ms: 20.8535
+  ...
+# {"event":"http.request","trace_id":"9c59fa5303d4c0bf3668876635f56636","correlation_id":"83a42004-4da7-4196-a502-f6e1566467ac","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/workflows/:code/versions","status":201,"duration_ms":23.5141}
+# {"event":"http.request","trace_id":"e2b0771f71e2b3b60cc16f7a34d9b3b4","correlation_id":"4af129b5-c0b3-4e4c-a541-6b61e9e07a73","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/signals","status":201,"duration_ms":28.1806}
+# {"event":"http.request","trace_id":"2a3372d81983f7d0e8c815622c8494e2","correlation_id":"06ba97b3-aadf-4428-8f78-7e03e0866435","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/signals/:id","status":200,"duration_ms":12.6598}
+# Subtest: API and worker restart rediscover durable state
+ok 20 - API and worker restart rediscover durable state
+  ---
+  duration_ms: 231.2545
+  ...
+# {"event":"http.request","trace_id":"c62b3bf2d75626418cf03b6c38f2545c","correlation_id":"bc649b28-16db-49c9-9e92-32d6a6f0a80d","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/ingress/email","status":201,"duration_ms":32.9201}
+# {"event":"http.request","trace_id":"3d0d939389de10f1d03c517d0f1f4f17","correlation_id":"9d0518cb-3d8a-4857-9fac-b159dbeaa66f","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/ingress/email","status":201,"duration_ms":20.017}
+# Subtest: email ingress uses authenticated tenancy and deduplicates message identity
+ok 21 - email ingress uses authenticated tenancy and deduplicates message identity
+  ---
+  duration_ms: 58.47
+  ...
+# {"event":"http.request","trace_id":"347250933d6139282c32fb43faaa2c03","correlation_id":"b52474cd-fe35-498a-9f5c-12b3512bd2e0","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/routing/rules","status":201,"duration_ms":22.4383}
+# {"event":"http.request","trace_id":"f9a7ddba056c97dd3a3133b77bfce85a","correlation_id":"bec05ca8-1a17-4783-8ec8-fa0de3938a8a","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":22.6397}
+# {"event":"http.request","trace_id":"785c60c58fb157f739f9a459fe57ac37","correlation_id":"c9590184-3b8a-40b7-bcd3-637cb135bb48","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/routing/tasks/:id","status":201,"duration_ms":43.3477}
+# {"event":"http.request","trace_id":"7cfd448efde796a2f47c88664bab882a","correlation_id":"4e562a38-8d6a-48f1-9580-35d2690c15df","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/tasks/:id","status":200,"duration_ms":24.2435}
+# Subtest: routing applies deterministic configured ownership through Work
+ok 22 - routing applies deterministic configured ownership through Work
+  ---
+  duration_ms: 118.0838
+  ...
+# {"event":"http.request","trace_id":"41403cb9eba204b5df1d9e752f356a95","correlation_id":"88bb19c6-783a-4283-bf1b-8aa54908784c","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/maintenance/assets","status":201,"duration_ms":27.123}
+# {"event":"http.request","trace_id":"6959d0c745b0d4655c97ec78c9cf2920","correlation_id":"f1a3599d-d3f1-4030-a7a7-017b22a6e0bb","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/maintenance/tasks","status":201,"duration_ms":31.969}
+# {"event":"http.request","trace_id":"0b4df87c31e2247e1a2e278447ad2436","correlation_id":"f4385d01-9193-421b-bc7f-aca299b290be","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/education/groups","status":201,"duration_ms":16.693}
+# {"event":"http.request","trace_id":"6b8ebc85b520538d790da22800a0e77b","correlation_id":"e40979d5-d15b-4ef2-9939-6fa0d2530b14","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/education/tasks","status":201,"duration_ms":26.3815}
+# Subtest: maintenance and education persist extension links with canonical tasks
+ok 23 - maintenance and education persist extension links with canonical tasks
+  ---
+  duration_ms: 112.5474
+  ...
+# {"event":"http.request","trace_id":"d59463908cd7614d7cfd10ec7a3de9b0","correlation_id":"490cb654-109f-4568-a840-944d5ae6d818","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/notifications","status":201,"duration_ms":22.0435}
+# {"event":"http.request","trace_id":"583b459c462d9c233185a76fb0c9bc5e","correlation_id":"b89ebf67-d4e7-4e48-a37c-080d3cec7b2a","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/notifications","status":200,"duration_ms":9.7843}
+# Subtest: in-app notifications are queued then delivered to their organization user
+ok 24 - in-app notifications are queued then delivered to their organization user
+  ---
+  duration_ms: 56.2146
+  ...
+# {"event":"http.request","trace_id":"836453a70112f45b4c698c2e0143c102","correlation_id":"45b06482-4f00-472b-93e9-9518715ff872","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/workflows/:code/versions","status":201,"duration_ms":25.2416}
+# {"event":"http.request","trace_id":"80d074a123eae63cc13be46296f28310","correlation_id":"c9dab579-3d28-4d8b-a87a-555bac4b8ea5","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/signals","status":201,"duration_ms":25.0582}
+# Subtest: email provenance and additive labels survive workflow execution
+ok 25 - email provenance and additive labels survive workflow execution
+  ---
+  duration_ms: 136.7674
+  ...
+# {"event":"http.request","trace_id":"ad293551c02fa3caf0ed93cf84ecce18","correlation_id":"e3231bb0-6068-47a1-8f9b-aa64e8753ffd","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":20.0148}
+# {"event":"http.request","trace_id":"8965eed0a7ab04d8d1f57868f6da5f30","correlation_id":"0785b2fe-ff6a-4351-b4d9-ddf958acd7c1","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/work/:type/:id/attachments","status":201,"duration_ms":22.8585}
+# {"event":"http.request","trace_id":"eb920efd3c655a19d361d822d9f8d917","correlation_id":"1955885a-584b-4f5c-a9b1-77d6d7693894","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/work/:type/:id/attachments","status":201,"duration_ms":11.2663}
+# {"event":"http.request","trace_id":"1164590ee4b5007666035627821abe5f","correlation_id":"b834fd92-2740-42be-9e93-4d03c701dcac","organization_id":"73ea41ce-14f7-4346-beb6-a66eeb3e66c4","actor_id":null,"method":"GET","route":"/api/v3/attachments/:id","status":404,"duration_ms":10.389}
+# {"event":"http.request","trace_id":"9af1fff27889b9ea5c32a68983bc319f","correlation_id":"d318a00f-dbc8-40c7-a1d2-0df44723e8cf","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/attachments/:id","status":200,"duration_ms":9.936}
+# {"event":"http.request","trace_id":"a8a4c173e79901b4ac9f624a9ca0b8a5","correlation_id":"fcec3b45-9bb3-4adb-8a16-898d0c3500df","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"DELETE","route":"/api/v3/attachments/:id","status":200,"duration_ms":21.6659}
+# {"event":"http.request","trace_id":"3d94289b62135f5b845a454cf31636b1","correlation_id":"1b1b5331-9b2d-4ab4-8bb1-7d1053f24e94","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/attachments/:id","status":404,"duration_ms":7.9239}
+# {"event":"http.request","trace_id":"10bc7297996f04d72f36c1ccdbd0cfae","correlation_id":"8e487183-49ee-45b9-b727-86444ded9d84","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/work/:type/:id/timeline","status":200,"duration_ms":11.1536}
+# Subtest: attachments preserve evidence and cannot cross tenant boundaries
+ok 26 - attachments preserve evidence and cannot cross tenant boundaries
+  ---
+  duration_ms: 125.5279
+  ...
+# {"event":"http.request","trace_id":"2c746b8ea360932b171e8cb6f15d7d22","correlation_id":"8478b6ac-a205-4704-9ce0-1c8aba598686","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":25.6618}
+# {"event":"http.request","trace_id":"45b69cdf4a455198e9667ae3ccd4a48d","correlation_id":"b70e4a98-28c8-47bf-a1ca-4ce4da557fcf","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/processes","status":201,"duration_ms":22.8502}
+# {"event":"http.request","trace_id":"b8fe9b7e11d1ab09e1acf45dcbc35716","correlation_id":"0c606ef9-88da-4151-a90f-71f2629c5a51","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/processes/:id","status":200,"duration_ms":10.2748}
+# {"event":"http.request","trace_id":"966899dac71adbd1061c781dce8e7345","correlation_id":"c4987933-1dbb-468e-860a-35ebc3c270b7","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/processes/:id/decision","status":409,"duration_ms":16.2551}
+# {"event":"http.request","trace_id":"f6cae4c67e0de3d9a48a4ed1f364dd92","correlation_id":"0655014d-45a2-4f37-8d82-251c4c82bee8","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/processes/:id/decision","status":201,"duration_ms":22.8893}
+# {"event":"http.request","trace_id":"10c9588da74699b472c7b236a416d408","correlation_id":"e668272a-4867-41f0-adda-eea88823d284","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/processes/:id","status":200,"duration_ms":10.7268}
+# {"event":"http.request","trace_id":"0e6bf8ad2313763d777230421544536f","correlation_id":"38bd7a8b-c48c-4a77-903a-a6e511833cc5","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/tasks/:id","status":200,"duration_ms":11.4419}
+# Subtest: durable human gates require a current revision and explicit approval
+ok 27 - durable human gates require a current revision and explicit approval
+  ---
+  duration_ms: 175.4895
+  ...
+# {"event":"http.request","trace_id":"a398deaeb888bf11566f861842d7efd8","correlation_id":"4c8ce12a-3602-41ca-8ef7-aac9c743b5ab","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/cases","status":201,"duration_ms":17.6251}
+# {"event":"http.request","trace_id":"778b4ca7a10ac6a580d4a4299fc56fa2","correlation_id":"c49015db-06f8-471a-8fe9-f77f8c3c891f","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/processes","status":201,"duration_ms":19.6452}
+# {"event":"http.request","trace_id":"d010a874109a4ca314e3edadc01b7a0f","correlation_id":"8a52eb96-b740-4e5e-846c-87df20a94433","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/processes/:id","status":200,"duration_ms":9.4608}
+# {"event":"http.request","trace_id":"273246497c7d1961beea4b1310210d0b","correlation_id":"6ecf5c15-c061-4509-aea3-982c3cc873e7","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/processes/:id","status":200,"duration_ms":9.158}
+# {"event":"http.request","trace_id":"71014cfffb7129bd6964a6c4a60c1f91","correlation_id":"7d04ff89-1865-4a0d-88b0-50000d9332e2","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/integration-operations/:id/receipt","status":201,"duration_ms":19.8881}
+# {"event":"http.request","trace_id":"fd210534efa11ac0f034a90e37253a54","correlation_id":"a3e25d70-7e35-4e6b-ad30-0f7e72742c2e","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/processes/:id","status":200,"duration_ms":9.7488}
+# {"event":"http.request","trace_id":"ada1a6db12ab13401d36c9048b08f2da","correlation_id":"d935baec-5ea3-4074-aba3-89461bdd574f","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/cases/:id","status":200,"duration_ms":25.4711}
+# {"event":"http.request","trace_id":"ee94fb61daded76154acdecbb9de76ce","correlation_id":"b943a981-a358-4494-99fb-f81738b98794","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/integration-operations/:id/receipt","status":409,"duration_ms":22.0104}
+# Subtest: accepted external work waits for authenticated callback without approving the Case
+ok 28 - accepted external work waits for authenticated callback without approving the Case
+  ---
+  duration_ms: 247.4607
+  ...
+# {"event":"http.request","trace_id":"75a1d813cb2be7832daf14e9bff38264","correlation_id":"048ea3aa-f14d-42ac-967b-b39e4bd2a91e","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/users","status":201,"duration_ms":87.9338}
+# {"event":"http.request","trace_id":"c578a2c2a231eab79cd3a7cfa76d8cc8","correlation_id":"288f60c2-cca8-4ffb-8c87-7de7794f5e8f","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/roles","status":201,"duration_ms":29.814}
+# {"event":"http.request","trace_id":"5d61d9ca4882b1b6b3c02fea710cd4b5","correlation_id":"f148e648-b9be-4586-bb48-edf94aba614d","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/identity/users/:id/scopes","status":201,"duration_ms":25.4155}
+# {"event":"http.request","trace_id":"fff035ca98c96ffa487caa61bd86b677","correlation_id":"0e09393c-091f-4abf-80b7-33871196310b","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"4497c538-8167-482c-bfc2-8b907ddc4253","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":26.8484}
+# {"event":"http.request","trace_id":"59b2ef682605dcbdcacaad4219256617","correlation_id":"5751f3cc-9110-40b7-a1a6-062b908b4022","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"4497c538-8167-482c-bfc2-8b907ddc4253","method":"POST","route":"/api/v3/tasks","status":403,"duration_ms":10.54}
+# {"event":"http.request","trace_id":"3dee61dde4395c8d5bd66fa9a51b9982","correlation_id":"fa81e5a4-fd0a-4e46-9b24-1466ce10c8f9","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/tasks","status":201,"duration_ms":20.1883}
+# {"event":"http.request","trace_id":"9b1aa8d2024e081e9bde270ac7f13462","correlation_id":"00ed5777-5fc3-45dd-83db-5639ba7927aa","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"4497c538-8167-482c-bfc2-8b907ddc4253","method":"GET","route":"/api/v3/tasks/:id","status":404,"duration_ms":11.2791}
+# {"event":"http.request","trace_id":"76ec8160c9e9e6c4a36e066b07a90c47","correlation_id":"1e56276e-1c45-4590-bb55-a7c24216fdcd","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"4497c538-8167-482c-bfc2-8b907ddc4253","method":"PATCH","route":"/api/v3/tasks/:id/status","status":200,"duration_ms":28.2807}
+# {"event":"http.request","trace_id":"91a7a582ba32577cc136ba70f2117821","correlation_id":"9d5a06fd-5964-46bf-b246-cdcf817195b3","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"DELETE","route":"/api/v3/identity/scopes/:id","status":200,"duration_ms":20.3274}
+# {"event":"http.request","trace_id":"6b09146b80c25639af0eb278082da3b2","correlation_id":"7aa527df-a22a-47f3-920a-765063a99866","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"4497c538-8167-482c-bfc2-8b907ddc4253","method":"GET","route":"/api/v3/tasks/:id","status":403,"duration_ms":4.8765}
+# Subtest: scoped roles read and mutate only their explicit Work perimeter
+ok 29 - scoped roles read and mutate only their explicit Work perimeter
+  ---
+  duration_ms: 290.1053
+  ...
+# {"event":"http.request","trace_id":"f845229b32b5e5a80b97e51fb1d7cef6","correlation_id":"90c16f49-dde4-4d03-9cc1-8b10e95629c2","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/maintenance/assets","status":201,"duration_ms":15.1641}
+# {"event":"http.request","trace_id":"4ea7e87bc6b4f1c93d17a8e80fed5382","correlation_id":"bdb83e96-5720-4a31-8dac-b7c7cf0df00f","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/maintenance/calendar","status":201,"duration_ms":24.183}
+# {"event":"http.request","trace_id":"e031cafb3e5259e1c6cff028fe60ac93","correlation_id":"18a91ae9-7295-4117-9de9-ee98e4984b6d","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/maintenance/calendar","status":409,"duration_ms":14.0397}
+# {"event":"http.request","trace_id":"f20608009f4f2db30cb34325e1eec77a","correlation_id":"7dea4ba2-2971-49a4-800e-06fd762d1cf3","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/maintenance/calendar","status":201,"duration_ms":20.8934}
+# Subtest: calendar reservations reject overlaps and accept non-overlapping intervals
+ok 30 - calendar reservations reject overlaps and accept non-overlapping intervals
+  ---
+  duration_ms: 79.5798
+  ...
+# {"event":"http.request","trace_id":"d43dac0577edd246c1c078aa21c6ebb7","correlation_id":"d280b3d8-2084-44c4-8f93-ea1b1ac4d92e","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"POST","route":"/api/v3/ingress/email","status":201,"duration_ms":28.248}
+# {"event":"http.request","trace_id":"b036968718a903e46b2c4445712e1463","correlation_id":"1c0b9c26-32fd-4a16-98bf-c9d19e8fac89","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/ingress/email/:signalId","status":200,"duration_ms":11.2311}
+# {"event":"http.request","trace_id":"10752570003ae0711274f73146706cd2","correlation_id":"395490b0-ee45-4a44-92db-b813a3d7f6a7","organization_id":"06f94fb7-470d-45d6-9136-f17c89b7824a","actor_id":"facb88d6-0b97-407a-9f8e-e785555f1b7e","method":"GET","route":"/api/v3/ingress/email/:signalId/attachments/:index","status":200,"duration_ms":8.8489}
+# {"event":"http.request","trace_id":"af39d3421d9f7d484e9e179a9fece174","correlation_id":"0755ac5c-6a08-4c83-9703-6deafea07e3b","organization_id":"73ea41ce-14f7-4346-beb6-a66eeb3e66c4","actor_id":null,"method":"GET","route":"/api/v3/ingress/email/:signalId/attachments/:index","status":404,"duration_ms":11.2025}
+# Subtest: MIME envelope attachments remain accessible only through Signal authorization
+ok 31 - MIME envelope attachments remain accessible only through Signal authorization
+  ---
+  duration_ms: 64.6005
+  ...
+1..31
+# tests 31
+# suites 0
+# pass 31
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6059.4921
