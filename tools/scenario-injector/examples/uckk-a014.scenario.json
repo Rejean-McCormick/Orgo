@@ -1,0 +1,166 @@
+{
+  "schema_version": "orgo.scenario.v1",
+  "scenario": {
+    "id": "uckk-pedagogy-pilot-a014",
+    "title": "UCKK A014 — pilote pédagogique expérimental",
+    "description": "Fixture synthétique de démonstration décision institutionnelle → Signal Orgo → workflow → Case et Tasks.",
+    "synthetic": true,
+    "epistemic_status": "synthetic_demo_fixture",
+    "correlation_id": "corr.uckk.A014.D009"
+  },
+  "operations": [
+    {
+      "op": "publish_workflow",
+      "ref": "workflow.a014",
+      "code": "uckk_pedagogy_pilot",
+      "content": {
+        "rules": [
+          {
+            "id": "uckk_pedagogy_pilot_approved_v1",
+            "enabled": true,
+            "match": {
+              "source": "API",
+              "type": "education_pilot_approved"
+            },
+            "actions": [
+              {
+                "type": "CREATE_CASE",
+                "input": {
+                  "title": "$signal.title",
+                  "description": "$signal.description",
+                  "label": "$signal.label",
+                  "severity": "$signal.severity",
+                  "metadata": {
+                    "demo_code": "UCKK-A014",
+                    "synthetic": true,
+                    "epistemic_status": "synthetic_demo_fixture",
+                    "authority_ref": "UCKK-D009"
+                  }
+                }
+              },
+              {
+                "type": "CREATE_TASK",
+                "input": {
+                  "title": "Freeze approved pilot specification",
+                  "description": "Freeze the synthetic demo specification authorized by UCKK-D009.",
+                  "label": "$signal.label",
+                  "type": "education_pilot",
+                  "category": "request",
+                  "case_id": "$case",
+                  "priority": "HIGH",
+                  "metadata": {
+                    "demo_code": "UCKK-A014",
+                    "synthetic": true
+                  }
+                }
+              },
+              {
+                "type": "CREATE_TASK",
+                "input": {
+                  "title": "Verify Day-3 team formation and charters",
+                  "description": "Synthetic checkpoint task for the demo.",
+                  "label": "$signal.label",
+                  "type": "education_pilot",
+                  "category": "update",
+                  "case_id": "$case",
+                  "priority": "MEDIUM",
+                  "metadata": {
+                    "demo_code": "UCKK-A014",
+                    "synthetic": true
+                  }
+                }
+              },
+              {
+                "type": "CREATE_TASK",
+                "input": {
+                  "title": "Produce Day-30 process review",
+                  "description": "Review synthetic Day-30 observations without changing institutional policy.",
+                  "label": "$signal.label",
+                  "type": "education_pilot",
+                  "category": "report",
+                  "case_id": "$case",
+                  "priority": "MEDIUM",
+                  "metadata": {
+                    "demo_code": "UCKK-A014",
+                    "synthetic": true
+                  }
+                }
+              },
+              {
+                "type": "CREATE_TASK",
+                "input": {
+                  "title": "Produce Day-90 reconsideration package",
+                  "description": "Prepare the synthetic reconsideration package for human institutional authority.",
+                  "label": "$signal.label",
+                  "type": "education_pilot",
+                  "category": "report",
+                  "case_id": "$case",
+                  "priority": "MEDIUM",
+                  "metadata": {
+                    "demo_code": "UCKK-A014",
+                    "synthetic": true
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "op": "create_signal",
+      "ref": "signal.d009",
+      "workflow_ref": "workflow.a014",
+      "input": {
+        "source": "api",
+        "external_reference": "uckk:assembly:A014:decision:D009:v1",
+        "type": "education_pilot_approved",
+        "category": "request",
+        "classification": "institutional_decision",
+        "severity": "MODERATE",
+        "label": "2.11",
+        "title": "Implement UCKK Pedagogical Pilot A014",
+        "description": "SYNTHETIC DEMO FIXTURE — UCKK Assembly published decision D009.",
+        "payload": {
+          "synthetic": true,
+          "epistemic_status": "synthetic_demo_fixture",
+          "authority": {
+            "system": "uckk",
+            "authority_type": "human_institutional_decision",
+            "assembly_ref": "UCKK-A014",
+            "decision_ref": "UCKK-D009",
+            "decision_status": "published",
+            "outcome": "approved_with_conditions"
+          },
+          "mandate": {
+            "course_sections": 3,
+            "team_size": {
+              "min": 4,
+              "max": 6
+            },
+            "sprint_weeks": 2,
+            "rotating_roles": true,
+            "contribution_journaling": true,
+            "evaluation_model": {
+              "individual": 0.5,
+              "peer_engagement": 0.3,
+              "traced_contribution": 0.2
+            },
+            "review_days": [
+              3,
+              30,
+              90
+            ]
+          },
+          "archive_ref": "UCKK-ARCH-A014-D009",
+          "contains_personal_data": false
+        }
+      }
+    },
+    {
+      "op": "wait_signal",
+      "signal_ref": "signal.d009",
+      "timeout_seconds": 30
+    }
+  ]
+}
