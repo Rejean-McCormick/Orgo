@@ -27,6 +27,7 @@ services:
       OIDC_ISSUER: ${OIDC_ISSUER:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_DISPLAY_NAME: ${OIDC_DISPLAY_NAME:-SSO}
       PORT: 4000
       DATABASE_URL: postgresql://orgo:${POSTGRES_PASSWORD}@postgres:5432/orgo
     depends_on:

@@ -23,6 +23,17 @@ import {
 import { OidcService } from '../../../modules/identity/oidc.service';
 import { IdentityAdmin } from '../../../modules/identity/identity-admin.service';
 import { Ctx, Public } from './boundary';
+
+const secureSsoCookie = () => {
+  try {
+    return (
+      !process.env.ORGO_PUBLIC_URL ||
+      new URL(process.env.ORGO_PUBLIC_URL).protocol === 'https:'
+    );
+  } catch {
+    return true;
+  }
+};
 @Controller()
 export class SsoController {
   constructor(
@@ -38,6 +49,9 @@ export class SsoController {
         process.env.OIDC_CLIENT_ID &&
         process.env.ORGO_PUBLIC_URL
       ),
+      display_name: process.env.OIDC_DISPLAY_NAME?.trim() || 'SSO',
+      local_login_available: true,
+      identity_key: 'issuer+subject',
     };
   }
   @Public() @Post('auth/sso/start') async start(
@@ -51,9 +65,10 @@ export class SsoController {
     );
     await this.admin.throttle(`sso:${req.ip ?? 'unknown'}`, 10);
     const result = await this.oidc.start(input.organization);
+    const secureCookie = secureSsoCookie();
     res.cookie('orgo_sso', result.browser, {
       httpOnly: true,
-      secure: true,
+      secure: secureCookie,
       sameSite: 'lax',
       path: '/api/v3/auth/sso',
       maxAge: 600000,
@@ -80,9 +95,10 @@ export class SsoController {
       .map((v) => v.trim())
       .find((v) => v.startsWith('orgo_sso='))
       ?.slice('orgo_sso='.length);
+    const secureCookie = secureSsoCookie();
     res.clearCookie('orgo_sso', {
       httpOnly: true,
-      secure: true,
+      secure: secureCookie,
       sameSite: 'lax',
       path: '/api/v3/auth/sso',
     });
@@ -108,7 +124,7 @@ export class SsoController {
     requirePermission(ctx, 'identity:manage');
     const input = parse(
       z
-        .object({ user_id: uuid, subject: z.string().min(1).max(1000) })
+        .object({ user_id: uuid, subject: z.string().trim().min(1).max(1000) })
         .strict(),
       raw,
     );
@@ -122,11 +138,29 @@ export class SsoController {
         }))
       )
         throw new DomainError('NOT_FOUND', 'User not found', 404);
+      const existing = await tx.ssoIdentity.findUnique({
+        where: {
+          organization_id_issuer_subject: {
+            organization_id: ctx.organizationId,
+            issuer,
+            subject: input.subject,
+          },
+        },
+      });
+      if (existing) {
+        if (existing.user_id === input.user_id) return existing;
+        throw new DomainError(
+          'SSO_IDENTITY_CONFLICT',
+          'This federated identity is already linked to another user',
+          409,
+        );
+      }
       const row = await tx.ssoIdentity.create({
         data: { organization_id: ctx.organizationId, issuer, ...input },
       });
       await recordEvent(tx, ctx, 'user', input.user_id, 'SsoIdentityLinked', {
         identity_id: row.id,
+        issuer,
       });
       return row;
     });

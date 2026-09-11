@@ -202,6 +202,76 @@ test('runtime boots and readiness does not depend on Spaces or external provider
   assert.equal(response.status, 200);
   assert.equal((await response.json()).data.status, 'ready');
 });
+test('common identity config keeps local login available', async () => {
+  const config = await api(
+    'auth/sso/config',
+    'GET',
+    undefined,
+    randomUUID(),
+    '',
+  );
+  assert.equal(config.status, 200, JSON.stringify(config));
+  assert.equal(config.data.local_login_available, true);
+  assert.equal(config.data.identity_key, 'issuer+subject');
+  assert.equal(typeof config.data.display_name, 'string');
+});
+
+test('SSO linkage is explicit, conflict-safe, and does not disable local login', async () => {
+  const previousIssuer = process.env.OIDC_ISSUER;
+  process.env.OIDC_ISSUER = 'https://identity.example.test';
+  try {
+    const subject = `subject-${randomUUID()}`;
+    const linked = await api('identity/sso', 'POST', {
+      user_id: userId,
+      subject,
+    });
+    assert.equal(linked.status, 201, JSON.stringify(linked));
+    assert.equal(linked.data.issuer, process.env.OIDC_ISSUER);
+    assert.equal(linked.data.subject, subject);
+
+    const replay = await api('identity/sso', 'POST', {
+      user_id: userId,
+      subject,
+    });
+    assert.equal(replay.status, 201, JSON.stringify(replay));
+    assert.equal(replay.data.id, linked.data.id);
+
+    const second = await api('users', 'POST', {
+      email: `sso-conflict-${randomUUID()}@example.test`,
+      display_name: 'SSO conflict',
+      password: 'local-test-password-123',
+    });
+    assert.equal(second.status, 201, JSON.stringify(second));
+
+    const conflict = await api('identity/sso', 'POST', {
+      user_id: second.data.id,
+      subject,
+    });
+    assert.equal(conflict.status, 409, JSON.stringify(conflict));
+    assert.equal(conflict.error.code, 'SSO_IDENTITY_CONFLICT');
+
+    const organization = await db.organization.findUniqueOrThrow({
+      where: { id: tenant },
+    });
+    const local = await api(
+      'auth/login',
+      'POST',
+      {
+        organization: organization.slug,
+        email: 'admin@example.test',
+        password: 'test-password-123',
+      },
+      randomUUID(),
+      '',
+    );
+    assert.equal(local.status, 201, JSON.stringify(local));
+    assert.ok(local.data.token);
+  } finally {
+    if (previousIssuer === undefined) delete process.env.OIDC_ISSUER;
+    else process.env.OIDC_ISSUER = previousIssuer;
+  }
+});
+
 test('authentication and tenant boundary reject unauthenticated and spoofed input', async () => {
   assert.equal(
     (await api('tasks', 'GET', undefined, randomUUID(), '')).status,

@@ -55,15 +55,26 @@ export class IdentityService {
     const context = await this.forUser(organizationId, userId);
     const token = randomBytes(32).toString('base64url');
     const expires = new Date(Date.now() + 8 * 3600000);
-    await this.db.loginSession.create({
-      data: {
-        organization_id: organizationId,
-        user_id: userId,
-        token_hash: tokenHash(token),
-        created_at: new Date(),
-        expires_at: expires,
-      },
-    });
+    const now = new Date();
+    await this.db.$transaction([
+      this.db.userAccount.updateMany({
+        where: {
+          id: userId,
+          organization_id: organizationId,
+          status: 'active',
+        },
+        data: { last_login_at: now },
+      }),
+      this.db.loginSession.create({
+        data: {
+          organization_id: organizationId,
+          user_id: userId,
+          token_hash: tokenHash(token),
+          created_at: now,
+          expires_at: expires,
+        },
+      }),
+    ]);
     return {
       token,
       expires_at: expires.toISOString(),

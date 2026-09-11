@@ -10,18 +10,32 @@ const fail = () =>
     'Unable to authenticate this SSO session',
     401,
   );
-const secure = (raw: string) => {
-  const u = new URL(raw);
-  if (u.protocol !== 'https:' || u.username || u.password || u.hash)
+export const oidcUrl = (raw: string) => {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    throw new DomainError('SSO_CONFIGURATION', 'Invalid OIDC URL', 503);
+  }
+  const localDevelopment =
+    process.env.NODE_ENV !== 'production' &&
+    u.protocol === 'http:' &&
+    ['localhost', '127.0.0.1', '::1'].includes(u.hostname);
+  if (
+    (u.protocol !== 'https:' && !localDevelopment) ||
+    u.username ||
+    u.password ||
+    u.hash
+  )
     throw new DomainError(
       'SSO_CONFIGURATION',
-      'OIDC endpoints require HTTPS',
+      'OIDC URLs require HTTPS except localhost in non-production',
       503,
     );
   return u;
 };
 async function boundedJson(url: string, init: RequestInit = {}) {
-  secure(url);
+  oidcUrl(url);
   const response = await fetch(url, {
     ...init,
     redirect: 'error',
@@ -60,8 +74,8 @@ export class OidcService {
       base = process.env.ORGO_PUBLIC_URL;
     if (!issuer || !client || !base)
       throw new DomainError('SSO_UNAVAILABLE', 'SSO is not configured', 503);
-    secure(issuer);
-    const callback = secure(base);
+    oidcUrl(issuer);
+    const callback = oidcUrl(base);
     callback.pathname = '/sso';
     callback.search = '';
     return { issuer, client, callback: callback.toString() };
@@ -81,9 +95,9 @@ export class OidcService {
         ),
       );
     if (discovery.issuer !== config.issuer) throw fail();
-    secure(discovery.authorization_endpoint);
-    secure(discovery.token_endpoint);
-    secure(discovery.jwks_uri);
+    oidcUrl(discovery.authorization_endpoint);
+    oidcUrl(discovery.token_endpoint);
+    oidcUrl(discovery.jwks_uri);
     return { ...config, ...discovery };
   }
   async start(slug: string) {

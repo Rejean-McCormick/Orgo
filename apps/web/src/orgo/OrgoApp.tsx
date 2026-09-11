@@ -486,12 +486,22 @@ function Login({
 }) {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
-  const [sso, setSso] = useState(false);
+  const [sso, setSso] = useState<{
+    available: boolean;
+    display_name: string;
+    local_login_available: boolean;
+    identity_key: string;
+  } | null>(null);
   const started = useRef(false);
   useEffect(() => {
     void client
-      .request<{ available: boolean }>("auth/sso/config")
-      .then((r) => setSso(r.available))
+      .request<{
+        available: boolean;
+        display_name: string;
+        local_login_available: boolean;
+        identity_key: string;
+      }>("auth/sso/config")
+      .then(setSso)
       .catch(() => {});
     const parameters = new URLSearchParams(window.location.search);
     const code = parameters.get("code"),
@@ -582,7 +592,7 @@ function Login({
           {busy ? "Connexion…" : "Se connecter"}
         </button>
         <a href="/account">Mot de passe oublié ou premier accès</a>
-        {sso && (
+        {sso?.available && (
           <button
             type="button"
             disabled={busy}
@@ -608,7 +618,7 @@ function Login({
               }
             }}
           >
-            Connexion avec votre organisation
+            Se connecter avec {sso.display_name}
           </button>
         )}
       </form>
