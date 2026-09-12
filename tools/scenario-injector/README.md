@@ -92,7 +92,7 @@ $env:ORGO_SCENARIO_TOKEN = '<bearer-token>'
 
 ## Opérations v1
 
-`publish_workflow`, `simulate_workflow`, `execute_workflow`, `create_case`, `create_task`, `create_signal`, `queue_signal`, `wait_signal`, `comment_task`, `transition_task`, `transition_case`.
+`publish_workflow`, `simulate_workflow`, `execute_workflow`, `create_case`, `create_task`, `create_signal`, `queue_signal`, `wait_signal`, `find_case`, `find_task`, `assert_case_absent`, `request_integration`, `wait_integration`, `comment_task`, `transition_task`, `transition_case`.
 
 ## Important — worker Orgo
 
@@ -101,3 +101,19 @@ $env:ORGO_SCENARIO_TOKEN = '<bearer-token>'
 ## RC utilisée comme contrat
 
 Le template reflète le contrat du snapshot RC inspecté : `source` des Signals en minuscules, `match.source` des workflows en majuscules, labels Orgo obligatoires et `SET_METADATA` non utilisé sur un Case.
+
+## Reprise depuis Orgo_Worlds
+
+L'injecteur accepte aussi les opérations contrôlées `find_case`, `find_task`, `assert_case_absent`, `request_integration` et `wait_integration`. Elles servent à enchaîner plusieurs checkpoints d'un même World sans stocker d'UUID runtime dans les fichiers source.
+
+`Orgo_Worlds` peut donc conserver des scénarios versionnés, puis déléguer ici la seule écriture vers Orgo :
+
+```text
+Orgo_Worlds world pack
+  → orgo.scenario.v1
+  → validate / plan
+  → Orgo Scenario Injector
+  → API Orgo
+```
+
+`find_case` et `find_task` échouent si la résolution n'est pas unique. `assert_case_absent` échoue fermé si un objet interdit est présent. `request_integration` n'accepte qu'une référence locale de Case/Task déjà résolue.

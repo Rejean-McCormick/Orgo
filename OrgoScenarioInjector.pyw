@@ -26,6 +26,11 @@ TOOL_DIR = ROOT / "tools" / "scenario-injector"
 CLI = TOOL_DIR / "cli.mjs"
 DEFAULT_API_URL = os.environ.get("ORGO_SCENARIO_API_URL", "http://127.0.0.1:4000/api/v3")
 
+# Local E2E test profile. This file is a test harness, not production configuration.
+TEST_ORGANIZATION = "orgo-e2e"
+TEST_EMAIL = "e2e@example.test"
+TEST_PASSWORD = "Orgo-Test!2026-Labo#47"
+
 
 def _windows_subprocess_kwargs() -> dict:
     """Keep node.exe/cmd.exe hidden when launched from a .pyw process."""
@@ -41,7 +46,7 @@ def _windows_subprocess_kwargs() -> dict:
 
 
 class InjectorUI(tk.Tk):
-    def __init__(self) -> None:
+    def __init__(self, *, initial_scenario: str = "", initial_api_url: str = "") -> None:
         super().__init__()
         self.title(APP_TITLE)
         self.geometry("1040x760")
@@ -50,16 +55,19 @@ class InjectorUI(tk.Tk):
         self._events: queue.Queue[tuple[str, object]] = queue.Queue()
         self._busy = False
 
-        self.api_url = tk.StringVar(value=DEFAULT_API_URL)
-        self.organization = tk.StringVar(value=os.environ.get("ORGO_SCENARIO_ORGANIZATION", ""))
-        self.email = tk.StringVar(value=os.environ.get("ORGO_SCENARIO_EMAIL", ""))
-        self.password = tk.StringVar(value=os.environ.get("ORGO_SCENARIO_PASSWORD", ""))
+        self.api_url = tk.StringVar(value=initial_api_url or DEFAULT_API_URL)
+        self.organization = tk.StringVar(value=os.environ.get("ORGO_SCENARIO_ORGANIZATION", TEST_ORGANIZATION))
+        self.email = tk.StringVar(value=os.environ.get("ORGO_SCENARIO_EMAIL", TEST_EMAIL))
+        self.password = tk.StringVar(value=os.environ.get("ORGO_SCENARIO_PASSWORD", TEST_PASSWORD))
         self.token = tk.StringVar(value=os.environ.get("ORGO_SCENARIO_TOKEN", ""))
 
         self.brief_path = tk.StringVar()
         self.prompt_path = tk.StringVar(value=str(ROOT / "scenario-prompt.md"))
-        self.scenario_path = tk.StringVar()
+        self.scenario_path = tk.StringVar(value=initial_scenario)
         self.report_path = tk.StringVar()
+        if initial_scenario:
+            p = Path(initial_scenario)
+            self.report_path.set(str(p.with_name(f"{p.stem}.import-report.json")))
 
         self._build_ui()
         self.after(100, self._poll_events)
@@ -130,8 +138,8 @@ class InjectorUI(tk.Tk):
 
         ttk.Label(
             api,
-            text="Si un token est fourni, il est utilisé à la place de organisation/email/mot de passe. "
-                 "Les secrets ne sont pas enregistrés par cette UI.",
+            text="Profil TEST local préchargé : orgo-e2e / e2e@example.test. "
+                 "Un token reste prioritaire. Le mot de passe de test est embarqué dans ce harness; ne pas utiliser en production.",
         ).grid(row=3, column=0, columnspan=4, sticky="w", pady=(7, 0))
 
         logbox = ttk.LabelFrame(self, text="Sortie", padding=8)
@@ -515,5 +523,18 @@ class InjectorUI(tk.Tk):
             messagebox.showerror(APP_TITLE, str(exc))
 
 
+def _startup_args() -> tuple[str, str]:
+    scenario = ""
+    api_url = ""
+    args = sys.argv[1:]
+    for i, arg in enumerate(args):
+        if arg == "--scenario" and i + 1 < len(args):
+            scenario = str(Path(args[i + 1]).resolve())
+        elif arg == "--api-url" and i + 1 < len(args):
+            api_url = args[i + 1]
+    return scenario, api_url
+
+
 if __name__ == "__main__":
-    InjectorUI().mainloop()
+    scenario, api_url = _startup_args()
+    InjectorUI(initial_scenario=scenario, initial_api_url=api_url).mainloop()

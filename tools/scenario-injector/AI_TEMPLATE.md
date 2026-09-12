@@ -124,3 +124,34 @@ Un create_signal peut contenir "workflow_ref": "workflow.main" pour que le Signa
 
 [COLLER ICI LE BRIEF DU SCÉNARIO]
 
+
+## Opérations de reprise inter-checkpoints (v1.2)
+
+Ces opérations permettent à un World externe de reprendre des objets déjà créés sans mémoriser d'UUID Orgo :
+
+- `find_case` : résout exactement un Case par recherche + titre/metadata.
+- `find_task` : résout exactement une Task, optionnellement sous un `case_ref`.
+- `assert_case_absent` : échoue si un Case attendu absent existe.
+- `request_integration` : crée une `IntegrationOperation` à partir d'un `case_ref` ou `task_ref`; aucun UUID source n'est accepté.
+- `wait_integration` : observe une IntegrationOperation déjà résolue par ref locale.
+
+Exemple :
+
+{
+  "op": "find_case",
+  "ref": "case.a014",
+  "search": "UCKK Pedagogical Pilot A014",
+  "title": "Implement UCKK Pedagogical Pilot A014",
+  "metadata": { "demo_id": "uckk-pedagogy-pilot-a014" }
+}
+
+{
+  "op": "request_integration",
+  "ref": "integration.j30",
+  "subject_ref": "case.a014",
+  "provider": "konnaxion",
+  "operation": "publish",
+  "request": { "synthetic": true }
+}
+
+Ces opérations ne changent pas la règle fondamentale : aucun SQL, aucune route HTTP arbitraire et aucun UUID runtime dans le document scénario.

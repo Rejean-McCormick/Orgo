@@ -30,3 +30,28 @@ L'injecteur utilise les routes existantes : workflows, cases, tasks, signals et 
 ## Évolution
 
 Le schéma est versionné (`orgo.scenario.v1`). Toute extension future (personnes, rôles, domaines spécialisés, pièces jointes) doit ajouter des opérations explicites et des validateurs dédiés plutôt qu'un mécanisme d'appel HTTP générique.
+
+## Reprise depuis Orgo_Worlds
+
+`Orgo_Worlds` peut être utilisé comme dépôt autonome de Worlds/scénarios à côté d'Orgo. La frontière d'écriture reste toutefois ce Scenario Injector : Orgo_Worlds ne reçoit aucun accès SQL et ne fait pas d'appel métier direct à Orgo.
+
+```text
+Orgo_Worlds/world-packs/<world>/...
+        ↓
+orgo.scenario.v1
+        ↓
+validate / plan
+        ↓
+Orgo Scenario Injector
+        ↓
+API publique Orgo v3
+```
+
+Les opérations de reprise suivantes sont explicitement autorisées :
+
+- `find_case` et `find_task` : résolution contrôlée d'objets existants sans UUID dans le scénario source;
+- `assert_case_absent` : assertion fail-closed pour les états où un Case ne doit pas exister;
+- `request_integration` : création d'une IntegrationOperation à partir d'un `case_ref`/`task_ref`;
+- `wait_integration` : observation d'une opération d'intégration par référence locale.
+
+Les résolveurs exigent un résultat unique. Ils ne constituent pas une route HTTP générique et ne donnent pas à l'auteur du scénario la possibilité de choisir un endpoint arbitraire.

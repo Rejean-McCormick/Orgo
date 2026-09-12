@@ -15,9 +15,10 @@ const PRIORITY = new Set(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
 const VISIBILITY = new Set(['PUBLIC', 'INTERNAL', 'RESTRICTED', 'ANONYMISED']);
 const TASK_STATUS = new Set(['PENDING','IN_PROGRESS','ON_HOLD','COMPLETED','FAILED','ESCALATED','CANCELLED']);
 const CASE_STATUS = new Set(['open','in_progress','resolved','archived']);
+const PROVIDERS = new Set(['kristal','konnaxion','architect','koa']);
 const ACTION_TYPES = new Set(['CREATE_CASE','CREATE_TASK','UPDATE_TASK','ASSIGN_TASK','ROUTE','ESCALATE','ATTACH_TEMPLATE','SET_METADATA','ADD_LABEL','NOTIFY','REQUEST_INTEGRATION','START_PROCESS']);
-const OPS = new Set(['publish_workflow','simulate_workflow','execute_workflow','create_case','create_task','create_signal','queue_signal','wait_signal','comment_task','transition_task','transition_case']);
-const MUTATING_OPS = new Set(['publish_workflow','execute_workflow','create_case','create_task','create_signal','queue_signal','comment_task','transition_task','transition_case']);
+const OPS = new Set(['publish_workflow','simulate_workflow','execute_workflow','create_case','create_task','create_signal','queue_signal','wait_signal','find_case','find_task','assert_case_absent','request_integration','wait_integration','comment_task','transition_task','transition_case']);
+const MUTATING_OPS = new Set(['publish_workflow','execute_workflow','create_case','create_task','create_signal','queue_signal','request_integration','comment_task','transition_task','transition_case']);
 
 function isObject(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
 function requiredString(v, path, errors, max=500) {
@@ -36,6 +37,20 @@ function validateLabel(v, path, errors) {
 }
 function validateRef(v, path, errors) {
   if (typeof v !== 'string' || !REF_RE.test(v)) errors.push(`${path}: référence locale invalide`);
+}
+function validateFind(op, path, errors, kind) {
+  if (op.ref === undefined) errors.push(`${path}.ref: requis`);
+  requiredString(op.search, `${path}.search`, errors, 200);
+  optionalString(op.title, `${path}.title`, errors, 500);
+  if (op.metadata !== undefined && !isObject(op.metadata)) errors.push(`${path}.metadata: objet requis`);
+  if (kind === 'task' && op.case_ref !== undefined) validateRef(op.case_ref, `${path}.case_ref`, errors);
+}
+function validateIntegrationRequest(op, path, errors) {
+  if (op.ref === undefined) errors.push(`${path}.ref: requis`);
+  validateRef(op.subject_ref, `${path}.subject_ref`, errors);
+  enumValue(op.provider, PROVIDERS, `${path}.provider`, errors);
+  requiredString(op.operation, `${path}.operation`, errors, 200);
+  if (op.request !== undefined && !isObject(op.request)) errors.push(`${path}.request: objet requis`);
 }
 function validateWorkBase(input, path, errors) {
   if (!isObject(input)) { errors.push(`${path}: objet requis`); return; }
@@ -160,6 +175,18 @@ export function validateScenario(doc) {
         break;
       case 'queue_signal':
       case 'wait_signal': validateRef(op.signal_ref, `${p}.signal_ref`, errors); if (op.op==='queue_signal') validateRef(op.workflow_ref, `${p}.workflow_ref`, errors); break;
+      case 'find_case': validateFind(op, p, errors, 'case'); break;
+      case 'find_task': validateFind(op, p, errors, 'task'); break;
+      case 'assert_case_absent':
+        requiredString(op.search, `${p}.search`, errors, 200);
+        optionalString(op.title, `${p}.title`, errors, 500);
+        if (op.metadata !== undefined && !isObject(op.metadata)) errors.push(`${p}.metadata: objet requis`);
+        break;
+      case 'request_integration': validateIntegrationRequest(op, p, errors); break;
+      case 'wait_integration':
+        validateRef(op.integration_ref, `${p}.integration_ref`, errors);
+        if (op.timeout_seconds !== undefined && (!Number.isInteger(op.timeout_seconds) || op.timeout_seconds < 1 || op.timeout_seconds > 300)) errors.push(`${p}.timeout_seconds: entier 1..300 requis`);
+        break;
       case 'comment_task': validateRef(op.task_ref, `${p}.task_ref`, errors); requiredString(op.body, `${p}.body`, errors, 20000); if (op.visibility !== undefined && !new Set(['internal_only','requester_visible','org_wide']).has(op.visibility)) errors.push(`${p}.visibility invalide`); break;
       case 'transition_task': validateRef(op.task_ref, `${p}.task_ref`, errors); enumValue(op.status, TASK_STATUS, `${p}.status`, errors); optionalString(op.reason, `${p}.reason`, errors, 2000); break;
       case 'transition_case': validateRef(op.case_ref, `${p}.case_ref`, errors); enumValue(op.status, CASE_STATUS, `${p}.status`, errors); break;
@@ -170,7 +197,7 @@ export function validateScenario(doc) {
   if (Array.isArray(doc.operations)) doc.operations.forEach((op,i) => {
     if (!isObject(op)) return;
     const needs=[];
-    for (const k of ['case_ref','workflow_ref','signal_ref','task_ref']) if (op[k]) needs.push([k,op[k]]);
+    for (const k of ['case_ref','workflow_ref','signal_ref','task_ref','subject_ref','integration_ref']) if (op[k]) needs.push([k,op[k]]);
     for (const [k,r] of needs) if (!created.has(r)) errors.push(`operations[${i}].${k}: référence ${r} doit être créée par une opération précédente`);
     if (op.ref) created.add(op.ref);
   });
@@ -178,12 +205,12 @@ export function validateScenario(doc) {
 }
 
 export function buildPrompt(brief='') {
-  return `# Orgo Scenario Injector — contrat IA v1\n\nTu simules un scénario destiné à être injecté dans Orgo RC via un outil contrôlé.\n\n## Règles absolues\n\n1. Réponds avec **un seul objet JSON**, sans bloc Markdown et sans texte avant/après.\n2. Utilise exactement \"schema_version\": \"${SCHEMA_VERSION}\".\n3. Le scénario est fictif : \"synthetic\": true et \"epistemic_status\": \"synthetic_demo_fixture\".\n4. N'invente jamais d'UUID Orgo. Utilise des références locales stables comme \"case.main\", \"task.review30\", \"workflow.main\".\n5. N'écris jamais de SQL, d'URL arbitraire, de token, de mot de passe ou de secret.\n6. Ne produis pas de PII réelle. Les noms éventuels doivent être explicitement fictifs et placés dans metadata/payload.\n7. Les Signals Orgo utilisent source en minuscules: email | api | manual | sync.\n8. Dans les règles workflow, match.source utilise les valeurs majuscules: EMAIL | API | SYSTEM | TIMER.\n9. Un label Orgo est obligatoire pour Case/Task/Signal et suit le format ex. \"2.11\".\n10. SET_METADATA cible actuellement une Task, pas un Case. Pour un Case, mets metadata directement dans CREATE_CASE.\n11. Chaque Signal doit avoir external_reference stable.\n12. Ordonne les opérations afin qu'une référence soit créée avant son utilisation.\n\n## Opérations autorisées\n\npublish_workflow, simulate_workflow, execute_workflow, create_case, create_task, create_signal, queue_signal, wait_signal, comment_task, transition_task, transition_case.\n\n## Enveloppe obligatoire\n\n{\n  \"schema_version\": \"${SCHEMA_VERSION}\",\n  \"scenario\": {\n    \"id\": \"scenario-id-stable\",\n    \"title\": \"Titre\",\n    \"description\": \"But de la simulation\",\n    \"synthetic\": true,\n    \"epistemic_status\": \"synthetic_demo_fixture\",\n    \"correlation_id\": \"scenario.scenario-id-stable\"\n  },\n  \"operations\": []\n}\n\n## Formes utiles\n\n### Créer un Case\n{\n  \"op\": \"create_case\",\n  \"ref\": \"case.main\",\n  \"input\": {\n    \"title\": \"...\",\n    \"description\": \"...\",\n    \"label\": \"2.11\",\n    \"severity\": \"MODERATE\",\n    \"visibility\": \"INTERNAL\",\n    \"metadata\": { \"synthetic\": true }\n  }\n}\n\n### Créer une Task liée\n{\n  \"op\": \"create_task\",\n  \"ref\": \"task.one\",\n  \"case_ref\": \"case.main\",\n  \"input\": {\n    \"title\": \"...\",\n    \"description\": \"...\",\n    \"type\": \"scenario\",\n    \"category\": \"request\",\n    \"label\": \"2.11\",\n    \"priority\": \"MEDIUM\",\n    \"metadata\": { \"synthetic\": true }\n  }\n}\n\n### Créer un Signal\n{\n  \"op\": \"create_signal\",\n  \"ref\": \"signal.event1\",\n  \"input\": {\n    \"source\": \"api\",\n    \"external_reference\": \"scenario:scenario-id-stable:event1:v1\",\n    \"type\": \"scenario_event\",\n    \"category\": \"update\",\n    \"severity\": \"MODERATE\",\n    \"label\": \"2.11\",\n    \"title\": \"...\",\n    \"description\": \"...\",\n    \"payload\": { \"synthetic\": true }\n  }\n}\n\n### Workflow\n{\n  \"op\": \"publish_workflow\",\n  \"ref\": \"workflow.main\",\n  \"code\": \"scenario_workflow\",\n  \"content\": {\n    \"rules\": [{\n      \"id\": \"event_v1\",\n      \"enabled\": true,\n      \"match\": { \"source\": \"API\", \"type\": \"scenario_event\" },\n      \"actions\": [{\n        \"type\": \"CREATE_CASE\",\n        \"input\": {\n          \"title\": \"$signal.title\",\n          \"description\": \"$signal.description\",\n          \"label\": \"$signal.label\",\n          \"severity\": \"$signal.severity\",\n          \"metadata\": { \"synthetic\": true }\n        }\n      }]\n    }]\n  }\n}\n\nUn create_signal peut contenir \"workflow_ref\": \"workflow.main\" pour que le Signal soit accepté et mis en file pour traitement par le worker Orgo. Ajoute ensuite {\"op\":\"wait_signal\",\"signal_ref\":\"signal.event1\",\"timeout_seconds\":30} si le scénario exige que les effets du workflow soient visibles avant de poursuivre.\n\n## Qualité attendue\n\n- scénario cohérent et déterministe;\n- titres lisibles par un humain;\n- metadata/payload contenant scenario_id et synthetic:true;\n- pas de succès scientifique ou institutionnel inventé;\n- distinguer observation, décision, tâche et résultat;\n- préférer peu d'opérations significatives à un grand volume artificiel.\n\n${brief ? `## Brief à simuler\n\n${brief}\n` : '## Brief à simuler\n\n[COLLER ICI LE BRIEF DU SCÉNARIO]\n'}\n`;
+  return `# Orgo Scenario Injector — contrat IA v1\n\nTu simules un scénario destiné à être injecté dans Orgo RC via un outil contrôlé.\n\n## Règles absolues\n\n1. Réponds avec **un seul objet JSON**, sans bloc Markdown et sans texte avant/après.\n2. Utilise exactement \"schema_version\": \"${SCHEMA_VERSION}\".\n3. Le scénario est fictif : \"synthetic\": true et \"epistemic_status\": \"synthetic_demo_fixture\".\n4. N'invente jamais d'UUID Orgo. Utilise des références locales stables comme \"case.main\", \"task.review30\", \"workflow.main\".\n5. N'écris jamais de SQL, d'URL arbitraire, de token, de mot de passe ou de secret.\n6. Ne produis pas de PII réelle. Les noms éventuels doivent être explicitement fictifs et placés dans metadata/payload.\n7. Les Signals Orgo utilisent source en minuscules: email | api | manual | sync.\n8. Dans les règles workflow, match.source utilise les valeurs majuscules: EMAIL | API | SYSTEM | TIMER.\n9. Un label Orgo est obligatoire pour Case/Task/Signal et suit le format ex. \"2.11\".\n10. SET_METADATA cible actuellement une Task, pas un Case. Pour un Case, mets metadata directement dans CREATE_CASE.\n11. Chaque Signal doit avoir external_reference stable.\n12. Ordonne les opérations afin qu'une référence soit créée avant son utilisation.\n\n## Opérations autorisées\n\npublish_workflow, simulate_workflow, execute_workflow, create_case, create_task, create_signal, queue_signal, wait_signal, find_case, find_task, assert_case_absent, request_integration, wait_integration, comment_task, transition_task, transition_case.\n\n## Enveloppe obligatoire\n\n{\n  \"schema_version\": \"${SCHEMA_VERSION}\",\n  \"scenario\": {\n    \"id\": \"scenario-id-stable\",\n    \"title\": \"Titre\",\n    \"description\": \"But de la simulation\",\n    \"synthetic\": true,\n    \"epistemic_status\": \"synthetic_demo_fixture\",\n    \"correlation_id\": \"scenario.scenario-id-stable\"\n  },\n  \"operations\": []\n}\n\n## Formes utiles\n\n### Créer un Case\n{\n  \"op\": \"create_case\",\n  \"ref\": \"case.main\",\n  \"input\": {\n    \"title\": \"...\",\n    \"description\": \"...\",\n    \"label\": \"2.11\",\n    \"severity\": \"MODERATE\",\n    \"visibility\": \"INTERNAL\",\n    \"metadata\": { \"synthetic\": true }\n  }\n}\n\n### Créer une Task liée\n{\n  \"op\": \"create_task\",\n  \"ref\": \"task.one\",\n  \"case_ref\": \"case.main\",\n  \"input\": {\n    \"title\": \"...\",\n    \"description\": \"...\",\n    \"type\": \"scenario\",\n    \"category\": \"request\",\n    \"label\": \"2.11\",\n    \"priority\": \"MEDIUM\",\n    \"metadata\": { \"synthetic\": true }\n  }\n}\n\n### Créer un Signal\n{\n  \"op\": \"create_signal\",\n  \"ref\": \"signal.event1\",\n  \"input\": {\n    \"source\": \"api\",\n    \"external_reference\": \"scenario:scenario-id-stable:event1:v1\",\n    \"type\": \"scenario_event\",\n    \"category\": \"update\",\n    \"severity\": \"MODERATE\",\n    \"label\": \"2.11\",\n    \"title\": \"...\",\n    \"description\": \"...\",\n    \"payload\": { \"synthetic\": true }\n  }\n}\n\n### Workflow\n{\n  \"op\": \"publish_workflow\",\n  \"ref\": \"workflow.main\",\n  \"code\": \"scenario_workflow\",\n  \"content\": {\n    \"rules\": [{\n      \"id\": \"event_v1\",\n      \"enabled\": true,\n      \"match\": { \"source\": \"API\", \"type\": \"scenario_event\" },\n      \"actions\": [{\n        \"type\": \"CREATE_CASE\",\n        \"input\": {\n          \"title\": \"$signal.title\",\n          \"description\": \"$signal.description\",\n          \"label\": \"$signal.label\",\n          \"severity\": \"$signal.severity\",\n          \"metadata\": { \"synthetic\": true }\n        }\n      }]\n    }]\n  }\n}\n\nUn create_signal peut contenir \"workflow_ref\": \"workflow.main\" pour que le Signal soit accepté et mis en file pour traitement par le worker Orgo. Ajoute ensuite {\"op\":\"wait_signal\",\"signal_ref\":\"signal.event1\",\"timeout_seconds\":30} si le scénario exige que les effets du workflow soient visibles avant de poursuivre.\n\n## Qualité attendue\n\n- scénario cohérent et déterministe;\n- titres lisibles par un humain;\n- metadata/payload contenant scenario_id et synthetic:true;\n- pas de succès scientifique ou institutionnel inventé;\n- distinguer observation, décision, tâche et résultat;\n- préférer peu d'opérations significatives à un grand volume artificiel.\n\n${brief ? `## Brief à simuler\n\n${brief}\n` : '## Brief à simuler\n\n[COLLER ICI LE BRIEF DU SCÉNARIO]\n'}\n`;
 }
 
 export function planScenario(doc) {
   const v=validateScenario(doc); if (!v.ok) return v;
-  return { ok:true, scenario:doc.scenario.id, operations:doc.operations.map((op,i)=>({index:i+1, op:op.op, ref:op.ref ?? null, target:op.case_ref ?? op.task_ref ?? op.signal_ref ?? op.workflow_ref ?? null, mutates:MUTATING_OPS.has(op.op)})) };
+  return { ok:true, scenario:doc.scenario.id, operations:doc.operations.map((op,i)=>({index:i+1, op:op.op, ref:op.ref ?? null, target:op.case_ref ?? op.task_ref ?? op.signal_ref ?? op.workflow_ref ?? op.subject_ref ?? op.integration_ref ?? null, mutates:MUTATING_OPS.has(op.op)})) };
 }
 
 export class OrgoClient {
@@ -218,6 +245,33 @@ function refId(refs, name, expected) {
   if (expected && row.kind!==expected) throw new Error(`Référence ${name}: attendu ${expected}, reçu ${row.kind}`);
   return row.id;
 }
+function workId(data, kind) {
+  const id = kind === 'case' ? (data?.case_id ?? data?.id) : kind === 'task' ? (data?.task_id ?? data?.id) : data?.id;
+  if (typeof id !== 'string' || !id) throw new Error(`${kind}: identifiant runtime absent de la réponse API`);
+  return id;
+}
+function matchMetadata(actual, expected) {
+  if (!isObject(expected)) return true;
+  if (!isObject(actual)) return false;
+  return Object.entries(expected).every(([key,value]) => JSON.stringify(actual[key]) === JSON.stringify(value));
+}
+function selectUnique(items, op, kind) {
+  const candidates=(Array.isArray(items) ? items : []).filter((row) => {
+    if (op.title !== undefined && row.title !== op.title) return false;
+    if (!matchMetadata(row.metadata, op.metadata)) return false;
+    return true;
+  });
+  if (candidates.length !== 1) {
+    const label=op.title || op.search;
+    throw new Error(`${kind} ${JSON.stringify(label)}: attendu exactement 1 résultat, reçu ${candidates.length}`);
+  }
+  return candidates[0];
+}
+function queryString(values) {
+  const params=new URLSearchParams();
+  for (const [key,value] of Object.entries(values)) if (value !== undefined && value !== null && value !== '') params.set(key,String(value));
+  return params.toString();
+}
 function enrichMetadata(input, doc) {
   return {...input, metadata:{...(isObject(input.metadata)?input.metadata:{}), scenario_id:doc.scenario.id, synthetic:true, epistemic_status:'synthetic_demo_fixture'}};
 }
@@ -239,9 +293,9 @@ export async function applyScenario(doc, config, {apply=false, fetchImpl=fetch, 
       case 'execute_workflow': {
         const id=refId(refs,op.workflow_ref,'workflow'); data=await client.request(`workflow-versions/${id}/execute`,'POST',op.context,{idempotencyKey:key,correlationId}); if (op.ref) refs.set(op.ref,{kind:'workflow_instance',id:data.instance_id,data}); break; }
       case 'create_case':
-        data=await client.request('cases','POST',enrichMetadata(op.input,doc),{idempotencyKey:key,correlationId}); refs.set(op.ref,{kind:'case',id:data.id,data}); break;
+        data=await client.request('cases','POST',enrichMetadata(op.input,doc),{idempotencyKey:key,correlationId}); refs.set(op.ref,{kind:'case',id:workId(data,'case'),data}); break;
       case 'create_task': {
-        const input=enrichMetadata(op.input,doc); if (op.case_ref) input.case_id=refId(refs,op.case_ref,'case'); data=await client.request('tasks','POST',input,{idempotencyKey:key,correlationId}); refs.set(op.ref,{kind:'task',id:data.id,data}); break; }
+        const input=enrichMetadata(op.input,doc); if (op.case_ref) input.case_id=refId(refs,op.case_ref,'case'); data=await client.request('tasks','POST',input,{idempotencyKey:key,correlationId}); refs.set(op.ref,{kind:'task',id:workId(data,'task'),data}); break; }
       case 'create_signal': {
         const input={...op.input,payload:{...(isObject(op.input.payload)?op.input.payload:{}),scenario_id:doc.scenario.id,synthetic:true,epistemic_status:'synthetic_demo_fixture'}};
         if (op.case_ref) input.case_id=refId(refs,op.case_ref,'case'); if (op.workflow_ref) input.workflow_version_id=refId(refs,op.workflow_ref,'workflow');
@@ -252,10 +306,44 @@ export async function applyScenario(doc, config, {apply=false, fetchImpl=fetch, 
         const signalId=refId(refs,op.signal_ref,'signal'); const timeout=Math.max(1,Math.min(Number(op.timeout_seconds ?? 30),300))*1000; const started=Date.now();
         while (true) { data=await client.request(`signals/${signalId}`); if (data.status==='PROCESSED') break; if (data.status==='REJECTED') throw new Error(`Signal ${op.signal_ref} rejeté`); if (Date.now()-started>=timeout) { status='pending_worker'; break; } await new Promise(r=>setTimeout(r,750)); }
         break; }
+      case 'find_case': {
+        const q=queryString({search:op.search,limit:100,offset:0}); const rows=await client.request(`cases?${q}`); data=selectUnique(rows.items,op,'Case'); refs.set(op.ref,{kind:'case',id:workId(data,'case'),data}); status='resolved'; break; }
+      case 'find_task': {
+        const caseId=op.case_ref ? refId(refs,op.case_ref,'case') : undefined; const q=queryString({search:op.search,case_id:caseId,limit:100,offset:0}); const rows=await client.request(`tasks?${q}`); data=selectUnique(rows.items,op,'Task'); refs.set(op.ref,{kind:'task',id:workId(data,'task'),data}); status='resolved'; break; }
+      case 'assert_case_absent': {
+        const q=queryString({search:op.search,limit:100,offset:0}); const rows=await client.request(`cases?${q}`); const matches=(Array.isArray(rows.items)?rows.items:[]).filter((row)=> (op.title===undefined || row.title===op.title) && matchMetadata(row.metadata,op.metadata)); if (matches.length) throw new Error(`Case présent alors qu'il doit être absent: ${op.title || op.search}`); data={count:0}; status='asserted_absent'; break; }
+      case 'request_integration': {
+        const subject=refs.get(op.subject_ref); if (!subject) throw new Error(`Référence non résolue: ${op.subject_ref}`); if (!['case','task'].includes(subject.kind)) throw new Error(`Référence ${op.subject_ref}: Case ou Task requis`); const input={provider:op.provider,operation:op.operation,subject_type:subject.kind,subject_id:subject.id,request:isObject(op.request)?op.request:{}}; data=await client.request('integration-operations','POST',input,{idempotencyKey:key,correlationId}); refs.set(op.ref,{kind:'integration_operation',id:data.id,data}); break; }
+      case 'wait_integration': {
+        const id=refId(refs,op.integration_ref,'integration_operation'); const timeout=Math.max(1,Math.min(Number(op.timeout_seconds ?? 30),300))*1000; const started=Date.now();
+        while (true) {
+          data=await client.request(`integration-operations/${id}`);
+          if (data.status==='SUCCEEDED') { status='succeeded'; break; }
+          if (data.status==='FAILED') throw new Error(`Integration ${op.integration_ref} échouée: ${data.error || 'provider failure'}`);
+          if (Date.now()-started>=timeout) throw new Error(`Integration ${op.integration_ref} toujours ${data.status || 'PENDING'} après ${Math.round(timeout/1000)}s`);
+          await new Promise(r=>setTimeout(r,750));
+        }
+        break; }
       case 'comment_task': {
         const taskId=refId(refs,op.task_ref,'task'); data=await client.request(`tasks/${taskId}/comments`,'POST',{body:op.body,visibility:op.visibility ?? 'internal_only'},{idempotencyKey:key,correlationId}); break; }
       case 'transition_task': {
-        const taskId=refId(refs,op.task_ref,'task'); const current=await client.request(`tasks/${taskId}`); if (current.status===op.status) { data=current; status='skipped_already_at_status'; } else data=await client.request(`tasks/${taskId}/status`,'PATCH',{status:op.status,revision:current.revision,...(op.reason?{reason:op.reason}:{})},{idempotencyKey:key,correlationId}); refs.set(op.task_ref,{kind:'task',id:taskId,data}); break; }
+        const taskId=refId(refs,op.task_ref,'task');
+        let current=await client.request(`tasks/${taskId}`);
+        if (current.status===op.status) {
+          data=current; status='skipped_already_at_status';
+        } else {
+          const terminalFromInProgress=new Set(['COMPLETED','FAILED','ESCALATED']);
+          const path=(current.status==='PENDING' && terminalFromInProgress.has(op.status)) ? ['IN_PROGRESS',op.status] : [op.status];
+          for (let stepIndex=0; stepIndex<path.length; stepIndex++) {
+            const nextStatus=path[stepIndex];
+            if (current.status===nextStatus) continue;
+            const stepKey=`${key}:status:${nextStatus.toLowerCase()}`;
+            current=await client.request(`tasks/${taskId}/status`,'PATCH',{status:nextStatus,revision:current.revision,...(op.reason && nextStatus===op.status?{reason:op.reason}:{})},{idempotencyKey:stepKey,correlationId});
+          }
+          data=current;
+          status=path.length>1?'applied_via_legal_path':'applied';
+        }
+        refs.set(op.task_ref,{kind:'task',id:taskId,data}); break; }
       case 'transition_case': {
         const caseId=refId(refs,op.case_ref,'case'); const current=await client.request(`cases/${caseId}`); if (current.status===op.status) { data=current; status='skipped_already_at_status'; } else data=await client.request(`cases/${caseId}/status`,'PATCH',{status:op.status,revision:current.revision},{idempotencyKey:key,correlationId}); refs.set(op.case_ref,{kind:'case',id:caseId,data}); break; }
     }
