@@ -1,5 +1,9 @@
 # Orgo — implementation ledger, completion delivery 2026-09-09
 
+> **Historical pre-RC acceptance snapshot.** This ledger accurately records the 2026-09-09 completion delivery, but it is **not the current acceptance status**. The subsequent RC1 validation is canonical for release acceptance: `docs/status/2026-09-10-rc1-status.md`, tag `v0.1.0-rc.1`, commit `60e3a250f98252735839816c8e0143bbdd7546bf`.
+>
+> RC1 subsequently validated Prisma generation, PostgreSQL 16 migrations, architecture checks, TypeScript, automated tests, native PostgreSQL integration tests, builds and two consecutive Chromium campaigns (22/22 + 22/22 = 44/44 PASS). Therefore, statements below saying that those final validations “have not been run” apply only to this 2026-09-09 snapshot. External-provider and restore validation remained outside the RC1 local validation scope.
+
 This ledger describes active source in this archive. The user will perform final validation locally. Implemented source and supplied tests are distinct from executed acceptance results.
 
 ## Active capabilities

@@ -1,4 +1,4 @@
-> Current delivery: [Implementation status](Technical-Reference/IMPLEMENTATION_STATUS.md), [adopted decisions](Technical-Reference/IMPLEMENTATION_DECISIONS.md), [implemented API](Technical-Reference/API_IMPLEMENTED.md).
+> Current release baseline: [RC1 status](status/2026-09-10-rc1-status.md) (`v0.1.0-rc.1`, commit `60e3a250f98252735839816c8e0143bbdd7546bf`). The [2026-09-09 implementation ledger](Technical-Reference/IMPLEMENTATION_STATUS.md) is a pre-RC acceptance snapshot. See also [adopted decisions](Technical-Reference/IMPLEMENTATION_DECISIONS.md) and [implemented API](Technical-Reference/API_IMPLEMENTED.md).
 
 # Orgo — Documentation
 
@@ -29,7 +29,7 @@ Orgo owns **workflow state, business authorization and its business UI**. It can
 - `Work` is the central operational bounded context; it owns canonical Case/Task mutations.
 - `Task` is the canonical executable unit of work.
 - `Case` is the durable situation/context and primary operational workspace.
-- `Signal` is a first-class accepted input/evidence object in the target architecture; the current schema still requires this persistence model to be added.
+- `Signal` is a first-class durable accepted input/evidence object; persistence, deduplication/fingerprint conflict handling and pinned workflow-version behavior are implemented in the delivered source.
 - Domain modules refine the Task/Case engine; they do not create competing core lifecycles.
 - Canonical labels drive routing/classification but do not replace domain state.
 - Broadcast labels are informational by default unless an explicit workflow creates work.
@@ -46,6 +46,10 @@ Orgo owns **workflow state, business authorization and its business UI**. It can
 
 The supplied code snapshot contains the real Prisma schema, migrations, NestJS services/controllers, domain modules, charters and web application. The physical schema and executable code are the implementation reference; this documentation defines the aligned architecture those surfaces should implement.
 
-## Completion delivery reference — 2026-09-09
+## Release and implementation references
 
-The active implementation and its remaining external-contract boundaries are recorded in `IMPLEMENTATION_STATUS.md`. See `COMPLETION_DECISIONS.md` for durable processes, receipt predicates, Work scopes, identity and evidence semantics; `ARCHITECTURE_TO_CODE.md` for source ownership; `LOCAL_VALIDATION.md` for the final acceptance to run locally. Historical validation results do not validate the completion changes.
+The official validated RC1 baseline is `v0.1.0-rc.1` at commit `60e3a250f98252735839816c8e0143bbdd7546bf`; its acceptance evidence is recorded in `status/2026-09-10-rc1-status.md`.
+
+`Technical-Reference/IMPLEMENTATION_STATUS.md` remains the implementation ledger for the 2026-09-09 completion delivery, but its statements that final tests/migrations/browser acceptance had not yet run are historical pre-RC statements and are superseded for current acceptance status by the RC1 report.
+
+See `COMPLETION_DECISIONS.md` for durable processes, receipt predicates, Work scopes, identity and evidence semantics; `ARCHITECTURE_TO_CODE.md` for source ownership; and `LOCAL_VALIDATION.md` for the reproducible local acceptance procedure.
