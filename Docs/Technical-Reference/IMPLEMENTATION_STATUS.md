@@ -1,12 +1,11 @@
-# Orgo — implementation ledger, completion delivery 2026-09-09
+# Orgo — implementation status (2026-09-15)
 
-> **Historical pre-RC acceptance snapshot.** This ledger accurately records the 2026-09-09 completion delivery, but it is **not the current acceptance status**. The subsequent RC1 validation is canonical for release acceptance: `docs/status/2026-09-10-rc1-status.md`, tag `v0.1.0-rc.1`, commit `60e3a250f98252735839816c8e0143bbdd7546bf`.
->
-> RC1 subsequently validated Prisma generation, PostgreSQL 16 migrations, architecture checks, TypeScript, automated tests, native PostgreSQL integration tests, builds and two consecutive Chromium campaigns (22/22 + 22/22 = 44/44 PASS). Therefore, statements below saying that those final validations “have not been run” apply only to this 2026-09-09 snapshot. External-provider and restore validation remained outside the RC1 local validation scope.
+This document describes the current development implementation and distinguishes **implemented source**, **automated validation evidence**, **browser evidence** and **remaining external/manual acceptance boundaries**.
 
-This ledger describes active source in this archive. The user will perform final validation locally. Implemented source and supplied tests are distinct from executed acceptance results.
+The immutable tagged release-candidate baseline remains `v0.1.0-rc.1` at commit `60e3a250f98252735839816c8e0143bbdd7546bf`. The current development evidence below was collected against application commit `167f672998075b83ff72ac73f10d550f3ea73e9b` before the documentation-only alignment that updates these files.
 
 ## Active capabilities
+
 
 | Area | Implemented source and connected behavior |
 | --- | --- |
@@ -33,15 +32,49 @@ This ledger describes active source in this archive. The user will perform final
 | Public surface | Product-owned hosted entry, Orgo surface/route/profile export and permission-filtered command inventory; standalone has no Spaces dependency |
 | Delivery | New additive migration, endpoint inventory, architecture-to-code map, runnable local validation command and examples |
 
-## Checks and acceptance status
+## Current validation evidence
 
-The implementation work includes Prisma client generation, TypeScript checking for API/tests/web, architecture dependency checks and Python/shell syntax checking. Current check output is under `validation/completion/`.
+### Automated `deep` campaign — 2026-09-15
 
-**Final tests, application execution against the new migration, Docker builds/runs, browser acceptance, real provider delivery, OIDC interoperability, load/recovery and restoration validation have not been run for this completion delivery.** They are intentionally left to the user. Run `npm run validate:local` with an isolated `TEST_DATABASE_URL` and follow `LOCAL_VALIDATION.md`.
+LevelUpDiag run `20260915T131608Z-acda063b` executed the `deep` selection against a clean `master` working tree at application commit `167f672998075b83ff72ac73f10d550f3ea73e9b`.
 
-The previous archive had 12 passing unit tests and 24 passing integration tests, with one native PostgreSQL test skipped in PGlite. Those are historical results only; they must not be read as results for the changes in this archive. New regression tests have been added for attachments, process gates/callbacks, scopes, maintenance overlap, MIME attachments and safe templates.
+All **12/12 required levels passed**:
+
+| Evidence area | Result |
+| --- | --- |
+| Diagnostic/context/inventory/hygiene | PASS |
+| Security hygiene scan | PASS — 209 files scanned; no configured secret-pattern hits or high-risk sensitive filenames |
+| Prisma generation | PASS |
+| Architecture checks | PASS |
+| API + web TypeScript checks | PASS |
+| LevelUpDiag npm-launcher safeguards | PASS — 3/3 |
+| Orgo unit tests | PASS — 16/16 |
+| PostgreSQL migration | PASS |
+| Native PostgreSQL integration | PASS — 33/33, 0 skipped |
+| API + web production builds | PASS |
+| npm dependency audit | PASS — 0 info/low/moderate/high/critical vulnerabilities reported |
+
+The campaign summary verdict was **`ERROR` only at target-protection level** because the successful Next.js production build rewrote tracked `apps/web/next-env.d.ts`. No required validation level failed, warned, skipped or blocked. This is a build/repository-cleanliness issue, not evidence of a failed application test.
+
+### Browser campaign — 2026-09-15
+
+LevelUpDiag run `20260915T144942Z-2f927d7b` passed **24/24 required Chromium journeys** using one worker against the real local Orgo API, with:
+
+- 0 skipped;
+- 0 unexpected;
+- 0 flaky;
+- successful coverage of local login/common-login UI behavior, Work creation and lifecycle, stale revisions, comments, assignments, attachments, workflow publication/simulation, offline replay, CSV safety, permissions/team scope, Maintenance, Education and confidential HR work.
+
+E17 mocks only the public SSO configuration response to validate the UI option. It does **not** prove real OIDC discovery/JWKS/authorization-code interoperability.
+
+## Acceptance interpretation
+
+The current source has strong automated evidence for the local application/runtime scope above. It is **not** a claim that every deployment or external integration is accepted. In particular, provider-specific interoperability, real OIDC-provider exchange, backup/restore execution, deployment/load characteristics and native Koali/Capsule admission remain separate evidence boundaries.
+
+RC1 remains the official immutable tagged release baseline until a new release candidate is intentionally cut. See `docs/status/2026-09-15-current-status.md` for the dated status report.
 
 ## Concrete boundaries
+
 
 - Native Kristal/Konnaxion/Architect/kOA schemas and SDKs, and canonical Koali/Capsule contract packages, are absent from the supplied workspace. The shipped bridges and `orgo-surface/v1` are explicit Orgo contracts. Their existence does not assert native compatibility or host admission.
 - A gateway must implement delivery/idempotency semantics for the chosen SMS or webhook provider. Browser push, a vendor-specific gateway and a built-in SMTP server are not claimed. The supplied email adapter consumes an existing IMAP server or mail archives.

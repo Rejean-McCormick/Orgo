@@ -2,13 +2,13 @@
 
 **Status:** Canonical direction for the Orgo vNext frontend and Koali hosting boundary.
 
-**Delivery update:** The active frontend implements shared OrgoApp composition and a code-level hosted entry. Native Koali manifest admission and host execution remain unverified because those contract packages are not supplied. See `IMPLEMENTATION_STATUS.md`.
+**Delivery update (2026-09-15):** The active frontend implements shared Orgo application composition, product routes/presentation profiles and a code-level hosted entry. The current standalone browser surface has automated Chromium evidence. Native Koali manifest admission and host execution remain unverified because the executable Koali/Capsule contract packages are not supplied. See `IMPLEMENTATION_STATUS.md`.
 
-This document defines the intended architecture. The current Orgo web snapshot is smaller than this target and must be aligned incrementally. The UI composition is backed by the same operational model defined in `TARGET_ARCHITECTURE.md`: Signal intake, Case-centered Work, Tasks and Orchestration.
+This document defines the UI architecture and hosting boundary. The active frontend now implements the shared Orgo application surface over the operational model defined in `TARGET_ARCHITECTURE.md`: Signal intake, Case-centered Work, Tasks and Orchestration. Sections that show a target directory organization are normative for boundaries, not mandatory filenames.
 
 ## 1. Ownership invariant
 
-Orgo is a proprietary integrated subsystem/application. It owns its operational domain and its business UI.
+Orgo is an Orgo-owned integrated subsystem/application. It owns its operational domain and its business UI. This is a runtime/domain ownership statement; the repository license is AGPL-3.0-or-later.
 
 Orgo owns:
 
@@ -388,4 +388,6 @@ Do not force this target directory structure mechanically if the current framewo
 
 ## 14. Current-state note
 
-The current Orgo web snapshot is not yet this application. It contains useful types/screens/hooks but a small effective route tree. Build/runtime repair and core-domain stabilization should precede or accompany the UI composition work.
+The active Orgo web application implements the shared standalone product surface, presentation profiles and the code-level hosted entry described by this architecture. The 2026-09-15 browser campaign passed 24/24 required Chromium journeys against the real local API.
+
+That evidence validates the standalone Orgo surface and selected common-login UI behavior; it does not establish native Koali/Capsule manifest admission or host execution. Those remain integration steps to validate against the actual Koali contracts.

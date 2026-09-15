@@ -1,3 +1,5 @@
+> **Historical status record.** This report captures the pre-RC decision on 2026-09-10. It was superseded later the same day by `2026-09-10-rc1-status.md`. For the current development-tree evidence, see `2026-09-15-current-status.md`.
+
 # Orgo — Rapport de statut du 10 septembre 2026
 
 ## Décision : bêta

@@ -1,10 +1,18 @@
-# Validation locale — à exécuter par le propriétaire
+# Validation locale
 
-Les nouveaux tests sont livrés sans exécution finale dans cet environnement, conformément à la demande. Les résultats de l'archive précédente restent historiques. Cette livraison fait l'objet de contrôles statiques, pas d'une certification fonctionnelle ou de déploiement.
+This procedure separates the repository-local gate from the broader `LevelUpDiag-Orgo` campaigns. Always use disposable test data and a dedicated PostgreSQL database. Never point automated validation at production.
 
-## Base de validation neuve
+Current dated evidence is recorded in `docs/status/2026-09-15-current-status.md`; this file is the reusable procedure, not a historical result log.
 
-Utiliser Node 22+, npm et PostgreSQL 16. Extraire l'archive dans un répertoire neuf. Créer une base isolée `orgo_test`, jamais une base de production.
+## Repository-local gate
+
+Requirements:
+
+- Node.js 22+
+- npm
+- PostgreSQL 16
+
+From a clean checkout:
 
 ```bash
 npm ci
@@ -12,50 +20,70 @@ export TEST_DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/orgo_test?co
 npm run validate:local
 ```
 
-Le script génère Prisma, applique les migrations, contrôle les frontières et les types, puis exécute les tests unitaires/d'intégration et les builds. Il s'arrête au premier échec et écrit les résultats dans `validation/local-<date>/`. Les identifiants de connexion réels restent dans votre environnement. Sous Windows, utiliser WSL pour les scripts shell et ce lanceur.
+The launcher generates Prisma, applies migrations, checks architecture and TypeScript, executes unit/integration tests and production builds, stops on the first failure and writes evidence under `validation/local-<date>/`.
 
-Le test natif `FOR UPDATE SKIP LOCKED` doit être exécuté sur PostgreSQL, pas seulement PGlite. Les nouveaux scénarios couvrent fichiers/tenants, étapes humaines/révisions, réception asynchrone, périmètres Work, chevauchements de calendrier et pièces jointes email. Le test de template est purement local.
+The native `FOR UPDATE SKIP LOCKED` behavior must be exercised on PostgreSQL, not inferred from PGlite.
 
-## Démarrage et navigateur
+## Comprehensive LevelUpDiag-Orgo validation
 
-Configurer `.env` depuis `.env.example`, puis suivre le README pour Compose, migration et création du compte initial. Vérifier les parcours avec au moins deux organisations et un utilisateur limité à un périmètre.
+`LevelUpDiag-Orgo` is a separate diagnostics application. It invokes Orgo's public validators without being copied into this repository.
 
-- Connexion/déconnexion ; rôles et droits révoqués pris en compte à la requête suivante.
-- Création et édition de Case/Task ; transitions et conflits de révision ; rattachement à un Case ; visibilité restreinte et périmètres cohérents.
-- Upload/téléchargement/retrait d'une pièce jointe ; historique paginé et relations ; aucun accès depuis un autre tenant.
-- Signal manuel et email, version de workflow épinglée, redémarrage API/worker entre acceptation et traitement.
-- Processus en attente humaine, minuterie et reçu externe ; refus/predicate négatif/timeout ; reprise et adoption ; compensation uniquement lorsqu'elle est déclarée et applicable.
-- Gestion utilisateurs/rôles/jetons, invitation et mot de passe oublié via un SMTP de test. Vérifier qu'un secret de jeton n'est pas réaffiché lors d'un rejeu.
-- OIDC sur une origine HTTPS et un fournisseur de test : subject explicitement inscrit, state/nonce invalide, mauvais issuer/audience/signature, compte désactivé, code réutilisé.
-- Maintenance : réservation concurrente du même équipement ; RH : participants/revue/confidentialité ; éducation : ajout/retrait d'un membre et tâche de soutien.
-- Notifications, templates, lecture, SMTP et gateways choisies.
-- File hors ligne : commande créée sans réseau, reconnexion, rejeu, conflit de révision et correction explicite ; changer de compte ne doit pas exposer la file d'un autre compte.
-- CSV (y compris un titre commençant par `=`), pagination, navigation clavier et petits écrans.
-- Mode standalone sans Spaces ; mode hébergé avec les vrais contrats Koali lorsqu'ils seront disponibles.
+For the broad automated local gate, prepare a dedicated PostgreSQL test database and run:
 
-## Reprise de données existantes
+```text
+deep
+```
 
-Les anciennes migrations du snapshot sont conservées. Certaines migrations historiques remplacent d'anciennes tables : ne pas les rejouer aveuglément sur une base déjà peuplée. Faire une sauvegarde et vérifier l'historique Prisma avant migration.
+`deep` covers repository/context checks, security hygiene, Prisma generation, architecture, types, unit tests, native PostgreSQL migration/integration, production builds and npm audit.
+
+For browser acceptance, start the disposable local Orgo test runtime and run:
+
+```text
+browser
+```
+
+The browser campaign requires explicit consent for test writes and validates the required Chromium journeys against the local API. Browser evidence does not by itself prove real external-provider or OIDC-provider interoperability.
+
+## Browser and functional review boundaries
+
+Where deployment context requires it, verify:
+
+- connection/logout and immediate effect of revoked roles/permissions;
+- Case/Task creation, edits, transitions, revision conflicts, Case linkage, restricted visibility and scope behavior;
+- attachment upload/download/removal, timeline/relations and tenant isolation;
+- manual/email Signals, pinned workflow versions and worker restart between acceptance and processing;
+- durable processes waiting on human/timer/external receipts, predicate mismatch, timeout, adoption and declared compensation;
+- users/roles/tokens, invitations and password recovery with a test SMTP service;
+- real OIDC on HTTPS with a test IdP, including invalid state/nonce, wrong issuer/audience/signature, disabled account and reused code;
+- Maintenance overlap behavior, HR confidentiality and Education membership/support work;
+- notifications/templates and selected SMTP/SMS/webhook gateways;
+- offline queue replay/conflict correction and account isolation;
+- CSV safety, pagination, keyboard navigation and deployment-specific responsive/accessibility requirements;
+- standalone mode and, when available, hosted mode against the real Koali contracts.
+
+## Existing-data migration
+
+Historical migrations are preserved. Do not replay them blindly on an already populated database. Back up and inspect Prisma migration history first.
 
 ```bash
 export DATABASE_URL='postgresql://.../orgo_existing'
 npm run migration:preflight
-bash scripts/operations/backup.sh /chemin/prive/orgo-before.dump
+bash scripts/operations/backup.sh /private/path/orgo-before.dump
 ```
 
-Le précontrôle ne modifie rien et signale les liens de tenant incohérents, intervalles invalides et comptes nécessitant une réinscription de leurs credentials. Il expose uniquement des identifiants échantillonnés, pas les mots de passe. Réconcilier les données et l'historique avant `prisma migrate deploy`. Les contraintes nouvelles sur des tables historiques marquées `NOT VALID` contrôlent les nouvelles écritures mais nécessitent `VALIDATE CONSTRAINT` après réconciliation des anciennes lignes.
+The preflight is non-mutating and reports inconsistent tenant links, invalid intervals and accounts requiring credential reenrollment. Reconcile existing data/history before `prisma migrate deploy`. Constraints introduced as `NOT VALID` protect new writes but require explicit `VALIDATE CONSTRAINT` after historical rows are reconciled.
 
-Restaurer dans une base dédiée vide et vérifier fonctionnellement la restauration :
+Restore into a dedicated empty database and verify the restored application behavior:
 
 ```bash
 export RESTORE_DATABASE_URL='postgresql://.../orgo_restore_test'
-bash scripts/operations/restore.sh --restore-to-empty-database /chemin/prive/orgo-before.dump
+bash scripts/operations/restore.sh --restore-to-empty-database /private/path/orgo-before.dump
 ```
 
-## Exploitation et contrats externes
+## Operations and external contracts
 
-Tester une panne SMTP/fournisseur, des callbacks tardifs/dupliqués/contradictoires, la mort d'un worker après envoi mais avant acquittement, et le redémarrage avec backlog. L'idempotence côté fournisseur reste nécessaire pour des effets externes effectivement uniques.
+Exercise failure behavior appropriate to the deployment: unavailable SMTP/providers, late/duplicate/contradictory callbacks, worker death after send-before-acknowledgement and restart with backlog. Provider-side idempotency remains required for externally unique effects.
 
-`GET /api/v3/system/overview` donne l'état des files/processus/workers. `GET /api/v3/system/metrics` fournit des gauges Prometheus avec authentification et permissions d'exploitation. Les logs HTTP sont des spans JSON sur stdout. Collecteur, alertes, sauvegardes planifiées et politique de rétention sont à configurer dans l'environnement de déploiement.
+`GET /api/v3/system/overview` exposes queue/process/worker state. `GET /api/v3/system/metrics` exposes authenticated Prometheus gauges. Deployment collectors, alerts, scheduled backups and retention policy remain operator responsibilities.
 
-Les contrats natifs Kristal/Konnaxion/Architect/kOA et Koali/Capsule sont à fournir et à vérifier séparément. Les bridges et le contrat public Orgo livrés sont explicites ; ils ne déclarent pas une compatibilité native non démontrée.
+Native Kristal/Konnaxion/Architect/kOA and Koali/Capsule contracts must be supplied and validated separately. The shipped Orgo bridge/public contracts do not claim native compatibility that has not been demonstrated.

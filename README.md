@@ -1,6 +1,6 @@
 # Orgo
 
-Orgo is a **proprietary, multi-tenant operational workflow and coordination system** in the kOA Digital Ecosystem. It turns incoming signals into governed operational work through organizations, cases, tasks, workflows, routing, evidence, permissions, communications, audit and insights.
+Orgo is a **multi-tenant operational workflow and coordination system** in the kOA Digital Ecosystem. It turns incoming signals into governed operational work through organizations, cases, tasks, workflows, routing, evidence, permissions, communications, audit and insights.
 
 Orgo is **standalone-first**. It owns its workflow state, business authorization and business UI. It can also be hosted inside Koali Spaces as an Orgo-managed `local_module_surface` without transferring ownership of Orgo business state or permissions to the host.
 
@@ -22,19 +22,19 @@ RC1 passed the retained local automated gate and two consecutive Chromium campai
 
 Detailed evidence: [RC1 status report](docs/status/2026-09-10-rc1-status.md).
 
-### Post-RC1 development
+### Current development validation (2026-09-15)
 
-Development continued after the RC1 tag. In particular:
+Development continued after RC1. The common-identity/OIDC work and dependency-security updates are present in the current development tree. A fresh validation was executed against application commit `167f672998075b83ff72ac73f10d550f3ea73e9b` before this documentation-only alignment:
 
-- common identity/OIDC behavior was aligned with the kOA common identity profile while preserving local login and Orgo-local authorization;
-- dependency-security updates were prepared, including NestJS, Nodemailer, `js-yaml`, Express and Multer changes;
-- the dependency update requires a regenerated lock file and final validation on the destination environment.
+- LevelUpDiag `deep`: all **12/12 required levels PASS**, including Prisma generation, architecture checks, TypeScript, **16/16 unit tests**, PostgreSQL migrations, **33/33 native PostgreSQL integration tests**, API/web production builds and dependency audit with **0 known npm vulnerabilities** at the audited threshold;
+- the `deep` campaign wrapper reported `ERROR` only because the successful Next.js build rewrote tracked `apps/web/next-env.d.ts`, triggering LevelUpDiag target-protection;
+- LevelUpDiag `browser`: **24/24 Chromium journeys PASS**, with 0 skipped, unexpected or flaky tests, against the real local Orgo API;
+- this validation does **not** move or replace the immutable RC1 tag.
 
-These changes **do not retroactively change the RC1 tag**. The current development tree must pass the applicable validation gates before it can be described as a newly validated release candidate.
+Current evidence and remaining boundaries: [2026-09-15 current status](docs/status/2026-09-15-current-status.md).
 
-See:
+See also:
 
-- [Common identity update](docs/status/2026-09-11-common-identity-update.md)
 - [Common identity implementation profile](docs/Technical-Reference/COMMON_IDENTITY.md)
 - [Implementation status](docs/Technical-Reference/IMPLEMENTATION_STATUS.md)
 
@@ -192,22 +192,27 @@ Do not use `npm audit fix --force` as a substitute for the project validation ga
 
 ## Development
 
-Run API and web development tasks from the repository root:
+The root workspace exposes separate development commands for the API and web application. Run them in separate terminals:
 
 ```bash
-npm run dev
+npm run dev:api
+```
+
+```bash
+npm run dev:web
 ```
 
 Typical local endpoints are:
 
 - Web UI: `http://localhost:3000/`
-- API / Swagger: `http://localhost:5002/docs`
+- API base: `http://localhost:4000/api/v3`
+- Readiness: `http://localhost:4000/health/ready`
 
-The API and web applications can also be started from their respective workspace directories when working on one surface at a time.
+The active runtime does not currently expose a Swagger `/docs` endpoint. The implemented route inventory is maintained in [API Implemented](docs/Technical-Reference/API_IMPLEMENTED.md).
 
 ## Validation
 
-### Local acceptance gate
+### Repository-local gate
 
 Use a fresh, isolated PostgreSQL validation database:
 
@@ -217,35 +222,18 @@ export TEST_DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/orgo_test?co
 npm run validate:local
 ```
 
-The validation launcher generates Prisma, applies migrations, checks architectural boundaries and types, runs automated tests and builds, and writes evidence under `validation/local-<date>/`.
+The repository launcher generates Prisma, applies migrations, checks architectural boundaries and types, runs automated tests and builds, and writes evidence under `validation/local-<date>/`.
 
-On Windows, follow the repository's validation documentation for shell requirements.
+### Comprehensive LevelUpDiag gate
+
+The separate `LevelUpDiag-Orgo` application can orchestrate the broader local evidence set without being copied into this repository:
+
+- `deep` — baseline/hygiene, Prisma, architecture, types, unit tests, native PostgreSQL migrations/integration, production builds and npm audit;
+- `browser` — the required Chromium journeys against a disposable local Orgo runtime.
+
+Current 2026-09-15 results are recorded in [Current Status](docs/status/2026-09-15-current-status.md). External providers, real OIDC-provider interoperability, restore/deployment acceptance and native Koali admission remain separate evidence boundaries.
 
 Full instructions: [Local Validation](docs/Technical-Reference/LOCAL_VALIDATION.md).
-
-### Common identity update gate
-
-After identity changes, run the normal Orgo gates:
-
-```bash
-npm run typecheck
-npm run test
-npm run test:integration
-npm run build
-```
-
-Integration tests require a dedicated PostgreSQL test/validation database.
-
-### Dependency-security gate
-
-The post-RC1 dependency update must be validated after the lock file is regenerated. When using the separate `LevelUpDiag-Orgo` diagnostic repository, run the expected campaigns in this order:
-
-1. `quick`
-2. `embedded`
-3. `build`
-4. `security`
-
-The intended security result is **zero moderate, high or critical vulnerabilities**. The actual LevelUpDiag security report is authoritative for that campaign.
 
 ## RC1 validation summary
 
@@ -285,6 +273,7 @@ Status history:
 - [2026-09-10 — Beta status](docs/status/2026-09-10-beta-status.md)
 - [2026-09-10 — RC1 status](docs/status/2026-09-10-rc1-status.md)
 - [2026-09-11 — Common identity update](docs/status/2026-09-11-common-identity-update.md)
+- [2026-09-15 — Current development status](docs/status/2026-09-15-current-status.md)
 
 ## Integration boundaries
 
@@ -294,4 +283,4 @@ Native provider/host compatibility must be validated against the real external c
 
 ## License
 
-Orgo is **proprietary software**. This repository and its documentation should not be treated as an open-source distribution unless an explicit license states otherwise.
+Orgo is licensed under the **GNU Affero General Public License, version 3 or later (AGPL-3.0-or-later)**. See [`LICENSE`](LICENSE) for the repository license text.

@@ -1,6 +1,8 @@
 # Orgo — Implementation decisions, 2026-09-09
 
-This file refines `TARGET_ARCHITECTURE.md` for the delivered code. It does not replace product ownership or lifecycle contracts.
+This file records implementation decisions made during the 2026-09-09 delivery. It refines `TARGET_ARCHITECTURE.md` but does not replace product ownership or lifecycle contracts.
+
+> **Supersession note (2026-09-15):** later completion work implemented several capabilities that were still missing when sections of this document were written. `COMPLETION_DECISIONS.md`, `COMMON_IDENTITY.md` and `IMPLEMENTATION_STATUS.md` are authoritative for the current implementation where they supersede historical limitations below.
 
 ## 1. Replace broken runtime slices; preserve physical state
 
@@ -22,7 +24,9 @@ The old `WorkflowInstance.task_id` was required. It is now nullable; new instanc
 
 A definition's `definition_blob` remains a compatibility mirror of its latest publication. Runtime evaluation reads `WorkflowVersion.content` only. Published versions have an SQL immutability trigger. Definitions use organization-scoped codes; global workflow inheritance is not implemented.
 
-Instance `completed / ACTIONS_COMMITTED` means internal actions committed and external requests were queued. It **does not mean** an external validation approved anything. Long-running business process managers that wait for external receipts remain separate future work.
+Instance `completed / ACTIONS_COMMITTED` means internal actions committed and external requests were queued. It **does not mean** an external validation approved anything.
+
+**Current supersession:** durable process managers were added after this decision record. `DurableProcess` now handles ordered external/human/timer steps, explicit receipt predicates, deadlines, blocking, decisions, adoption and declared compensation. The original `ACTIONS_COMMITTED` semantic remains unchanged.
 
 ## 4. Idempotency and concurrency
 
@@ -38,11 +42,15 @@ The outbox uses `FOR UPDATE SKIP LOCKED`, a 60-second lease, a token that fences
 
 One HTTP guard resolves the identity and organization from an opaque session token or organization-scoped API token. Headers/body values never grant tenancy. Sessions are stored by token hash; user roles and permissions are resolved from the database for every protected request. Local passwords use scrypt; legacy password hashes are not automatically converted.
 
-The initial authorization implementation admits organization-wide roles only (`global` or absent scope). It fails closed for unimplemented team/location/custom scopes. `work:restricted` gates restricted Cases and sensitive people. Restricted Tasks additionally admit their assigned user/role, subject to their parent Case remaining visible. HR creation forces restricted Case and Task visibility.
+The initial authorization implementation admitted organization-wide roles only (`global` or absent scope) and failed closed for then-unimplemented team/location/custom scopes. `work:restricted` gates restricted Cases and sensitive people; restricted Tasks also respect assignment and parent-Case visibility. HR creation forces restricted Case and Task visibility.
+
+**Current supersession:** existing scoped assignments are now activated as explicit Work grants for team/location/unit/custom scopes, with dedicated Task/Case scope fields and parent constraints. See `COMPLETION_DECISIONS.md` and `IMPLEMENTATION_STATUS.md`.
 
 The API returns 404 for inaccessible Work references. Composite tenant foreign keys protect Task Case/owner/requester references and Signal links. Cross-organization dirty legacy references must be corrected before the additive migration can apply; the migration does not silently reassign them.
 
-Login throttling is per API process and IP. Distributed rate limiting, SSO, password recovery and user invitations are not included. Seed supplies initial administration. Existing credentials are never overwritten implicitly.
+Login throttling is per API process and IP; distributed rate limiting is not claimed. Seed supplies initial administration and existing credentials are never overwritten implicitly.
+
+**Current supersession:** password recovery, invitations/account lifecycle and optional OIDC SSO were added after this decision record. SSO uses explicit `issuer + subject` enrollment and preserves Orgo-local authorization; see `COMMON_IDENTITY.md` and `COMPLETION_DECISIONS.md`.
 
 ## 6. Workflow authoring and action syntax
 
