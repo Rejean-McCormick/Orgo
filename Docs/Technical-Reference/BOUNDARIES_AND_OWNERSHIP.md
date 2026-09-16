@@ -71,20 +71,38 @@ Orgo workflow
 
 If Konnaxion requests governed work, Orgo creates/updates its own Tasks/Cases; Konnaxion does not write the Orgo database.
 
-## 5. Orgo ↔ Kristal
+## 5. Orgo ↔ Kristal / Da’at
 
-Orgo implements an **Orgo-owned generic HTTP bridge adapter** for Kristal validation requests. This is not a claim of native Kristal API compatibility; a provider-side adapter must translate the Orgo bridge contract to the real Kristal contract.
+The current repository includes an **Orgo-owned generic HTTP bridge adapter** for direct Kristal validation. That bridge is a compatibility boundary, not a claim that Orgo owns Kristal state or that the bridge is the target Kristal v5 integration model.
 
-Orgo may eventually orchestrate Kristal operations and keep artifact references/receipts, but:
+The target ecosystem path for new Kristal v5 work is:
+
+```text
+Orgo owner transaction
+  + OutboxMessage
+        ↓ post-commit
+Interaction Kernel interaction
+        ↓
+Da’at mapping / compilation boundary
+        ↓
+Kristal Exchange / artifact
+        ↓
+ArtifactRef / receipt back to Orgo
+```
+
+Orgo remains authoritative for mutable operational workflow state. Kristal is authoritative for the epistemic artifact it produces. Interaction Kernel transports the interaction and references; it is not the storage owner. Da’at translates/compiles the submitted snapshot or references into Kristal-native structures.
+
+Orgo may retain lightweight artifact references, digests, locators, correlation data and receipts. It must not copy a canonical Kristal payload into Case/Task state and then treat that copy as a second source of truth. Likewise, a Kristal Runtime Pack or query materialization does not become authoritative Orgo state.
 
 ```text
 Task.status ≠ Kristal assertion_status
 Case.status ≠ Kristal validation_status
 Orgo approval ≠ Kristal validation
 Orgo approval ≠ Kristal authority recognition
+Operational DB ≠ Kristal Exchange ≠ Runtime Pack
 ```
 
-A workflow approval becomes a Kristal epistemic decision only through an explicit Kristal operation/artifact.
+A workflow approval becomes a Kristal epistemic decision only through an explicit Kristal operation/artifact. Operational mutations commit locally first; no distributed transaction spans Orgo, Interaction Kernel, Da’at or Kristal.
 
 ## 6. Orgo ↔ SemantiK Architect
 
@@ -141,6 +159,8 @@ owner business transaction
 ```
 
 `OutboxMessage` is delivery infrastructure. `IntegrationOperation` is Orgo-owned operational state for a request to an external system. Neither replaces the external system's authoritative state.
+
+The owner transaction commits before remote delivery. Cross-system reliability is achieved with idempotent post-commit delivery, receipts and reconciliation, not with a distributed transaction or bidirectional database synchronization.
 
 External operation status must not be folded into Task/Case lifecycle by implication.
 

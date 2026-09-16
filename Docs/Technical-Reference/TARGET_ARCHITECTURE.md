@@ -152,13 +152,19 @@ Each external system receives its own explicit port/adapter and Anti-Corruption 
 
 ```text
 Orgo core
-  ↓ port
-KristalPort
-  ↓ adapter + mapper
-Kristal
+  ↓ owner transaction + outbox
+Integration port
+  ↓ post-commit boundary
+Interaction Kernel
+  ↓
+Da’at
+  ↓
+Kristal artifact
 ```
 
-The same rule applies to Konnaxion, SemantiK Architect and kOA-facing operational integrations.
+For Kristal v5, this is the target knowledge-publication path. The current direct Kristal validation bridge may remain as migration compatibility until the native IK/Da’at path is implemented and validated. The same ownership rule applies to Konnaxion, SemantiK Architect and kOA-facing operational integrations: each external system owns its own authoritative state.
+
+Interaction Kernel is a protocol boundary, not a database or artifact store. Da’at is the translation/compilation boundary toward Kristal. Orgo stores only the operational request state and the references/receipts needed to correlate resulting artifacts.
 
 ## 3. Signal becomes a first-class persisted object
 
@@ -263,7 +269,7 @@ external/channel adapter
 receipt / retry / terminal failure
 ```
 
-Do not perform a remote side effect between an operational database mutation and its commit.
+Do not perform a remote side effect between an operational database mutation and its commit. A cross-system operation never extends the local ACID transaction: the owner commits first, then delivery/reconciliation proceeds asynchronously and idempotently.
 
 ## 6. OutboxMessage and IntegrationOperation are different concepts
 
@@ -388,6 +394,20 @@ read projections
 ```
 
 A separate warehouse, ORM or broker is an implementation option, not an architectural requirement.
+
+### 10.1 Operational state versus knowledge artifacts
+
+The architectural direction distinguishes three planes:
+
+```text
+1. Orgo operational state      mutable, transactional, Orgo-owned
+           ↓ snapshot/export
+2. Kristal knowledge artifact  immutable/content-addressed epistemic state
+           ↓ deterministic build
+3. Runtime materialization     derived query/index representation
+```
+
+Only plane 1 may drive Orgo transactional mutations. Plane 2 may be referenced by `ArtifactRef`-style metadata. Plane 3 may be cached or rebuilt and must never become an independent write authority for Orgo.
 
 ## 11. Runtime/deployment shape
 

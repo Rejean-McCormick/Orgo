@@ -295,3 +295,28 @@ A WorkflowInstance identifies the exact immutable version/hash used. YAML/filesy
 ## Completion delivery reference — 2026-09-09
 
 The active implementation and its remaining external-contract boundaries are recorded in `IMPLEMENTATION_STATUS.md`. See `COMPLETION_DECISIONS.md` for durable processes, receipt predicates, Work scopes, identity and evidence semantics; `ARCHITECTURE_TO_CODE.md` for source ownership; `LOCAL_VALIDATION.md` for the final acceptance to run locally. Historical validation results do not validate the completion changes.
+
+## 15. External artifact/reference contract
+
+Cross-system knowledge/artifact integration preserves ownership rather than sharing mutable storage. An Orgo-side reference should carry only the metadata needed to identify, verify and correlate an external artifact, for example:
+
+```text
+owner_system
+artifact_type
+artifact_id
+version (when applicable)
+digest
+locator (when applicable)
+correlation_id
+provenance/audit reference
+```
+
+The referenced artifact remains owned by its producer. In particular:
+
+```text
+Orgo operational record != Kristal canonical artifact
+Kristal canonical artifact != Runtime Pack/materialized query store
+```
+
+A snapshot/export used to request a knowledge build is immutable for that request and is delivered after the Orgo owner transaction commits. The integration contract does not require, and must not simulate, a distributed transaction between Orgo and the external artifact owner.
+

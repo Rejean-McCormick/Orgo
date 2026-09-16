@@ -42,6 +42,7 @@ The repository is licensed under AGPL-3.0-or-later; ownership boundaries in this
 - Durable external/long-running effects use idempotency, an outbox/worker boundary and explicit receipts.
 - Insights are read/analysis projections; actionable patterns re-enter Work as Cases/Tasks.
 - External systems are orchestrated through explicit contracts; Orgo does not write their internal stores.
+- Orgo operational state commits locally before cross-system delivery; IK/Da’at/Kristal integration uses immutable snapshots/references and receipts, not distributed transactions or shared mutable databases.
 - Workflow state is not epistemic, civic, linguistic or platform state.
 - Orgo remains standalone-capable; hosting is an integration mode, not a required business dependency.
 - Host capability projections may influence presentation but never replace Orgo authorization.
