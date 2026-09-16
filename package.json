@@ -22,8 +22,7 @@
     "db:migrate": "npm run db:migrate -w api",
     "db:seed": "npm run db:seed -w api",
     "test:pglite": "node scripts/test-pglite.mjs",
-    "validate:local": "node scripts/validate-local.mjs",
-    "migration:preflight": "node scripts/legacy-preflight.mjs"
+    "validate:local": "node scripts/validate-local.mjs"
   },
   "overrides": {
     "multer": "2.3.0"

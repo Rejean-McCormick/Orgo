@@ -119,7 +119,7 @@ normalize
 
 A Signal is not automatically a Task or Case. Several Signals may relate to one Case.
 
-**Implementation update:** the delivered Prisma schema persists Signal. The historical snapshot under `legacy/` did not.
+**Implementation status:** the active Prisma schema persists `Signal`; `IMPLEMENTATION_STATUS.md` records current validation evidence for the intake/workflow path.
 
 ## 6. Execution context
 

@@ -1,112 +1,54 @@
 # Orgo v3 — API Surface
 
-> **Historical snapshot route inventory.** The active API now uses a single `/api/v3` prefix. Use `../API_IMPLEMENTED.md` for the implemented routes; the older mixed-route analysis below is retained for migration reference.
+**Status:** current routing contract. `../API_IMPLEMENTED.md` is the generated route inventory and is authoritative for the exact implemented HTTP surface.
 
-## 1. Routing note
+## 1. Routing convention
 
-The current NestJS application has no global `api` prefix in `main.ts`. Controller decorators therefore matter directly. Some controllers already include `api/v3`, while others use shorter paths and assume reverse-proxy mapping.
-
-The code should converge on one routing convention; see `CODE_ALIGNMENT_NOTES.md`.
-
-## 2. Core routes represented in current controllers
-
-### Organizations
+The active Nest application uses one global prefix:
 
 ```text
-GET    /api/v3/organizations
-GET    /api/v3/organizations/:id
-POST   /api/v3/organizations
-PATCH  /api/v3/organizations/:id
+/api/v3
 ```
 
-### Tasks
+`apps/api/src/bootstrap.ts` applies that prefix globally and explicitly excludes health probes:
 
 ```text
-GET    /api/v3/tasks
-GET    /api/v3/tasks/:id
-POST   /api/v3/tasks
-PATCH  /api/v3/tasks/:id/status
+/health/live
+/health/ready
+/health/dependencies
 ```
 
-### Cases
+Controllers therefore define route fragments inside the common `/api/v3` boundary instead of mixing prefixed and unprefixed public APIs.
 
-Controller path in code:
+## 2. Implemented surface
 
-```text
-GET /v3/cases
-GET /v3/cases/:caseId
-```
+The generated inventory in `../API_IMPLEMENTED.md` currently covers these product areas:
 
-Comments expect external reverse-proxy paths under `/api/v3/cases`. Case creation/status mutation exist at service level but are not exposed by the current CaseController.
+- organizations, people, users, roles and organization profile configuration;
+- authentication, account lifecycle, API tokens and optional OIDC SSO;
+- Tasks, Cases, comments, assignments and Case linkage;
+- Work evidence, attachments, timelines and relations;
+- Signals, email/webhook ingress and offline replay;
+- workflow versions, import/export, simulation and execution;
+- routing rules and SLA/orchestration operations;
+- durable processes and external integration receipts;
+- notifications, templates, outbox/redrive and audit;
+- Maintenance, HR and Education product operations;
+- insights, reports, system overview, metrics and retention.
 
-### Workflow
+Do not manually duplicate the full route table here. Regenerate or update `API_IMPLEMENTED.md` when controllers change.
 
-```text
-POST /api/v3/workflows/:workflowId/execute
-```
+## 3. Authentication and tenant boundary
 
-Supports execute/simulate behavior.
+Health probes and the explicitly public identity bootstrap flows are the exceptions documented by the implemented route inventory. Other product routes require authentication according to their controller/guard contract.
 
-### Configuration
+Tenant identity comes from resolved authentication context. Request headers or body fields do not grant organization authority. Protected operations must enter owner services with resolved execution context and current authorization.
 
-The snapshot contains controllers for `/api/v3/config` plus additional Orgo config/profile/feature-flag routes. These should be normalized to one public convention.
+Mutation routes use the repository's idempotency/revision rules where applicable. Work visibility and authorization are rechecked by the owning services rather than inferred from UI state.
 
-### Domain APIs
+## 4. Application boundary
 
-Controllers exist for:
-
-```text
-/domain/hr/*
-/domain/education/*
-/maintenance/*
-```
-
-Their current module wiring is not fully aligned; treat these as code surfaces requiring the fixes in `CODE_ALIGNMENT_NOTES.md` before describing them as stable production contracts.
-
-### Insights
-
-Controller implementation exists under the reporting slice for endpoints such as:
-
-```text
-/insights/reports/tasks/volume
-/insights/reports/tasks/sla-breaches
-/insights/reports/profiles/score
-```
-
-The current module import paths need alignment.
-
-## 3. Present but not fully wired core surfaces
-
-The snapshot also contains code for:
-
-- signals;
-- email;
-- notifications;
-- RBAC/auth;
-- offline sync;
-- health.
-
-Their existence in source does not mean the current `AppModule` exposes every controller. Module wiring must be corrected explicitly.
-
-## 4. Tenant rule
-
-Every Task/Case API operation must resolve and enforce the organization consistently. Public API DTO casing and internal service casing must be explicitly mapped rather than passed through `as any`.
-
-
-## 5. Frontend and hosted-module route boundary
-
-Orgo owns its application routes and inner navigation in both standalone and Koali-hosted modes.
-
-Koali's canonical outer application route family is `/apps/[moduleId]/...`; this is a hosting/navigation boundary, not a replacement for Orgo's internal router or business authorization.
-
-The hosted Orgo entry must expose the same business application through the canonical Koali module/interface manifest as a `local_module_surface`. Do not maintain a second Koali-specific implementation of Orgo pages.
-
-See `../UI_AND_KOALI_INTEGRATION.md` for the UI composition and authorization boundary.
-
-
-## 6. Target application boundary
-
-As the modular-monolith migration proceeds, controllers/adapters should enter application modules rather than owning tenant/workflow semantics themselves:
+HTTP, email, webhook and offline adapters enter the application through module APIs rather than owning tenant/workflow semantics:
 
 ```text
 HTTP/email/webhook/offline adapter
@@ -115,4 +57,21 @@ HTTP/email/webhook/offline adapter
 → owner transaction
 ```
 
-Signal persistence, idempotency, outbox processing and integration-operation APIs are target contracts and must not be advertised as implemented until their schema/services/routes exist.
+`Work` owns canonical Case/Task mutation. `Intake` owns accepted Signals. `Orchestration` owns workflow/process decisions. Durable remote effects cross explicit integration/outbox boundaries.
+
+## 5. Frontend and hosted-module boundary
+
+Orgo owns its application routes and inner navigation in standalone and hosted modes. A host may provide outer composition/navigation, but it does not replace Orgo's internal router, tenant resolution or business authorization.
+
+The hosted entry exposes the same Orgo application surface; do not maintain a second host-specific implementation of Orgo pages.
+
+See `../UI_AND_KOALI_INTEGRATION.md` and `../BOUNDARIES_AND_OWNERSHIP.md` for composition and ownership rules.
+
+## 6. Authority
+
+When this document, older status material and executable source differ:
+
+1. active controller/bootstrap source defines what the application can expose;
+2. `../API_IMPLEMENTED.md` is the maintained route inventory;
+3. `../IMPLEMENTATION_STATUS.md` records dated implementation/validation evidence;
+4. this document defines the intended stable routing and ownership convention.

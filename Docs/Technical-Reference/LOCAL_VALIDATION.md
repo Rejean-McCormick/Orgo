@@ -1,8 +1,8 @@
 # Validation locale
 
-This procedure separates the repository-local gate from the broader `LevelUpDiag-Orgo` campaigns. Always use disposable test data and a dedicated PostgreSQL database. Never point automated validation at production.
+This procedure separates the repository-local gate from broader diagnostic/browser campaigns. Always use disposable test data and a dedicated PostgreSQL test database. Never point automated validation at production.
 
-Current dated evidence is recorded in `docs/status/2026-09-15-current-status.md`; this file is the reusable procedure, not a historical result log.
+Dated evidence is recorded under `docs/status/`; this file is the reusable procedure, not a historical result log.
 
 ## Repository-local gate
 
@@ -20,29 +20,48 @@ export TEST_DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/orgo_test?co
 npm run validate:local
 ```
 
-The launcher generates Prisma, applies migrations, checks architecture and TypeScript, executes unit/integration tests and production builds, stops on the first failure and writes evidence under `validation/local-<date>/`.
+`TEST_DATABASE_URL` is mandatory and the database name must contain `test` or `validation`. The launcher maps it to `DATABASE_URL`, generates Prisma, applies migrations, checks architecture and TypeScript, executes unit/integration tests and production builds, stops on the first failure and writes evidence under `validation/local-<date>/`.
 
 The native `FOR UPDATE SKIP LOCKED` behavior must be exercised on PostgreSQL, not inferred from PGlite.
 
-## Comprehensive LevelUpDiag-Orgo validation
+## Fast disposable integration check
 
-`LevelUpDiag-Orgo` is a separate diagnostics application. It invokes Orgo's public validators without being copied into this repository.
+For a quick local integration run without provisioning a PostgreSQL database:
 
-For the broad automated local gate, prepare a dedicated PostgreSQL test database and run:
-
-```text
-deep
+```bash
+npm run test:pglite
 ```
 
-`deep` covers repository/context checks, security hygiene, Prisma generation, architecture, types, unit tests, native PostgreSQL migration/integration, production builds and npm audit.
+This applies the current migration set to a disposable PGlite instance and runs the integration tests. It is useful for fast feedback, but it does not replace the native PostgreSQL gate.
 
-For browser acceptance, start the disposable local Orgo test runtime and run:
+## Fresh database baseline
+
+Orgo now uses one initial Prisma migration baseline:
 
 ```text
-browser
+apps/api/prisma/migrations/
+├── migration_lock.toml
+└── 00000000000000_initial/
+    └── migration.sql
 ```
 
-The browser campaign requires explicit consent for test writes and validates the required Chromium journeys against the local API. Browser evidence does not by itself prove real external-provider or OIDC-provider interoperability.
+For a disposable Docker Compose environment, `.env` must define a URL-safe `POSTGRES_PASSWORD`. A full local reset destroys the Compose database volume:
+
+```bash
+docker compose down -v --remove-orphans
+docker compose up -d --build
+docker compose run --rm seed
+```
+
+Use this only for disposable local data. The repository does not provide an automatic migration/import path from an unrelated predecessor schema.
+
+## Comprehensive diagnostic/browser validation
+
+If `LevelUpDiag-Orgo` is available separately, it may invoke Orgo's public validators without being copied into this repository.
+
+For the broad automated local gate, prepare a dedicated PostgreSQL test database and run the diagnostic application's `deep` selection. Browser acceptance requires a disposable local Orgo runtime plus explicit consent for test writes.
+
+Browser evidence does not by itself prove real external-provider or OIDC-provider interoperability.
 
 ## Browser and functional review boundaries
 
@@ -59,26 +78,7 @@ Where deployment context requires it, verify:
 - notifications/templates and selected SMTP/SMS/webhook gateways;
 - offline queue replay/conflict correction and account isolation;
 - CSV safety, pagination, keyboard navigation and deployment-specific responsive/accessibility requirements;
-- standalone mode and, when available, hosted mode against the real Koali contracts.
-
-## Existing-data migration
-
-Historical migrations are preserved. Do not replay them blindly on an already populated database. Back up and inspect Prisma migration history first.
-
-```bash
-export DATABASE_URL='postgresql://.../orgo_existing'
-npm run migration:preflight
-bash scripts/operations/backup.sh /private/path/orgo-before.dump
-```
-
-The preflight is non-mutating and reports inconsistent tenant links, invalid intervals and accounts requiring credential reenrollment. Reconcile existing data/history before `prisma migrate deploy`. Constraints introduced as `NOT VALID` protect new writes but require explicit `VALIDATE CONSTRAINT` after historical rows are reconciled.
-
-Restore into a dedicated empty database and verify the restored application behavior:
-
-```bash
-export RESTORE_DATABASE_URL='postgresql://.../orgo_restore_test'
-bash scripts/operations/restore.sh --restore-to-empty-database /private/path/orgo-before.dump
-```
+- standalone mode and, when available, hosted mode against real host contracts.
 
 ## Operations and external contracts
 
@@ -86,4 +86,4 @@ Exercise failure behavior appropriate to the deployment: unavailable SMTP/provid
 
 `GET /api/v3/system/overview` exposes queue/process/worker state. `GET /api/v3/system/metrics` exposes authenticated Prometheus gauges. Deployment collectors, alerts, scheduled backups and retention policy remain operator responsibilities.
 
-Native Kristal/Konnaxion/Architect/kOA and Koali/Capsule contracts must be supplied and validated separately. The shipped Orgo bridge/public contracts do not claim native compatibility that has not been demonstrated.
+Native Kristal/Konnaxion/Architect/kOA and host contracts must be supplied and validated separately. The shipped Orgo bridge/public contracts do not claim native compatibility that has not been demonstrated.

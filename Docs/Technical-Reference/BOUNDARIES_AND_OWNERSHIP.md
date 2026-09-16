@@ -6,7 +6,7 @@ Orgo owns:
 
 - organizations and organization profiles;
 - Orgo user/person/RBAC state;
-- accepted/persisted Signals (target architecture; model not yet present in current Prisma snapshot);
+- accepted/persisted Signals;
 - Cases;
 - Tasks;
 - assignments/comments/events;
@@ -47,7 +47,7 @@ insight/pattern
 
 ## 4. Orgo ↔ Konnaxion
 
-There is no implemented Konnaxion adapter in the current Orgo snapshot.
+Orgo implements an **Orgo-owned generic HTTP bridge adapter** for Konnaxion operations (`publish`, `distribute`). This is not a claim of native Konnaxion API compatibility; a provider-side adapter must translate the Orgo bridge contract to the real Konnaxion contract.
 
 No implicit identity is allowed:
 
@@ -73,7 +73,7 @@ If Konnaxion requests governed work, Orgo creates/updates its own Tasks/Cases; K
 
 ## 5. Orgo ↔ Kristal
 
-There is no implemented Kristal adapter in the current Orgo snapshot.
+Orgo implements an **Orgo-owned generic HTTP bridge adapter** for Kristal validation requests. This is not a claim of native Kristal API compatibility; a provider-side adapter must translate the Orgo bridge contract to the real Kristal contract.
 
 Orgo may eventually orchestrate Kristal operations and keep artifact references/receipts, but:
 
@@ -88,15 +88,15 @@ A workflow approval becomes a Kristal epistemic decision only through an explici
 
 ## 6. Orgo ↔ SemantiK Architect
 
-No SemantiK Architect adapter is implemented in the current Orgo snapshot.
+Orgo implements an **Orgo-owned generic HTTP bridge adapter** for Architect generation requests. This is not a claim of native SemantiK Architect API compatibility; a provider-side adapter must translate the Orgo bridge contract to the real provider contract.
 
 A future boundary should pass semantic generation requests/results without making Architect the owner of Orgo Tasks/Cases and without encoding Architect internal planner objects in the Orgo core.
 
 ## 7. Orgo ↔ Koali Spaces
 
-Orgo is an owner-managed subsystem/application. It can run standalone. When installed in Koali Spaces, it is exposed as a `local_module_surface` through the canonical module/interface manifest mechanism.
+Orgo is an owner-managed subsystem/application and can run standalone. The current repository exports an Orgo-owned hosted entry/surface contract so a host can compose the same business application. Native Koali/Capsule admission or manifest compatibility is not claimed unless the real host contract packages are supplied and validated.
 
-Koali owns:
+A host such as Koali may own:
 
 - the `GlobalShell`;
 - Space composition;
@@ -111,11 +111,11 @@ Orgo retains ownership of:
 - Orgo routes and inner navigation;
 - the Orgo Control Panel, Inspector, commands and presentation profiles.
 
-Capability snapshots/projections are non-authoritative. Koali may use them to show/hide/enable/disable UI or choose a safe route, but Orgo must revalidate identity, tenant, RBAC and policy before every protected mutation.
+Host capability projections are non-authoritative. A host may use them to shape presentation or navigation, but Orgo must revalidate identity, tenant, RBAC and policy before every protected mutation.
 
 Do not assume that a Koali session is automatically an authorized Orgo session unless an explicit SSO/identity contract establishes that mapping.
 
-Do not create a second global Koali shell inside Orgo. Koali outer navigation and Orgo inner navigation intentionally coexist.
+Do not create a second host-specific implementation of Orgo. Host outer navigation and Orgo inner navigation intentionally coexist.
 
 ## 8. Orgo ↔ kOA-Linux
 

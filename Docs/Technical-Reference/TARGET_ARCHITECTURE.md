@@ -1,9 +1,9 @@
 # Orgo — Target Architecture
 
-> **Delivery reference (2026-09-09):** `IMPLEMENTATION_STATUS.md` distinguishes implemented behavior from the remaining target; `IMPLEMENTATION_DECISIONS.md` defines the adopted action syntax and migration refinements.
+> **Delivery reference (2026-09-09):** `IMPLEMENTATION_STATUS.md` distinguishes implemented behavior from the remaining target; `IMPLEMENTATION_DECISIONS.md` defines the adopted implementation refinements.
 **Status:** Canonical target architecture for Orgo vNext.
 
-**Relationship to the current snapshot:** this document defines the desired architecture. It does not claim that every module, model, route or worker described here already exists. Current implementation gaps are tracked in `CODE_ALIGNMENT_NOTES.md`; the physical database remains authoritative for what is actually persisted today.
+**Relationship to the current implementation:** this document defines architectural direction and invariants. `IMPLEMENTATION_STATUS.md` records dated implementation evidence, `ARCHITECTURE_TO_CODE.md` maps active ownership, and the executable Prisma schema/migrations remain authoritative for physical persistence.
 
 ## 1. Architectural thesis
 
@@ -162,7 +162,7 @@ The same rule applies to Konnaxion, SemantiK Architect and kOA-facing operationa
 
 ## 3. Signal becomes a first-class persisted object
 
-The supplied historical snapshot lacked a canonical persisted `Signal`. The delivered runtime now adds it; see `IMPLEMENTATION_STATUS.md` for tested coverage.
+The active runtime persists `Signal` as a canonical accepted-input/evidence object; see `IMPLEMENTATION_STATUS.md` and `ARCHITECTURE_TO_CODE.md` for current implementation evidence and ownership.
 
 A Signal represents accepted incoming evidence/input before or alongside the work it causes.
 
@@ -545,7 +545,7 @@ apps/api/src/orgo/
     koa/
 ```
 
-This tree is illustrative. Ownership and dependency rules are normative; exact folder names may change during migration.
+This tree is illustrative. Ownership and dependency rules are normative; exact folder names may evolve with the implementation.
 
 ## 17. Patterns selected from the Senior Architect corpus
 
@@ -568,49 +568,31 @@ This tree is illustrative. Ownership and dependency rules are normative; exact f
 | BFF as separate service | **Not selected currently** |
 | Sharding / Cell architecture / Service mesh | **Not selected currently** |
 
-## 18. Migration strategy
+## 18. Implementation strategy
 
-Use incremental replacement rather than a rewrite.
+The repository now has one active runtime, one Prisma persistence model and one public API routing convention. Evolution should preserve those single-authority boundaries rather than reintroducing parallel implementations.
 
-### Phase 0 — Make the snapshot truthful
+### Database evolution
 
-- repair imports/module graph/dependencies/config;
-- establish build/test/boot baseline;
-- normalize API routing;
-- remove/retire phantom and duplicate active implementations.
+- `apps/api/prisma/schema.prisma` is the Prisma model authority.
+- `apps/api/prisma/migrations/00000000000000_initial/migration.sql` is the fresh-deployment baseline.
+- Future physical schema changes add forward migrations from that baseline.
+- Database-only invariants, indexes, triggers or constraints that Prisma cannot model remain explicit migration SQL and must be covered by validation.
 
-### Phase 1 — Establish module boundaries
+### Module evolution
 
-- group Task/Case under Work ownership;
-- establish Intake and Orchestration public APIs;
-- prevent domain modules from bypassing Work;
-- introduce architecture tests.
+- Work remains the owner of canonical Case/Task mutations.
+- Intake remains the owner of accepted Signals and inbound normalization.
+- Orchestration remains the owner of deterministic evaluation, routing and durable process decisions.
+- Domain modules enter canonical Work APIs instead of creating competing lifecycles.
+- External providers remain behind explicit ports/adapters and receipt semantics.
 
-### Phase 2 — Durable intake/platform primitives
+### Acceptance discipline
 
-- add persisted Signal;
-- add ExecutionContext;
-- add idempotency records/constraints where required;
-- propagate correlation/causation identifiers.
-
-### Phase 3 — Reliable effects
-
-- add Action Executor/Dispatcher;
-- add OutboxMessage + worker;
-- reconcile WorkflowDefinition/Version/Instance;
-- make YAML import/export rather than competing runtime truth.
-
-### Phase 4 — External integrations
-
-- add IntegrationOperation;
-- implement per-system ACL/ports/adapters;
-- add retry/circuit/resilience policy according to external semantics.
-
-### Phase 5 — Read projections and product UI
-
-- consolidate Insights/read projections;
-- build Case-centered Orgo UI from composable presentation profiles;
-- preserve standalone + Koali-hosted modes.
+- Source/schema/tests determine implementation truth.
+- `IMPLEMENTATION_STATUS.md` records dated evidence only.
+- `LOCAL_VALIDATION.md` is rerun after structural changes before the current working tree is described as validated.
+- Native external/host compatibility is claimed only against supplied and tested real contracts.
 
 ## 19. Non-negotiable architectural invariants
 

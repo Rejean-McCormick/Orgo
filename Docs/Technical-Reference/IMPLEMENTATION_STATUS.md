@@ -2,7 +2,7 @@
 
 This document describes the current development implementation and distinguishes **implemented source**, **automated validation evidence**, **browser evidence** and **remaining external/manual acceptance boundaries**.
 
-The immutable tagged release-candidate baseline remains `v0.1.0-rc.1` at commit `60e3a250f98252735839816c8e0143bbdd7546bf`. The current development evidence below was collected against application commit `167f672998075b83ff72ac73f10d550f3ea73e9b` before the documentation-only alignment that updates these files.
+The immutable tagged release-candidate baseline remains `v0.1.0-rc.1` at commit `60e3a250f98252735839816c8e0143bbdd7546bf`. The current development evidence below was collected against application commit `167f672998075b83ff72ac73f10d550f3ea73e9b` before subsequent documentation and repository-cleanup changes. The results below remain dated evidence and should not be treated as proof for the current working tree until validation is rerun.
 
 ## Active capabilities
 
@@ -26,11 +26,15 @@ The immutable tagged release-candidate baseline remains `v0.1.0-rc.1` at commit 
 | HR | Restricted Work creation, participant lifecycle additions, review transitions, wellbeing records, product forms and detail view |
 | Education | Groups, member add/remove with tenant checks, linked support tasks, product forms and member view |
 | Read side | Scoped overview/workload queries, timeline/list pagination, bounded CSV export with formula neutralization and supporting database indexes |
-| Operations | Authenticated fleet/backlog/process overview, Prometheus gauges, structured HTTP spans, explicit retention, backup/empty-database restore scripts and legacy preflight |
+| Operations | Authenticated fleet/backlog/process overview, Prometheus gauges, structured HTTP spans, explicit retention, backup/empty-database restore scripts |
 | Web | Shared product routes, profiles, operational forms, inspectors, identity/domains/process/communications/system/report views, account recovery and SSO entry |
 | Offline | Explicit browser-local per-account/API queue, preview/export/replay, stable command IDs, visible conflicts and correction using new command IDs; tokens never stored in the queue |
 | Public surface | Product-owned hosted entry, Orgo surface/route/profile export and permission-filtered command inventory; standalone has no Spaces dependency |
-| Delivery | New additive migration, endpoint inventory, architecture-to-code map, runnable local validation command and examples |
+| Delivery | Single initial migration baseline, endpoint inventory, architecture-to-code map, runnable local validation command and examples |
+
+## Current database baseline
+
+The repository now carries a single Prisma baseline migration at `apps/api/prisma/migrations/00000000000000_initial/migration.sql`. This describes fresh Orgo deployment state together with `schema.prisma`; future schema changes should add forward migrations from this baseline.
 
 ## Current validation evidence
 
@@ -82,6 +86,6 @@ RC1 remains the official immutable tagged release baseline until a new release c
 - Work scope identifiers are explicit authorization perimeters. A separate team/location hierarchy catalog or arbitrary policy language is not implied.
 - Evidence is bounded to 1 MiB per Work file and 1 MiB total attachments per incoming message. Mail source parsing is bounded to 2 MiB. Large-file object storage is not bundled.
 - The read side uses scoped operational queries and indexes. A separate analytical warehouse/materialized projection fleet is not required for this delivery and is not presented as implemented.
-- Legacy data may require reconciliation and credential reenrollment. The preflight and migration notes address this; no blind automatic repair mutates existing business data.
+- Fresh Orgo deployments initialize from the current single migration baseline. Importing or reconciling an unrelated predecessor database is outside the supported repository-local deployment path.
 
 These are the actual integration/configuration and acceptance boundaries. No endpoint fabricates external success or depends on Spaces to keep Orgo functional.

@@ -1,6 +1,6 @@
 # Orgo — Contract Surface
 
-> **Delivery reference (2026-09-09):** `IMPLEMENTATION_STATUS.md` distinguishes implemented behavior from the remaining target; `IMPLEMENTATION_DECISIONS.md` defines the adopted action syntax and migration refinements.
+> **Delivery reference (2026-09-09):** `IMPLEMENTATION_STATUS.md` distinguishes implemented behavior from the remaining target; `IMPLEMENTATION_DECISIONS.md` defines the adopted implementation refinements.
 ## 1. Public Task JSON boundary
 
 The intended public JSON contract uses snake_case:
@@ -235,7 +235,7 @@ The exact transport representation may differ by adapter. The semantic context m
 
 ## 11. Target Signal contract
 
-Signal is a first-class accepted intake object in the target architecture. The delivered Prisma schema now provides the canonical model; the historical snapshot did not.
+Signal is a first-class accepted intake object. The active Prisma schema provides the canonical persisted model, and Intake owns its acceptance/deduplication semantics.
 
 Target public/internal mappings should preserve at least:
 

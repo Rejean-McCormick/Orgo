@@ -1,81 +1,92 @@
-# Orgo — Implementation decisions, 2026-09-09
+# Orgo — implementation decisions
 
-This file records implementation decisions made during the 2026-09-09 delivery. It refines `TARGET_ARCHITECTURE.md` but does not replace product ownership or lifecycle contracts.
+**Original delivery:** 2026-09-09  
+**Current baseline update:** 2026-09-16
 
-> **Supersession note (2026-09-15):** later completion work implemented several capabilities that were still missing when sections of this document were written. `COMPLETION_DECISIONS.md`, `COMMON_IDENTITY.md` and `IMPLEMENTATION_STATUS.md` are authoritative for the current implementation where they supersede historical limitations below.
+This file records implementation decisions that refine `TARGET_ARCHITECTURE.md`. `COMPLETION_DECISIONS.md`, `COMMON_IDENTITY.md` and `IMPLEMENTATION_STATUS.md` are authoritative where they define newer or more specific behavior.
 
-## 1. Replace broken runtime slices; preserve physical state
+## 1. One active application/runtime
 
-The user authorized prioritizing documentation over negligible legacy code. The snapshot's active Nest graph referenced nonexistent modules, mixed two persistence stacks and exposed incompatible tenant/DTO conventions. Instead of preserving those as live parallel code, the supplied API/web source is retained under `legacy/`; new active modules use the **same Task, Case, organization, role and domain-extension tables**. This is an authorized implementation change from the earlier repair-first migration sequence, not a second operational model.
+The active repository has two application workspaces: `apps/api` and `apps/web`.
 
-Root workspaces now contain `apps/api` and `apps/web`. The former starter `packages/*` remain reference material and are not runtime dependencies. The shared application UI is owned by Orgo.
+- `apps/api` contains the Nest API, worker, Prisma schema and database migrations.
+- `apps/web` contains the shared Orgo web application.
+- The API and worker use the same Prisma schema and release.
+- There is one canonical Work model for Cases and Tasks and one active persistence stack.
+
+Orgo's business UI is owned by Orgo. Hosted composition reuses the same application surface rather than maintaining a second host-specific implementation.
 
 ## 2. Signal acceptance is a separate committed transaction
 
-`POST /signals` persists the normalized Signal and, when requested, an outbox message containing an immutable workflow-version reference. It does not synchronously execute workflow effects. This ensures a later invalid action cannot erase accepted input.
+`POST /signals` persists the normalized Signal and, when requested, an outbox message containing an immutable workflow-version reference. It does not synchronously execute retry-prone workflow effects. A later action failure therefore cannot erase accepted input.
 
-The worker re-resolves the initiating user's current permissions, or the initiating API token's current scopes. A deactivated principal cannot execute an old privilege snapshot. Intake processing locks the Signal, creates Work/instance/link rows and acknowledges the message in one transaction. A failed action rolls these back; the accepted Signal remains `RECEIVED` and the message exposes its retry/dead state. `REJECTED` is reserved; there is currently no rejection endpoint.
+The worker re-resolves the initiating user's current permissions, or the initiating API token's current scopes. A deactivated principal cannot execute an old privilege snapshot. Intake processing locks the Signal, creates Work/instance/link rows and acknowledges the message in one transaction. A failed action rolls these back; the accepted Signal remains available and the message exposes its retry/dead state.
 
 External-reference uniqueness is organization + source + external reference. Reusing that identity with changed normalized input returns a conflict rather than silently changing evidence.
 
 ## 3. A workflow can start before any Task exists
 
-The old `WorkflowInstance.task_id` was required. It is now nullable; new instances always pin `workflow_version_id`, and may also refer to a Signal. Existing rows retain nullable version references for explicit legacy migration. No version is fabricated from an incompatible old YAML/blob.
+`WorkflowInstance.task_id` is optional. New instances pin `workflow_version_id` and may refer to a Signal before any Task exists.
 
-A definition's `definition_blob` remains a compatibility mirror of its latest publication. Runtime evaluation reads `WorkflowVersion.content` only. Published versions have an SQL immutability trigger. Definitions use organization-scoped codes; global workflow inheritance is not implemented.
+A definition's `definition_blob` is a compatibility mirror of its latest publication. Runtime evaluation reads `WorkflowVersion.content`. Published versions are immutable at the database layer. Definitions use organization-scoped codes; global workflow inheritance is not implemented.
 
 Instance `completed / ACTIONS_COMMITTED` means internal actions committed and external requests were queued. It **does not mean** an external validation approved anything.
 
-**Current supersession:** durable process managers were added after this decision record. `DurableProcess` now handles ordered external/human/timer steps, explicit receipt predicates, deadlines, blocking, decisions, adoption and declared compensation. The original `ACTIONS_COMMITTED` semantic remains unchanged.
+Durable process managers handle ordered external/human/timer steps, explicit receipt predicates, deadlines, blocking, decisions, adoption and declared compensation.
 
 ## 4. Idempotency and concurrency
 
-All ordinary mutation routes require `Idempotency-Key`; login/logout do not. Email may fall back to its message identity; offline replay supplies a UUID for each command.
+Ordinary mutation routes require `Idempotency-Key`; login/logout use their own security lifecycle. Email may fall back to its message identity; offline replay supplies a UUID for each command.
 
 Commands take a transaction-scoped PostgreSQL advisory lock on organization + operation + key. The request fingerprint includes input, principal and current authorization context. A replay returns the stored response; different input or a changed authorization context conflicts. Task/Case mutation routes also recheck current visibility before replay.
 
 Work status/assignment/edit operations require `revision`. Compare-and-update prevents lost updates; accepted updates increment it. Case archival and task attachment share a Case lock. Case reopening and Task terminal states follow the canonical transition tables.
 
-The outbox uses `FOR UPDATE SKIP LOCKED`, a 60-second lease, a token that fences acknowledgements, heartbeat renewal, eight attempts and bounded exponential backoff with jitter. Dead messages can be manually redriven. Delivery is at least once; an external adapter must implement durable deduplication with the supplied operation identity. SMTP cannot guarantee exactly-once delivery; a crash after SMTP acceptance can produce a duplicate despite the stable Message-ID.
+The outbox uses `FOR UPDATE SKIP LOCKED`, leases and fenced acknowledgements with bounded retries/backoff. Dead messages can be manually redriven. Delivery is at least once; external adapters must implement durable deduplication with the supplied operation identity.
 
 ## 5. Authorization and confidentiality
 
-One HTTP guard resolves the identity and organization from an opaque session token or organization-scoped API token. Headers/body values never grant tenancy. Sessions are stored by token hash; user roles and permissions are resolved from the database for every protected request. Local passwords use scrypt; legacy password hashes are not automatically converted.
+One HTTP guard resolves identity and organization from an opaque session token or organization-scoped API token. Headers/body values never grant tenancy. Sessions are stored by token hash; user roles and permissions are resolved from the database for every protected request. Local passwords use scrypt.
 
-The initial authorization implementation admitted organization-wide roles only (`global` or absent scope) and failed closed for then-unimplemented team/location/custom scopes. `work:restricted` gates restricted Cases and sensitive people; restricted Tasks also respect assignment and parent-Case visibility. HR creation forces restricted Case and Task visibility.
+Global roles and explicit scoped Work grants are supported for team/location/unit/custom scopes. Task/Case scope fields and parent constraints enforce the authorization perimeter. `work:restricted` gates restricted Cases and sensitive people; HR creation forces restricted Case and Task visibility.
 
-**Current supersession:** existing scoped assignments are now activated as explicit Work grants for team/location/unit/custom scopes, with dedicated Task/Case scope fields and parent constraints. See `COMPLETION_DECISIONS.md` and `IMPLEMENTATION_STATUS.md`.
+The API returns 404 for inaccessible Work references. Composite tenant constraints protect Task/Case ownership and Signal links.
 
-The API returns 404 for inaccessible Work references. Composite tenant foreign keys protect Task Case/owner/requester references and Signal links. Cross-organization dirty legacy references must be corrected before the additive migration can apply; the migration does not silently reassign them.
-
-Login throttling is per API process and IP; distributed rate limiting is not claimed. Seed supplies initial administration and existing credentials are never overwritten implicitly.
-
-**Current supersession:** password recovery, invitations/account lifecycle and optional OIDC SSO were added after this decision record. SSO uses explicit `issuer + subject` enrollment and preserves Orgo-local authorization; see `COMMON_IDENTITY.md` and `COMPLETION_DECISIONS.md`.
+Password recovery, invitations/account lifecycle and optional OIDC SSO use explicit identity contracts. SSO uses explicit `issuer + subject` enrollment and preserves Orgo-local authorization; see `COMMON_IDENTITY.md` and `COMPLETION_DECISIONS.md`.
 
 ## 6. Workflow authoring and action syntax
 
 The implemented version payload is `{ "rules": [...] }`. Rules have unique `id`, optional `enabled` (default true), strict match criteria and ordered `actions`. Each action is `{ "type": "...", "target": "...", "input": {...} }`.
 
-Supported actions: `CREATE_CASE`, `CREATE_TASK`, `UPDATE_TASK` (status only), `ASSIGN_TASK`, `ROUTE`, `ESCALATE`, `SET_METADATA`, `ATTACH_TEMPLATE`, `ADD_LABEL`, `NOTIFY`, `REQUEST_INTEGRATION`.
+Supported actions include `CREATE_CASE`, `CREATE_TASK`, `UPDATE_TASK`, `ASSIGN_TASK`, `ROUTE`, `ESCALATE`, `SET_METADATA`, `ATTACH_TEMPLATE`, `ADD_LABEL`, `NOTIFY`, `REQUEST_INTEGRATION` and process-start behavior documented by `COMPLETION_DECISIONS.md`.
 
-`ROUTE` with empty input applies persisted routing rules; an explicit owner input uses the same Work assignment API. Routing resolves matching non-fallback rules first, then fallback rules; weight descending and ID break ties deterministically. `ADD_LABEL` adds an EntityLabel and leaves the primary classification label unchanged. `ATTACH_TEMPLATE` records a template reference; it does not call a document-generation engine.
+References such as `$signal.id`, `$signal.source`, `$signal.payload`, `$case` and `$task` are explicit bindings, never evaluated code. An unavailable binding rejects execution. Simulation evaluates matches and returns action intents without invoking handlers or writing state.
 
-References are exact strings: `$signal.id`, `$signal.source`, `$signal.title`, `$signal.description`, `$signal.label`, `$signal.type`, `$signal.category`, `$signal.severity`, `$signal.payload`, `$case`, `$task`. The latter two refer to the latest result (or linked Case). They are explicit bindings, never evaluated code. An unavailable binding rejects execution. Simulation evaluates matches and returns action intents without invoking handlers or writing state; it is not a promise that every eventual effect will succeed.
-
-JSON publication and YAML import normalize into the same persisted contract. Historical action syntax must be explicitly converted; it is not silently interpreted as the new shape.
+JSON publication and YAML import normalize into the persisted contract. Unsupported action shapes must be explicitly converted rather than interpreted heuristically.
 
 ## 7. Presentation and optional hosting
 
-The React component is the same application in standalone and hosted modes. A host supplies path/navigation through `OrgoAppProps`; the component retains Orgo login and authorization. Profiles select a home and a composition of routes. They do not grant permissions or replace backend checks.
+The React component is the same application in standalone and hosted modes. A host supplies path/navigation through the exported hosted boundary; the component retains Orgo login and authorization. Profiles select presentation composition but do not grant permissions or replace backend checks.
 
-`hosted-entry.tsx` is a code-level embedding boundary. The supplied files do not contain the executable canonical Koali/Capsule schema packages; no native manifest compatibility or admission is claimed. Wiring the exported surface into those actual contracts remains an integration step. No second global shell, private provider frontend import, or required Spaces dependency was introduced.
+The repository exposes Orgo-owned hosted contracts. Native host/provider compatibility is only claimed when the corresponding real external contract has been supplied and validated.
 
 ## 8. Data and deployment
 
-The new migration is additive to the supplied migration history. Test it against a restored copy of any existing database before applying it there. Historical migrations are preserved as provided, including their original legacy User-table removal; they are not a recommended import path for an unrelated existing database.
+The repository now starts from one Prisma migration baseline:
 
-API and worker use the same Prisma schema, modules and release. Insights reads grouped operational data through Prisma and cannot mutate it. The existing star schema remains available for later projections; no second ORM, broker or mandatory warehouse is introduced. Observability currently supplies correlation identifiers, history, error logs and liveness/readiness; full metrics/tracing export remains a documented gap.
+```text
+apps/api/prisma/migrations/
+├── migration_lock.toml
+└── 00000000000000_initial/
+    └── migration.sql
+```
 
-## Completion supersession
+`apps/api/prisma/schema.prisma` plus the migration SQL are the physical database definition for a fresh Orgo deployment. Future schema changes must add forward migrations from this baseline.
 
-For the 2026-09-09 completion delivery, `COMPLETION_DECISIONS.md` supersedes earlier limitations concerning global-only Work permissions, completed-only bridges, missing process managers, identity administration, email ingress, offline UI and supplemental domain screens. The original architectural boundaries remain unchanged. Do not treat historical test counts as acceptance of the new code.
+The project does not maintain an import path for an unrelated predecessor database. Backup/restore scripts are operational tools for Orgo databases, not a compatibility layer for discarded schemas.
+
+Insights reads operational data through Prisma and cannot mutate canonical Work state. No second ORM, broker or mandatory warehouse is introduced.
+
+## 9. Validation authority
+
+`IMPLEMENTATION_STATUS.md` records dated evidence, not perpetual proof for later edits. `LOCAL_VALIDATION.md` defines the current repository-local acceptance procedure. Structural changes to migrations, Docker configuration, source or tests require a fresh validation run before the working tree is described as validated.
