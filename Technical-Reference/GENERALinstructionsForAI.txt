@@ -1,0 +1,115 @@
+ORGO — AI IMPLEMENTATION RULES
+==============================
+
+1. IDENTITY
+
+Orgo is an ecosystem system for workflow and operational coordination.
+Work is the central operational bounded context. Task is the canonical executable
+unit of work. Case is the durable situation/context container.
+
+2. TENANCY
+
+Every Task/Case/domain operation must resolve and enforce organization scope.
+Do not treat a caller-supplied organization ID as authorization by itself.
+
+3. TASK
+
+Canonical DB status:
+PENDING, IN_PROGRESS, ON_HOLD, COMPLETED, FAILED, ESCALATED, CANCELLED
+
+Canonical category:
+request, incident, update, report, distribution
+
+Do not create a second Task table/lifecycle inside a domain module.
+
+4. CASE
+
+Canonical status:
+open, in_progress, resolved, archived
+
+Case is not identical to a Konnaxion topic, external ticket, Kristal artifact or
+any other external object.
+
+5. DOMAIN MODULES
+
+Maintenance, HR and Education are adapters/extensions over Task/Case.
+During migration, use the existing TaskService/CaseService owner methods for canonical
+mutations. The target dependency is the Work public API; domain modules must never
+write raw Task/Case persistence. Domain extension tables may store only domain-specific
+state/linkage.
+
+6. SIGNAL / INTAKE
+
+Treat Signal as a first-class accepted input in the target architecture. The delivered Prisma schema contains Signal; consult IMPLEMENTATION_STATUS.md
+for the implemented acceptance and processing semantics. Intake adapters normalize/deduplicate input, then persist Signal
+before retry-prone orchestration.
+
+7. WORKFLOW / ORCHESTRATION
+
+WorkflowEngineService evaluates rules and emits resolved actions. Keep evaluation
+deterministic and side-effect free. Apply effects through an Action Executor and the
+correct owner service. Simulation must not persist changes. Runtime workflow truth
+should become persisted/version-pinned; YAML is authoring/import/export, not a
+second unrelated runtime truth.
+
+8. LABELS
+
+Format:
+<BASE>.<CATEGORY><SUBCATEGORY>[.<HORIZONTAL_ROLE>]
+
+Broadcast bases 10/100/1000 are informational unless an explicit workflow
+creates work.
+
+9. INSIGHTS
+
+Analytics/read models are derived. A pattern becomes operational only through
+explicit Task/Case creation.
+
+10. EXTERNAL SYSTEMS
+
+Konnaxion, Kristal, SemantiK Architect and kOA-Linux are independently owned
+ecosystem systems. Never import their internal persistence models as Orgo core
+state and never write their stores directly.
+
+11. UI / KOALI HOSTING
+
+Orgo owns its business UI and must remain standalone-capable. When hosted in Koali,
+use the existing Koali GlobalShell/module-interface model and expose Orgo as a
+local_module_surface. Do not invent a second KoaliShell or replace Orgo RBAC with
+Koali capability projections.
+
+Orgo presentation profiles (Operations, My Work, Supervisor, Intake, Workflow
+Admin, Executive, Embedded) compose shared Orgo UI primitives. Presentation does
+not grant authorization. Case is the primary operational workspace; Tasks and
+Signals remain transverse first-class views.
+
+12. PUBLIC/API TYPES
+
+Public JSON casing and internal service casing must be mapped explicitly.
+Do not bypass mappings with `as any` at API boundaries.
+
+13. BEFORE GENERATING CODE
+
+Inspect the real Prisma model and the owning core service first.
+Prefer extending the current owner over creating a parallel service/lifecycle.
+
+
+14. RELIABLE EFFECTS
+
+For external or long-running effects, prefer:
+business transaction + OutboxMessage -> commit -> Orgo worker -> adapter -> receipt.
+Use explicit IntegrationOperation state for external operations. Never overload
+Task.status or Case.status with external system status.
+
+15. EXECUTION CONTEXT / IDEMPOTENCY
+
+Resolve organization, actor, correlation/causation and idempotency context once at
+the boundary. Retry-prone inputs/actions must be idempotent. Caller-provided tenant
+IDs are never authorization.
+
+16. ARCHITECTURE STYLE
+
+Prefer a modular monolith. Do not split Task/Case/Workflow into network services.
+Use hexagonal ports/ACLs selectively at external/infrastructure boundaries. Use light
+CQRS for read projections only. Do not introduce Event Sourcing or a broker unless a
+measured requirement justifies it.

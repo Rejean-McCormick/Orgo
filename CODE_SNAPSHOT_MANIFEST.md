@@ -1,257 +1,67 @@
-> Historical inventory of the uploaded snapshot. Active sources have since changed; use DELIVERY_MANIFEST.json and IMPLEMENTATION_STATUS.md.
+# Orgo documentation package manifest
 
-# Code snapshot
+- updated: 2026-09-16
+- package_type: documentation snapshot
+- change_scope: documentation-only alignment
+- files_excluding_manifest: 52
 
-- generated_at: 2026-09-08T16:53:23.196958
-- repository: Orgo
-- archive_layout: repository-relative paths
+## Files
 
-## Snapshot files
-- `.dockerignore` (241 bytes)
-- `.github/workflows/api.yaml` (1277 bytes)
-- `.github/workflows/web.yaml` (1116 bytes)
-- `.gitignore` (449 bytes)
-- `apps/api/.eslintrc.js` (688 bytes)
-- `apps/api/.prettierrc` (54 bytes)
-- `apps/api/Dockerfile` (1370 bytes)
-- `apps/api/nest-cli.json` (68 bytes)
-- `apps/api/package.json` (2946 bytes)
-- `apps/api/prisma/migrations/20220307034109_initial_migrate/migration.sql` (241 bytes)
-- `apps/api/prisma/migrations/20251127134632_init/migration.sql` (69937 bytes)
-- `apps/api/prisma/migrations/migration_lock.toml` (128 bytes)
-- `apps/api/prisma/schema.prisma` (59543 bytes)
-- `apps/api/README.md` (3412 bytes)
-- `apps/api/src/app.controller.spec.ts` (791 bytes)
-- `apps/api/src/app.controller.ts` (320 bytes)
-- `apps/api/src/app.module.ts` (2627 bytes)
-- `apps/api/src/app.service.ts` (190 bytes)
-- `apps/api/src/config/environment-variables.ts` (229 bytes)
-- `apps/api/src/main.ts` (860 bytes)
-- `apps/api/src/orgo/backbone/identity/dto/link-user-person.dto.ts` (1066 bytes)
-- `apps/api/src/orgo/backbone/identity/identity-link.controller.ts` (6636 bytes)
-- `apps/api/src/orgo/backbone/identity/identity-link.module.ts` (890 bytes)
-- `apps/api/src/orgo/backbone/identity/identity-link.service.ts` (19091 bytes)
-- `apps/api/src/orgo/backbone/organizations/dto/create-organization.dto.ts` (2971 bytes)
-- `apps/api/src/orgo/backbone/organizations/dto/update-organization.dto.ts` (2915 bytes)
-- `apps/api/src/orgo/backbone/organizations/organization.controller.ts` (3382 bytes)
-- `apps/api/src/orgo/backbone/organizations/organization.module.ts` (1114 bytes)
-- `apps/api/src/orgo/backbone/organizations/organization.service.ts` (18102 bytes)
-- `apps/api/src/orgo/backbone/persons/dto/upsert-person-profile.dto.ts` (2288 bytes)
-- `apps/api/src/orgo/backbone/persons/person-profile.controller.ts` (11977 bytes)
-- `apps/api/src/orgo/backbone/persons/person-profile.module.ts` (709 bytes)
-- `apps/api/src/orgo/backbone/persons/person-profile.service.ts` (11024 bytes)
-- `apps/api/src/orgo/backbone/rbac/dto/assign-permission.dto.ts` (857 bytes)
-- `apps/api/src/orgo/backbone/rbac/dto/create-role.dto.ts` (1645 bytes)
-- `apps/api/src/orgo/backbone/rbac/permission.service.ts` (7586 bytes)
-- `apps/api/src/orgo/backbone/rbac/rbac.controller.ts` (10827 bytes)
-- `apps/api/src/orgo/backbone/rbac/rbac.module.ts` (1330 bytes)
-- `apps/api/src/orgo/backbone/rbac/role.service.ts` (6374 bytes)
-- `apps/api/src/orgo/config/config.controller.ts` (10865 bytes)
-- `apps/api/src/orgo/config/config.module.ts` (987 bytes)
-- `apps/api/src/orgo/config/config.service.ts` (22876 bytes)
-- `apps/api/src/orgo/config/feature-flag.controller.ts` (11395 bytes)
-- `apps/api/src/orgo/config/feature-flag.service.ts` (24522 bytes)
-- `apps/api/src/orgo/config/org-profile.controller.ts` (12376 bytes)
-- `apps/api/src/orgo/config/org-profile.service.ts` (36849 bytes)
-- `apps/api/src/orgo/core/alerts/alerting.service.ts` (11912 bytes)
-- `apps/api/src/orgo/core/cases/case.controller.ts` (14451 bytes)
-- `apps/api/src/orgo/core/cases/case.module.ts` (788 bytes)
-- `apps/api/src/orgo/core/cases/case.service.ts` (15902 bytes)
-- `apps/api/src/orgo/core/cases/dto/create-case.dto.ts` (5748 bytes)
-- `apps/api/src/orgo/core/cases/dto/update-case-status.dto.ts` (939 bytes)
-- `apps/api/src/orgo/core/database/database.service.ts` (10819 bytes)
-- `apps/api/src/orgo/core/database/repository-factory.service.ts` (10787 bytes)
-- `apps/api/src/orgo/core/email/email-ingest.service.ts` (27711 bytes)
-- `apps/api/src/orgo/core/email/email-parser.service.ts` (20208 bytes)
-- `apps/api/src/orgo/core/email/email-router.service.ts` (33688 bytes)
-- `apps/api/src/orgo/core/email/email-validator.service.ts` (10616 bytes)
-- `apps/api/src/orgo/core/email/email.controller.ts` (9657 bytes)
-- `apps/api/src/orgo/core/email/email.module.ts` (1956 bytes)
-- `apps/api/src/orgo/core/email/email.service.ts` (15865 bytes)
-- `apps/api/src/orgo/core/functional-ids.ts` (14065 bytes)
-- `apps/api/src/orgo/core/health/health.controller.ts` (3641 bytes)
-- `apps/api/src/orgo/core/health/worker-health.service.ts` (8624 bytes)
-- `apps/api/src/orgo/core/labels/label-routing.service.ts` (10509 bytes)
-- `apps/api/src/orgo/core/labels/label.service.ts` (11260 bytes)
-- `apps/api/src/orgo/core/labels/labels.module.ts` (515 bytes)
-- `apps/api/src/orgo/core/labels/routing-rule.service.ts` (11961 bytes)
-- `apps/api/src/orgo/core/logging/log.service.ts` (25894 bytes)
-- `apps/api/src/orgo/core/logging/logger.module.ts` (1462 bytes)
-- `apps/api/src/orgo/core/metrics/metrics.service.ts` (17956 bytes)
-- `apps/api/src/orgo/core/notifications/notification.controller.ts` (7002 bytes)
-- `apps/api/src/orgo/core/notifications/notification.module.ts` (841 bytes)
-- `apps/api/src/orgo/core/notifications/notification.service.ts` (40229 bytes)
-- `apps/api/src/orgo/core/offline/offline-sync.module.ts` (716 bytes)
-- `apps/api/src/orgo/core/offline/sync.service.ts` (19601 bytes)
-- `apps/api/src/orgo/core/signals/dto/create-signal.dto.ts` (6108 bytes)
-- `apps/api/src/orgo/core/signals/signal-ingest.service.ts` (20108 bytes)
-- `apps/api/src/orgo/core/signals/signal.controller.ts` (3791 bytes)
-- `apps/api/src/orgo/core/signals/signals.module.ts` (599 bytes)
-- `apps/api/src/orgo/core/tasks/dto/create-task.dto.ts` (5785 bytes)
-- `apps/api/src/orgo/core/tasks/dto/update-task-status.dto.ts` (1251 bytes)
-- `apps/api/src/orgo/core/tasks/task-events.gateway.ts` (10833 bytes)
-- `apps/api/src/orgo/core/tasks/task-events.service.ts` (13927 bytes)
-- `apps/api/src/orgo/core/tasks/task.controller.ts` (9449 bytes)
-- `apps/api/src/orgo/core/tasks/task.module.ts` (388 bytes)
-- `apps/api/src/orgo/core/tasks/task.service.ts` (36897 bytes)
-- `apps/api/src/orgo/core/validation/config-validation.service.ts` (8937 bytes)
-- `apps/api/src/orgo/core/validation/metadata.service.ts` (7906 bytes)
-- `apps/api/src/orgo/core/validation/payload-validation.pipe.ts` (12286 bytes)
-- `apps/api/src/orgo/core/workflow/escalation.service.ts` (32655 bytes)
-- `apps/api/src/orgo/core/workflow/workflow-engine.service.ts` (36604 bytes)
-- `apps/api/src/orgo/core/workflow/workflow.controller.ts` (5957 bytes)
-- `apps/api/src/orgo/core/workflow/workflow.module.ts` (652 bytes)
-- `apps/api/src/orgo/domain/domain-task.factory.ts` (7711 bytes)
-- `apps/api/src/orgo/domain/domain-workflow.service.ts` (17516 bytes)
-- `apps/api/src/orgo/domain/education/education.controller.ts` (12104 bytes)
-- `apps/api/src/orgo/domain/education/education.module.ts` (342 bytes)
-- `apps/api/src/orgo/domain/education/education.service.ts` (29771 bytes)
-- `apps/api/src/orgo/domain/hr/hr.controller.ts` (6971 bytes)
-- `apps/api/src/orgo/domain/hr/hr.module.ts` (551 bytes)
-- `apps/api/src/orgo/domain/hr/hr.service.ts` (24680 bytes)
-- `apps/api/src/orgo/domain/hr/hr.service.ts.BAK` (29187 bytes)
-- `apps/api/src/orgo/domain/maintenance/maintenance.controller.ts` (2634 bytes)
-- `apps/api/src/orgo/domain/maintenance/maintenance.module.ts` (5329 bytes)
-- `apps/api/src/orgo/domain/maintenance/maintenance.service.ts` (19075 bytes)
-- `apps/api/src/orgo/insights/cache/insights-cache-warmup.service.ts` (8155 bytes)
-- `apps/api/src/orgo/insights/export/analytics-export.service.ts` (10912 bytes)
-- `apps/api/src/orgo/insights/insights-cache-warmup.service.ts` (10855 bytes)
-- `apps/api/src/orgo/insights/insights.module.ts` (1417 bytes)
-- `apps/api/src/orgo/insights/pattern-detection.service.ts` (26889 bytes)
-- `apps/api/src/orgo/insights/patterns/pattern-detection.service.ts` (26394 bytes)
-- `apps/api/src/orgo/insights/reports/reports.controller.ts` (5979 bytes)
-- `apps/api/src/orgo/insights/reports/reports.service.ts` (19965 bytes)
-- `apps/api/src/orgo/orgo.module.ts` (1496 bytes)
-- `apps/api/src/orgo/security/audit/audit-trail.service.ts` (7357 bytes)
-- `apps/api/src/orgo/security/auth/auth.guard.ts` (7632 bytes)
-- `apps/api/src/orgo/security/auth/auth.module.ts` (2286 bytes)
-- `apps/api/src/orgo/security/auth/auth.service.ts` (15032 bytes)
-- `apps/api/src/orgo/security/compliance/compliance-export.service.ts` (13754 bytes)
-- `apps/api/src/orgo/security/logging/log-query.service.ts` (12925 bytes)
-- `apps/api/src/orgo/security/privacy/privacy.service.ts` (12846 bytes)
-- `apps/api/src/orgo/security/rbac/rbac.service.ts` (10735 bytes)
-- `apps/api/src/persistence/persistence.module.ts` (212 bytes)
-- `apps/api/src/persistence/prisma/prisma.service.spec.ts` (478 bytes)
-- `apps/api/src/persistence/prisma/prisma.service.ts` (262 bytes)
-- `apps/api/test/app.e2e-spec.ts` (654 bytes)
-- `apps/api/test/jest-e2e.json` (192 bytes)
-- `apps/api/tsconfig.build.json` (153 bytes)
-- `apps/api/tsconfig.json` (119 bytes)
-- `apps/api/webpack-hmr.config.js` (739 bytes)
-- `apps/web/.env.example` (0 bytes)
-- `apps/web/.eslintrc.js` (51 bytes)
-- `apps/web/Dockerfile` (1085 bytes)
-- `apps/web/jest.config.js` (769 bytes)
-- `apps/web/jest.setup.js` (306 bytes)
-- `apps/web/next-env.d.ts` (206 bytes)
-- `apps/web/next.config.js` (119 bytes)
-- `apps/web/package.json` (1015 bytes)
-- `apps/web/pages/_app.tsx` (1034 bytes)
-- `apps/web/pages/index.tsx` (364 bytes)
-- `apps/web/postcss.config.js` (52 bytes)
-- `apps/web/README.md` (1399 bytes)
-- `apps/web/src/common/.gitkeep` (0 bytes)
-- `apps/web/src/orgo/core/functional-ids.ts` (4861 bytes)
-- `apps/web/src/orgo/hooks/useTaskEventStream.ts` (10335 bytes)
-- `apps/web/src/orgo/types/case.ts` (2876 bytes)
-- `apps/web/src/orgo/types/insights.ts` (11796 bytes)
-- `apps/web/src/orgo/types/organization.ts` (7892 bytes)
-- `apps/web/src/orgo/types/permission.ts` (3596 bytes)
-- `apps/web/src/orgo/types/person.ts` (2670 bytes)
-- `apps/web/src/orgo/types/profile.ts` (10024 bytes)
-- `apps/web/src/orgo/types/role.ts` (4382 bytes)
-- `apps/web/src/orgo/types/task.ts` (4196 bytes)
-- `apps/web/src/providers/AppProviders.tsx` (530 bytes)
-- `apps/web/src/screens/admin/.gitkeep` (0 bytes)
-- `apps/web/src/screens/admin/cases/AdminCaseOverviewPage.tsx` (22076 bytes)
-- `apps/web/src/screens/admin/insights/InsightsOverviewPage.tsx` (13230 bytes)
-- `apps/web/src/screens/admin/org/OrgProfileSettingsPage.tsx` (15068 bytes)
-- `apps/web/src/screens/admin/profiles/OrgProfileSettingsPage.tsx` (16563 bytes)
-- `apps/web/src/screens/admin/tasks/AdminTaskOverviewPage.tsx` (26129 bytes)
-- `apps/web/src/screens/auth/login/login.test.tsx` (165 bytes)
-- `apps/web/src/screens/auth/login/login.tsx` (1752 bytes)
-- `apps/web/src/screens/common/.gitkeep` (0 bytes)
-- `apps/web/src/screens/employee/.gitkeep` (0 bytes)
-- `apps/web/src/screens/insights/InsightsOverviewPage.tsx` (19550 bytes)
-- `apps/web/src/store/index.ts` (719 bytes)
-- `apps/web/src/store/services/api.ts` (412 bytes)
-- `apps/web/src/store/services/orgoApi.ts` (31562 bytes)
-- `apps/web/src/styles/global.css` (62 bytes)
-- `apps/web/tailwind.config.js` (53 bytes)
-- `apps/web/tsconfig.json` (148 bytes)
-- `charters/care.json` (2455 bytes)
-- `charters/care_hospital.json` (1700 bytes)
-- `charters/care_nursing_home.json` (986 bytes)
-- `charters/care_school.json` (1285 bytes)
-- `charters/care_social_services.json` (852 bytes)
-- `charters/general.json` (4051 bytes)
-- `charters/groups.json` (971 bytes)
-- `charters/groups_associations.json` (617 bytes)
-- `charters/groups_sports.json` (796 bytes)
-- `charters/incidents.json` (1535 bytes)
-- `charters/incidents_it_helpdesk.json` (591 bytes)
-- `charters/incidents_sst.json` (594 bytes)
-- `charters/operations.json` (2409 bytes)
-- `charters/operations_facilities.json` (900 bytes)
-- `charters/operations_manufacturing.json` (840 bytes)
-- `charters/operations_transport_logistics.json` (1028 bytes)
-- `charters/programs.json` (1734 bytes)
-- `charters/programs_government.json` (1149 bytes)
-- `charters/programs_humanitarian.json` (1521 bytes)
-- `concat_orgo.py` (8319 bytes)
-- `docker-compose.yml` (1557 bytes)
-- `docs/README.md` (3628 bytes)
-- `docs/Technical-Reference/Architecture upgrade(to do)/OPS-001_AI_Resilience_Strategy.md` (6356 bytes)
-- `docs/Technical-Reference/Architecture upgrade(to do)/REF-001_Configuration_Manifest.md` (5200 bytes)
-- `docs/Technical-Reference/Architecture upgrade(to do)/RFC-001_Nervous_System_Upgrade.md` (7988 bytes)
-- `docs/Technical-Reference/Architecture upgrade(to do)/SPEC-001_Input_SenTient_ACL.md` (6937 bytes)
-- `docs/Technical-Reference/Architecture upgrade(to do)/SPEC-002_Output_Architect_Outbox.md` (8052 bytes)
-- `docs/Technical-Reference/Boilerplate_Turborepo.md` (2348 bytes)
-- `docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md` (5599 bytes)
-- `docs/Technical-Reference/CODE_ALIGNMENT_NOTES.md` (19210 bytes)
-- `docs/Technical-Reference/CONTRACTS.md` (6444 bytes)
-- `docs/Technical-Reference/eliteUserList_clean.csv` (39039 bytes)
-- `docs/Technical-Reference/GENERALinstructionsForAI.txt` (4190 bytes)
-- `docs/Technical-Reference/Glossary-Letters.txt` (2905 bytes)
-- `docs/Technical-Reference/GLOSSARY.md` (5487 bytes)
-- `docs/Technical-Reference/HowToStartAndEnter.txt` (1212 bytes)
-- `docs/Technical-Reference/Semantic-Charters.md` (7138 bytes)
-- `docs/Technical-Reference/TARGET_ARCHITECTURE.md` (17058 bytes)
-- `docs/Technical-Reference/UI_AND_KOALI_INTEGRATION.md` (11697 bytes)
-- `docs/Technical-Reference/v3/1-Orgo v3 - Database Schema Reference.md` (5612 bytes)
-- `docs/Technical-Reference/v3/1-orgo-database-schema-reference.md` (47606 bytes)
-- `docs/Technical-Reference/v3/2-Orgo v3 - Architecture and Invariants.md` (8752 bytes)
-- `docs/Technical-Reference/v3/2-orgo-documentation-index.md` (31142 bytes)
-- `docs/Technical-Reference/v3/3-Orgo v3 - Task Case and Workflow Contract.md` (5841 bytes)
-- `docs/Technical-Reference/v3/3-orgo-full-stack-technical-spec.md` (28392 bytes)
-- `docs/Technical-Reference/v3/4-Orgo v3 - Domain Modules.md` (3091 bytes)
-- `docs/Technical-Reference/v3/4-orgo-functional-code-name-inventory.md` (46327 bytes)
-- `docs/Technical-Reference/v3/5-Orgo v3 - Labels Profiles and Cyclic Overview.md` (1931 bytes)
-- `docs/Technical-Reference/v3/5-orgo-Core-Services-Specification.md` (40973 bytes)
-- `docs/Technical-Reference/v3/6-Orgo v3 - Insights and Analytics.md` (1969 bytes)
-- `docs/Technical-Reference/v3/6-orgo-insights-module-config-parameters.md` (29951 bytes)
-- `docs/Technical-Reference/v3/7-Orgo v3 - API Surface.md` (3481 bytes)
-- `docs/Technical-Reference/v3/7-orgo-organization-profiles-and-cyclic-overview.md` (21619 bytes)
-- `docs/Technical-Reference/v3/8-Orgo v3 - Documentation Index.md` (1543 bytes)
-- `docs/Technical-Reference/v3/8-orgo-cyclic-overview-labels-and-flow-rules.md` (29606 bytes)
-- `docs/Technical-Reference/WikiData-Orgo_Chart.md` (6970 bytes)
-- `LICENSE` (688 bytes)
-- `package-scripts.js` (1998 bytes)
-- `package.json` (681 bytes)
-- `packages/config/eslint-preset.js` (240 bytes)
-- `packages/config/nginx.conf` (1491 bytes)
-- `packages/config/package.json` (281 bytes)
-- `packages/config/postcss.config.js` (89 bytes)
-- `packages/config/tailwind.config.js` (221 bytes)
-- `packages/tsconfig/base.json` (541 bytes)
-- `packages/tsconfig/nestjs.json` (604 bytes)
-- `packages/tsconfig/nextjs.json` (590 bytes)
-- `packages/tsconfig/package.json` (178 bytes)
-- `packages/tsconfig/react-library.json` (245 bytes)
-- `packages/tsconfig/README.md` (109 bytes)
-- `packages/ui/components/Button/Button.tsx` (98 bytes)
-- `packages/ui/index.tsx` (45 bytes)
-- `packages/ui/package.json` (479 bytes)
-- `packages/ui/tsconfig.json` (120 bytes)
-- `README.md` (7111 bytes)
-- `turbo.json` (455 bytes)
+| Path | Bytes | SHA-256 |
+|---|---:|---|
+| `CHANGED_FILES_2026-09-16.txt` | 600 | `5537713ba2cce2550a57b130a61bdda1abc5b34082ca41c603abd4cfb6d6d947` |
+| `DOCUMENTATION_ALIGNMENT_2026-09-16.md` | 1743 | `c0f5660c3c92a1346d9d4cb4e2ca2be2ad079ba1ccea37de97d966214697a3d3` |
+| `README.md` | 5305 | `2d164445c34ad8f6d3f3e25d471fd8cbe6c76db2b0648fd19ac854e97be10935` |
+| `Technical-Reference/API_IMPLEMENTED.md` | 8057 | `d210e31589cc6f69f31c1b396322c6ec8cf33885c4f4aa53a8a58bc593169121` |
+| `Technical-Reference/ARCHITECTURE_TO_CODE.md` | 4304 | `0c1a272d26262c0ccab0b8eaadc34347c0ec7bb48db9aecc0a39bd54b408f67a` |
+| `Technical-Reference/Architecture upgrade(to do)/OPS-001_AI_Resilience_Strategy.md` | 6356 | `cb9630ee78f0fea035b4bca8bba5e0533ba0e92795db068607ff32ac7d3b5406` |
+| `Technical-Reference/Architecture upgrade(to do)/REF-001_Configuration_Manifest.md` | 5200 | `063606238ff3bc975232d0e8d9c8782afa387d144c6ed2f3cc2ec78ebbea50c7` |
+| `Technical-Reference/Architecture upgrade(to do)/RFC-001_Nervous_System_Upgrade.md` | 7988 | `f7b23bc23c945d7909d8f5d8046ad4ecc4fcd011ff912069be979b92d4d6744e` |
+| `Technical-Reference/Architecture upgrade(to do)/SPEC-001_Input_SenTient_ACL.md` | 6937 | `aa1d525047ad14b143550cffc40af71d0d15af6b6dcf582aeb9fb9ff4199509c` |
+| `Technical-Reference/Architecture upgrade(to do)/SPEC-002_Output_Architect_Outbox.md` | 8052 | `5f6223c7194e3a787586ac0f4f3c6869cc2f819fa5f7fda108967527a0ffe53a` |
+| `Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md` | 6288 | `82eabff4544bdcb787693a62d3c0a905df172d52a14b45f9a5d1e1ac31229377` |
+| `Technical-Reference/Boilerplate_Turborepo.md` | 1129 | `420ffb9ea74e97ed2946fccb81d68dc4e83a30fae0e3aae706018bd6ccb63e2f` |
+| `Technical-Reference/CODE_ALIGNMENT_NOTES.md` | 20449 | `3a2beb40ada3e3ce2267da707d98c74448bc536d115e2384f4dae5c4faa6e7ee` |
+| `Technical-Reference/COMMON_IDENTITY.md` | 3761 | `b5d5a14b19d83c9f6c52c88dd457e00d45f337f945014cbf8b83aef4dd7d5af7` |
+| `Technical-Reference/COMPLETION_DECISIONS.md` | 9200 | `4ef41a73829d18a5c7b99ccfbe74bb1e8b693b7843d1533d566fa492143030e6` |
+| `Technical-Reference/CONTRACTS.md` | 7155 | `41d8aa0a6d96ad8a3cd973c8cec981b28ac062622c9898e1dad5fdb938edcebe` |
+| `Technical-Reference/GENERALinstructionsForAI.txt` | 4209 | `3e7c2d7e1d1c31f0aa92850467cec982599b6f54f0fcf0b16a0eead43d9286d6` |
+| `Technical-Reference/GLOSSARY.md` | 6068 | `f8f0cc28564a12e6d67137eca7c8ad7dc4c2f4a1512be22d11ea10d736248734` |
+| `Technical-Reference/Glossary-Letters.txt` | 2905 | `fefa026821c1973368ca9ae319c76fc15e184a6f6588afca2fb30f879b174e7d` |
+| `Technical-Reference/HowToStartAndEnter.txt` | 1132 | `6ee6b34a37c4cf697a7b5b4279e97920fa2a2255dd31f300d0629bbd1728ecb4` |
+| `Technical-Reference/IMPLEMENTATION_DECISIONS.md` | 10107 | `69af01b6c956f788a26deea052d9f398a83d74312a78380b72aa449dfd5fb7d1` |
+| `Technical-Reference/IMPLEMENTATION_STATUS.md` | 9235 | `a97801b7ba53bbd8f39b475170598abcbe589af7b94eb02afbd15a85f607af71` |
+| `Technical-Reference/INTEGRATION_BRIDGE.md` | 4723 | `792d9023a14dac37d246bb114923dd94dd1428077db9f65f6e7a453cc08194d2` |
+| `Technical-Reference/INTERACTION_KERNEL.md` | 3827 | `ea312a22e8a99dad617b39e623324a96f9dceb5e8c55d74da7f38e91b61ca9b1` |
+| `Technical-Reference/LOCAL_VALIDATION.md` | 5669 | `c4494062a3c232bffcaa9f0172d53e9c1d3e5e3052344eb3e3839aab9566917d` |
+| `Technical-Reference/SCENARIO_INJECTOR.md` | 2733 | `bae7380e9e12dbfdce765370ed9c5255c00d3678383cf13f0b3a5a33134c3ab2` |
+| `Technical-Reference/Semantic-Charters.md` | 7138 | `c8f875ec5505e5f1c251fbed2b3c2a3358d6ceca707077aeb03fe477e3e420bc` |
+| `Technical-Reference/TARGET_ARCHITECTURE.md` | 18192 | `ce159276d2470fbc28781435848b2e420992922c2fd54ca927d33c1e49629989` |
+| `Technical-Reference/UI_AND_KOALI_INTEGRATION.md` | 12556 | `c0b2b46a8604ecfef48b135baba8098fb1cd0c10ded38c469239e86867ec7963` |
+| `Technical-Reference/WikiData-Orgo_Chart.md` | 6970 | `4fdd7eaea27828f3d95369214591d9edc774af676e5fdacb6176b3daa84a35b0` |
+| `Technical-Reference/eliteUserList_clean.csv` | 39039 | `6d149eabd4171839dab76e9504a4995977cdeab31510fe257f12b5f79a99914d` |
+| `Technical-Reference/v3/1-Orgo v3 - Database Schema Reference.md` | 5973 | `eb749a4168aad2c5b76d74072e3ec0800cf85446363f999de2b142c25f993f8a` |
+| `Technical-Reference/v3/1-orgo-database-schema-reference.md` | 47606 | `1d5d33ee1859e5dbb0ab4349c8118de6358c23a8575400c3495382c382b29cbb` |
+| `Technical-Reference/v3/2-Orgo v3 - Architecture and Invariants.md` | 8752 | `32fb353b996b3127d47b1c506182aef0d9b7ea36179d2bbb880db4997570d0f8` |
+| `Technical-Reference/v3/2-orgo-documentation-index.md` | 31142 | `5d152ae988f8141eb42ef7cbf98a987895bc9f9b478425eae7ac72680f659963` |
+| `Technical-Reference/v3/3-Orgo v3 - Task Case and Workflow Contract.md` | 6078 | `58731c133f3be8823076978de7ec658c33ad8d3fd63a45f200511aeaae775cf2` |
+| `Technical-Reference/v3/3-orgo-full-stack-technical-spec.md` | 28392 | `153f921c269a3b6e2dd83fbbfcd2380f765edd3d23bfa9f2104f275b6732723d` |
+| `Technical-Reference/v3/4-Orgo v3 - Domain Modules.md` | 3091 | `3218eca4e4b8dddca16a36b73ee7efdad46f77865605e396deb9f04381785daf` |
+| `Technical-Reference/v3/4-orgo-functional-code-name-inventory.md` | 46327 | `5de0d2ab0491fd01ba482678977e49f265da25e4caeb7a11963239ac13c3dd48` |
+| `Technical-Reference/v3/5-Orgo v3 - Labels Profiles and Cyclic Overview.md` | 1931 | `17f1b6c211135258ad1eb5b6d128e52855a45542b9bafa0221a492d9273a9281` |
+| `Technical-Reference/v3/5-orgo-Core-Services-Specification.md` | 40973 | `1f78e6f73f4c1aa21715d2f3b74c81c0fbfa5de1656649f53728c6b6d2e7d02d` |
+| `Technical-Reference/v3/6-Orgo v3 - Insights and Analytics.md` | 1969 | `629c53ebcab194b0a908102faa7abb93c0a3bf0e91d9d2bc7475bb1f1715af37` |
+| `Technical-Reference/v3/6-orgo-insights-module-config-parameters.md` | 29951 | `7183935cc369671486769060758e2baa7ff46b591147659bcfa89f0dc5250d3e` |
+| `Technical-Reference/v3/7-Orgo v3 - API Surface.md` | 3706 | `85155be5e53283eb4c1bc983ad0c01a85cffc561d68032cbc5a8694b33f73d7b` |
+| `Technical-Reference/v3/7-orgo-organization-profiles-and-cyclic-overview.md` | 21619 | `01ec9e77a8968bcd78a8fab691ce6f42ca3fd9e0d5d2fba5fd8acd138fdfa4e5` |
+| `Technical-Reference/v3/8-Orgo v3 - Documentation Index.md` | 1543 | `5bc04cd7a75ca6980a603a7f44b857c474de2f5c82213c058d9546c5e0e976c7` |
+| `Technical-Reference/v3/8-orgo-cyclic-overview-labels-and-flow-rules.md` | 29606 | `f144c92bf18d6fc23f730bd829d35ebbbf5fa54ce5878967ba4649fea2c61282` |
+| `status/2026-09-10-beta-status.md` | 4617 | `625fabbaca428f8dc2863d04f6dfca8331d5b3aa87e6ff887df68bf098762a26` |
+| `status/2026-09-10-rc1-status.md` | 6955 | `9c548acc01ac70f8e78d97cfd7cde2797016eaea67675f58b29085bd136168eb` |
+| `status/2026-09-11-common-identity-update.md` | 2411 | `48daeafbcaf59c4909de2222de70d5971150a715ddf7d50cc48f7bfc3e6cda9b` |
+| `status/2026-09-15-current-status.md` | 4242 | `521dea55d30b3a46791c50d11731fe29128ab1dd7372ac9f86db390cada5a769` |
+| `status/2026-09-16-ecosystem-integration-alignment.md` | 822 | `96b5ca668f709c9d022a2ba2b9c2c4174a018094934dee41dee3cb665f11b97e` |
+
+## Note
+
+This manifest was regenerated after the documentation alignment. It does not claim that executable source files absent from this archive were modified or validated.

@@ -1,0 +1,12 @@
+ADDED	DOCUMENTATION_ALIGNMENT_2026-09-16.md
+MODIFIED	README.md
+MODIFIED	Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md
+MODIFIED	Technical-Reference/CODE_ALIGNMENT_NOTES.md
+MODIFIED	Technical-Reference/GLOSSARY.md
+MODIFIED	Technical-Reference/IMPLEMENTATION_STATUS.md
+MODIFIED	Technical-Reference/INTEGRATION_BRIDGE.md
+ADDED	Technical-Reference/INTERACTION_KERNEL.md
+MODIFIED	Technical-Reference/LOCAL_VALIDATION.md
+MODIFIED	Technical-Reference/TARGET_ARCHITECTURE.md
+MODIFIED	Technical-Reference/v3/1-Orgo v3 - Database Schema Reference.md
+ADDED	status/2026-09-16-ecosystem-integration-alignment.md

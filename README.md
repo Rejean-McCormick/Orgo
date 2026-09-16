@@ -1,286 +1,55 @@
-# Orgo
+> **Release baseline:** [RC1 status](status/2026-09-10-rc1-status.md) (`v0.1.0-rc.1`, commit `60e3a250f98252735839816c8e0143bbdd7546bf`) remains the immutable tagged release-candidate baseline. The current development-tree evidence is recorded in [2026-09-15 current status](status/2026-09-15-current-status.md).
 
-Orgo is a **multi-tenant operational workflow and coordination system** in the kOA Digital Ecosystem. It turns incoming signals into governed operational work through organizations, cases, tasks, workflows, routing, evidence, permissions, communications, audit and insights.
+# Orgo — Documentation
 
-Orgo is **standalone-first**. It owns its workflow state, business authorization and business UI. It can also be hosted inside Koali Spaces as an Orgo-managed `local_module_surface` without transferring ownership of Orgo business state or permissions to the host.
+## Scope
 
-## Status
+Orgo is an **Orgo-owned integrated subsystem/application** in the kOA Digital Ecosystem. It is a multi-tenant workflow and coordination system that turns signals into governed operational work through Organizations, Cases, Tasks, labels, profiles, workflows, audit and insights. Its implementation style is a modular monolith centered on Intake, Work and Orchestration.
 
-### Validated release baseline
+Orgo owns **workflow state, business authorization and its business UI**. It can run standalone. When hosted by Koali Spaces it is contributed as a `local_module_surface`; Koali hosts/composes Orgo but does not become the owner of Orgo's Tasks, Cases, Signals, Workflows, tenant rules, RBAC or UI. Orgo does not absorb the business state of Konnaxion, the epistemic state of Kristal, the linguistic runtime of SemantiK Architect, or the host/platform state of kOA-Linux.
 
-The official validated baseline is:
+The repository is licensed under AGPL-3.0-or-later; ownership boundaries in this documentation describe runtime/domain authority, not a proprietary software license.
 
-| Item | Value |
-| --- | --- |
-| Release | **Release Candidate 1** |
-| Tag | `v0.1.0-rc.1` |
-| Commit | `60e3a250f98252735839816c8e0143bbdd7546bf` |
-| Tag date | 2026-09-10 |
-| Development branch | `master` |
+## Canonical reading order
 
-RC1 passed the retained local automated gate and two consecutive Chromium campaigns. The browser validation completed **44/44 executions successfully** across the two runs. The RC tag is immutable and remains the reference to use when reproducing or diagnosing RC1.
+1. `Technical-Reference/IMPLEMENTATION_STATUS.md` — current implementation and validation status.
+2. `Technical-Reference/TARGET_ARCHITECTURE.md` — canonical target architecture and migration strategy.
+3. `Technical-Reference/v3/1-Orgo v3 - Database Schema Reference.md` — historical v3 schema baseline; executable Prisma/migrations and `IMPLEMENTATION_STATUS.md` are current authority.
+4. `Technical-Reference/v3/2-Orgo v3 - Architecture and Invariants.md`
+5. `Technical-Reference/v3/3-Orgo v3 - Task Case and Workflow Contract.md`
+6. `Technical-Reference/v3/4-Orgo v3 - Domain Modules.md`
+7. `Technical-Reference/v3/5-Orgo v3 - Labels Profiles and Cyclic Overview.md`
+8. `Technical-Reference/v3/6-Orgo v3 - Insights and Analytics.md`
+9. `Technical-Reference/v3/7-Orgo v3 - API Surface.md`
+10. `Technical-Reference/UI_AND_KOALI_INTEGRATION.md`
+11. `Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md`
+12. `Technical-Reference/GLOSSARY.md`
+13. `Technical-Reference/INTERACTION_KERNEL.md` — target kOA interoperability profile for this snapshot; implementation is not claimed here.
+14. `Technical-Reference/CODE_ALIGNMENT_NOTES.md`
 
-Detailed evidence: [RC1 status report](docs/status/2026-09-10-rc1-status.md).
-
-### Current development validation (2026-09-15)
-
-Development continued after RC1. The common-identity/OIDC work and dependency-security updates are present in the current development tree. A fresh validation was executed against application commit `167f672998075b83ff72ac73f10d550f3ea73e9b` before this documentation-only alignment:
-
-- LevelUpDiag `deep`: all **12/12 required levels PASS**, including Prisma generation, architecture checks, TypeScript, **16/16 unit tests**, PostgreSQL migrations, **33/33 native PostgreSQL integration tests**, API/web production builds and dependency audit with **0 known npm vulnerabilities** at the audited threshold;
-- the `deep` campaign wrapper reported `ERROR` only because the successful Next.js build rewrote tracked `apps/web/next-env.d.ts`, triggering LevelUpDiag target-protection;
-- LevelUpDiag `browser`: **24/24 Chromium journeys PASS**, with 0 skipped, unexpected or flaky tests, against the real local Orgo API;
-- this validation does **not** move or replace the immutable RC1 tag.
-
-Current evidence and remaining boundaries: [2026-09-15 current status](docs/status/2026-09-15-current-status.md).
-
-See also:
-
-- [Common identity implementation profile](docs/Technical-Reference/COMMON_IDENTITY.md)
-- [Implementation status](docs/Technical-Reference/IMPLEMENTATION_STATUS.md)
-
-## What Orgo does
-
-Orgo is centered on four operational concepts:
-
-- **Signal** — accepted incoming evidence or input that can be normalized, deduplicated and processed.
-- **Case** — the durable situation/context and primary operational workspace.
-- **Task** — the canonical executable unit of work.
-- **Workflow** — deterministic orchestration that evaluates rules and resolves actions without bypassing the owning domain services.
-
-### Main capabilities
-
-| Area | Capabilities |
-| --- | --- |
-| Work management | Cases, Tasks, lifecycle transitions, assignment, comments, edits, optimistic revisions, labels, Case/Task relationships and immutable work events |
-| Intake | Durable Signals, deduplication, fingerprint conflict handling, manual/API intake, email, webhook and offline adapters |
-| Evidence | File attachments, content hashes, authorized download, tombstones, typed relations and paged timelines |
-| Workflows | Immutable JSON/YAML versions, import/export, simulation, execution, routing, escalation and synchronous/durable actions |
-| Long-running processes | Human, timer and external steps; frozen plans; deadlines; blocking; decisions; adoption; compensation and explicit receipt predicates |
-| Authentication | Local email/password authentication, opaque sessions, logout, password change/recovery, invitations and account disablement |
-| Common identity / SSO | Optional OIDC Authorization Code + PKCE, explicit `issuer + subject` enrollment, configurable IdP label and Orgo-local RBAC |
-| Authorization | Multi-tenant organization boundary, global roles and scoped Work grants for team/location/unit/custom scopes |
-| Communications | In-app notifications, SMTP, versioned plain-text templates and optional fixed SMS/webhook gateways |
-| Maintenance | Assets, linked Work tasks, calendar reservations, overlap rejection and status transitions |
-| HR | Restricted Work creation, participant lifecycle, reviews and wellbeing records |
-| Education | Groups, tenant-checked membership operations and linked support tasks |
-| Offline work | Per-account browser-local command queue, preview/export/replay, stable command IDs and visible conflict correction |
-| Reporting and operations | Scoped overview/workload queries, paged reads, safe CSV export, audit, system overview and Prometheus metrics |
-| Hosted product surface | Standalone Orgo UI plus an Orgo-owned hosted surface/profile/route export for Koali integration |
-
-## Architecture
-
-Orgo is implemented as a **modular monolith**, not as a collection of Task/Case/Workflow microservices.
-
-```text
-                         ORGO
-                    Modular Monolith
-                           │
-       ┌───────────────────┼────────────────────┐
-       │                   │                    │
-     INTAKE               WORK             ORCHESTRATION
-     Signals           Cases + Tasks          Workflow
-     normalization     assignments            Routing
-     deduplication     comments               Escalation
-       │               work events            Actions
-       └───────────────────┼────────────────────┘
-                           │
-                   Domain events + Outbox
-                           │
-              ┌────────────┼─────────────┐
-              │            │             │
-       Communications   Integrations   Insights
-```
-
-Cross-cutting concerns include tenancy, identity, RBAC, execution context, configuration, persistence/transactions, idempotency, audit and observability.
-
-### Architectural invariants
+## Core invariants
 
 - `Organization` is the tenant boundary.
-- `Work` owns canonical Case/Task mutations.
-- `Case` is the primary operational workspace.
+- `Work` is the central operational bounded context; it owns canonical Case/Task mutations.
 - `Task` is the canonical executable unit of work.
-- `Signal` is a first-class persisted intake object.
-- Workflow evaluation is deterministic and side-effect free; resolved actions are applied through owner services.
-- External and long-running effects use explicit idempotency, durable outbox/worker boundaries and receipts.
-- Domain modules refine Work rather than creating competing Case/Task lifecycles.
-- Koali hosting affects composition/presentation only; Orgo remains authoritative for Orgo authorization and business state.
-- Orgo must remain usable without Koali Spaces.
+- `Case` is the durable situation/context and primary operational workspace.
+- `Signal` is a first-class durable accepted input/evidence object; persistence, deduplication/fingerprint conflict handling and pinned workflow-version behavior are implemented.
+- Domain modules refine the Task/Case engine; they do not create competing core lifecycles.
+- Canonical labels drive routing/classification but do not replace domain state.
+- Broadcast labels are informational by default unless an explicit workflow creates work.
+- Workflow evaluation is deterministic and side-effect free; an Action Executor applies resolved actions through owner services.
+- Durable external/long-running effects use idempotency, an outbox/worker boundary and explicit receipts.
+- Insights are read/analysis projections; actionable patterns re-enter Work as Cases/Tasks.
+- External systems are orchestrated through explicit contracts; Orgo does not write their internal stores. The current snapshot uses the generic bridge; the kOA target is Interaction Kernel (IK) with Da’at for Kristal-facing workflows.
+- Workflow state is not epistemic, civic, linguistic or platform state.
+- Orgo remains standalone-capable; Koali hosting is an integration mode, not a required business dependency.
+- Koali capability projections may influence presentation but never replace Orgo authorization.
+- Orgo presentation profiles compose shared UI capabilities; reduced surfaces are not implemented by cloning or merely hiding a monolithic Control Panel.
 
-Architecture reference: [Target Architecture](docs/Technical-Reference/TARGET_ARCHITECTURE.md).
+## Current code and validation reference
 
-## User interface
+Executable source, Prisma schema/migrations and active tests are the implementation reference. `Technical-Reference/IMPLEMENTATION_STATUS.md` records the current implemented surface and the validation evidence available for it.
 
-The web application exposes shared Orgo product routes and presentation profiles. The operational model is Case-centered while keeping transverse views for Tasks, Signals and personal work.
+The tagged RC1 baseline remains `v0.1.0-rc.1` / `60e3a250f98252735839816c8e0143bbdd7546bf`. The development application baseline at commit `167f672998075b83ff72ac73f10d550f3ea73e9b` was exercised on 2026-09-15 with all 12 required `deep` levels passing and a separate 24/24 Chromium browser campaign passing. The `deep` wrapper itself reported target-protection `ERROR` because the successful Next.js build rewrote tracked `apps/web/next-env.d.ts`; see `status/2026-09-15-current-status.md` for the exact interpretation and remaining boundaries.
 
-Typical Orgo navigation includes:
-
-`My Work` · `Cases` · `Tasks` · `Signals` · `Workflows` · `Routing` · `People` · `Organizations` · `Insights` · `Integrations` · `Audit` · `System`
-
-Presentation profiles may compose different subsets of the product surface, including Full Control Panel, Operations, My Work, Supervisor, Intake, Workflow Admin, Executive and Embedded profiles. Presentation never grants business permission; backend authorization remains authoritative.
-
-See [UI Architecture and Koali Integration](docs/Technical-Reference/UI_AND_KOALI_INTEGRATION.md).
-
-## API
-
-The API is implemented with NestJS and exposes the `/api/v3` product surface plus health endpoints. Implemented route groups cover:
-
-- authentication, recovery and SSO;
-- organizations, people, users, roles and scopes;
-- Cases, Tasks, comments, attachments, relations and timelines;
-- Signals and ingress adapters;
-- workflows and routing;
-- processes and external-operation receipts;
-- notifications, templates and outbox operations;
-- maintenance, HR and education modules;
-- insights, reports, audit, system overview and metrics;
-- offline replay/synchronization.
-
-The current endpoint inventory is maintained in [API Implemented](docs/Technical-Reference/API_IMPLEMENTED.md).
-
-## Common identity and login
-
-Orgo supports both local authentication and optional common-identity federation.
-
-```text
-local login
-+ optional OIDC login
-+ explicit issuer/subject mapping
-+ Orgo-local roles and permissions
-```
-
-Federated identities are resolved from the validated `issuer + subject` pair. Email and display name are attributes only: Orgo does not auto-link or auto-provision users by email.
-
-A successful OIDC login identifies an Orgo user; authorization is still derived from the user's Orgo organization memberships, roles, scopes and permissions. Konnaxion or Moodle roles are not implicitly accepted as Orgo permissions.
-
-Minimal OIDC configuration:
-
-```dotenv
-ORGO_PUBLIC_URL=https://orgo.example.org
-OIDC_ISSUER=https://identity.example.org
-OIDC_CLIENT_ID=orgo
-OIDC_CLIENT_SECRET=
-OIDC_DISPLAY_NAME=kOA Identity
-```
-
-Production OIDC/public URLs require HTTPS. Local non-production development may use `http://localhost` or `http://127.0.0.1`.
-
-See [Common Identity](docs/Technical-Reference/COMMON_IDENTITY.md).
-
-## Requirements
-
-For the current local validation path:
-
-- **Node.js 22+**
-- **npm**
-- **PostgreSQL 16**
-
-Use an isolated database for tests and validation. Never point automated validation at a production database.
-
-## Installation
-
-From the repository root, configure the environment from `.env.example` and install dependencies.
-
-For a clean checkout whose `package-lock.json` already matches the current source:
-
-```bash
-npm ci
-```
-
-If applying the post-RC1 dependency-security update to an older lock file, run `npm install` **once** to regenerate `package-lock.json`, review and commit the resulting lock file, then return to `npm ci` for subsequent clean installations.
-
-Do not use `npm audit fix --force` as a substitute for the project validation gates.
-
-## Development
-
-The root workspace exposes separate development commands for the API and web application. Run them in separate terminals:
-
-```bash
-npm run dev:api
-```
-
-```bash
-npm run dev:web
-```
-
-Typical local endpoints are:
-
-- Web UI: `http://localhost:3000/`
-- API base: `http://localhost:4000/api/v3`
-- Readiness: `http://localhost:4000/health/ready`
-
-The active runtime does not currently expose a Swagger `/docs` endpoint. The implemented route inventory is maintained in [API Implemented](docs/Technical-Reference/API_IMPLEMENTED.md).
-
-## Validation
-
-### Repository-local gate
-
-Use a fresh, isolated PostgreSQL validation database:
-
-```bash
-npm ci
-export TEST_DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/orgo_test?connection_limit=5'
-npm run validate:local
-```
-
-The repository launcher generates Prisma, applies migrations, checks architectural boundaries and types, runs automated tests and builds, and writes evidence under `validation/local-<date>/`.
-
-### Comprehensive LevelUpDiag gate
-
-The separate `LevelUpDiag-Orgo` application can orchestrate the broader local evidence set without being copied into this repository:
-
-- `deep` — baseline/hygiene, Prisma, architecture, types, unit tests, native PostgreSQL migrations/integration, production builds and npm audit;
-- `browser` — the required Chromium journeys against a disposable local Orgo runtime.
-
-Current 2026-09-15 results are recorded in [Current Status](docs/status/2026-09-15-current-status.md). External providers, real OIDC-provider interoperability, restore/deployment acceptance and native Koali admission remain separate evidence boundaries.
-
-Full instructions: [Local Validation](docs/Technical-Reference/LOCAL_VALIDATION.md).
-
-## RC1 validation summary
-
-The retained RC1 evidence includes:
-
-- clean Git state before the RC gate;
-- two consecutive Chromium runs at 22/22 each;
-- Prisma generation and migrations on isolated PostgreSQL 16;
-- architecture checks;
-- TypeScript checks;
-- unit and integration tests;
-- API/web builds;
-- dependency audit at the configured RC threshold;
-- versioned local validation evidence committed with the RC baseline.
-
-The local RC1 gate explicitly left **external-provider** and **restore** validation outside its automated scope. Those are not known failures; they must be exercised when required by the deployment context.
-
-For reproduction or comparison of RC1, check out `v0.1.0-rc.1` rather than assuming the current `master` head is equivalent to the validated RC state.
-
-## Repository documentation
-
-Start with [docs/README.md](docs/README.md). The most important technical references are:
-
-- [Implementation Status](docs/Technical-Reference/IMPLEMENTATION_STATUS.md)
-- [Target Architecture](docs/Technical-Reference/TARGET_ARCHITECTURE.md)
-- [Architecture to Code](docs/Technical-Reference/ARCHITECTURE_TO_CODE.md)
-- [Boundaries and Ownership](docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md)
-- [Implemented API](docs/Technical-Reference/API_IMPLEMENTED.md)
-- [Contracts](docs/Technical-Reference/CONTRACTS.md)
-- [Common Identity](docs/Technical-Reference/COMMON_IDENTITY.md)
-- [UI and Koali Integration](docs/Technical-Reference/UI_AND_KOALI_INTEGRATION.md)
-- [Local Validation](docs/Technical-Reference/LOCAL_VALIDATION.md)
-- [Glossary](docs/Technical-Reference/GLOSSARY.md)
-
-Status history:
-
-- [2026-09-10 — Beta status](docs/status/2026-09-10-beta-status.md)
-- [2026-09-10 — RC1 status](docs/status/2026-09-10-rc1-status.md)
-- [2026-09-11 — Common identity update](docs/status/2026-09-11-common-identity-update.md)
-- [2026-09-15 — Current development status](docs/status/2026-09-15-current-status.md)
-
-## Integration boundaries
-
-Orgo integrates with external systems through explicit contracts and adapters. It does not write directly into the internal stores of other kOA subsystems.
-
-Native provider/host compatibility must be validated against the real external contracts available in the deployment environment. Shipped Orgo bridge contracts do not by themselves prove interoperability with every Kristal, Konnaxion, SemantiK Architect, kOA or Koali/Capsule deployment.
-
-## License
-
-Orgo is licensed under the **GNU Affero General Public License, version 3 or later (AGPL-3.0-or-later)**. See [`LICENSE`](LICENSE) for the repository license text.
+See `COMPLETION_DECISIONS.md` for durable processes, receipt predicates, Work scopes, identity and evidence semantics; `ARCHITECTURE_TO_CODE.md` for source ownership; and `LOCAL_VALIDATION.md` for the reproducible local acceptance procedure.

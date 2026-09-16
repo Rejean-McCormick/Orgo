@@ -1,0 +1,934 @@
+first_name,name,occupation,country
+first_name,name,occupation,country
+Donald,Trump,politician,United States
+Xi,Jinping,politician,China
+Narendra,Modi,politician,India
+Keir,Starmer,politician,United Kingdom
+Emmanuel,Macron,politician,France
+Friedrich,Merz,politician,Germany
+Fumio,Kishida,politician,Japan
+Luiz Inácio,Lula da Silva,politician,Brazil
+Volodymyr,Zelenskyy,politician,Ukraine
+Benjamin,Netanyahu,politician,Israel
+Mohammed,bin Salman,politician,Saudi Arabia
+Ali,Khamenei,political and religious leader,Iran
+Recep Tayyip,Erdogan,politician,Turkey
+Abdel Fattah,el-Sisi,politician,Egypt
+Cyril,Ramaphosa,politician,South Africa
+Bola,Tinubu,politician,Nigeria
+Claudia,Sheinbaum,politician,Mexico
+Justin,Trudeau,politician,Canada
+Joko,Widodo,politician,Indonesia
+Prabowo,Subianto,politician,Indonesia
+Yoon,Suk-yeol,politician,South Korea
+Pedro,Sánchez,politician,Spain
+Giorgia,Meloni,politician,Italy
+Sheikh Hasina,Wazed,politician,Bangladesh
+Yoweri,Museveni,politician,Uganda
+Paul,Kagame,politician,Rwanda
+Mohammed,bin Zayed Al Nahyan,politician,United Arab Emirates
+Jerome,Powell,central banker,United States
+Christine,Lagarde,central banker,France
+Kristalina,Georgieva,economist (IMF chief),Bulgaria
+Ajay,Banga,banker (World Bank president),United States
+Ngozi,Okonjo-Iweala,economist (WTO director-general),Nigeria
+Agustín,Carstens,economist (BIS general manager),Mexico
+Pan,Gongsheng,central banker,China
+Kazuo,Ueda,central banker,Japan
+Andrew,Bailey,central banker,United Kingdom
+Elon,Musk,"tech entrepreneur (Tesla,SpaceX,X,xAI)",United States
+Jensen,Huang,tech CEO (Nvidia),United States
+Sam,Altman,tech CEO (OpenAI),United States
+Mark,Zuckerberg,tech CEO (Meta),United States
+Sundar,Pichai,"tech CEO (Alphabet,Google)",United States
+Tim,Cook,tech CEO (Apple),United States
+Satya,Nadella,tech CEO (Microsoft),United States
+Andy,Jassy,tech CEO (Amazon),United States
+Larry,Page,tech founder (Google),United States
+Sergey,Brin,tech founder (Google),United States
+Jeff,Bezos,"tech entrepreneur (Amazon,Blue Origin)",United States
+Larry,Ellison,tech entrepreneur (Oracle),United States
+Reed,Hastings,media tech founder (Netflix),United States
+Evan,Spiegel,social media entrepreneur (Snap),United States
+Brian,Chesky,tech entrepreneur (Airbnb),United States
+Patrick,Collison,tech CEO (Stripe),Ireland
+Jack,Dorsey,"tech entrepreneur (Block,Twitter cofounder)",United States
+Pony,Ma,tech CEO (Tencent),China
+Zhang,Yiming,tech entrepreneur (ByteDance),China
+Colin,Huang,tech entrepreneur (Pinduoduo),China
+Robin,Li,tech CEO (Baidu),China
+Masayoshi,Son,tech investor (SoftBank),Japan
+Daniel,Ek,tech CEO (Spotify),Sweden
+Hiroshi,Mikitani,tech CEO (Rakuten),Japan
+Demis,Hassabis,AI researcher & CEO (DeepMind),United Kingdom
+Dario,Amodei,AI researcher & CEO (Anthropic),United States
+Mira,Murati,AI executive,Albania
+Bernard,Arnault,luxury goods tycoon (LVMH),France
+François,Pinault,luxury goods tycoon (Kering),France
+Amancio,Ortega,"retail tycoon (Inditex,Zara)",Spain
+Mukesh,Ambani,industrialist (Reliance),India
+Gautam,Adani,industrialist (Adani Group),India
+Warren,Buffett,investor (Berkshire Hathaway),United States
+Ken,Griffin,hedge fund manager (Citadel),United States
+Ray,Dalio,investor (Bridgewater),United States
+Carl,Icahn,investor,United States
+Stephen,Schwarzman,private equity investor (Blackstone),United States
+Henry,Kravis,private equity investor (KKR),United States
+Li,Ka-shing,conglomerate tycoon,Hong Kong
+Carlos,Slim Helú,telecom tycoon,Mexico
+Aliko,Dangote,industrialist,Nigeria
+Lakshmi,Mittal,steel tycoon,India
+Michael,Bloomberg,media & finance entrepreneur,United States
+Alwaleed,bin Talal,investor & prince,Saudi Arabia
+Leo,XIV,religious leader (Pope),Vatican City
+Ahmed,el-Tayeb,religious leader (Grand Imam of Al-Azhar),Egypt
+Bartholomew,I,religious leader (Ecumenical Patriarch),Turkey
+Justin,Welby,religious leader (Archbishop of Canterbury),United Kingdom
+Tenzin,Gyatso,religious leader (14th Dalai Lama),India
+Ravi,Shankar,spiritual leader (Art of Living),India
+Patriarch,Kirill,religious leader (Russian Orthodox Church),Russia
+Rupert,Murdoch,media mogul (News Corp),United States
+Lachlan,Murdoch,media executive (Fox / News Corp),United States
+Oprah,Winfrey,media mogul,United States
+Ted,Turner,media founder (CNN),United States
+Bob,Iger,media executive (Disney),United States
+Kevin,Feige,film producer (Marvel Studios),United States
+Sheryl,Sandberg,business executive,United States
+Jack,Ma,e-commerce entrepreneur (Alibaba),China
+David,Zaslav,media executive (Warner Bros. Discovery),United States
+Taylor,Swift,musician,United States
+Beyoncé,Knowles-Carter,musician,United States
+Stefani,Germanotta,musician (Lady Gaga),United States
+Robyn,Fenty,musician (Rihanna),Barbados
+Aubrey,Graham,musician (Drake),Canada
+Benito,Martínez Ocasio,musician (Bad Bunny),Puerto Rico
+Abel,Tesfaye,musician (The Weeknd),Canada
+Ed,Sheeran,musician,United Kingdom
+Ariana,Grande,musician,United States
+Billie,Eilish,musician,United States
+Katy,Perry,musician,United States
+Justin,Bieber,musician,Canada
+Nam-joon,Kim,"musician (RM,BTS)",South Korea
+Lalisa,Manoban,"musician (Lisa,BLACKPINK)",Thailand
+Jennie,Kim,musician (BLACKPINK),South Korea
+Shakira,Mebarak,musician (Shakira),Colombia
+Tom,Cruise,actor,United States
+Dwayne,Johnson,actor,United States
+Leonardo,DiCaprio,actor,United States
+Robert,Downey Jr.,actor,United States
+Meryl,Streep,actor,United States
+Margot,Robbie,actor,Australia
+Chris,Hemsworth,actor,Australia
+Ryan,Reynolds,actor,Canada
+Pedro,Pascal,actor,Chile
+Jackie,Chan,actor,China
+Ziyi,Zhang,actor,China
+Priyanka,Chopra Jonas,actor,India
+Cristiano,Ronaldo,footballer,Portugal
+Lionel,Messi,footballer,Argentina
+Neymar,da Silva Santos Júnior,footballer,Brazil
+Kylian,Mbappé,footballer,France
+Erling,Haaland,footballer,Norway
+Robert,Lewandowski,footballer,Poland
+LeBron,James,basketball player,United States
+Stephen,Curry,basketball player,United States
+Giannis,Antetokounmpo,basketball player,Greece
+Kevin,Durant,basketball player,United States
+Novak,Djokovic,tennis player,Serbia
+Rafael,Nadal,tennis player,Spain
+Roger,Federer,tennis player,Switzerland
+Naomi,Osaka,tennis player,Japan
+Simone,Biles,gymnast,United States
+Virat,Kohli,cricketer,India
+Rohit,Sharma,cricketer,India
+Babar,Azam,cricketer,Pakistan
+Mahendra Singh,Dhoni,cricketer,India
+Shaheen,Afridi,cricketer,Pakistan
+Lewis,Hamilton,racing driver,United Kingdom
+Max,Verstappen,racing driver,Netherlands
+Michael,Jordan,basketball legend,United States
+Serena,Williams,tennis player,United States
+Tiger,Woods,golfer,United States
+Jennifer,Doudna,biochemist,United States
+Emmanuelle,Charpentier,biochemist,France
+Katalin,Karikó,biochemist,Hungary
+Drew,Weissman,immunologist,United States
+Anthony,Fauci,immunologist,United States
+Neil deGrasse,Tyson,astrophysicist & science communicator,United States
+Brian,Cox,physicist & science communicator,United Kingdom
+Jane,Goodall,primatologist & conservationist,United Kingdom
+Peter,Hotez,vaccine scientist,United States
+Vinod,Khosla,venture capitalist & tech investor,United States
+Greta,Thunberg,climate activist,Sweden
+Malala,Yousafzai,education activist,Pakistan
+Jose,Andrés,chef & humanitarian,Spain
+Paul,Hewson,musician & activist (Bono),Ireland
+Ai,Weiwei,artist & activist,China
+Bryan,Stevenson,lawyer & civil rights advocate,United States
+Michelle,Bachelet,politician & human-rights leader,Chile
+Amina,Mohammed,diplomat (UN deputy secretary-general),Nigeria
+António,Guterres,diplomat (UN secretary-general),Portugal
+Tedros,Ghebreyesus,public-health leader (WHO director-general),Ethiopia
+Yuval Noah,Harari,historian & author,Israel
+Thomas,Piketty,economist & author,France
+Steven,Pinker,psychologist & author,Canada
+Noam,Chomsky,linguist & political commentator,United States
+Jordan,Peterson,psychologist & author,Canada
+Nassim Nicholas,Taleb,scholar & author,Lebanon
+Esther,Duflo,economist,France
+Paul,Krugman,economist,United States
+Anne,Applebaum,historian & journalist,United States
+Fareed,Zakaria,journalist & commentator,United States
+Joe,Biden,Politician,United States
+Barack,Obama,Politician,United States
+Li,Qiang,Politician,China
+Rahul,Gandhi,Politician,India
+Jair,Bolsonaro,Politician,Brazil
+Andrés Manuel,López Obrador,Politician,Mexico
+Rishi,Sunak,Politician,United Kingdom
+Olaf,Scholz,Politician,Germany
+Vladimir,Putin,Politician,Russia
+Sergey,Lavrov,Diplomat,Russia
+Julius,Malema,Politician,South Africa
+Abdelmadjid,Tebboune,Politician,Algeria
+Pierre,Poilievre,Politician,Canada
+Alexander,Lukashenko,Politician,Belarus
+Viktor,Orbán,Politician,Hungary
+Sheikh,Hasina,Politician,Bangladesh
+Imran,Khan,Politician,Pakistan
+Anwar,Ibrahim,Politician,Malaysia
+Tedros,Adhanom Ghebreyesus,International civil servant,Ethiopia
+Jens,Stoltenberg,International civil servant,Norway
+Ursula,von der Leyen,Politician,Germany
+Charles,Michel,Politician,Belgium
+Josep,Borrell,Diplomat,Spain
+Audrey,Azoulay,International civil servant,France
+Fatih,Birol,Energy economist,Turkey
+Gilbert,Houngbo,International civil servant,Togo
+Simon,Stiell,Climate diplomat,Grenada
+Rebeca,Grynspan,International civil servant,Costa Rica
+Volker,Türk,International civil servant,Austria
+Bill,Gates,Tech entrepreneur / philanthropist,United States
+Michael,Dell,Business executive,United States
+Susan,Wojcicki,Business executive,United States
+Travis,Kalanick,Tech entrepreneur,United States
+John,Collison,Tech entrepreneur,Ireland
+Lei,Jun,Tech entrepreneur,China
+Ren,Zhengfei,Business executive,China
+Ratan,Tata,Business executive,India
+Carlos,Slim,Business executive,Mexico
+François-Henri,Pinault,Business executive,France
+Mary,Barra,Business executive,United States
+Akio,Toyoda,Business executive,Japan
+Lee,Jae-yong,Business executive,South Korea
+Jamie,Dimon,Banking executive,United States
+Larry,Fink,Asset management executive,United States
+Steve,Cohen,Investor,United States
+George,Soros,Investor / philanthropist,United States
+Jim,Simons,Investor,United States
+Abigail,Johnson,Asset management executive,United States
+Adena,Friedman,Exchange executive,United States
+Roberto,Campos Neto,Central banker,Brazil
+Shaktikanta,Das,Central banker,India
+Ali,al-Sistani,Religious leader,Iraq
+Tawadros,II,Religious leader,Egypt
+Kirill,I,Religious leader,Russia
+Russell,Nelson,Religious leader,United States
+Sri Sri,Ravi Shankar,Spiritual teacher,India
+Sadhguru,Jaggi Vasudev,Spiritual teacher,India
+Mata,Amritanandamayi,Spiritual teacher,India
+Joel,Osteen,Religious leader,United States
+Rick,Warren,Religious leader,United States
+Jay-Z,,Musician,United States
+Rihanna,,Musician,Barbados
+Drake,,Musician,Canada
+Adele,,Musician,United Kingdom
+Lady,Gaga,Musician,United States
+Nicki,Minaj,Musician,Trinidad and Tobago
+Kanye,West,Musician,United States
+Travis,Scott,Musician,United States
+The Weeknd,,Musician,Canada
+Selena,Gomez,Musician,United States
+Dua,Lipa,Musician,United Kingdom
+Olivia,Rodrigo,Musician,United States
+Bad,Bunny,Musician,Puerto Rico
+Shakira,,Musician,Colombia
+Karol,G,Musician,Colombia
+Wizkid,,Musician,Nigeria
+Burna,Boy,Musician,Nigeria
+Davido,,Musician,Nigeria
+Brad,Pitt,Actor,United States
+Angelina,Jolie,Actor,United States
+Scarlett,Johansson,Actor,United States
+Jennifer,Lawrence,Actor,United States
+Shah Rukh,Khan,Actor,India
+Deepika,Padukone,Actor,India
+Steven,Spielberg,Director,United States
+Christopher,Nolan,Director,United Kingdom
+James,Cameron,Director,Canada
+Jimmy,Donaldson,Digital creator,United States
+Felix,Kjellberg,Digital creator,Sweden
+Khaby,Lame,Digital creator,Italy
+Charli,D'Amelio,Digital creator,United States
+Joe,Rogan,Podcaster,United States
+Anderson,Cooper,Journalist,United States
+Christiane,Amanpour,Journalist,United Kingdom
+Rachel,Maddow,Journalist,United States
+Trevor,Noah,Comedian / host,South Africa
+Arianna,Huffington,Media founder,Greece
+Geoffrey,Hinton,AI researcher,Canada
+Yoshua,Bengio,AI researcher,Canada
+Yann,LeCun,AI researcher,France
+Andrew,Ng,AI researcher,United States
+Fei-Fei,Li,AI researcher,United States
+María Corina,Machado,Democracy activist,Venezuela
+Vanessa,Nakate,Climate activist,Uganda
+Melinda,French Gates,Philanthropist,United States
+MacKenzie,Scott,Philanthropist,United States
+Michelle,Obama,Advocate / author,United States
+Kailash,Satyarthi,Child rights activist,India
+Leymah,Gbowee,Peace activist,Liberia
+José,Andrés,Chef / humanitarian,Spain
+Kamala,Harris,politician,United States
+Nancy,Pelosi,politician,United States
+Chuck,Schumer,politician,United States
+Mitch,McConnell,politician,United States
+Ron,DeSantis,politician,United States
+Gavin,Newsom,politician,United States
+Alexandria,Ocasio-Cortez,politician,United States
+Bernie,Sanders,politician,United States
+Elizabeth,Warren,politician,United States
+Nikki,Haley,politician,United States
+Pete,Buttigieg,politician,United States
+Marco,Rubio,politician,United States
+Lindsey,Graham,politician,United States
+Ted,Cruz,politician,United States
+Nigel,Farage,politician,United Kingdom
+Suella,Braverman,politician,United Kingdom
+Jeremy,Hunt,politician,United Kingdom
+Sadiq,Khan,politician,United Kingdom
+Marine,Le Pen,politician,France
+Jordan,Bardella,politician,France
+Jean-Luc,Mélenchon,politician,France
+Mark,Rutte,politician,Netherlands
+Geert,Wilders,politician,Netherlands
+Alexander,De Croo,politician,Belgium
+Sanna,Marin,politician,Finland
+Donald,Tusk,politician,Poland
+Andrzej,Duda,politician,Poland
+Mateusz,Morawiecki,politician,Poland
+Robert,Fico,politician,Slovakia
+Andrej,Babiš,politician,Czech Republic
+Kyriakos,Mitsotakis,politician,Greece
+Ekrem,İmamoğlu,politician,Turkey
+Benny,Gantz,politician,Israel
+Yair,Lapid,politician,Israel
+Naftali,Bennett,politician,Israel
+Mahmoud,Abbas,politician,Palestinian Territories
+Tamim,bin Hamad Al Thani,politician,Qatar
+Mohammed,bin Rashid Al Maktoum,politician,United Arab Emirates
+King,Abdullah II,politician,Jordan
+King,Mohammed VI,politician,Morocco
+Kais,Saied,politician,Tunisia
+Bashar,al-Assad,politician,Syria
+Haitham,bin Tariq,politician,Oman
+Salman,bin Abdulaziz Al Saud,politician,Saudi Arabia
+William,Ruto,politician,Kenya
+Raila,Odinga,politician,Kenya
+Abiy,Ahmed,politician,Ethiopia
+Hakainde,Hichilema,politician,Zambia
+Félix,Tshisekedi,politician,Democratic Republic of the Congo
+Alassane,Ouattara,politician,Côte d'Ivoire
+Nana,Addo Dankwa Akufo-Addo,politician,Ghana
+Paul,Biya,politician,Cameroon
+Yogi,Adityanath,politician,India
+Arvind,Kejriwal,politician,India
+Mamata,Banerjee,politician,India
+Nitish,Kumar,politician,India
+Bilawal,Bhutto Zardari,politician,Pakistan
+Shehbaz,Sharif,politician,Pakistan
+Wang,Yi,politician,China
+Hu,Jintao,politician,China
+Taro,Kono,politician,Japan
+Lee,Jaemyung,politician,South Korea
+Kim,Jong-un,politician,North Korea
+Aung San,Suu Kyi,politician,Myanmar
+Min Aung,Hlaing,politician,Myanmar
+Prayut,Chan-o-cha,politician,Thailand
+Thaksin,Shinawatra,politician,Thailand
+Hun,Sen,politician,Cambodia
+Hun,Manet,politician,Cambodia
+Ferdinand,Marcos Jr.,politician,Philippines
+Leni,Robredo,politician,Philippines
+Anthony,Albanese,politician,Australia
+Peter,Dutton,politician,Australia
+Chris,Luxon,politician,New Zealand
+Javier,Milei,politician,Argentina
+Cristina,Fernández de Kirchner,politician,Argentina
+Gabriel,Boric,politician,Chile
+Luís,Arce,politician,Bolivia
+Evo,Morales,politician,Bolivia
+Nayib,Bukele,politician,El Salvador
+Daniel,Ortega,politician,Nicaragua
+Juan,Guaidó,politician,Venezuela
+Gustavo,Petro,politician,Colombia
+Iván,Duque,politician,Colombia
+Tsai,Ing-wen,politician,Taiwan
+Lai,Ching-te,politician,Taiwan
+Marc,Benioff,tech entrepreneur,United States
+Stewart,Butterfield,tech entrepreneur,Canada
+Lisa,Su,business executive,United States
+Pat,Gelsinger,business executive,United States
+Arvind,Krishna,business executive,India
+Safra,Catz,business executive,Israel
+Brian,Moynihan,banking executive,United States
+David,Solomon,banking executive,United States
+Jane,Fraser,banking executive,United Kingdom
+Ana,Botín,banking executive,Spain
+Tidjane,Thiam,banking executive,Côte d'Ivoire
+Hank,Paulson,finance executive,United States
+Ben,Bernanke,economist,United States
+Li,Shufu,business executive,China
+Zhong,Shanshan,business executive,China
+Wang,Jianlin,business executive,China
+Dong,Mingzhu,business executive,China
+Zhang,Ruimin,business executive,China
+Azim,Premji,business executive,India
+Nandan,Nilekani,business executive,India
+Kumar,Mangalam Birla,business executive,India
+Strive,Masiyiwa,business executive,Zimbabwe
+Patrice,Motsepe,business executive,South Africa
+Koos,Bekker,business executive,South Africa
+Jorge,Paulo Lemann,business executive,Brazil
+Marcel,Herrmann Telles,business executive,Brazil
+Carlos,Alberto Sicupira,business executive,Brazil
+Vladimir,Potanin,business executive,Russia
+Alexey,Mordashov,business executive,Russia
+Oleg,Deripaska,business executive,Russia
+Leonid,Mikhelson,business executive,Russia
+Alisher,Usmanov,business executive,Uzbekistan
+Yasir,Al-Rumayyan,sovereign wealth fund executive,Saudi Arabia
+Mohamed,Alabbar,real estate developer,United Arab Emirates
+Ginni,Rometty,business executive,United States
+Indra,Nooyi,business executive,India
+Marillyn,Hewson,business executive,United States
+Ursula,Burns,business executive,United States
+Bruno,Mars,musician,United States
+Post,Malone,musician,United States
+Calvin,Harris,musician,United Kingdom
+Snoop,Dogg,musician,United States
+Doja,Cat,musician,United States
+Lil,Nas X,musician,United States
+Eminem,,musician,United States
+Sia,Furler,musician,Australia
+Rosalía,Vila Tobella,musician,Spain
+J,Balvin,musician,Colombia
+Maluma,,musician,Colombia
+Anitta,Maciel,musician,Brazil
+Ozuna,Juan Carlos,musician,Puerto Rico
+Daddy,Yankee,musician,Puerto Rico
+IU,Lee Ji-eun,musician,South Korea
+Jisoo,Kim,musician,South Korea
+Roseanne,Park,musician,New Zealand
+Jungkook,Jeon,musician,South Korea
+Jimin,Park,musician,South Korea
+Will,Smith,actor,United States
+Keanu,Reeves,actor,Canada
+Samuel L.,Jackson,actor,United States
+Tom,Hanks,actor,United States
+George,Clooney,actor,United States
+Matt,Damon,actor,United States
+Ben,Affleck,actor,United States
+Julia,Roberts,actor,United States
+Sandra,Bullock,actor,United States
+Henry,Cavill,actor,United Kingdom
+Chris,Evans,actor,United States
+Chris,Pratt,actor,United States
+Gal,Gadot,actor,Israel
+Yalitza,Aparicio,actor,Mexico
+Lupita,Nyong'o,actor,Kenya
+Youn,Yuh-jung,actor,South Korea
+Mads,Mikkelsen,actor,Denmark
+Song,Joong-ki,actor,South Korea
+Lee,Min-ho,actor,South Korea
+Nawazuddin,Siddiqui,actor,India
+Aamir,Khan,actor,India
+Salman,Khan,actor,India
+Akshay,Kumar,actor,India
+Ranveer,Singh,actor,India
+Alia,Bhatt,actor,India
+Rajinikanth,,actor,India
+Kamal,Haasan,actor,India
+Joseph,Vijay,actor,India
+Quentin,Tarantino,director,United States
+Martin,Scorsese,director,United States
+Bong,Joon-ho,director,South Korea
+Taika,Waititi,director,New Zealand
+Zack,Snyder,director,United States
+Greta,Gerwig,director,United States
+Jordan,Peele,director,United States
+Guillermo,del Toro,director,Mexico
+Alfonso,Cuarón,director,Mexico
+Alejandro G.,Iñárritu,director,Mexico
+Jimmy,Fallon,TV host,United States
+Jimmy,Kimmel,TV host,United States
+Stephen,Colbert,TV host,United States
+John,Oliver,TV host,United Kingdom
+James,Corden,TV host,United Kingdom
+Tucker,Carlson,TV host,United States
+Sean,Hannity,TV host,United States
+Piers,Morgan,TV host,United Kingdom
+Ben,Shapiro,commentator,United States
+Phillip,McGraw,TV host,United States
+Logan,Paul,digital creator,United States
+Jake,Paul,digital creator,United States
+Mark,Edward Fischbach,digital creator,United States
+Imane,Anys,digital creator,Canada
+Addison,Rae Easterling,digital creator,United States
+Emma,Chamberlain,digital creator,United States
+Huda,Kattan,beauty entrepreneur,United States
+Chiara,Ferragni,fashion influencer,Italy
+Valeria,Lipovetsky,digital creator,Canada
+Nikkie,de Jager,beauty creator,Netherlands
+Patrisse,Cullors,activist,United States
+Alicia,Garza,activist,United States
+Opal,Tometi,activist,United States
+Tarana,Burke,activist,United States
+Angela,Davis,activist,United States
+Gloria,Steinem,activist,United States
+Joshua,Wong,activist,Hong Kong
+Nathan,Law,activist,Hong Kong
+Agnes,Chow,activist,Hong Kong
+Alexei,Navalny,activist,Russia
+Sviatlana,Tsikhanouskaya,activist,Belarus
+Maria,Kolesnikova,activist,Belarus
+David,Miliband,NGO leader,United Kingdom
+Kenneth,Roth,NGO leader,United States
+Agnès,Callamard,NGO leader,France
+Jan,Egeland,NGO leader,Norway
+Samantha,Power,diplomat,United States
+T.D.,Jakes,religious leader,United States
+Joyce,Meyer,religious leader,United States
+Paula,White-Cain,religious leader,United States
+Enoch,Adeboye,religious leader,Nigeria
+David,Oyedepo,religious leader,Nigeria
+Amartya,Sen,economist,India
+Joseph,Stiglitz,economist,United States
+Jeffrey,Sachs,economist,United States
+Daron,Acemoglu,economist,Turkey
+Abhijit,Banerjee,economist,India
+Michael,Kremer,economist,United States
+Branko,Milanovic,economist,Serbia
+Mariana,Mazzucato,economist,Italy
+Dani,Rodrik,economist,Turkey
+Robert,Shiller,economist,United States
+Slavoj,Žižek,philosopher,Slovenia
+Martha,Nussbaum,philosopher,United States
+Judith,Butler,philosopher,United States
+Cornel,West,philosopher,United States
+Peter,Singer,philosopher,Australia
+Michael,Sandel,philosopher,United States
+Francis,Fukuyama,political scientist,United States
+Timothy,Snyder,historian,United States
+Ta-Nehisi,Coates,writer,United States
+Chimamanda,Ngozi Adichie,writer,Nigeria
+Margaret,Atwood,writer,Canada
+Salman,Rushdie,writer,United Kingdom
+George R.R.,Martin,writer,United States
+J.K.,Rowling,writer,United Kingdom
+Neil,Gaiman,writer,United Kingdom
+Stephen,King,writer,United States
+Malcolm,Gladwell,writer,Canada
+Brené,Brown,writer,United States
+Roxane,Gay,writer,United States
+Thomas,L. Friedman,journalist,United States
+Nicholas,Kristof,journalist,United States
+Ezra,Klein,journalist,United States
+Glenn,Greenwald,journalist,Brazil
+Maria,Ressa,journalist,Philippines
+Dmitry,Muratov,journalist,Russia
+Masha,Gessen,journalist,United States
+Bill,Nye,science communicator,United States
+Brian,Greene,physicist,United States
+Carlo,Rovelli,physicist,Italy
+Lisa,Randall,physicist,United States
+Sabine,Hossenfelder,physicist,Germany
+Jacinda,Ardern,Former prime minister,New Zealand
+Abdullah,II,King,Jordan
+Mohammed,VI,King,Morocco
+Kim,Jong Un,Leader,North Korea
+Nicolás,Maduro,President,Venezuela
+Miguel,Díaz-Canel,President,Cuba
+Aleksandar,Vučić,President,Serbia
+Anthony,Blinken,Secretary of state,United States
+Janet,Yellen,Treasury secretary,United States
+Gina,Raimondo,Commerce secretary,United States
+Jake,Sullivan,National security advisor,United States
+Lloyd,Austin,Defense secretary,United States
+Hakeem,Jeffries,Congressional leader,United States
+Greg,Abbott,Governor,United States
+Eric,Adams,Mayor,United States
+Anne,Hidalgo,Mayor,France
+Yuriko,Koike,Governor,Japan
+John,Lee,Chief executive,Hong Kong
+Margrethe,Vestager,Competition commissioner,Denmark
+Thierry,Breton,EU commissioner,France
+Howard,Schultz,Business executive,United States
+Shiv,Nadar,Business executive,India
+Uday,Kotak,Banking executive,India
+Henry,Paulson,Banking executive,United States
+Kevin,Systrom,Tech entrepreneur,United States
+Mike,Krieger,Tech entrepreneur,Brazil
+Brian,Acton,Tech entrepreneur,United States
+Jan,Koum,Tech entrepreneur,Ukraine
+Drew,Houston,Tech entrepreneur,United States
+Garrett,Camp,Tech entrepreneur,Canada
+Nathan,Blecharczyk,Tech entrepreneur,United States
+Joe,Gebbia,Tech entrepreneur,United States
+Tobi,Lütke,Tech entrepreneur,Canada
+Melanie,Perkins,Tech entrepreneur,Australia
+Cliff,Obrecht,Tech entrepreneur,Australia
+Peter,Thiel,Investor,United States
+Marc,Andreessen,Investor,United States
+Ben,Horowitz,Investor,United States
+Yuri,Milner,Investor,Israel
+Dustin,Moskovitz,Tech entrepreneur,United States
+Eduardo,Saverin,Tech entrepreneur,Brazil
+Alex,Karp,Business executive,United States
+Ilya,Sutskever,AI researcher,United States
+Daniela,Amodei,AI executive,United States
+Emad,Mostaque,Tech entrepreneur,United Kingdom
+Robert,Iger,Business executive,United States
+Meredith,Kopit Levien,Media executive,United States
+Mark,Thompson,Media executive,United Kingdom
+Candace,Owens,Commentator,United States
+Kara,Swisher,Journalist,United States
+Thomas,Friedman,Columnist,United States
+Cass,Sunstein,Legal scholar,United States
+Branko,Milanović,Economist,Serbia
+Jared,Diamond,Author,United States
+Rebecca,Solnit,Author,United States
+George,R.R. Martin,Author,United States
+Soumya,Swaminathan,Public health leader,India
+Salim,Abdool Karim,Epidemiologist,South Africa
+Michael,Mann,Climate scientist,United States
+James,Hansen,Climate scientist,United States
+Hina,Jilani,Human rights lawyer,Pakistan
+Darren,Walker,Philanthropist,United States
+Raj,Shah,Philanthropist,United States
+Reshma,Saujani,Nonprofit leader,United States
+Al,Gore,Climate advocate,United States
+Bill,McKibben,Climate activist,United States
+Naomi,Klein,Author / activist,Canada
+Ibram X.,Kendi,Scholar / activist,United States
+Addison,Rae,Digital creator,United States
+Mark,Fischbach,Digital creator,United States
+Liza,Koshy,Digital creator,United States
+Ban,Ki-moon,Former UN secretary-general,South Korea
+Achim,Steiner,UNDP administrator,Germany
+Filippo,Grandi,UN high commissioner for refugees,Italy
+Winnie,Byanyima,UNAIDS executive director,Uganda
+Catherine,Russell,UNICEF executive director,United States
+Cindy,McCain,World Food Programme executive director,United States
+Mirjana,Spoljaric,ICRC president,Switzerland
+Inger,Ashing,Save the Children International CEO,Sweden
+Amitabh,Behar,Oxfam International executive director,India
+Hugh,Evans,Global Citizen CEO,Australia
+Peter,Sands,Global Fund executive director,United Kingdom
+Mathias,Cormann,OECD secretary-general,Australia
+Qu,Dongyu,FAO director-general,China
+Philemon,Yang,UN General Assembly president,Cameroon
+Roberta,Metzola,European Parliament president,Malta
+Annalena,Baerbock,Foreign minister,Germany
+Lina,Khan,Antitrust regulator,United States
+Jonathan,Kanter,Antitrust regulator,United States
+Sherrilyn,Ifill,Civil rights lawyer,United States
+Amal,Clooney,Human-rights lawyer,United Kingdom
+Kimberlé,Crenshaw,Legal scholar,United States
+Mary,Robinson,Former president & climate advocate,Ireland
+Richard,Branson,Entrepreneur & philanthropist,United Kingdom
+Laurene,Powell Jobs,Philanthropist & media owner,United States
+Priscilla,Chan,Philanthropist,United States
+Pierre,Omidyar,Entrepreneur & philanthropist,United States
+Cari,Tuna,Philanthropist,United States
+John,Arnold,Investor & philanthropist,United States
+George,Kaiser,Philanthropist,United States
+Amin,Nasser,Saudi Aramco CEO,Saudi Arabia
+Wael,Sawan,Shell CEO,Netherlands
+Michael,Wirth,Chevron CEO,United States
+Hock,Tan,Broadcom CEO,United States
+Hein,Schumacher,Unilever CEO,Netherlands
+Laxman,Narasimhan,Starbucks CEO,India
+Ramon,Laguarta,PepsiCo CEO,Spain
+James,Quincey,Coca-Cola CEO,United Kingdom
+Dirk,Van de Put,Mondelez CEO,Belgium
+Oliver,Blume,Volkswagen Group CEO,Germany
+Ola,Kallenius,Mercedes-Benz CEO,Germany
+Raj,Subramaniam,FedEx CEO,India
+Carol,Tome,UPS CEO,United States
+Guillaume,Faury,Airbus CEO,France
+Scott,Kirby,United Airlines CEO,United States
+Akbar,Al Baker,Qatar Airways CEO,Qatar
+Whitney,Wolfe Herd,Bumble CEO,United States
+Anne,Wojcicki,23andMe CEO,United States
+Dylan,Field,Figma CEO,United States
+Moxie,Marlinspike,Signal creator,United States
+Meredith,Whittaker,Signal president & tech activist,United States
+Max,Tegmark,Physicist & AI safety advocate,Sweden
+Stuart,Russell,Computer scientist & AI researcher,United Kingdom
+Nick,Bostrom,Philosopher & AI theorist,Sweden
+Gary,Marcus,AI critic & author,Canada
+Cynthia,Rudin,Computer scientist,United States
+Tim,O'Reilly,Tech publisher & thinker,United States
+Christiana,Figueres,Climate diplomat,Costa Rica
+Laurence,Tubiana,Climate policy expert,France
+Johan,Rockstrom,Climate scientist,Sweden
+Sunita,Narain,Environmental activist,India
+Xiye,Bastida,Climate activist,Mexico
+Leah,Stokes,Climate policy scholar,Canada
+Alaa,Abdel Fattah,Democracy activist,Egypt
+Narges,Mohammadi,Human-rights activist,Iran
+Ilwad,Elman,Peace activist,Somalia
+Laverne,Cox,Actor & trans-rights advocate,United States
+Michelle,Alexander,Author & legal scholar,United States
+Oleksandra,Matviichuk,Human-rights lawyer,Ukraine
+Arundhati,Roy,Author & activist,India
+Haruki,Murakami,Author,Japan
+Elif,Shafak,Author,Turkey
+Atul,Gawande,Surgeon & writer,United States
+Michael,Pollan,Author,United States
+David,Sinclair,Ageing researcher,Australia
+Eric,Topol,Cardiologist & digital-health leader,United States
+Devi,Sridhar,Global health professor,United Kingdom
+Dave,Chappelle,Comedian,United States
+Ricky,Gervais,Comedian,United Kingdom
+Ali,Wong,Comedian,United States
+Bo,Burnham,Comedian & filmmaker,United States
+John,Mulaney,Comedian,United States
+Anna,Wintour,Fashion editor,United Kingdom
+Demna,Gvasalia,Fashion designer,Georgia
+Pharrell,Williams,Producer & fashion designer,United States
+Olivier,Rousteing,Fashion designer,France
+Donatella,Versace,Fashion designer,Italy
+Stella,McCartney,Fashion designer,United Kingdom
+Marques,Brownlee,Tech reviewer & YouTuber,United States
+Casey,Neistat,Filmmaker & YouTuber,United States
+Olajide,Olatunji,YouTuber & entrepreneur,United Kingdom
+Lex,Fridman,Podcaster & researcher,United States
+Andrew,Tate,Online commentator,Romania
+Marie,Kondo,Organizing consultant & TV host,Japan
+David,Chang,Chef & media personality,United States
+Massimo,Bottura,Chef,Italy
+Yotam,Ottolenghi,Chef,United Kingdom
+Achille,Mbembe,Philosopher,Cameroon
+Ruha,Benjamin,Sociologist,United States
+Ellen,Johnson Sirleaf,Former president & activist,Liberia
+Graca,Machel,Children's-rights advocate,Mozambique
+Klaus,Schwab,WEF founder,Switzerland
+Borge,Brende,WEF president,Norway
+Ian,Bremmer,Political risk analyst,United States
+Parag,Khanna,Political scientist,Singapore
+John,Roberts,Chief justice,United States
+Clarence,Thomas,Supreme Court justice,United States
+Samuel,Alito,Supreme Court justice,United States
+Sonia,Sotomayor,Supreme Court justice,United States
+Elena,Kagan,Supreme Court justice,United States
+Neil,Gorsuch,Supreme Court justice,United States
+Brett,Kavanaugh,Supreme Court justice,United States
+Amy,Coney Barrett,Supreme Court justice,United States
+Amy,Klobuchar,Senator,United States
+Mitt,Romney,Senator,United States
+Josh,Hawley,Senator,United States
+Joe,Manchin,Senator,United States
+Ilhan,Omar,Representative,United States
+Rashida,Tlaib,Representative,United States
+Lauren,Boebert,Representative,United States
+Marjorie,Taylor Greene,Representative,United States
+Katie,Porter,Representative,United States
+Amit,Shah,Home minister,India
+Nirmala,Sitharaman,Finance minister,India
+Piyush,Goyal,Commerce minister,India
+Jairam,Ramesh,Parliamentary leader,India
+Asaduddin,Owaisi,Politician,India
+Shashi,Tharoor,Politician and author,India
+Alexander,Van der Bellen,President,Austria
+Gabriel,Attal,Prime minister,France
+Robert,Habeck,Vice-chancellor,Germany
+Karim,Khan,ICC prosecutor,United Kingdom
+Fatou,Bensouda,Former ICC prosecutor,Gambia
+Dilma,Rousseff,Head of BRICS Bank,Brazil
+Jose,Ramos-Horta,President,Timor-Leste
+Roland,Busch,CEO Siemens,Germany
+Pascal,Soriot,CEO AstraZeneca,France
+Albert,Bourla,CEO Pfizer,United States
+Emma,Walmsley,CEO GSK,United Kingdom
+Stephane,Bancel,CEO Moderna,France
+Paul,Hudson,CEO Sanofi,France
+Vas,Narasimhan,CEO Novartis,Switzerland
+Joaquin,Duato,CEO Johnson & Johnson,United States
+Reshma,Kewalramani,CEO Vertex Pharmaceuticals,United States
+Miguel,Patricio,CEO Kraft Heinz,Portugal
+Mark,Schneider,CEO Nestle,Switzerland
+Daniel,Zhang,Former CEO Alibaba,China
+Zhang,Lei,Investor,China
+Gayle,King,TV host,United States
+Ellen,DeGeneres,TV host,United States
+Hasan,Minhaj,Comedian and commentator,United States
+Samantha,Bee,TV host,Canada
+Jon,Stewart,Comedian and host,United States
+Bill,Maher,TV host,United States
+Megyn,Kelly,Commentator,United States
+Laura,Ingraham,Commentator,United States
+Joe,Scarborough,TV host,United States
+Mika,Brzezinski,TV host,United States
+Glenn,Beck,Commentator,United States
+Ali,Abdaal,Digital creator,United Kingdom
+Arun,Maini,Tech YouTuber,United Kingdom
+Nuseir,Yassin,Digital creator,Israel
+Lilly,Singh,Digital creator,Canada
+Zach,King,Digital creator,United States
+Gary,Vaynerchuk,Entrepreneur and influencer,United States
+Tim,Ferriss,Author and podcaster,United States
+Joe,Dispenza,Author and speaker,United States
+Ed,Boyden,Neuroscientist,United States
+Karl,Friston,Neuroscientist,United Kingdom
+David,Attenborough,Naturalist and broadcaster,United Kingdom
+Isabel,Allende,Author,Chile
+Orhan,Pamuk,Author,Turkey
+Kazuo,Ishiguro,Author,United Kingdom
+Colson,Whitehead,Author,United States
+David,Wallace-Wells,Journalist and author,United States
+Zeynep,Tufekci,Sociologist and writer,Turkey
+Rutger,Bregman,Author,Netherlands
+Thomas,Frank,Author,United States
+Robert,Reich,Economist and commentator,United States
+Paul,Collier,Economist,United Kingdom
+Fethullah,Gulen,Religious leader,Turkey
+Tariq,Ramadan,Islamic scholar,Switzerland
+Thich,Nhat Hanh,Zen teacher,Vietnam
+Mahathir,Mohamad,Former prime minister,Malaysia
+Ken,Langone,Investor,United States
+Jim,Kim,Former World Bank president,United States
+Gro,Harlem Brundtland,Former prime minister and WHO leader,Norway
+Abdullah,Gul,Former president,Turkey
+Mohammad,Javad Zarif,Former foreign minister,Iran
+Dean,Baquet,Journalist,United States
+Marty,Baron,Journalist,United States
+Dieter,Rams,Industrial designer,Germany
+Jonathan,Ive,Industrial designer,United Kingdom
+Stefan,Persson,Fashion retail billionaire,Sweden
+John,Elkann,Business leader,Italy
+Doug,McMillon,CEO Walmart,United States
+Darren,Woods,CEO ExxonMobil,United States
+Patrick,Pouyanne,CEO TotalEnergies,France
+Saad,Al-Kaabi,Energy minister and CEO QatarEnergy,Qatar
+Sultan,Al Jaber,Energy executive and climate diplomat,United Arab Emirates
+Tadashi,Yanai,CEO Fast Retailing (Uniqlo),Japan
+Renzo,Rosso,Fashion entrepreneur (Diesel),Italy
+Martin,Sorrell,Advertising executive (WPP founder),United Kingdom
+Bob,Sternfels,Management consultant (McKinsey global managing partner),United States
+Carmine,Di Sibio,Accounting executive (EY global chair),Italy
+Punit,Renjen,Management consultant (former Deloitte CEO),India
+Christophe,Weber,CEO Takeda Pharmaceutical,France
+Jean-Paul,Agon,Chairman LOréal,France
+Remo,Ruffini,CEO Moncler,Italy
+Nassef,Sawiris,Businessman,Egypt
+Naguib,Sawiris,Businessman,Egypt
+Doug,Parker,Airline executive (American Airlines),United States
+Oscar,Munoz,Airline executive (United Airlines former CEO),United States
+Tim,Berners-Lee,Web pioneer,United Kingdom
+Vint,Cerf,Internet pioneer,United States
+Linus,Torvalds,Software engineer (Linux creator),Finland
+Guido,van Rossum,Software engineer (Python creator),Netherlands
+Mitchell,Baker,Tech leader (Mozilla),United States
+Bruce,Schneier,Cybersecurity expert,United States
+Cory,Doctorow,Writer and digital-rights activist,Canada
+Jaron,Lanier,Computer scientist and author,United States
+Chris,Anderson,Curator (TED),United Kingdom
+Jimmy,Wales,Internet entrepreneur (Wikipedia cofounder),United Kingdom
+Katherine,Maher,Nonprofit leader (ex Wikimedia CEO),United States
+Terence,Tao,Mathematician,Australia
+Cedric,Villani,Mathematician,France
+Donna,Strickland,Physicist,Canada
+Andrea,Ghez,Astronomer,United States
+Carolyn,Bertozzi,Chemist,United States
+Svante,Paabo,Paleogeneticist,Sweden
+Kip,Thorne,Physicist,United States
+David,Julius,Physiologist,United States
+Agnes,Binagwaho,Physician and health leader,Rwanda
+Gagandeep,Kang,Virologist,India
+Vandana,Shiva,Environmental activist,India
+Aruna,Roy,Social activist,India
+Medha,Patkar,Environmental activist,India
+Ingrid,Newkirk,Animal-rights activist,United States
+Peter,Tatchell,Human-rights activist,United Kingdom
+Mona,Eltahawy,Feminist writer,Egypt
+Nadya,Okamoto,Social entrepreneur and activist,United States
+Benjamin,Crump,Civil-rights attorney,United States
+David,Remnick,Editor (The New Yorker),United States
+Jorge,Ramos,Journalist,Mexico
+Mehdi,Hasan,Journalist,United States
+Jake,Tapper,Journalist,United States
+Rania,Abouzeid,Journalist,Lebanon
+Clarissa,Ward,Journalist,United States
+Lyse,Doucet,Journalist,Canada
+Hamid,Mir,Journalist,Pakistan
+N.K.,Jemisin,Author,United States
+Brandon,Sanderson,Author,United States
+Patrick,Rothfuss,Author,United States
+Han,Kang,Author,South Korea
+Mo,Yan,Author,China
+Liu,Cixin,Author,China
+Elena,Ferrante,Author,Italy
+Yu,Hua,Author,China
+Olga,Tokarczuk,Author,Poland
+Wole,Soyinka,Author,Nigeria
+Ngugi,wa Thiong'o,Author,Kenya
+Aravind,Adiga,Author,India
+Eka,Kurniawan,Author,Indonesia
+David,Guetta,Musician,France
+Stromae,,Musician,Belgium
+Femi,Kuti,Musician,Nigeria
+Till,Lindemann,Musician,Germany
+Juan,Luis Guerra,Musician,Dominican Republic
+Asha,Bhosle,Singer,India
+Amr,Diab,Musician,Egypt
+Rahat,Fateh Ali Khan,Singer,Pakistan
+Nancy,Ajram,Musician,Lebanon
+Kadim,Al Sahir,Musician,Iraq
+Angham,Mohamed Ali Suleiman,Singer,Egypt
+Elissa,Khoury,Singer,Lebanon
+Hussein,Al Jasmi,Singer,United Arab Emirates
+Vince,Gilligan,Writer and producer,United States
+David,Benioff,Writer and producer,United States
+D.B.,Weiss,Writer and producer,United States
+Jesse,Armstrong,Writer and producer,United Kingdom
+Mike,White,Writer and producer,United States
+Hwang,Dong-hyuk,Writer and director,South Korea
+Kathleen,Kennedy,Film producer (Lucasfilm president),United States
+Bela,Bajaria,Television executive (Netflix),United States
+Rachell,Hofstetter,Digital creator (Valkyrae),United States
+Tyler,Blevins,Digital creator (Ninja),United States
+Ben,Francis,Entrepreneur (Gymshark),United Kingdom
+Steven,Bartlett,Entrepreneur and podcaster,United Kingdom
+Neal,Mohan,Tech executive (YouTube CEO),United States
+Michelle,Phan,Digital creator,United States
+James,Charles,Digital creator,United States
+Bretman,Rock,Digital creator,Philippines
+Bella,Poarch,Digital creator,Philippines
+Kwame,Anthony Appiah,Philosopher,Ghana
+Byung-Chul,Han,Philosopher,South Korea
+Chantal,Mouffe,Political theorist,Belgium
+Thomas,Nagel,Philosopher,United States
+Ingrid,Daubechies,Mathematician,Belgium
+Teresita,Fernandez,Artist,United States
+El,Anatsui,Artist,Ghana
+Zanele,Muholi,Artist,South Africa
+Theaster,Gates,Artist,United States
+JR,JR,Artist,France
+Hernan,Diaz Alonso,Architect,Argentina
+Jeanne,Gang,Architect,United States
+Alejandro,Aravena,Architect,Chile
+Diébédo Francis,Kéré,Architect,Burkina Faso
+Toyo,Ito,Architect,Japan
+Wang,Shu,Architect,China

@@ -1,0 +1,70 @@
+# Orgo System Reference Chart
+
+## 1\. Graph Identifiers (The "Letters")
+
+Used in JSON files (`general.json`, `care.json`) to define **what** things are and **how** they relate.
+
+| Prefix | Name | Format | Origin | Definition |
+| :--- | :--- | :--- | :--- | :--- |
+| **Q** | **Concept (Item)** | `Q####` | Wikidata | A universal object or concept (e.g., `Q43229` Organization). Reused directly from Wikidata. |
+| **P** | **Universal Property** | `P####` | Wikidata | A standard relation reused "as-is" (e.g., `P31` instance of, `P361` part of). |
+| **R** | **Refinement** | `R####NNN` | Orgo | A specific workflow relation based on a P-property.<br>**Format:** `R` + [Base P] + [3-digits].<br>*(e.g., `R710002` "assigned to" is a specific type of `P710` "participant")* |
+| **S** | **Orgo Property** | `S####NNN` | Orgo | A property exclusive to Orgo (no direct Wikidata match).<br>**Format:** `S` + [Base P OR 0000] + [3-digits].<br>*(e.g., `S1552001` "priority\_level")* |
+
+-----
+
+## 2\. Routing Labels (The "Numbers")
+
+Used on Cases and Tasks to define **routing**, **broadcast scope**, and **intent**.
+
+**Format:** `<BASE>.<CATEGORY><SUBCATEGORY>.<HORIZONTAL_ROLE>`
+*(Example: `100.94.Operations.Safety`)*
+
+### A. Vertical Base (Who is in scope?)
+
+The integer before the first dot defines the hierarchy or broadcast level.
+
+| Code | Level / Scope | Note |
+| :--- | :--- | :--- |
+| **1** | CEO / Top Individual | Specific individual scope. |
+| **10** | **Executive Broadcast** | Informational broadcast to top leadership. |
+| **11** | Department Head | Specific individual scope. |
+| **100** | **Department Broadcast** | Informational broadcast to all dept heads. |
+| **1000** | **Staff Broadcast** | Informational broadcast to all staff. |
+
+### B. Category (1st Decimal - What type of info?)
+
+The first digit after the dot (1–9).
+
+| Code | Meaning |
+| :--- | :--- |
+| **.1** | Operational information |
+| **.2** | Strategic information |
+| **.3** | Compliance & reporting |
+| **.4** | Customer / client information |
+| **.5** | Training & development |
+| **.6** | Communication & coordination |
+| **.7** | Financial information |
+| **.8** | Technical & infrastructure |
+| **.9** | **Crisis & emergency** |
+
+### C. Subcategory (2nd Decimal - What is the intent?)
+
+The second digit after the dot (1–5).
+
+| Code | Intent | Behavior |
+| :--- | :--- | :--- |
+| **.1** | **Request** | Asks for resources/action. Spawns Tasks. |
+| **.2** | **Update** | Informational flow. Usually no Tasks. |
+| **.3** | **Decision** | Approval/Rejection/Directive. |
+| **.4** | **Report** | Structured data (incident/audit). Feeds Analytics. |
+| **.5** | **Distribution** | Pure broadcast. No Tasks. |
+
+### D. Horizontal Role (Text)
+
+Functional routing labels (Examples):
+
+  * `Ops.Maintenance`
+  * `HR.Recruitment`
+  * `IT.Support`
+  * `Finance.Audit`
