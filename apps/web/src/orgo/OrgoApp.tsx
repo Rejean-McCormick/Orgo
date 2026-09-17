@@ -15,6 +15,7 @@ import {
 } from "react";
 import { Actor, ApiError, can, OrgoClient, Row, rowId, rows, str } from "./api";
 import { profiles, routes, Section } from "./profiles";
+import { InteractionSurface, interactionSections } from "./InteractionSurfaces";
 
 export interface OrgoAppProps {
   path: string[];
@@ -33,23 +34,23 @@ const states: Record<string, string[]> = {
   resolved: ["in_progress", "archived"],
 };
 const stateName: Record<string, string> = {
-  PENDING: "À faire",
-  IN_PROGRESS: "En cours",
-  ON_HOLD: "En pause",
-  ESCALATED: "Escaladée",
-  COMPLETED: "Terminée",
-  FAILED: "Échec",
-  CANCELLED: "Annulée",
-  open: "Ouvert",
-  in_progress: "En cours",
-  resolved: "Résolu",
-  archived: "Archivé",
-  RECEIVED: "Reçu",
-  PROCESSED: "Traité",
-  REJECTED: "Rejeté",
-  SUCCEEDED: "Réussie",
-  RUNNING: "En cours",
-  DEAD: "À reprendre",
+  PENDING: "To do",
+  IN_PROGRESS: "In progress",
+  ON_HOLD: "On hold",
+  ESCALATED: "Escalated",
+  COMPLETED: "Completed",
+  FAILED: "Failed",
+  CANCELLED: "Cancelled",
+  open: "Open",
+  in_progress: "In progress",
+  resolved: "Resolved",
+  archived: "Archived",
+  RECEIVED: "Received",
+  PROCESSED: "Processed",
+  REJECTED: "Rejected",
+  SUCCEEDED: "Succeeded",
+  RUNNING: "In progress",
+  DEAD: "Needs retry",
 };
 function Badge({ value }: { value: unknown }) {
   const v = str(value);
@@ -66,7 +67,7 @@ function DateText({ value }: { value: unknown }) {
   return (
     <>
       {value
-        ? new Date(str(value)).toLocaleString("fr-CA", {
+        ? new Date(str(value)).toLocaleString("en-CA", {
             dateStyle: "medium",
             timeStyle: "short",
           })
@@ -91,6 +92,7 @@ export function OrgoApp({
 }: OrgoAppProps) {
   const client = useMemo(() => new OrgoClient("", apiBase), [apiBase]);
   const [actor, setActor] = useState<Actor | null>(null),
+    [authReady, setAuthReady] = useState(false),
     [profile, setProfile] = useState(initialProfile),
     [error, setError] = useState("");
   const [search, setSearch] = useState(""),
@@ -114,6 +116,31 @@ export function OrgoApp({
       ? composition.home
       : allowed[0];
   const id = path[1];
+  useEffect(() => {
+    let cancelled = false;
+    const restore = async () => {
+      try {
+        const current = await client.request<Actor>('auth/me');
+        if (!cancelled) setActor(current);
+      } catch {
+        try {
+          const local = await client.request<{ context: Actor }>(
+            'auth/local-auto-login',
+            'POST',
+          );
+          if (!cancelled) setActor(local.context);
+        } catch {
+          // Normal when local auto-login is disabled or no session exists.
+        }
+      } finally {
+        if (!cancelled) setAuthReady(true);
+      }
+    };
+    void restore();
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
   useEffect(() => {
     const timer = setTimeout(() => setQuery(search), 250);
     return () => clearTimeout(timer);
@@ -163,6 +190,7 @@ export function OrgoApp({
     if (
       section === "insights" ||
       section === "settings" ||
+      interactionSections.includes(section as (typeof interactionSections)[number]) ||
       extensionSections.includes(section)
     ) {
       setLoading(false);
@@ -182,7 +210,7 @@ export function OrgoApp({
       })
       .catch((e) => {
         if (!cancelled)
-          setError(e instanceof Error ? e.message : "Chargement impossible");
+          setError(e instanceof Error ? e.message : "Unable to load");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -201,14 +229,22 @@ export function OrgoApp({
     };
   }, [actor, client, section, id, offset, query, version]);
 
+  if (!authReady)
+    return (
+      <main className="login no-view">
+        <img className="standalone-logo" src="/logo_k.svg" alt="Orgo" />
+        <p>Restoring your session…</p>
+      </main>
+    );
   if (!actor) return <Login client={client} onLogin={setActor} />;
   if (!section)
     return (
-      <main className="login">
+      <main className="login no-view">
+        <img className="standalone-logo" src="/logo_k.svg" alt="Orgo" />
         <h1>Orgo</h1>
-        <Empty>Aucune vue autorisée dans ce profil.</Empty>
+        <Empty>No view is authorized in this profile.</Empty>
         <select
-          aria-label="Profil"
+          aria-label="Profile"
           value={profile}
           onChange={(e) => setProfile(e.target.value)}
         >
@@ -222,7 +258,7 @@ export function OrgoApp({
             setActor(null);
           }}
         >
-          Se déconnecter
+          Sign out
         </button>
       </main>
     );
@@ -236,13 +272,13 @@ export function OrgoApp({
     <div className={`app ${mode === "hosted" ? "hosted" : ""}`}>
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-mark">o</span>
+          <img className="brand-logo" src="/logo_k.svg" alt="" aria-hidden="true" />
           <div>
-            orgo<small>Travail opérationnel</small>
+            orgo<small>Organize and Go</small>
           </div>
         </div>
         <label className="profile-label">
-          Espace de travail
+          Workspace
           <select
             value={profile}
             onChange={(e) => {
@@ -267,8 +303,13 @@ export function OrgoApp({
             </button>
           ))}
         </nav>
+        {allowed.includes("intake") && can(actor, "signals:write") && (
+          <button className="sidebar-report" onClick={() => go("intake")}>
+            + Report something
+          </button>
+        )}
         <div className="sidebar-footer">
-          <span className="connection">Organisation connectée</span>
+          <span className="connection">Connected organization</span>
           <button
             onClick={async () => {
               try {
@@ -279,7 +320,7 @@ export function OrgoApp({
               }
             }}
           >
-            Se déconnecter
+            Sign out
           </button>
         </div>
       </aside>
@@ -287,18 +328,31 @@ export function OrgoApp({
         <header className="topbar">
           <span>{definition.label}</span>
           <label className="search">
-            <span>Rechercher</span>
+            <span>Search</span>
             <input
               ref={searchRef}
-              aria-label="Rechercher dans la vue"
+              aria-label="Search this view"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Titre ou libellé…"
+              placeholder="Title or label…"
             />
             <kbd>⌘ K</kbd>
           </label>
         </header>
         <div className="workspace">
+          {interactionSections.includes(section as (typeof interactionSections)[number]) ? (
+            <InteractionSurface
+              section={section}
+              client={client}
+              actor={actor}
+              navigate={navigate}
+              query={query}
+              path={path}
+              version={version}
+              reload={reload}
+            />
+          ) : (
+            <>
           <div className="page-heading">
             <div>
               <p className="eyebrow">{profile}</p>
@@ -306,7 +360,7 @@ export function OrgoApp({
               <p>{definition.description}</p>
             </div>
             <div className="actions">
-              <button onClick={reload}>Actualiser</button>
+              <button onClick={reload}>Refresh</button>
               {["cases", "tasks", "signals"].includes(section) &&
                 can(
                   actor,
@@ -315,10 +369,10 @@ export function OrgoApp({
                   <button className="primary" onClick={() => setCreating(true)}>
                     +{" "}
                     {section === "cases"
-                      ? "Nouveau dossier"
+                      ? "New case"
                       : section === "signals"
-                        ? "Nouveau signal"
-                        : "Nouvelle tâche"}
+                        ? "New signal"
+                        : "New task"}
                   </button>
                 )}
             </div>
@@ -362,10 +416,10 @@ export function OrgoApp({
                 <div className="panel-heading">
                   <strong>
                     {loading
-                      ? "Chargement…"
-                      : `${total} élément${total !== 1 ? "s" : ""}`}
+                      ? "Loading…"
+                      : `${total} item${total !== 1 ? "s" : ""}`}
                   </strong>
-                  <span>Organisation courante</span>
+                  <span>Current organization</span>
                 </div>
                 {data.length ? (
                   <div className="table-scroll">
@@ -373,9 +427,9 @@ export function OrgoApp({
                       <thead>
                         <tr>
                           <th>
-                            {section === "people" ? "Personne" : "Élément"}
+                            {section === "people" ? "Person" : "Item"}
                           </th>
-                          <th>État</th>
+                          <th>Status</th>
                           <th>Date</th>
                         </tr>
                       </thead>
@@ -433,8 +487,8 @@ export function OrgoApp({
                   !loading && (
                     <Empty>
                       {query
-                        ? "Aucun résultat pour cette recherche."
-                        : "Aucun élément pour le moment."}
+                        ? "No results for this search."
+                        : "No items yet."}
                     </Empty>
                   )
                 )}
@@ -444,7 +498,7 @@ export function OrgoApp({
                       disabled={offset === 0}
                       onClick={() => setOffset(Math.max(0, offset - 30))}
                     >
-                      Précédent
+                      Previous
                     </button>
                     <span>
                       {offset + 1}–{Math.min(offset + 30, total)}
@@ -453,7 +507,7 @@ export function OrgoApp({
                       disabled={offset + 30 >= total}
                       onClick={() => setOffset(offset + 30)}
                     >
-                      Suivant
+                      Next
                     </button>
                   </div>
                 )}
@@ -470,6 +524,8 @@ export function OrgoApp({
                 />
               )}
             </div>
+          )}
+            </>
           )}
         </div>
       </main>
@@ -538,7 +594,7 @@ function Login({
       client.token = response.token;
       onLogin(response.context);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Connexion impossible");
+      setError(error instanceof Error ? error.message : "Unable to sign in");
     } finally {
       setBusy(false);
     }
@@ -546,40 +602,40 @@ function Login({
   return (
     <main className="login">
       <div className="login-story">
-        <p className="eyebrow">ORGO</p>
+        <img className="login-logo" src="/logo_k.svg" alt="Orgo" />
         <h1>
-          Du signal
+          From signal
           <br />
-          au travail accompli.
+          to completed work.
         </h1>
         <p>
-          Rassemblez le contexte, attribuez les actions et suivez leur
-          résolution.
+          Bring the context together, assign actions, and track them through
+          resolution.
         </p>
         <div className="story-line">
           <span>Signal</span>
-          <span>Dossier</span>
+          <span>Case</span>
           <span>Action</span>
         </div>
       </div>
       <form className="login-form" onSubmit={submit}>
-        <h2>Votre espace de travail</h2>
-        <p>Connectez-vous à votre organisation.</p>
+        <h2>Your workspace</h2>
+        <p>Sign in to your organization.</p>
         <label>
-          Organisation
+          Organization
           <input
             name="organization"
             required
             autoComplete="organization"
-            placeholder="mon-organisation"
+            placeholder="my-organization"
           />
         </label>
         <label>
-          Adresse courriel
+          Email address
           <input name="email" type="email" required autoComplete="username" />
         </label>
         <label>
-          Mot de passe
+          Password
           <input
             name="password"
             type="password"
@@ -589,9 +645,9 @@ function Login({
         </label>
         <ErrorMessage error={error} />
         <button className="primary" disabled={busy}>
-          {busy ? "Connexion…" : "Se connecter"}
+          {busy ? "Signing in…" : "Sign in"}
         </button>
-        <a href="/account">Mot de passe oublié ou premier accès</a>
+        <a href="/account">Forgot password or first access</a>
         {sso?.available && (
           <button
             type="button"
@@ -603,7 +659,7 @@ function Login({
                 ) as HTMLInputElement
               )?.value;
               if (!organization) {
-                setError("Indiquez votre organisation.");
+                setError("Enter your organization.");
                 return;
               }
               setBusy(true);
@@ -618,7 +674,7 @@ function Login({
               }
             }}
           >
-            Se connecter avec {sso.display_name}
+            Sign in with {sso.display_name}
           </button>
         )}
       </form>
@@ -688,7 +744,7 @@ function CreateWork({
       await client.request(section, "POST", body, key.current);
       onSave();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Création impossible");
+      setError(e instanceof Error ? e.message : "Unable to create");
       if (e instanceof ApiError && e.code !== "NETWORK_ERROR")
         key.current = crypto.randomUUID();
     } finally {
@@ -696,16 +752,16 @@ function CreateWork({
     }
   }
   return (
-    <section className="panel create-panel" aria-label="Créer un élément">
+    <section className="panel create-panel" aria-label="Create item">
       <div className="panel-heading">
         <h2>
           {section === "cases"
-            ? "Nouveau dossier"
+            ? "New case"
             : section === "signals"
-              ? "Nouveau signal"
-              : "Nouvelle tâche"}
+              ? "New signal"
+              : "New task"}
         </h2>
-        <button onClick={onClose} aria-label="Fermer">
+        <button onClick={onClose} aria-label="Close">
           ×
         </button>
       </div>
@@ -715,23 +771,23 @@ function CreateWork({
             actor.permissions.includes("work:write")) && (
             <>
               <label>
-                Type de périmètre
+                Scope type
                 <select name="access_scope_type">
-                  <option value="">Organisation</option>
+                  <option value="">Organization</option>
                   {["team", "location", "unit", "custom"].map((v) => (
                     <option key={v}>{v}</option>
                   ))}
                 </select>
               </label>
               <label>
-                Référence du périmètre
+                Scope reference
                 <input name="access_scope_reference" maxLength={200} />
               </label>
             </>
           )}
         {section !== "signals" && !!actor.workGrants?.length && (
           <label>
-            Périmètre
+            Scope
             <select
               name="scope"
               required={
@@ -739,7 +795,7 @@ function CreateWork({
                 !actor.permissions.includes("work:write")
               }
             >
-              <option value="">Organisation entière</option>
+              <option value="">Entire organization</option>
               {actor.workGrants
                 .filter((g) => g.permissions.includes("work:write"))
                 .map((g, index) => (
@@ -757,7 +813,7 @@ function CreateWork({
           </label>
         )}
         <label className="wide">
-          Titre
+          Title
           <input name="title" required maxLength={500} autoFocus />
         </label>
         <label className="wide">
@@ -765,7 +821,7 @@ function CreateWork({
           <textarea name="description" rows={3} maxLength={20000} />
         </label>
         <label>
-          Libellé
+          Label
           <input
             name="label"
             defaultValue="1.11"
@@ -774,7 +830,7 @@ function CreateWork({
           />
         </label>
         <label>
-          Gravité
+          Severity
           <select name="severity" defaultValue="MODERATE">
             {["MINOR", "MODERATE", "MAJOR", "CRITICAL"].map((s) => (
               <option key={s}>{s}</option>
@@ -788,7 +844,7 @@ function CreateWork({
               <input name="type" defaultValue="general" required />
             </label>
             <label>
-              Catégorie
+              Category
               <select name="category">
                 {[
                   "request",
@@ -802,14 +858,14 @@ function CreateWork({
               </select>
             </label>
             <label className="wide">
-              Dossier associé (identifiant, facultatif)
+              Associated case (ID, optional)
               <input name="case_id" defaultValue={caseId} />
             </label>
           </>
         )}
         {section === "tasks" && (
           <label>
-            Priorité
+            Priority
             <select name="priority" defaultValue="MEDIUM">
               {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((s) => (
                 <option key={s}>{s}</option>
@@ -819,9 +875,9 @@ function CreateWork({
         )}
         {section === "signals" && workflowList.length > 0 && (
           <label className="wide">
-            Traitement
+            Processing
             <select name="workflow_version_id">
-              <option value="">Conserver pour triage</option>
+              <option value="">Keep for triage</option>
               {workflowList.map((w) => (
                 <optgroup key={rowId(w)} label={str(w.name)}>
                   {rows(w.versions).map((v) => (
@@ -837,7 +893,7 @@ function CreateWork({
         <div className="wide">
           <ErrorMessage error={error} />
           <button className="primary" disabled={busy}>
-            {busy ? "Enregistrement…" : "Créer"}
+            {busy ? "Saving…" : "Create"}
           </button>
         </div>
       </form>
@@ -888,7 +944,7 @@ function Detail({
       onChange();
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action impossible");
+      setError(e instanceof Error ? e.message : "Unable to complete action");
       return false;
     } finally {
       setBusy(false);
@@ -900,12 +956,12 @@ function Detail({
       <div className="panel-heading">
         <span>
           {type === "cases"
-            ? "Dossier"
+            ? "Case"
             : type === "signals"
               ? "Signal"
-              : "Tâche"}
+              : "Task"}
         </span>
-        <button onClick={onClose} aria-label="Fermer le détail">
+        <button onClick={onClose} aria-label="Close details">
           ×
         </button>
       </div>
@@ -913,17 +969,17 @@ function Detail({
         <Badge value={row.status} />
         <h2>{str(row.title)}</h2>
         <p className="description">
-          {str(row.description) || "Aucune description."}
+          {str(row.description) || "No description."}
         </p>
         <div className="facts">
           <span>
-            Libellé<strong>{str(row.label)}</strong>
+            Label<strong>{str(row.label)}</strong>
           </span>
           <span>
-            Gravité<strong>{str(row.severity)}</strong>
+            Severity<strong>{str(row.severity)}</strong>
           </span>
           <span>
-            Création
+            Created
             <strong>
               <DateText value={row.created_at ?? row.received_at} />
             </strong>
@@ -953,10 +1009,10 @@ function Detail({
         {type === "cases" && (
           <>
             <div className="section-heading">
-              <h3>Tâches associées</h3>
+              <h3>Related tasks</h3>
               {can(actor, "work:write") && (
                 <button onClick={() => setCreating(!creating)}>
-                  + Ajouter
+                  + Add
                 </button>
               )}
             </div>
@@ -985,9 +1041,9 @@ function Detail({
                 </button>
               ))
             ) : (
-              <Empty>Aucune tâche associée.</Empty>
+              <Empty>No related tasks.</Empty>
             )}
-            <h3>Signaux</h3>
+            <h3>Signals</h3>
             {rows(row.signals).map((signal) => (
               <button
                 className="relation"
@@ -998,7 +1054,7 @@ function Detail({
                 <Badge value={signal.status} />
               </button>
             ))}
-            <h3>Opérations externes</h3>
+            <h3>External operations</h3>
             {rows(row.operations).map((op) => (
               <div className="relation" key={rowId(op)}>
                 <span>
@@ -1016,7 +1072,7 @@ function Detail({
                 className="relation"
                 onClick={() => navigate(`cases/${str(row.case_id)}`)}
               >
-                Ouvrir le dossier associé ↗
+                Open associated case ↗
               </button>
             )}
             {can(actor, "work:assign") && users.length > 0 && (
@@ -1031,13 +1087,13 @@ function Detail({
                 }}
               >
                 <label>
-                  Responsable
+                  Assignee
                   <select
                     key={str(row.owner_user_id)}
                     name="owner"
                     defaultValue={str(row.owner_user_id)}
                   >
-                    <option value="">Non attribuée</option>
+                    <option value="">Unassigned</option>
                     {users.map((u) => (
                       <option key={rowId(u)} value={rowId(u)}>
                         {str(u.display_name)}
@@ -1045,10 +1101,10 @@ function Detail({
                     ))}
                   </select>
                 </label>
-                <button disabled={busy}>Attribuer</button>
+                <button disabled={busy}>Assign</button>
               </form>
             )}
-            <h3>Commentaires</h3>
+            <h3>Comments</h3>
             {rows(row.comments).map((c) => (
               <p className="comment" key={rowId(c)}>
                 {str(c.body)}
@@ -1071,10 +1127,10 @@ function Detail({
                 }}
               >
                 <label>
-                  Ajouter un commentaire
+                  Add a comment
                   <textarea name="body" required maxLength={20000} rows={3} />
                 </label>
-                <button disabled={busy}>Commenter</button>
+                <button disabled={busy}>Comment</button>
               </form>
             )}
           </>
@@ -1094,7 +1150,7 @@ function Detail({
               }}
             >
               <label>
-                Version à exécuter
+                Version to run
                 <select name="version" required>
                   {workflows.flatMap((w) =>
                     rows(w.versions).map((v) => (
@@ -1106,7 +1162,7 @@ function Detail({
                 </select>
               </label>
               <button className="primary" disabled={busy}>
-                Lancer le traitement
+                Run processing
               </button>
             </form>
           )}
@@ -1115,7 +1171,7 @@ function Detail({
             className="relation"
             onClick={() => navigate(`cases/${str(row.case_id)}`)}
           >
-            Ouvrir le dossier associé ↗
+            Open associated case ↗
           </button>
         )}
         {(type === "tasks" || type === "cases") && (
@@ -1138,7 +1194,7 @@ function Detail({
             onChange={onChange}
           />
         )}
-        <h3>Historique récent</h3>
+        <h3>Recent history</h3>
         {rows(row.timeline).map((event) => (
           <div className="timeline-event" key={rowId(event)}>
             <strong>{str(event.event_type)}</strong>
@@ -1148,7 +1204,7 @@ function Detail({
           </div>
         ))}
         <details>
-          <summary>Références et métadonnées</summary>
+          <summary>References and metadata</summary>
           <p className="mono">{rowId(row)}</p>
           <pre>
             {JSON.stringify(row.metadata ?? row.payload ?? {}, null, 2)}
@@ -1211,7 +1267,7 @@ function WorkflowAdmin({
   return (
     <div className="workflow-grid">
       <section className="panel padded">
-        <h2>Versions publiées</h2>
+        <h2>Published versions</h2>
         {workflows.length ? (
           workflows.map((w) => (
             <div key={rowId(w)}>
@@ -1229,7 +1285,7 @@ function WorkflowAdmin({
                       setContent(JSON.stringify(v.content, null, 2))
                     }
                   >
-                    Lire
+                    Read
                   </button>
                   <button
                     onClick={async () => {
@@ -1240,7 +1296,7 @@ function WorkflowAdmin({
                           {
                             source: "API",
                             category: "incident",
-                            title: "Incident de test",
+                            title: "Test incident",
                           },
                         );
                         setOutput(JSON.stringify(result, null, 2));
@@ -1249,18 +1305,18 @@ function WorkflowAdmin({
                       }
                     }}
                   >
-                    Simuler
+                    Simulate
                   </button>
                 </div>
               ))}
             </div>
           ))
         ) : (
-          <Empty>Aucun workflow publié.</Empty>
+          <Empty>No published workflow.</Empty>
         )}
         {output && (
           <>
-            <h3>Simulation sans effet</h3>
+            <h3>No-side-effect simulation</h3>
             <pre>{output}</pre>
           </>
         )}
@@ -1268,11 +1324,11 @@ function WorkflowAdmin({
       <section className="panel padded">
         <h2>
           {can(actor, "workflows:write")
-            ? "Publier une version"
-            : "Lire une version"}
+            ? "Publish a version"
+            : "Read a version"}
         </h2>
         <p>
-          Une nouvelle publication ne modifie jamais les instances existantes.
+          A new publication never modifies existing instances.
         </p>
         <form
           onSubmit={async (e) => {
@@ -1304,7 +1360,7 @@ function WorkflowAdmin({
             />
           </label>
           <label>
-            Règles (JSON)
+            Rules (JSON)
             <textarea
               className="code-editor"
               value={content}
@@ -1316,7 +1372,7 @@ function WorkflowAdmin({
           <ErrorMessage error={error} />
           {can(actor, "workflows:write") && (
             <button className="primary" disabled={busy}>
-              {busy ? "Publication…" : "Publier la version"}
+              {busy ? "Publishing…" : "Publish version"}
             </button>
           )}
         </form>
@@ -1351,24 +1407,24 @@ function Insights({
     <>
       <ErrorMessage error={error} />
       {!data ? (
-        <Empty>Chargement des indicateurs…</Empty>
+        <Empty>Loading insights…</Empty>
       ) : (
         <>
           <div className="metrics">
             <div className="metric">
-              <span>Tâches</span>
+              <span>Tasks</span>
               <strong>
                 {rows(data.tasks).reduce((n, r) => n + Number(r.count), 0)}
               </strong>
             </div>
             <div className="metric">
-              <span>Dossiers</span>
+              <span>Cases</span>
               <strong>
                 {rows(data.cases).reduce((n, r) => n + Number(r.count), 0)}
               </strong>
             </div>
             <div className="metric attention">
-              <span>Délais dépassés</span>
+              <span>Overdue</span>
               <strong>{str(data.overdue)}</strong>
             </div>
           </div>
@@ -1376,7 +1432,7 @@ function Insights({
             {["tasks", "cases"].map((kind) => (
               <section className="panel padded" key={kind}>
                 <h2>
-                  {kind === "tasks" ? "Tâches par état" : "Dossiers par état"}
+                  {kind === "tasks" ? "Tasks by status" : "Cases by status"}
                 </h2>
                 {rows(data[kind]).map((r) => (
                   <div className="relation" key={str(r.status)}>
@@ -1404,7 +1460,7 @@ function Settings({ client, actor }: { client: OrgoClient; actor: Actor }) {
   }, [client]);
   return (
     <section className="panel padded">
-      <h2>Profil de l’organisation</h2>
+      <h2>Organization profile</h2>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -1423,7 +1479,7 @@ function Settings({ client, actor }: { client: OrgoClient; actor: Actor }) {
               retention_profile: data?.retention_profile ?? {},
             });
             setData(result);
-            setMessage("Profil enregistré.");
+            setMessage("Profile saved.");
           } catch (e) {
             setError((e as Error).message);
           }
@@ -1431,7 +1487,7 @@ function Settings({ client, actor }: { client: OrgoClient; actor: Actor }) {
         key={str(data?.version)}
       >
         <label>
-          Code du profil
+          Profile code
           <input
             name="code"
             required
@@ -1439,7 +1495,7 @@ function Settings({ client, actor }: { client: OrgoClient; actor: Actor }) {
           />
         </label>
         <label>
-          Délai de réactivité par défaut (secondes)
+          Default response time (seconds)
           <input
             name="seconds"
             type="number"
@@ -1454,7 +1510,7 @@ function Settings({ client, actor }: { client: OrgoClient; actor: Actor }) {
         <ErrorMessage error={error} />
         <p role="status">{message}</p>
         {can(actor, "config:write") && (
-          <button className="primary">Enregistrer</button>
+          <button className="primary">Save</button>
         )}
       </form>
     </section>

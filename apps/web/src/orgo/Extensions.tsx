@@ -36,51 +36,51 @@ function download(name: string, content: string, type = "application/json") {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 const fieldLabels: Record<string, string> = {
-  title: "Titre",
+  title: "Title",
   description: "Description",
-  name: "Nom",
-  display_name: "Nom affiché",
-  email: "Courriel",
-  password: "Mot de passe",
-  label: "Libellé",
-  subject_id: "Référence du travail",
-  subject_type: "Type de travail",
-  person_id: "Référence de la personne",
-  asset_id: "Équipement",
-  case_code: "Code du dossier",
-  role_id: "Rôle",
-  role_ids: "Rôles",
-  scope_type: "Type de périmètre",
-  scope_reference: "Périmètre",
-  start_at: "Début",
-  end_at: "Fin",
-  reason: "Motif",
+  name: "Name",
+  display_name: "Display name",
+  email: "Email",
+  password: "Password",
+  label: "Label",
+  subject_id: "Work reference",
+  subject_type: "Work type",
+  person_id: "Person reference",
+  asset_id: "Asset",
+  case_code: "Case code",
+  role_id: "Role",
+  role_ids: "Roles",
+  scope_type: "Scope type",
+  scope_reference: "Scope",
+  start_at: "Start",
+  end_at: "End",
+  reason: "Reason",
   notes: "Notes",
   score: "Score",
   expires_at: "Expiration",
   permissions: "Permissions",
-  scopes: "Permissions du jeton",
-  steps: "Étapes",
-  recipient_user_id: "Destinataire",
-  subject: "Objet",
+  scopes: "Token permissions",
+  steps: "Steps",
+  recipient_user_id: "Recipient",
+  subject: "Subject",
   body: "Message",
-  subject_template: "Objet du modèle",
-  body_template: "Texte du modèle",
+  subject_template: "Template subject",
+  body_template: "Template body",
   variables: "Variables",
-  channel: "Canal",
-  is_active: "Actif",
-  is_fallback: "Règle de secours",
-  weight: "Priorité de routage",
-  target_user_id: "Responsable",
-  operation: "Opération",
-  payload: "Commande",
-  version: "Version actuelle",
-  updated_at: "Version courante",
-  revision: "Révision",
-  task: "Tâche",
-  case: "Dossier",
-  days: "Ancienneté minimale (jours)",
-  purge_deleted_attachments: "Purger les fichiers déjà retirés",
+  channel: "Channel",
+  is_active: "Active",
+  is_fallback: "Fallback rule",
+  weight: "Routing priority",
+  target_user_id: "Assignee",
+  operation: "Operation",
+  payload: "Command",
+  version: "Current version",
+  updated_at: "Current version",
+  revision: "Revision",
+  task: "Task",
+  case: "Case",
+  days: "Minimum age (days)",
+  purge_deleted_attachments: "Purge already removed files",
 };
 function StructuredFields({
   value,
@@ -219,13 +219,13 @@ function JsonValue({
             e.currentTarget.setCustomValidity("");
           } catch {
             setInvalid(true);
-            e.currentTarget.setCustomValidity("JSON invalide");
+            e.currentTarget.setCustomValidity("Invalid JSON");
           }
         }}
         aria-invalid={invalid}
       />
       {invalid && (
-        <small>JSON incomplet : la dernière valeur valide reste active.</small>
+        <small>Incomplete JSON: the last valid value remains active.</small>
       )}
     </>
   );
@@ -267,7 +267,7 @@ function JsonForm({
         ),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action impossible");
+      setError(e instanceof Error ? e.message : "Unable to complete action");
     } finally {
       setBusy(false);
     }
@@ -282,7 +282,7 @@ function JsonForm({
         />
         <ErrorText error={error} />
         <button disabled={busy} className="primary">
-          {busy ? "Enregistrement…" : "Enregistrer"}
+          {busy ? "Saving…" : "Save"}
         </button>
         {result !== undefined && (
           <pre className="json-result">{JSON.stringify(result, null, 2)}</pre>
@@ -326,9 +326,9 @@ function DataList({
       <table>
         <thead>
           <tr>
-            <th>Élément</th>
-            <th>État / rôle</th>
-            <th>Référence</th>
+            <th>Item</th>
+            <th>Status / role</th>
+            <th>Reference</th>
           </tr>
         </thead>
         <tbody>
@@ -366,7 +366,7 @@ function DataList({
           ))}
         </tbody>
       </table>
-      {!items.length && <p className="empty">Aucun élément.</p>}
+      {!items.length && <p className="empty">No items.</p>}
     </div>
   );
 }
@@ -428,9 +428,9 @@ function Processes({ client, actor }: Props) {
       <ErrorText error={error || list.error} />
       {can(actor, "workflows:execute") && (
         <JsonForm
-          title="Démarrer un processus"
+          title="Start a process"
           initial={{
-            title: "Validation puis décision",
+            title: "Validation then decision",
             subject_type: "case",
             subject_id: "",
             steps: [
@@ -446,7 +446,7 @@ function Processes({ client, actor }: Props) {
               },
               {
                 kind: "approval",
-                title: "Décision responsable",
+                title: "Responsible decision",
                 permission: "workflows:approve",
               },
             ],
@@ -464,15 +464,15 @@ function Processes({ client, actor }: Props) {
           disabled={!offset}
           onClick={() => setOffset((v) => Math.max(0, v - 30))}
         >
-          Précédent
+          Previous
         </button>
-        <button onClick={() => setOffset((v) => v + 30)}>Suivant</button>
+        <button onClick={() => setOffset((v) => v + 30)}>Next</button>
       </div>
       {selected && (
         <section className="panel form-panel">
           <h2>{str(selected.title)}</h2>
           <p>
-            {str(selected.status)} · Étape {Number(selected.step_index) + 1}
+            {str(selected.status)} · Step {Number(selected.step_index) + 1}
           </p>
           <ErrorText error={str(selected.error)} />
           <button
@@ -486,7 +486,7 @@ function Processes({ client, actor }: Props) {
               }
             }}
           >
-            Recharger l’état
+            Reload status
           </button>
           <pre className="json-result">
             {JSON.stringify(
@@ -498,7 +498,7 @@ function Processes({ client, actor }: Props) {
           {can(actor, "workflows:execute") && (
             <>
               <label>
-                Motif de la décision
+                Decision reason
                 <textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
@@ -523,10 +523,10 @@ function Processes({ client, actor }: Props) {
                     {
                       (
                         {
-                          approve: "Approuver",
-                          reject: "Refuser",
-                          retry: "Reprendre",
-                          cancel: "Annuler le processus",
+                          approve: "Approve",
+                          reject: "Reject",
+                          retry: "Retry",
+                          cancel: "Cancel process",
                         } as Record<string, string>
                       )[actionName]
                     }
@@ -551,7 +551,7 @@ function Processes({ client, actor }: Props) {
                     }
                   }}
                 >
-                  Exécuter les compensations déclarées
+                  Execute declared compensations
                 </button>
               )}
             </>
@@ -571,7 +571,7 @@ function Identity({ client }: Props) {
     <div className="extension-stack">
       <ErrorText error={error || users.error || tokens.error || roles.error} />
       <JsonForm
-        title="Créer un compte"
+        title="Create account"
         initial={{ email: "", display_name: "", password: "" }}
         onSubmit={async (v) => {
           const r = await client.request("users", "POST", v);
@@ -580,10 +580,10 @@ function Identity({ client }: Props) {
         }}
       />
       <JsonForm
-        title="Créer un rôle"
+        title="Create role"
         initial={{
           code: "operator",
-          display_name: "Opérateur",
+          display_name: "Operator",
           permissions: ["work:read", "work:write", "sync:write"],
         }}
         onSubmit={async (v) => {
@@ -598,7 +598,7 @@ function Identity({ client }: Props) {
           <h3>{str(selected.display_name)}</h3>
           <JsonForm
             key={`scope:${rowId(selected)}`}
-            title="Attribuer un périmètre de travail"
+            title="Assign work scope"
             initial={{ role_id: "", scope_type: "team", scope_reference: "" }}
             onSubmit={(v) =>
               client.request(
@@ -610,7 +610,7 @@ function Identity({ client }: Props) {
           />
           <JsonForm
             key={rowId(selected)}
-            title="Attribuer des rôles"
+            title="Assign roles"
             initial={{ role_ids: [] }}
             onSubmit={(v) =>
               client.request(`users/${rowId(selected)}/roles`, "PUT", v)
@@ -624,13 +624,13 @@ function Identity({ client }: Props) {
                   "POST",
                   {},
                 );
-                setError("Invitation mise en file d’envoi.");
+                setError("Invitation queued for delivery.");
               } catch (e) {
                 setError((e as Error).message);
               }
             }}
           >
-            Envoyer le lien d’accès
+            Send access link
           </button>
           <button
             onClick={async () => {
@@ -650,18 +650,17 @@ function Identity({ client }: Props) {
               }
             }}
           >
-            {selected.status === "disabled" ? "Réactiver" : "Désactiver"} le
-            compte
+            {selected.status === "disabled" ? "Reactivate" : "Disable"} account
           </button>
         </section>
       )}
       <JsonForm
-        title="Relier une identité SSO"
+        title="Link SSO identity"
         initial={{ user_id: "", subject: "" }}
         onSubmit={(v) => client.request("identity/sso", "POST", v)}
       />
       <JsonForm
-        title="Inviter une personne sans mot de passe temporaire"
+        title="Invite a person without a temporary password"
         initial={{ email: "", display_name: "", role_ids: [] }}
         onSubmit={async (v) => {
           const r = await client.request("identity/invitations", "POST", v);
@@ -669,17 +668,17 @@ function Identity({ client }: Props) {
           return r;
         }}
       />
-      <h2>Rôles</h2>
+      <h2>Roles</h2>
       <DataList items={roles.items} />
-      <h2>Jetons d’intégration</h2>
+      <h2>Integration tokens</h2>
       <p>
-        Le secret est affiché une seule fois. Une réponse perdue exige de
-        révoquer le jeton puis d’en créer un autre.
+        The secret is displayed only once. If it is lost, revoke the token
+        and create a new one.
       </p>
       <JsonForm
-        title="Créer un jeton"
+        title="Create token"
         initial={{
-          name: "Connecteur",
+          name: "Connector",
           scopes: ["signals:read", "signals:write"],
           expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
         }}
@@ -706,7 +705,7 @@ function Identity({ client }: Props) {
               }
             }}
           >
-            Révoquer
+            Revoke
           </button>
         </div>
       ))}
@@ -735,7 +734,7 @@ function Maintenance({ client, actor }: Props) {
     <div className="extension-stack">
       <ErrorText error={error || assets.error || calendar.error} />
       <label>
-        Mois
+        Month
         <input
           type="month"
           value={month}
@@ -747,7 +746,7 @@ function Maintenance({ client, actor }: Props) {
       {can(actor, "maintenance:write") && (
         <>
           <JsonForm
-            title="Ajouter un équipement"
+            title="Add asset"
             initial={{ name: "", category: "", location: {} }}
             onSubmit={async (v) => {
               const r = await client.request("maintenance/assets", "POST", v);
@@ -756,7 +755,7 @@ function Maintenance({ client, actor }: Props) {
             }}
           />
           <JsonForm
-            title="Planifier une intervention"
+            title="Schedule maintenance"
             initial={{
               title: "",
               asset_id: "",
@@ -770,15 +769,15 @@ function Maintenance({ client, actor }: Props) {
             }}
           />
           <JsonForm
-            title="Créer la tâche de maintenance"
+            title="Create maintenance task"
             initial={{ asset_id: "", task: taskSample }}
             onSubmit={(v) => client.request("maintenance/tasks", "POST", v)}
           />
         </>
       )}
-      <h2>Équipements</h2>
+      <h2>Assets</h2>
       <DataList items={assets.items} />
-      <h2>Calendrier</h2>
+      <h2>Calendar</h2>
       {calendar.items.map((slot) => (
         <section className="panel form-panel" key={rowId(slot)}>
           <h3>{str(slot.title)}</h3>
@@ -829,7 +828,7 @@ function Hr({ client, actor }: Props) {
       {can(actor, "hr:write") && (
         <>
           <JsonForm
-            title="Ouvrir un dossier RH confidentiel"
+            title="Open confidential HR case"
             initial={{
               case_code: "",
               case: { title: "", label: "2.11" },
@@ -842,7 +841,7 @@ function Hr({ client, actor }: Props) {
             }}
           />
           <JsonForm
-            title="Enregistrer un suivi de bien-être"
+            title="Record well-being check-in"
             initial={{ person_id: "", score: 5, comment: "", tags: [] }}
             onSubmit={(v) => client.request("hr/wellbeing", "POST", v)}
           />
@@ -865,7 +864,7 @@ function Hr({ client, actor }: Props) {
             <>
               <JsonForm
                 key={`participant:${rowId(selected)}`}
-                title="Ajouter un participant"
+                title="Add participant"
                 initial={{ person_id: "", role: "witness", notes: "" }}
                 onSubmit={async (v) => {
                   const r = await client.request(
@@ -881,7 +880,7 @@ function Hr({ client, actor }: Props) {
               />
               <JsonForm
                 key={`review:${selected.updated_at}`}
-                title="Enregistrer une décision RH"
+                title="Record HR decision"
                 initial={{
                   status: "under_review",
                   reason: "",
@@ -923,7 +922,7 @@ function Education({ client, actor }: Props) {
       <ErrorText error={error || groups.error} />
       {can(actor, "education:write") && (
         <JsonForm
-          title="Créer un groupe"
+          title="Create group"
           initial={{ code: "", name: "", description: "" }}
           onSubmit={async (v) => {
             const r = await client.request("education/groups", "POST", v);
@@ -935,12 +934,12 @@ function Education({ client, actor }: Props) {
       <DataList items={groups.items} onSelect={(r) => setGroup(rowId(r))} />
       {group && (
         <>
-          <h2>Membres</h2>
+          <h2>Members</h2>
           <DataList items={members} />
           {can(actor, "education:write") && (
             <>
               <JsonForm
-                title="Ajouter un membre"
+                title="Add member"
                 initial={{ person_id: "", role: "student" }}
                 onSubmit={async (v) => {
                   const r = await client.request(
@@ -954,7 +953,7 @@ function Education({ client, actor }: Props) {
               />
               <JsonForm
                 key={group}
-                title="Créer une tâche de soutien"
+                title="Create support task"
                 initial={{
                   learning_group_id: group,
                   task: { ...taskSample, type: "education_support" },
@@ -976,7 +975,7 @@ function Education({ client, actor }: Props) {
                     }
                   }}
                 >
-                  Retirer {str((m.person as Row)?.full_name ?? m.person_id)}
+                  Remove {str((m.person as Row)?.full_name ?? m.person_id)}
                 </button>
               ))}
             </>
@@ -993,13 +992,13 @@ function Communications({ client }: Props) {
     <div className="extension-stack">
       <ErrorText error={list.error} />
       <JsonForm
-        title="Créer un modèle de message"
+        title="Create message template"
         initial={{
           code: "reminder",
           version: 0,
           channel: "email",
-          subject_template: "Suivi : {{title}}",
-          body_template: "Bonjour {{name}},\n{{message}}",
+          subject_template: "Follow-up: {{title}}",
+          body_template: "Hello {{name}},\n{{message}}",
           is_active: true,
         }}
         onSubmit={async ({ code, ...v }) => {
@@ -1016,7 +1015,7 @@ function Communications({ client }: Props) {
       {template && (
         <JsonForm
           key={rowId(template)}
-          title={`Envoyer ${str(template.code)}`}
+          title={`Send ${str(template.code)}`}
           initial={{
             recipient_user_id: "",
             recipient_address: "",
@@ -1032,7 +1031,7 @@ function Communications({ client }: Props) {
         />
       )}
       <JsonForm
-        title="Envoyer un message"
+        title="Send a message"
         initial={{
           channel: "in_app",
           recipient_user_id: "",
@@ -1059,10 +1058,10 @@ function System({ client }: Props) {
     <div className="extension-stack">
       <ErrorText error={error || list.error} />
       <section className="panel form-panel">
-        <h2>Traitements et workers</h2>
+        <h2>Processing and workers</h2>
         <pre className="json-result">{JSON.stringify(overview, null, 2)}</pre>
       </section>
-      <h2>Messages à reprendre</h2>
+      <h2>Messages to retry</h2>
       {list.items.map((row) => (
         <div className="panel form-panel" key={rowId(row)}>
           <p>
@@ -1082,12 +1081,12 @@ function System({ client }: Props) {
               }
             }}
           >
-            Remettre en file
+            Requeue
           </button>
         </div>
       ))}
       <JsonForm
-        title="Appliquer la rétention"
+        title="Apply retention"
         initial={{ days: 90, purge_deleted_attachments: false }}
         onSubmit={(v) => client.request("system/retention", "POST", v)}
       />
@@ -1101,7 +1100,7 @@ function Routing({ client }: Props) {
       <ErrorText error={list.error} />
       <DataList items={list.items} />
       <JsonForm
-        title="Créer une règle de routage"
+        title="Create routing rule"
         initial={{
           name: "",
           label_codes: ["2.11"],
@@ -1122,8 +1121,8 @@ function Reports({ client }: Props) {
   const [error, setError] = useState("");
   return (
     <section className="panel form-panel">
-      <h2>Export des tâches visibles</h2>
-      <p>Export CSV paginé, jusqu’à 5 000 tâches par fichier.</p>
+      <h2>Visible task export</h2>
+      <p>Paginated CSV export, up to 5,000 tasks per file.</p>
       <ErrorText error={error} />
       <form
         onSubmit={async (e) => {
@@ -1140,7 +1139,7 @@ function Reports({ client }: Props) {
         }}
       >
         <label>
-          Décalage
+          Offset
           <input
             name="offset"
             type="number"
@@ -1150,7 +1149,7 @@ function Reports({ client }: Props) {
             required
           />
         </label>
-        <button>Exporter</button>
+        <button>Export</button>
       </form>
     </section>
   );
@@ -1174,9 +1173,8 @@ function Offline({ client, actor, apiBase }: Props) {
   return (
     <div className="extension-stack">
       <p>
-        Les commandes restent sur cet appareil, dans la file de votre compte. La
-        synchronisation nécessite une session active. Une commande en conflit
-        reste à examiner.
+        Commands stay on this device in your account queue. Synchronization
+        requires an active session. A conflicting command remains for review.
       </p>
       <ErrorText error={error} />
       <div className="actions">
@@ -1195,7 +1193,7 @@ function Offline({ client, actor, apiBase }: Props) {
             }
           }}
         >
-          Synchroniser
+          Synchronize
         </button>
         <button
           onClick={() =>
@@ -1205,11 +1203,11 @@ function Offline({ client, actor, apiBase }: Props) {
             )
           }
         >
-          Exporter la file
+          Export queue
         </button>
       </div>
       <JsonForm
-        title="Préparer une commande hors ligne"
+        title="Prepare offline command"
         initial={{ operation: "task.create", payload: taskSample }}
         onSubmit={async (v) => {
           if (
@@ -1217,7 +1215,7 @@ function Offline({ client, actor, apiBase }: Props) {
               str(v.operation),
             )
           )
-            throw new Error("Opération non prise en charge");
+            throw new Error("Unsupported operation");
           queue.add(
             v.operation as OfflineCommand["operation"],
             v.payload as Row,
@@ -1235,7 +1233,7 @@ function Offline({ client, actor, apiBase }: Props) {
           </pre>
           {item.error && (
             <JsonForm
-              title="Corriger puis réessayer avec une nouvelle identité"
+              title="Fix and retry with a new ID"
               initial={item.payload}
               onSubmit={async (v) => {
                 queue.replace(item.id, v);
@@ -1250,7 +1248,7 @@ function Offline({ client, actor, apiBase }: Props) {
               reload();
             }}
           >
-            Retirer de la file
+            Remove from queue
           </button>
         </section>
       ))}
@@ -1302,10 +1300,10 @@ export function EvidencePanel({
   return (
     <section className="evidence">
       <ErrorText error={error} />
-      <h3>Pièces jointes</h3>
+      <h3>Attachments</h3>
       {can(actor, "work:write") && (
         <label>
-          Ajouter un fichier (1 Mio maximum)
+          Add a file (1 MiB maximum)
           <input
             type="file"
             onChange={async (e) => {
@@ -1313,7 +1311,7 @@ export function EvidencePanel({
               if (!file) return;
               try {
                 if (file.size > 1048576)
-                  throw new Error("Le fichier dépasse 1 Mio.");
+                  throw new Error("The file exceeds 1 MiB.");
                 const data = await new Promise<string>((resolve, reject) => {
                   const reader = new FileReader();
                   reader.onload = () =>
@@ -1361,11 +1359,11 @@ export function EvidencePanel({
               }
             }}
           >
-            {str(a.filename)} ({str(a.byte_length)} octets)
+            {str(a.filename)} ({str(a.byte_length)} bytes)
           </button>
           {can(actor, "work:write") && (
             <button
-              aria-label={`Retirer ${str(a.filename)}`}
+              aria-label={`Remove ${str(a.filename)}`}
               onClick={async () => {
                 try {
                   await client.request(`attachments/${rowId(a)}`, "DELETE");
@@ -1375,7 +1373,7 @@ export function EvidencePanel({
                 }
               }}
             >
-              Retirer
+              Remove
             </button>
           )}
         </div>
@@ -1388,7 +1386,7 @@ export function EvidencePanel({
       ))}
       {can(actor, "work:write") && (
         <JsonForm
-          title="Relier un travail"
+          title="Link work"
           initial={{ target_type: "task", target_id: "", kind: "related" }}
           onSubmit={async (v) => {
             const r = await client.request(
@@ -1401,7 +1399,7 @@ export function EvidencePanel({
           }}
         />
       )}
-      <h3>Historique complet</h3>
+      <h3>Full history</h3>
       {events.map((e) => (
         <details key={rowId(e)}>
           <summary>
@@ -1417,13 +1415,13 @@ export function EvidencePanel({
           disabled={!offset}
           onClick={() => setOffset((v) => Math.max(0, v - 20))}
         >
-          Précédent
+          Previous
         </button>
         <button
           disabled={events.length < 20}
           onClick={() => setOffset((v) => v + 20)}
         >
-          Suivant
+          Next
         </button>
       </div>
     </section>
@@ -1445,7 +1443,7 @@ export function EditWork({
     <>
       <JsonForm
         key={`edit:${rowId(row)}:${row.revision}`}
-        title="Modifier le travail"
+        title="Edit work"
         initial={{
           title: row.title,
           description: row.description,
@@ -1464,7 +1462,7 @@ export function EditWork({
       {type === "task" && (
         <JsonForm
           key={`parent:${rowId(row)}:${row.revision}`}
-          title="Associer à un dossier"
+          title="Link to case"
           initial={{ case_id: row.case_id ?? "", revision: row.revision }}
           onSubmit={async (v) => {
             const result = await client.request(
@@ -1508,7 +1506,7 @@ export function EmailEvidence({
       <ErrorText error={error} />
       {email && (
         <section>
-          <h3>Courriel reçu</h3>
+          <h3>Received email</h3>
           <p>{str(email.from)}</p>
           {rows(email.attachments).map((a) => (
             <button
@@ -1563,7 +1561,7 @@ function NotificationInbox({ client }: Props) {
             setOffset(0);
           }}
         />{" "}
-        Non lus uniquement
+        Unread only
       </label>
       <ErrorText error={error || list.error} />
       {list.items.map((n) => (
@@ -1588,7 +1586,7 @@ function NotificationInbox({ client }: Props) {
                 }
               }}
             >
-              Marquer comme lu
+              Mark as read
             </button>
           )}
         </article>
@@ -1598,13 +1596,13 @@ function NotificationInbox({ client }: Props) {
           disabled={!offset}
           onClick={() => setOffset((v) => Math.max(0, v - 30))}
         >
-          Précédent
+          Previous
         </button>
         <button
           disabled={list.items.length < 30}
           onClick={() => setOffset((v) => v + 30)}
         >
-          Suivant
+          Next
         </button>
       </div>
     </div>

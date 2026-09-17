@@ -1,0 +1,19 @@
+{
+  "name": "Orgo Compose Dynamic Host Ports",
+  "date": "2026-09-16",
+  "purpose": "Keep default host ports 4000/3000 while allowing ORGO_API_HOST_PORT and ORGO_WEB_HOST_PORT overrides.",
+  "files": [
+    {
+      "path": "docker-compose.yml",
+      "sha256": "ab7f85d5b74510def977a092e96a6832d545d06626330e26639eb2400b354ad3"
+    },
+    {
+      "path": ".env.example",
+      "sha256": "02084715d5b9621f3956e60b3b3b984984c3500c0445951c73a3232f1880c41d"
+    },
+    {
+      "path": "OVERLAY_COMPOSE_DYNAMIC_PORTS.md",
+      "sha256": "9e52772e11f529e77882bd3031acbc3a32cda86581bd07072228546fc807b739"
+    }
+  ]
+}

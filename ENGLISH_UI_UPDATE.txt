@@ -1,0 +1,24 @@
+Orgo English UI update — 2026-09-17
+
+What this changes
+- All current Orgo runtime UI labels/messages translated to English.
+- Organization default locale changed to en-CA.
+- Seeded Administrator user/role display labels normalized to English on the next seed run.
+- Access invitation/password reset email text translated to English.
+- LevelUpDiag Playwright selectors updated to match the English UI.
+
+Install
+1. Extract this ZIP into:
+   C:\mycode\Orgo
+   and allow overwrite.
+2. Double-click:
+   C:\mycode\Orgo\Orgo\LAUNCH_ORGO.bat
+   It rebuilds the Docker images and runs the seed.
+3. In the browser, use Ctrl+F5 if an old page is cached.
+4. After sign-in, choose Workspace -> Full Control Panel to expose all sections.
+
+Validation performed before packaging
+- Modified TypeScript/TSX files passed a syntax transpilation check.
+- LevelUpDiag Python unit suite: 72/72 PASS.
+- Static audit found no remaining French runtime UI phrases in the changed Orgo UI.
+- Full Docker/Chromium acceptance must be rerun on the Windows/Docker host after installing this UI change.

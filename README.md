@@ -13,14 +13,26 @@ The canonical documentation entry point is [`docs/README.md`](docs/README.md).
 Recommended reading:
 
 1. [`docs/Technical-Reference/IMPLEMENTATION_STATUS.md`](docs/Technical-Reference/IMPLEMENTATION_STATUS.md) — implemented surface and dated validation evidence.
-2. [`docs/Technical-Reference/TARGET_ARCHITECTURE.md`](docs/Technical-Reference/TARGET_ARCHITECTURE.md) — architectural target and invariants.
-3. [`docs/Technical-Reference/ARCHITECTURE_TO_CODE.md`](docs/Technical-Reference/ARCHITECTURE_TO_CODE.md) — architecture-to-source ownership map.
-4. [`docs/Technical-Reference/API_IMPLEMENTED.md`](docs/Technical-Reference/API_IMPLEMENTED.md) — implemented HTTP route inventory.
-5. [`docs/Technical-Reference/LOCAL_VALIDATION.md`](docs/Technical-Reference/LOCAL_VALIDATION.md) — reproducible local validation procedure.
-6. [`docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md`](docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md) — Orgo and ecosystem ownership boundaries.
-7. [`docs/Technical-Reference/GLOSSARY.md`](docs/Technical-Reference/GLOSSARY.md) — shared terminology.
+2. [`docs/status/2026-09-17-acceptance-status.md`](docs/status/2026-09-17-acceptance-status.md) — latest automated production-acceptance status for the current development tree.
+3. [`docs/Technical-Reference/TARGET_ARCHITECTURE.md`](docs/Technical-Reference/TARGET_ARCHITECTURE.md) — architectural target and invariants.
+4. [`docs/Technical-Reference/ARCHITECTURE_TO_CODE.md`](docs/Technical-Reference/ARCHITECTURE_TO_CODE.md) — architecture-to-source ownership map.
+5. [`docs/Technical-Reference/API_IMPLEMENTED.md`](docs/Technical-Reference/API_IMPLEMENTED.md) — implemented HTTP route inventory.
+6. [`docs/Technical-Reference/LOCAL_VALIDATION.md`](docs/Technical-Reference/LOCAL_VALIDATION.md) — reproducible local validation procedure.
+7. [`docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md`](docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md) — Orgo and ecosystem ownership boundaries.
+8. [`docs/Technical-Reference/GLOSSARY.md`](docs/Technical-Reference/GLOSSARY.md) — shared terminology.
 
-Dated release/development evidence is kept under [`docs/status/`](docs/status/).
+Dated release/development evidence is kept under [`docs/status/`](docs/status/). The current development-tree acceptance record is [`docs/status/2026-09-17-acceptance-status.md`](docs/status/2026-09-17-acceptance-status.md); the immutable tagged RC baseline remains documented separately in the historical status records.
+
+## Current validation status
+
+The current development tree has passed the complete local automated validation chain available in LevelUpDiag:
+
+- `database` — PASS;
+- `deep` — PASS;
+- `browser` — PASS;
+- `acceptance` — PASS.
+
+The latest acceptance run validates backup/restore, an isolated production-like Docker deployment, service health, seed preparation, and the required Chromium browser journeys. Deployment-specific external-provider interoperability remains a separate acceptance boundary when those providers are enabled.
 
 ## Core invariants
 

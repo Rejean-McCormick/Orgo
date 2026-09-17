@@ -1,4 +1,4 @@
-> **Dated validation evidence:** [2026-09-15 current status](status/2026-09-15-current-status.md) records the most recent completed application validation campaign retained in this repository. [2026-09-16 ecosystem integration alignment](status/2026-09-16-ecosystem-integration-alignment.md) is documentation-only and does not claim a new validation run.
+> **Dated validation evidence:** [2026-09-17 acceptance status](status/2026-09-17-acceptance-status.md) records the latest completed local automated production-acceptance campaign retained in this repository. Historical status records remain immutable evidence for their dated baselines.
 
 # Orgo — Documentation
 
@@ -14,19 +14,20 @@ The repository is licensed under AGPL-3.0-or-later; ownership boundaries in this
 
 1. `Technical-Reference/IMPLEMENTATION_STATUS.md` — implemented surface and dated validation evidence.
 2. `Technical-Reference/TARGET_ARCHITECTURE.md` — canonical architectural target and invariants.
-3. `Technical-Reference/ARCHITECTURE_TO_CODE.md` — ownership map from architecture to active source.
-4. `Technical-Reference/API_IMPLEMENTED.md` — implemented HTTP route inventory.
-5. `Technical-Reference/v3/1-Orgo v3 - Database Schema Reference.md` — physical schema reference; executable Prisma schema/migrations remain authority.
-6. `Technical-Reference/v3/2-Orgo v3 - Architecture and Invariants.md`
-7. `Technical-Reference/v3/3-Orgo v3 - Task Case and Workflow Contract.md`
-8. `Technical-Reference/v3/4-Orgo v3 - Domain Modules.md`
-9. `Technical-Reference/v3/5-Orgo v3 - Labels Profiles and Cyclic Overview.md`
-10. `Technical-Reference/v3/6-Orgo v3 - Insights and Analytics.md`
-11. `Technical-Reference/v3/7-Orgo v3 - API Surface.md`
-12. `Technical-Reference/UI_AND_KOALI_INTEGRATION.md`
-13. `Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md`
-14. `Technical-Reference/GLOSSARY.md`
-15. `Technical-Reference/LOCAL_VALIDATION.md`
+3. `Technical-Reference/ORGO_INTERACTION_MODEL.md` — canonical human interaction model: Today, Workrooms, lenses, modes, profiles, field/offline and acceptance rules.
+4. `Technical-Reference/ARCHITECTURE_TO_CODE.md` — ownership map from architecture to active source.
+5. `Technical-Reference/API_IMPLEMENTED.md` — implemented HTTP route inventory.
+6. `Technical-Reference/v3/1-Orgo v3 - Database Schema Reference.md` — physical schema reference; executable Prisma schema/migrations remain authority.
+7. `Technical-Reference/v3/2-Orgo v3 - Architecture and Invariants.md`
+8. `Technical-Reference/v3/3-Orgo v3 - Task Case and Workflow Contract.md`
+9. `Technical-Reference/v3/4-Orgo v3 - Domain Modules.md`
+10. `Technical-Reference/v3/5-Orgo v3 - Labels Profiles and Cyclic Overview.md`
+11. `Technical-Reference/v3/6-Orgo v3 - Insights and Analytics.md`
+12. `Technical-Reference/v3/7-Orgo v3 - API Surface.md`
+13. `Technical-Reference/UI_AND_KOALI_INTEGRATION.md`
+14. `Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md`
+15. `Technical-Reference/GLOSSARY.md`
+16. `Technical-Reference/LOCAL_VALIDATION.md`
 
 ## Core invariants
 

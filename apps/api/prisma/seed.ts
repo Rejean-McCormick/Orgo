@@ -21,9 +21,11 @@ async function seed() {
           display_name: process.env.ORGO_ORGANIZATION_NAME ?? 'Orgo',
           status: 'active',
           timezone: 'UTC',
-          default_locale: 'fr-CA',
+          default_locale: 'en-CA',
         },
-        update: {},
+        update: {
+          default_locale: 'en-CA',
+        },
       });
       const user = await tx.userAccount.upsert({
         where: {
@@ -32,12 +34,14 @@ async function seed() {
         create: {
           organization_id: organization.id,
           email,
-          display_name: 'Administrateur',
+          display_name: 'Administrator',
           password_hash: digest,
           auth_provider: 'local',
           status: 'active',
         },
-        update: {},
+        update: {
+          display_name: 'Administrator',
+        },
       });
       const role = await tx.role.upsert({
         where: {
@@ -49,11 +53,14 @@ async function seed() {
         create: {
           organization_id: organization.id,
           code: 'administrator',
-          display_name: 'Administrateur',
-          description: 'Administration Orgo',
+          display_name: 'Administrator',
+          description: 'Orgo administration',
           is_system_role: true,
         },
-        update: {},
+        update: {
+          display_name: 'Administrator',
+          description: 'Orgo administration',
+        },
       });
       const permission = await tx.permission.upsert({
         where: { code: '*' },

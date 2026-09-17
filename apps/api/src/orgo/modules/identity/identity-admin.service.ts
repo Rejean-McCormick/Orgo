@@ -199,9 +199,9 @@ export class IdentityAdmin {
         payload: json({
           subject:
             kind === 'invite'
-              ? 'Votre accès Orgo'
-              : 'Réinitialisation du mot de passe Orgo',
-          body: `Utilisez ce lien dans l’heure pour définir votre mot de passe : ${url.toString()}\nSi vous n’avez pas demandé cet accès, ignorez ce message.`,
+              ? 'Your Orgo access'
+              : 'Orgo password reset',
+          body: `Use this link within one hour to set your password: ${url.toString()}\nIf you did not request this access, ignore this message.`,
         }),
       },
     });

@@ -22,7 +22,12 @@ import {
 } from '../../../platform/contracts';
 import { OidcService } from '../../../modules/identity/oidc.service';
 import { IdentityAdmin } from '../../../modules/identity/identity-admin.service';
-import { Ctx, Public } from './boundary';
+import {
+  Ctx,
+  ORGO_SESSION_COOKIE,
+  Public,
+  sessionCookieOptions,
+} from './boundary';
 
 const secureSsoCookie = () => {
   try {
@@ -108,7 +113,9 @@ export class SsoController {
         'Restart SSO from this browser',
         401,
       );
-    return this.oidc.complete(input.code, input.state, cookie);
+    const result = await this.oidc.complete(input.code, input.state, cookie);
+    res.cookie(ORGO_SESSION_COOKIE, result.token, sessionCookieOptions());
+    return result;
   }
   @Get('identity/sso') links(@Ctx() ctx: ExecutionContext) {
     requirePermission(ctx, 'identity:manage');

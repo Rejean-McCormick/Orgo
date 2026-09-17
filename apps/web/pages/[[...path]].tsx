@@ -6,10 +6,11 @@ export default function Page() {
   return (
     <>
       <Head>
-        <title>Orgo · Travail opérationnel</title>
+        <title>Orgo · Organize and Go</title>
+        <link rel="icon" href="/logo_k.svg" type="image/svg+xml" />
         <meta
           name="description"
-          content="Signaux, dossiers et tâches dans un espace opérationnel commun."
+          content="Organize signals into Workrooms, decisions, plans, Actions, evidence, and verified outcomes."
         />
       </Head>
       <OrgoApp

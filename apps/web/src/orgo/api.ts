@@ -30,11 +30,12 @@ export class OrgoClient {
   ) {}
   async download(path: string): Promise<string> {
     const response = await fetch(`${this.baseUrl}/${path}`, {
-      headers: { Authorization: `Bearer ${this.token}` },
+      credentials: 'same-origin',
+      headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
     });
     if (!response.ok)
       throw new Error(
-        "Export impossible : vérifiez vos permissions et votre connexion.",
+        "Unable to export: check your permissions and connection.",
       );
     return response.text();
   }
@@ -52,6 +53,7 @@ export class OrgoClient {
     if (mutationKey) this.pendingKeys.set(signature, mutationKey);
     const response = await fetch(`${this.baseUrl}/${path}`, {
       method,
+      credentials: 'same-origin',
       headers: {
         "Content-Type": "application/json",
         ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
@@ -64,7 +66,7 @@ export class OrgoClient {
     if (!response.ok || !result.ok)
       throw new ApiError(
         result.error?.code ?? "NETWORK_ERROR",
-        result.error?.message ?? "La requête a échoué.",
+        result.error?.message ?? "The request failed.",
         result.error?.details,
       );
     return result.data as T;

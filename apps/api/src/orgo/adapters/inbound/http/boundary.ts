@@ -19,7 +19,32 @@ import { DomainError, ExecutionContext } from '../../../platform/contracts';
 import { IdentityService } from '../../../modules/identity/identity.service';
 
 export const Public = () => SetMetadata('orgo.public', true);
-type ContextRequest = Request & { orgoContext?: ExecutionContext };
+export type ContextRequest = Request & { orgoContext?: ExecutionContext };
+export const ORGO_SESSION_COOKIE = 'orgo_session';
+export function sessionCookieOptions() {
+  const publicUrl = process.env.ORGO_PUBLIC_URL?.trim() ?? '';
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: publicUrl.startsWith('https://'),
+    path: '/',
+    maxAge: 8 * 3600 * 1000,
+  };
+}
+export function sessionToken(req: Request): string | undefined {
+  const authorization = req.headers.authorization;
+  if (authorization?.startsWith('Bearer ') && authorization.length <= 500)
+    return authorization.slice(7);
+  const raw = req.headers.cookie ?? '';
+  for (const part of raw.split(';')) {
+    const [name, ...rest] = part.trim().split('=');
+    if (name === ORGO_SESSION_COOKIE) {
+      const value = rest.join('=');
+      return value ? decodeURIComponent(value) : undefined;
+    }
+  }
+  return undefined;
+}
 export const Ctx = createParamDecorator(
   (_data: unknown, host: NestContext) =>
     host.switchToHttp().getRequest<ContextRequest>().orgoContext,
@@ -39,10 +64,10 @@ export class AuthGuard implements CanActivate {
     )
       return true;
     const req = host.switchToHttp().getRequest<ContextRequest>();
-    const authorization = req.headers.authorization;
-    if (!authorization?.startsWith('Bearer ') || authorization.length > 500)
-      throw new DomainError('UNAUTHENTICATED', 'Bearer token required', 401);
-    req.orgoContext = await this.identity.authenticate(authorization.slice(7), {
+    const token = sessionToken(req);
+    if (!token)
+      throw new DomainError('UNAUTHENTICATED', 'Authentication required', 401);
+    req.orgoContext = await this.identity.authenticate(token, {
       organization: req.get('X-Organization-ID'),
       correlation: req.get('X-Correlation-ID'),
       idempotency: req.get('Idempotency-Key'),

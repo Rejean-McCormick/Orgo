@@ -24,20 +24,20 @@ export default function Account() {
       const client = new OrgoClient();
       if (token) {
         if (form.get("password") !== form.get("confirm"))
-          throw new Error("Les mots de passe ne correspondent pas.");
+          throw new Error("Passwords do not match.");
         await client.request("auth/reset", "POST", {
           token,
           password: form.get("password"),
         });
         setToken("");
-        setMessage("Mot de passe enregistré. Vous pouvez vous connecter.");
+        setMessage("Password saved. You can sign in.");
       } else {
         await client.request("auth/recover", "POST", {
           organization: form.get("organization"),
           email: form.get("email"),
         });
         setMessage(
-          "Si le compte est admissible, un lien sera envoyé par courriel.",
+          "If the account is eligible, a link will be sent by email.",
         );
       }
     } catch (e) {
@@ -49,18 +49,20 @@ export default function Account() {
   return (
     <main className="account-page">
       <Head>
-        <title>Accès Orgo</title>
+        <title>Orgo Access</title>
+        <link rel="icon" href="/logo_k.svg" type="image/svg+xml" />
         <meta name="referrer" content="no-referrer" />
       </Head>
       <section className="panel form-panel">
+        <img className="account-logo" src="/logo_k.svg" alt="Orgo" />
         <h1>
-          {token ? "Définir votre mot de passe" : "Retrouver votre accès"}
+          {token ? "Set your password" : "Recover your access"}
         </h1>
         <form onSubmit={submit}>
           {token ? (
             <>
               <label>
-                Nouveau mot de passe
+                New password
                 <input
                   name="password"
                   type="password"
@@ -71,7 +73,7 @@ export default function Account() {
                 />
               </label>
               <label>
-                Confirmer
+                Confirm
                 <input
                   name="confirm"
                   type="password"
@@ -84,11 +86,11 @@ export default function Account() {
           ) : (
             <>
               <label>
-                Organisation
+                Organization
                 <input name="organization" required maxLength={100} />
               </label>
               <label>
-                Courriel
+                Email
                 <input
                   name="email"
                   type="email"
@@ -99,11 +101,11 @@ export default function Account() {
             </>
           )}
           <button className="primary" disabled={busy}>
-            {token ? "Enregistrer" : "Envoyer le lien"}
+            {token ? "Save" : "Send link"}
           </button>
         </form>
         <p role="status">{message}</p>
-        <Link href="/">Revenir à Orgo</Link>
+        <Link href="/">Back to Orgo</Link>
       </section>
     </main>
   );

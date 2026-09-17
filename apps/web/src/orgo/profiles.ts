@@ -1,4 +1,9 @@
 export type Section =
+  | "today"
+  | "workrooms"
+  | "intake"
+  | "team"
+  | "situation"
   | "processes"
   | "identity"
   | "maintenance"
@@ -24,156 +29,200 @@ export const routes: Record<
   Section,
   { label: string; permission: string; description: string }
 > = {
+  today: {
+    label: "Today",
+    permission: "work:read",
+    description: "The work that needs your attention now.",
+  },
+  workrooms: {
+    label: "Workrooms",
+    permission: "work:read",
+    description: "Shared operational context for coordinated work.",
+  },
+  intake: {
+    label: "Intake",
+    permission: "signals:read",
+    description: "Understand what arrived and route it into context.",
+  },
+  team: {
+    label: "Team",
+    permission: "work:read",
+    description: "Assignments, load, blockers, and team attention.",
+  },
+  situation: {
+    label: "Situation",
+    permission: "work:read",
+    description: "A shared operational picture across active work.",
+  },
   processes: {
-    label: "Processus",
+    label: "Processes",
     permission: "workflows:read",
-    description: "Attentes externes, décisions et reprises.",
+    description: "External waits, decisions, and retries.",
   },
   identity: {
-    label: "Accès",
+    label: "Access",
     permission: "identity:manage",
-    description: "Comptes, rôles et jetons.",
+    description: "Accounts, roles, and tokens.",
   },
   maintenance: {
     label: "Maintenance",
     permission: "maintenance:read",
-    description: "Équipements et calendrier des interventions.",
+    description: "Assets and maintenance schedule.",
   },
   hr: {
-    label: "Ressources humaines",
+    label: "Human Resources",
     permission: "hr:read",
-    description: "Dossiers confidentiels et suivis.",
+    description: "Confidential cases and follow-up.",
   },
   education: {
-    label: "Éducation",
+    label: "Education",
     permission: "education:read",
-    description: "Groupes, membres et accompagnement.",
+    description: "Groups, members, and support.",
   },
   communications: {
     label: "Messages",
     permission: "notifications:write",
-    description: "Modèles et envois.",
+    description: "Templates and deliveries.",
   },
   system: {
-    label: "Exploitation",
+    label: "System Operations",
     permission: "system:manage",
-    description: "Workers, files et reprises.",
+    description: "Workers, queues, and retries.",
   },
   offline: {
-    label: "Hors ligne",
+    label: "Offline",
     permission: "sync:write",
-    description: "Commandes locales et synchronisation.",
+    description: "Local commands and synchronization.",
   },
   routing: {
-    label: "Routage",
+    label: "Routing",
     permission: "routing:read",
-    description: "Distribution du travail.",
+    description: "Work distribution.",
   },
   reports: {
-    label: "Rapports",
+    label: "Reports",
     permission: "insights:read",
-    description: "Exports des travaux visibles.",
+    description: "Exports of visible work.",
   },
   cases: {
-    label: "Dossiers",
+    label: "Cases",
     permission: "work:read",
-    description: "Le contexte durable de votre travail.",
+    description: "Technical Case collection. Use Workrooms for ordinary coordination.",
   },
   tasks: {
-    label: "Tâches",
+    label: "Tasks",
     permission: "work:read",
-    description: "Les actions à mener, du début à la résolution.",
+    description: "Technical Task collection. Actions are presented in Workrooms.",
   },
   "my-work": {
-    label: "Mon travail",
+    label: "My Work",
     permission: "work:read",
-    description: "Les tâches qui vous sont attribuées.",
+    description: "Tasks assigned to you.",
   },
   signals: {
-    label: "Signaux",
+    label: "Signals",
     permission: "signals:read",
-    description: "Les entrées reçues, leur traitement et leur contexte.",
+    description: "Technical accepted-input collection. Use Intake for ordinary triage.",
   },
   workflows: {
     label: "Workflows",
     permission: "workflows:read",
-    description: "Règles publiées et versions immuables.",
+    description: "Published rules and immutable versions.",
   },
   people: {
-    label: "Personnes",
+    label: "People",
     permission: "people:read",
-    description: "Les personnes de votre organisation.",
+    description: "People in your organization.",
   },
   insights: {
-    label: "Indicateurs",
+    label: "Insights",
     permission: "insights:read",
-    description: "Une vue sur la situation opérationnelle.",
+    description: "A view of the operational situation.",
   },
   audit: {
     label: "Audit",
     permission: "audit:read",
-    description: "Les opérations acceptées et leurs auteurs.",
+    description: "Accepted operations and their actors.",
   },
   integrations: {
-    label: "Intégrations",
+    label: "Integrations",
     permission: "integrations:read",
-    description: "Les demandes externes et leurs reçus.",
+    description: "External requests and their receipts.",
   },
   settings: {
-    label: "Configuration",
+    label: "Settings",
     permission: "config:read",
-    description: "Les valeurs par défaut de votre organisation.",
+    description: "Default values for your organization.",
   },
   notifications: {
     label: "Notifications",
     permission: "notifications:read",
-    description: "Les messages qui vous sont destinés.",
+    description: "Messages addressed to you.",
   },
 };
-export const profiles: Record<string, { home: Section; sections: Section[] }> =
-  {
-    Operations: {
-      home: "cases",
-      sections: [
-        "cases",
-        "tasks",
-        "signals",
-        "processes",
-        "notifications",
-        "offline",
-      ],
-    },
-    "My Work": {
-      home: "my-work",
-      sections: ["my-work", "cases", "notifications", "offline"],
-    },
-    Supervisor: {
-      home: "insights",
-      sections: [
-        "insights",
-        "cases",
-        "tasks",
-        "people",
-        "processes",
-        "reports",
-      ],
-    },
-    Intake: { home: "signals", sections: ["signals", "cases"] },
-    "Workflow Admin": {
-      home: "workflows",
-      sections: [
-        "workflows",
-        "signals",
-        "processes",
-        "routing",
-        "integrations",
-        "settings",
-      ],
-    },
-    Executive: { home: "insights", sections: ["insights", "cases"] },
-    Embedded: { home: "cases", sections: ["cases", "tasks"] },
-    "Full Control Panel": {
-      home: "cases",
-      sections: Object.keys(routes) as Section[],
-    },
-  };
+
+/**
+ * Presentation composition only. API authorization remains authoritative.
+ * Technical collections are retained during the migration so existing deep
+ * links and the browser acceptance suite remain compatible.
+ */
+export const profiles: Record<string, { home: Section; sections: Section[] }> = {
+  Operations: {
+    home: "today",
+    sections: [
+      "today",
+      "my-work",
+      "workrooms",
+      "intake",
+      "notifications",
+      "offline",
+      // Transitional technical routes. Keep until OIM acceptance replaces the
+      // legacy browser journeys with equivalent human-surface coverage.
+      "cases",
+      "tasks",
+      "signals",
+      "processes",
+    ],
+  },
+  "My Work": {
+    home: "today",
+    sections: ["today", "my-work", "workrooms", "notifications", "offline", "cases"],
+  },
+  Supervisor: {
+    home: "team",
+    sections: [
+      "team",
+      "situation",
+      "today",
+      "workrooms",
+      "insights",
+      "people",
+      "processes",
+      "reports",
+      "cases",
+      "tasks",
+    ],
+  },
+  Intake: { home: "intake", sections: ["intake", "workrooms", "signals", "cases"] },
+  "Workflow Admin": {
+    home: "workflows",
+    sections: [
+      "workflows",
+      "workrooms",
+      "signals",
+      "processes",
+      "routing",
+      "integrations",
+      "settings",
+    ],
+  },
+  Executive: {
+    home: "situation",
+    sections: ["situation", "workrooms", "insights", "reports", "cases"],
+  },
+  Embedded: { home: "workrooms", sections: ["workrooms", "my-work", "cases", "tasks"] },
+  "Full Control Panel": {
+    home: "situation",
+    sections: Object.keys(routes) as Section[],
+  },
+};

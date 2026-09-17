@@ -51,6 +51,19 @@ export class IdentityService {
       throw new DomainError('UNAUTHENTICATED', 'Invalid credentials', 401);
     return this.session(user.organization_id, user.id);
   }
+  async localSession(organization: string, email: string) {
+    const user = await this.db.userAccount.findFirst({
+      where: {
+        email: email.toLowerCase(),
+        auth_provider: 'local',
+        organization: { slug: organization, status: 'active' },
+        status: 'active',
+      },
+    });
+    if (!user)
+      throw new DomainError('UNAUTHENTICATED', 'Local auto-login account is unavailable', 401);
+    return this.session(user.organization_id, user.id);
+  }
   async session(organizationId: string, userId: string) {
     const context = await this.forUser(organizationId, userId);
     const token = randomBytes(32).toString('base64url');

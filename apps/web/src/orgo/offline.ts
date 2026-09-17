@@ -21,7 +21,7 @@ export class OfflineQueue {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed))
       throw new Error(
-        "File locale illisible. Exportez les données avant de la réinitialiser.",
+        "Local queue cannot be read. Export the data before resetting it.",
       );
     return parsed as OfflineCommand[];
   }
@@ -34,7 +34,7 @@ export class OfflineQueue {
   ) {
     const items = this.list();
     if (items.length >= 200)
-      throw new Error("La file locale contient déjà 200 commandes.");
+      throw new Error("The local queue already contains 200 commands.");
     const command = {
       id: crypto.randomUUID(),
       operation,
@@ -49,7 +49,7 @@ export class OfflineQueue {
   }
   replace(id: string, payload: Record<string, unknown>) {
     const old = this.list().find((c) => c.id === id);
-    if (!old) throw new Error("Commande introuvable");
+    if (!old) throw new Error("Command not found");
     this.save(
       this.list().map((c) =>
         c.id === id
