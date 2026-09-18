@@ -22,7 +22,9 @@
     "db:migrate": "npm run db:migrate -w api",
     "db:seed": "npm run db:seed -w api",
     "test:pglite": "node scripts/test-pglite.mjs",
-    "validate:local": "node scripts/validate-local.mjs"
+    "validate:local": "node scripts/validate-local.mjs",
+    "docs:screenshots:setup": "npm --prefix tools/docs-screenshots install && cd tools/docs-screenshots && npx playwright install chromium",
+    "docs:screenshots": "npm --prefix tools/docs-screenshots run capture"
   },
   "overrides": {
     "multer": "2.3.0"

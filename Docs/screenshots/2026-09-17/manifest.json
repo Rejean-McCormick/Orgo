@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-09-17T18:36:59.165Z",
+  "date": "2026-09-17",
+  "baseURL": "http://127.0.0.1:3000",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "fullPage": false,
+  "captured": [
+    {
+      "file": "01-today.png",
+      "title": "Today",
+      "sourcePath": "today"
+    },
+    {
+      "file": "02-my-work.png",
+      "title": "My Work",
+      "sourcePath": "my-work"
+    },
+    {
+      "file": "03-workrooms.png",
+      "title": "Workrooms",
+      "sourcePath": "workrooms"
+    },
+    {
+      "file": "04-workroom-overview.png",
+      "title": "Workroom — Overview",
+      "sourcePath": "workrooms/e69ca7d6-caeb-4455-a9ae-683c793f0371/overview"
+    },
+    {
+      "file": "05-workroom-actions.png",
+      "title": "Workroom — Actions",
+      "sourcePath": "workrooms/e69ca7d6-caeb-4455-a9ae-683c793f0371/actions"
+    },
+    {
+      "file": "06-workroom-plan.png",
+      "title": "Workroom — Plan",
+      "sourcePath": "workrooms/e69ca7d6-caeb-4455-a9ae-683c793f0371/plan"
+    },
+    {
+      "file": "07-workroom-decisions.png",
+      "title": "Workroom — Decisions",
+      "sourcePath": "workrooms/e69ca7d6-caeb-4455-a9ae-683c793f0371/decisions"
+    },
+    {
+      "file": "08-workroom-evidence.png",
+      "title": "Workroom — Evidence",
+      "sourcePath": "workrooms/e69ca7d6-caeb-4455-a9ae-683c793f0371/evidence"
+    },
+    {
+      "file": "09-workroom-people.png",
+      "title": "Workroom — People",
+      "sourcePath": "workrooms/e69ca7d6-caeb-4455-a9ae-683c793f0371/people"
+    },
+    {
+      "file": "10-workroom-timeline.png",
+      "title": "Workroom — Timeline",
+      "sourcePath": "workrooms/e69ca7d6-caeb-4455-a9ae-683c793f0371/timeline"
+    },
+    {
+      "file": "11-workroom-review.png",
+      "title": "Workroom — Review",
+      "sourcePath": "workrooms/e69ca7d6-caeb-4455-a9ae-683c793f0371/review"
+    },
+    {
+      "file": "12-intake.png",
+      "title": "Intake",
+      "sourcePath": "intake"
+    },
+    {
+      "file": "13-team.png",
+      "title": "Team",
+      "sourcePath": "profile:Supervisor/team"
+    },
+    {
+      "file": "14-situation.png",
+      "title": "Situation",
+      "sourcePath": "profile:Supervisor/situation"
+    },
+    {
+      "file": "15-full-control-panel.png",
+      "title": "Full Control Panel",
+      "sourcePath": "profile:Full Control Panel/cases"
+    }
+  ],
+  "skipped": [
+    "Incident Workroom: no incident-mode Workroom exists in the current local dataset."
+  ],
+  "note": "Documentation screenshots only. This manifest is not functional or acceptance evidence."
+}

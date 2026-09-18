@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "productId": "orgo",
+  "owner": "Orgo",
+  "variables": {
+    "webPort": {
+      "type": "port",
+      "env": "KOALI_ORGO_PORT",
+      "default": 4302
+    },
+    "apiPort": {
+      "type": "port",
+      "env": "KOALI_ORGO_BACKEND_PORT",
+      "default": 4303
+    }
+  },
+  "surface": {
+    "embedBase": "http://127.0.0.1:${webPort}"
+  },
+  "processes": [
+    {
+      "id": "api",
+      "cwd": "apps/api",
+      "command": "npm",
+      "shell": {
+        "win32": true,
+        "default": false
+      },
+      "args": [
+        "run",
+        "dev"
+      ],
+      "env": {
+        "PORT": "${apiPort}"
+      },
+      "probeId": "api"
+    },
+    {
+      "id": "web",
+      "cwd": "apps/web",
+      "command": "npm",
+      "shell": {
+        "win32": true,
+        "default": false
+      },
+      "args": [
+        "exec",
+        "--yes=false",
+        "--",
+        "next",
+        "dev",
+        "-H",
+        "127.0.0.1",
+        "-p",
+        "${webPort}"
+      ],
+      "env": {
+        "PORT": "${webPort}",
+        "ORGO_API_URL": "http://127.0.0.1:${apiPort}"
+      },
+      "probeId": "web"
+    }
+  ],
+  "probes": [
+    {
+      "id": "api",
+      "url": "http://127.0.0.1:${apiPort}/health/ready",
+      "required": true,
+      "statuses": [
+        200
+      ],
+      "timeoutMs": 1800
+    },
+    {
+      "id": "web",
+      "url": "http://127.0.0.1:${webPort}/",
+      "required": true,
+      "statuses": [
+        200,
+        307,
+        308
+      ],
+      "timeoutMs": 1800
+    }
+  ]
+}

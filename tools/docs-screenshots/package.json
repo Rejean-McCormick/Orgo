@@ -1,0 +1,12 @@
+{
+  "name": "orgo-docs-screenshots",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "capture": "node capture.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

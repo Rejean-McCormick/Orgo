@@ -29,6 +29,11 @@ The repository is licensed under AGPL-3.0-or-later; ownership boundaries in this
 15. `Technical-Reference/GLOSSARY.md`
 16. `Technical-Reference/LOCAL_VALIDATION.md`
 
+
+## UI screenshots
+
+Dated documentation screenshots are stored under `screenshots/`. Generate a fresh set from a running local Orgo instance with `npm run docs:screenshots`; first-time setup is `npm run docs:screenshots:setup`. Screenshots are documentation artifacts only and are not acceptance evidence.
+
 ## Core invariants
 
 - `Organization` is the tenant boundary.
