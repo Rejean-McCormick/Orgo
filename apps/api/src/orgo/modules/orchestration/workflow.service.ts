@@ -82,6 +82,37 @@ export class WorkflowService {
       throw new DomainError('INVALID_YAML', 'Invalid workflow YAML');
     }
   }
+
+  async activeVersionByCode(
+    ctx: ExecutionContext,
+    code: string,
+    tx: Tx = this.db,
+  ) {
+    requirePermission(ctx, 'workflows:execute');
+    const definition = await tx.workflowDefinition.findUnique({
+      where: {
+        organization_id_code: { organization_id: ctx.organizationId, code },
+      },
+    });
+    if (!definition || !definition.is_active)
+      throw new DomainError(
+        'WORKFLOW_NOT_READY',
+        `Active workflow not found: ${code}`,
+        409,
+      );
+    const version = await tx.workflowVersion.findFirst({
+      where: { workflow_definition_id: definition.id },
+      orderBy: { version: 'desc' },
+    });
+    if (!version)
+      throw new DomainError(
+        'WORKFLOW_NOT_READY',
+        `Workflow has no published version: ${code}`,
+        409,
+      );
+    return version;
+  }
+
   async version(ctx: ExecutionContext, id: string, tx: Tx = this.db) {
     const row = await tx.workflowVersion.findFirst({
       where: { id, definition: { organization_id: ctx.organizationId } },

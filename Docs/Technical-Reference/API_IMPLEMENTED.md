@@ -122,3 +122,10 @@ Health, login/recovery/reset and OIDC initiation/completion are explicitly publi
 | PATCH | `/api/v3/tasks/:id/case` | `work.controller.ts` |
 
 Total: **114 routes**.
+
+
+## Interaction Kernel
+
+- `POST /api/v3/ik/interactions` — authenticated machine boundary for `governance.decision.execute/1.0.0`. The authenticated organization is authoritative; the handler resolves the configured active workflow and creates an Orgo `Signal` through the existing intake/outbox path.
+
+This endpoint is implemented in the main Orgo product, not `Orgo_Worlds`. End-to-end Konnaxion↔Orgo qualification remains pending.

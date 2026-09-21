@@ -2,7 +2,7 @@
 
 > **Target Kristal v5 boundary:** the generic direct `Kristal validate` bridge documented here is the current compatibility path. New ecosystem integration should converge on Orgo post-commit delivery → Interaction Kernel → Da’at → Kristal, with Kristal outputs returning as opaque artifact references/receipts. This document does not claim that native IK/Da’at delivery is implemented in this Orgo snapshot.
 
-The concrete APIs of Kristal, Konnaxion, Architect and kOA are not supplied. The adapters in `apps/api/src/orgo/integrations` implement the following **Orgo-owned bridge protocol**, not assumed native provider endpoints. A provider-side adapter must translate it and enforce its own authorization. Never point this code at a native API without an explicit compatible adapter.
+The generic adapters in `apps/api/src/orgo/integrations` remain Orgo-owned compatibility bridges for providers whose native contract is not implemented here. **Konnaxion is now an explicit exception:** the main Orgo product implements the Interaction Kernel boundary `governance.decision.execute/1.0.0` and emits `accountability.impact.publish/1.0.0` through the Konnaxion adapter. Kristal, Architect and kOA remain on the generic bridge path unless their native profile is explicitly implemented.
 
 Configure one exact endpoint per provider: `KRISTAL_BRIDGE_URL`, `KONNAXION_BRIDGE_URL`, `ARCHITECT_BRIDGE_URL`, `KOA_BRIDGE_URL`, with the corresponding optional `_TOKEN`. Production requires HTTPS. Development permits HTTP on localhost/127.0.0.1 only. URLs come from deployment configuration, never request payloads; redirects are rejected.
 
@@ -25,7 +25,7 @@ Configured operation allowlists:
 | Adapter | Operations |
 | --- | --- |
 | Kristal | `validate` (compatibility operation; target v5 build/revision path is IK → Da’at) |
-| Konnaxion | `publish`, `distribute` |
+| Konnaxion | Interaction Kernel `accountability.impact.publish/1.0.0` (generic `publish`/`distribute` only as legacy compatibility where explicitly configured) |
 | Architect | `generate` |
 | kOA | `execute` |
 
@@ -52,3 +52,10 @@ Outbox delivery is at least once. Retries use the same external identity. No ext
 No bridge operation creates a distributed transaction across Orgo and a provider. For knowledge publication, Orgo sends a stable snapshot/reference after local commit and later reconciles the provider result. A returned Kristal artifact is referenced; it is not copied into the Orgo operational model as a competing source of truth.
 
 For notifications, `in_app` delivery is implemented; email uses configured `SMTP_URL` and `SMTP_FROM`. SMS and webhook delivery can use fixed `SMS_GATEWAY_URL` / `WEBHOOK_GATEWAY_URL` endpoints and corresponding `_TOKEN` variables. The endpoint is configured by the operator, never taken from a recipient address. POST payload: `{id, organization_id, recipient, subject, body, correlation_id, channel}` with stable organization/notification Idempotency-Key. A gateway must durably deduplicate and return `{"status":"delivered"}` only when its delivery contract is satisfied. A generic gateway is not a native SMS vendor adapter. Browser push is not implemented. SMTP uses a stable Message-ID but does not provide exactly-once guarantees.
+
+
+## Konnaxion Interaction Kernel boundary
+
+The main Orgo API owns `POST /api/v3/ik/interactions`. It authenticates through the normal tenant API-token boundary, validates `governance.decision.execute/1.0.0`, resolves the configured active workflow version and creates the Orgo-owned `Signal` through `IntakeService`. Existing Orgo idempotency, outbox and workflow processing remain authoritative; no parallel IK database is introduced.
+
+Outbound Konnaxion accountability delivery uses `KONNAXION_IK_URL` and `KONNAXION_IK_TOKEN`. End-to-end conformance is not claimed until replay, conflict, processing and redrive are exercised against Konnaxion.

@@ -11,6 +11,7 @@ import { DomainsService } from './modules/domains/domains.service';
 import { InsightsService } from './modules/insights/insights.service';
 import { OutboxWorker } from './platform/outbox/worker.service';
 import { EscalationService } from './modules/orchestration/escalation.service';
+import { InteractionKernelModule } from './modules/interaction-kernel/interaction-kernel.module';
 @Module({
   imports: [
     PlatformModule,
@@ -18,6 +19,7 @@ import { EscalationService } from './modules/orchestration/escalation.service';
     OrchestrationModule,
     IntakeModule,
     IdentityModule,
+    InteractionKernelModule,
   ],
   providers: [
     EvidenceService,
@@ -35,6 +37,7 @@ import { EscalationService } from './modules/orchestration/escalation.service';
     OrchestrationModule,
     IntakeModule,
     IdentityModule,
+    InteractionKernelModule,
     DomainsService,
     InsightsService,
     OutboxWorker,
