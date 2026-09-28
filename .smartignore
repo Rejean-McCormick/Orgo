@@ -1,0 +1,7 @@
+# Files intentionally kept in Git but omitted from code snapshots.
+
+# Generated snapshot inventory (SMARTDUMP_INDEX is embedded separately).
+CODE_SNAPSHOT_MANIFEST.md
+
+# Historical, versioned validation evidence.
+validation/local-*/

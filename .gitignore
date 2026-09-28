@@ -5,38 +5,43 @@ node_modules
 .pnp
 .pnp.js
 
-# testing
+# testing / generated caches
 coverage
+.nyc_output/
+.cache/
 
-# next.js
+# next.js / build output
 .next/
 out/
-build
+build/
+**/dist/
 
-**/dist
+# local environment / secrets
 **/.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# local backup overlays
+.koali-ks4-backup/
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.tsbuildinfo
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# local env files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+validation-*.log
 
 # turbo
 .turbo
 
+# local helpers
 GitSink.bat
-
-
-*.tsbuildinfo
-validation-*.log
+/SmartSnap.pyw
