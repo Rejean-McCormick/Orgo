@@ -71,38 +71,44 @@ Orgo workflow
 
 If Konnaxion requests governed work, Orgo creates/updates its own Tasks/Cases; Konnaxion does not write the Orgo database.
 
-## 5. Orgo ↔ Kristal / Da’at
+## 5. Orgo ↔ Kristal v6 / Da’at
 
-The current repository includes an **Orgo-owned generic HTTP bridge adapter** for direct Kristal validation. That bridge is a compatibility boundary, not a claim that Orgo owns Kristal state or that the bridge is the target Kristal v5 integration model.
-
-The target ecosystem path for new Kristal v5 work is:
+Orgo's active knowledge path is now the ecosystem-native boundary:
 
 ```text
 Orgo owner transaction
-  + OutboxMessage
+  + immutable Case/Task snapshot
+  + IntegrationOperation / OutboxMessage
         ↓ post-commit
-Interaction Kernel interaction
+Interaction Kernel
         ↓
-Da’at mapping / compilation boundary
+Da’at mapping / ACL
         ↓
-Kristal Exchange / artifact
+Kristal Standard 6.0.0
         ↓
-ArtifactRef / receipt back to Orgo
+Kristal ArtifactRef / kristal.artifact.ready/2.0.0
+        ↓
+Orgo Signal / optional local workflow
 ```
 
-Orgo remains authoritative for mutable operational workflow state. Kristal is authoritative for the epistemic artifact it produces. Interaction Kernel transports the interaction and references; it is not the storage owner. Da’at translates/compiles the submitted snapshot or references into Kristal-native structures.
+The `kristal` provider supports `build` and `revise` and targets Da’at through Interaction Kernel. Orgo no longer relies on the old direct `Kristal validate` compatibility bridge.
 
-Orgo may retain lightweight artifact references, digests, locators, correlation data and receipts. It must not copy a canonical Kristal payload into Case/Task state and then treat that copy as a second source of truth. Likewise, a Kristal Runtime Pack or query materialization does not become authoritative Orgo state.
+Orgo remains authoritative for mutable operational workflow state. Kristal is authoritative for the Kristal State artifact it produces. Da’at translates/maps; Interaction Kernel transports interactions and references.
+
+A Kristal v6 artifact may represent `authoritative_constraint`, `observed_state`, `organizational_rule`, `derived_state`, `decision`, `action`, `reference_knowledge` or `structural` records, and may carry `actionability`. Those semantics do not transfer ownership:
 
 ```text
-Task.status ≠ Kristal assertion_status
-Case.status ≠ Kristal validation_status
-Orgo approval ≠ Kristal validation
-Orgo approval ≠ Kristal authority recognition
-Operational DB ≠ Kristal Exchange ≠ Runtime Pack
+Task.status           ≠ Kristal artifact_status
+Case.status           ≠ Kristal validation/recognition
+Orgo approval         ≠ Kristal validation
+Kristal actionability ≠ Orgo execution authority
+automatic             ≠ permission to bypass Orgo RBAC/workflow admission
+Operational DB        ≠ Kristal State ≠ derived projection
 ```
 
-A workflow approval becomes a Kristal epistemic decision only through an explicit Kristal operation/artifact. Operational mutations commit locally first; no distributed transaction spans Orgo, Interaction Kernel, Da’at or Kristal.
+`actionability = automatic` can remove unnecessary human friction only after an Orgo-owned policy/workflow admits that route. `human_review` and `human_decision` remain explicit human gates. Returned human decisions and completed effects may later be exported as new evidence/observed state, allowing the Kristal corpus to improve without becoming Orgo's operational database.
+
+Operational mutations commit locally first; no distributed transaction spans Orgo, Interaction Kernel, Da’at or Kristal.
 
 ## 6. Orgo ↔ SemantiK Architect
 

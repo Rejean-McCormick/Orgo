@@ -24,6 +24,7 @@ const previousEnv = {
   type: process.env.KONNAXION_DECISION_TYPE,
   category: process.env.KONNAXION_DECISION_CATEGORY,
   severity: process.env.KONNAXION_DECISION_SEVERITY,
+  kristalLabel: process.env.KRISTAL_ARTIFACT_LABEL,
 };
 
 function restore(name: string, value: string | undefined) {
@@ -75,6 +76,40 @@ function envelope(key: string, revision = '1') {
   };
 }
 
+function artifactReadyEnvelope(key: string) {
+  return {
+    specversion: 'ik/1.1',
+    id: randomUUID(),
+    class: 'event',
+    time: new Date().toISOString(),
+    profile: { id: 'kristal.artifact.ready', version: '2.0.0' },
+    source: { system: 'daat' },
+    target: { system: 'orgo', organization: tenant },
+    subject: { type: 'kristal-build', id: 'build-42' },
+    correlation_id: 'kristal:build-42',
+    idempotency_key: key,
+    data: { build_ref: 'build-42', stage: 'kristal-state' },
+    artifact_refs: [
+      {
+        owner: { system: 'kristal' },
+        artifact_type: 'kristal_state',
+        artifact_id: 'sha256:' + 'c'.repeat(64),
+        version: '6.0.0',
+        integrity: { algorithm: 'sha256', digest: 'd'.repeat(64) },
+        content: {
+          artifact_status: 'working',
+          assertions: [
+            {
+              record_role: 'decision',
+              actionability: { mode: 'human_review', requires_human_validation: true },
+            },
+          ],
+        },
+      },
+    ],
+  };
+}
+
 before(async () => {
   assert.ok(process.env.DATABASE_URL, 'Use a dedicated test database');
   process.env.KONNAXION_DECISION_WORKFLOW_CODE = workflowCode;
@@ -82,6 +117,7 @@ before(async () => {
   process.env.KONNAXION_DECISION_TYPE = 'governance_decision';
   process.env.KONNAXION_DECISION_CATEGORY = 'request';
   process.env.KONNAXION_DECISION_SEVERITY = 'MODERATE';
+  process.env.KRISTAL_ARTIFACT_LABEL = '1.11';
 
   app = await createApp();
   await app.listen(0, '127.0.0.1');
@@ -178,6 +214,7 @@ after(async () => {
   restore('KONNAXION_DECISION_TYPE', previousEnv.type);
   restore('KONNAXION_DECISION_CATEGORY', previousEnv.category);
   restore('KONNAXION_DECISION_SEVERITY', previousEnv.severity);
+  restore('KRISTAL_ARTIFACT_LABEL', previousEnv.kristalLabel);
 });
 
 test('Konnaxion decision admission creates one Signal and worker creates one Case/Task with replay safety', async () => {
@@ -214,6 +251,33 @@ test('Konnaxion decision admission creates one Signal and worker creates one Cas
   );
   assert.equal(
     await db.workflowInstance.count({ where: { organization_id: tenant, signal_id: signalId } }),
+    1,
+  );
+});
+
+
+test('Kristal artifact.ready/2.0.0 becomes one local Signal without transferring execution authority', async () => {
+  const key = `kristal:build-42:${tenant}`;
+  const firstEnvelope = artifactReadyEnvelope(key);
+  const first = await postIk(firstEnvelope, key);
+  assert.equal(first.status, 201, JSON.stringify(first));
+  assert.equal(first.data.status, 'accepted');
+  const signalId = first.data.data.signal_id as string;
+  const signal = await db.signal.findUniqueOrThrow({ where: { id: signalId } });
+  assert.equal(signal.type, 'kristal_artifact_ready');
+  assert.equal((signal.payload as any).kristal_standard, '6.0.0');
+  assert.equal((signal.payload as any).stage, 'kristal-state');
+  assert.equal((signal.payload as any).artifact_refs[0].content.assertions[0].actionability.mode, 'human_review');
+  assert.deepEqual((signal.payload as any).record_roles, ['decision']);
+  assert.deepEqual((signal.payload as any).actionability_modes, ['human_review']);
+  assert.equal((signal.payload as any).human_validation_required, true);
+  assert.equal(signal.case_id, null);
+
+  const replay = await postIk({ ...firstEnvelope, id: randomUUID(), time: new Date().toISOString() }, key);
+  assert.equal(replay.status, 201, JSON.stringify(replay));
+  assert.deepEqual(replay.data, first.data);
+  assert.equal(
+    await db.signal.count({ where: { organization_id: tenant, type: 'kristal_artifact_ready' } }),
     1,
   );
 });

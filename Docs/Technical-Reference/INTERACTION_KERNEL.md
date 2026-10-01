@@ -1,32 +1,31 @@
 # Orgo Interaction Kernel boundary
 
-Orgo core owns the operational consequence of `governance.decision.execute/1.0.0`.
-`Orgo_Worlds` does not create Signal/Case/Task state.
+Orgo exposes `POST /api/v3/ik/interactions` as an authenticated machine boundary. The envelope remains IK `ik/1.1`; the profiles determine use-case semantics.
 
-## Inbound
+## Accepted inbound profiles
 
-`POST /api/v3/ik/interactions`
+### `governance.decision.execute/1.0.0`
 
-The request is authenticated by the normal Orgo bearer-token boundary. The token's
-organization is authoritative; `target.organization` must match it.
+Source: Konnaxion. Orgo validates target tenant/world, governance authority and the referenced Konnaxion DecisionRecord, then creates exactly one local Signal under semantic idempotency. The configured Orgo workflow owns the resulting Case/Task effects.
 
-Accepted profile: `governance.decision.execute@1.0.0`.
+### `kristal.artifact.ready/2.0.0`
 
-The boundary resolves `KONNAXION_DECISION_WORKFLOW_CODE` to the current active
-WorkflowVersion, then creates exactly one Signal and queues that workflow. Existing
-`IdempotencyRecord`, Signal and Outbox infrastructure provide replay safety.
+Source: Da’at. Orgo validates the target and artifact event, persists exactly one `kristal_artifact_ready` Signal, and preserves returned ArtifactRefs. `KRISTAL_ARTIFACT_WORKFLOW_CODE` may route it into a local workflow, but is optional.
 
-Required token permissions must cover both intake and the actions executed later by the worker.
-For the qualification workflow that creates a Case, a Task and publishes impact, use:
-`signals:write`, `signals:read`, `workflows:execute`, `work:write`, `work:read`,
-`integrations:write` and `integrations:read`. The last read scope is used by qualification
-inspection; production roles may omit it if no readback is required.
+The event may contain Kristal v6 `record_role` or `actionability` metadata inside artifact content. These are descriptive/policy inputs only. They never authorize an Orgo mutation by themselves.
 
-For local Docker qualification only, `ORGO_ALLOW_INSECURE_LOCAL_PROVIDER_HTTP=true`
-permits `http://host.docker.internal/...` for the Konnaxion callback. It is false by
-default and does not permit arbitrary HTTP provider hosts.
+## Outbound profiles
 
-## Outbound
+- Konnaxion accountability output: `accountability.impact.publish/1.0.0`.
+- Kristal build via Da’at: `kristal.build.request/2.0.0`.
+- Kristal revision via Da’at: `kristal.revision.request/2.0.0`.
 
-The Konnaxion integration adapter emits `accountability.impact.publish@1.0.0` to
-`KONNAXION_IK_URL`, using `KONNAXION_IK_TOKEN`.
+Kristal build requests pin contract set `6.0.0` and carry an immutable Orgo Work snapshot ArtifactRef.
+
+## Idempotency
+
+Commands require an idempotency key. Kristal artifact events may supply one; otherwise Orgo derives a stable event key from the interaction id. Replays with the same semantic request return the stored result; conflicting reuse is rejected.
+
+## Ownership invariant
+
+Interaction Kernel transports interactions and ArtifactRefs. It does not own Orgo Work or Kristal knowledge. Orgo is the only writer of Orgo operational state.

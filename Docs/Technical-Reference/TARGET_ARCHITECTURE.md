@@ -162,7 +162,7 @@ Da’at
 Kristal artifact
 ```
 
-For Kristal v5, this is the target knowledge-publication path. The current direct Kristal validation bridge may remain as migration compatibility until the native IK/Da’at path is implemented and validated. The same ownership rule applies to Konnaxion, SemantiK Architect and kOA-facing operational integrations: each external system owns its own authoritative state.
+For Kristal v6, this knowledge-publication path is implemented: Orgo freezes the selected Work snapshot into the IntegrationOperation, delivers a `kristal.build.request/2.0.0` or revision request through Interaction Kernel to Da’at, and can receive `kristal.artifact.ready/2.0.0` as a local Signal. The same ownership rule applies to Konnaxion, SemantiK Architect and kOA-facing integrations: each external system owns its own authoritative state.
 
 Interaction Kernel is a protocol boundary, not a database or artifact store. Da’at is the translation/compilation boundary toward Kristal. Orgo stores only the operational request state and the references/receipts needed to correlate resulting artifacts.
 
@@ -402,7 +402,7 @@ The architectural direction distinguishes three planes:
 ```text
 1. Orgo operational state      mutable, transactional, Orgo-owned
            ↓ snapshot/export
-2. Kristal knowledge artifact  immutable/content-addressed epistemic state
+2. Kristal State artifact     immutable/content-addressed knowledge/state
            ↓ deterministic build
 3. Runtime materialization     derived query/index representation
 ```

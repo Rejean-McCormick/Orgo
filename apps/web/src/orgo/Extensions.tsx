@@ -430,17 +430,20 @@ function Processes({ client, actor }: Props) {
         <JsonForm
           title="Start a process"
           initial={{
-            title: "Validation then decision",
+            title: "Kristal build then decision",
             subject_type: "case",
             subject_id: "",
             steps: [
               {
                 kind: "integration",
-                title: "Validation",
+                title: "Kristal build",
                 request: {
                   provider: "kristal",
-                  operation: "validate",
-                  request: {},
+                  operation: "build",
+                  request: {
+                    mapping_profile: "orgo.work-snapshot/kristal-v6",
+                    requested_outputs: ["kristal-state"],
+                  },
                 },
                 timeout_seconds: 86400,
               },

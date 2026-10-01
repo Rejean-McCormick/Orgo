@@ -1,3 +1,5 @@
+> **Kristal v6 migration validation note (2026-10-01):** the new IK/Da’at/Kristal boundary passed architecture and TypeScript syntax/transpile checks in the supplied SmartSnap. Full npm/Prisma/database/browser acceptance was not rerun because dependencies/generated clients are absent; see `../../VALIDATION_KRISTAL_V6.md`.
+
 # Orgo — implementation status (2026-09-15)
 
 This document describes the current development implementation and distinguishes **implemented source**, **automated validation evidence**, **browser evidence** and **remaining external/manual acceptance boundaries**.
@@ -80,7 +82,7 @@ RC1 remains the official immutable tagged release baseline until a new release c
 ## Concrete boundaries
 
 
-- Native Kristal/Architect/kOA schemas and SDKs, and canonical Koali/Capsule contract packages, are absent from the supplied workspace. The shipped generic bridges and `orgo-surface/v1` are explicit Orgo contracts. Konnaxion is handled separately through the implemented Interaction Kernel profile boundary; end-to-end Konnaxion↔Orgo qualification is still pending.
+- The Kristal v6 ecosystem path is implemented at the Orgo boundary using Interaction Kernel profiles `kristal.build.request/2.0.0`, `kristal.revision.request/2.0.0`, and inbound `kristal.artifact.ready/2.0.0`. Native provider-side Da’at/Kristal deployment remains an external interoperability boundary. Architect/kOA generic bridges and canonical Koali/Capsule packages remain separate explicit contracts. Konnaxion continues through its implemented Interaction Kernel profile boundary.
 - A gateway must implement delivery/idempotency semantics for the chosen SMS or webhook provider. Browser push, a vendor-specific gateway and a built-in SMTP server are not claimed. The supplied email adapter consumes an existing IMAP server or mail archives.
 - Core workflows, domain operations and UI are implemented to the documented generic contracts. Organization-specific HR/education processes, provider receipt predicates, routing rules and compensation operations must be configured with actual policy/content. Example plans are examples, not automatic deployment policy.
 - Work scope identifiers are explicit authorization perimeters. A separate team/location hierarchy catalog or arbitrary policy language is not implied.
@@ -93,3 +95,9 @@ These are the actual integration/configuration and acceptance boundaries. No end
 ### Interaction Kernel (Konnaxion)
 
 Implemented in the main Orgo product: authenticated `POST /api/v3/ik/interactions`, `governance.decision.execute/1.0.0` admission, semantic idempotency, active workflow resolution and handoff to the existing `Signal`/outbox/workflow path. Konnaxion accountability output uses `accountability.impact.publish/1.0.0`. **Qualification state:** implementation present; cross-product E2E pending.
+
+### Kristal v6 / Da’at
+
+Implemented in the main Orgo product: a `kristal` integration operation with `build` freezes the selected Case/Task into a content-digested ArtifactRef, persists it inside the IntegrationOperation, and delivers `kristal.build.request/2.0.0` to Da’at through the IK bridge after commit. `revise` uses `kristal.revision.request/2.0.0`. `kristal.artifact.ready/2.0.0` is admitted inbound and persisted as an Orgo Signal.
+
+The implementation preserves returned `actionability` metadata but does not execute it directly. Orgo workflow/RBAC remains the execution authority.

@@ -1,5 +1,7 @@
 # Orgo — ecosystem integration documentation alignment, 2026-09-16
 
+**Historical note:** superseded on 2026-10-01 by the Kristal v6 / IK v2 integration update.
+
 This is a documentation-only alignment. It does not change the tested application commit or promote a release.
 
 ## Current snapshot

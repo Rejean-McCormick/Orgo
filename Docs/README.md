@@ -1,4 +1,4 @@
-> **Dated validation evidence:** [2026-09-17 acceptance status](status/2026-09-17-acceptance-status.md) records the latest completed local automated production-acceptance campaign retained in this repository. Historical status records remain immutable evidence for their dated baselines.
+> **Current migration evidence:** [2026-10-01 Kristal v6 integration](status/2026-10-01-kristal-v6-integration.md) records the knowledge-boundary update. [2026-09-17 acceptance status](status/2026-09-17-acceptance-status.md) remains the latest completed full local automated production-acceptance campaign retained in this repository.
 
 # Orgo — Documentation
 
@@ -6,7 +6,7 @@
 
 Orgo is an **Orgo-owned integrated subsystem/application** in the kOA Digital Ecosystem. It is a multi-tenant workflow and coordination system that turns signals into governed operational work through Organizations, Cases, Tasks, labels, profiles, workflows, audit and insights. Its implementation style is a modular monolith centered on Intake, Work and Orchestration.
 
-Orgo owns **workflow state, business authorization and its business UI**. It can run standalone. When hosted, the host composes Orgo but does not become the owner of Orgo's Tasks, Cases, Signals, Workflows, tenant rules, RBAC or UI. Orgo does not absorb the business state of Konnaxion, the epistemic state of Kristal, the linguistic runtime of SemantiK Architect, or the host/platform state of kOA-Linux.
+Orgo owns **workflow state, business authorization and its business UI**. It can run standalone. When hosted, the host composes Orgo but does not become the owner of Orgo's Tasks, Cases, Signals, Workflows, tenant rules, RBAC or UI. Orgo does not absorb the business state of Konnaxion, Kristal's canonical knowledge/state artifacts, the linguistic runtime of SemantiK Architect, or the host/platform state of kOA-Linux.
 
 The repository is licensed under AGPL-3.0-or-later; ownership boundaries in this documentation describe runtime/domain authority, not a proprietary software license.
 
@@ -49,7 +49,8 @@ Dated documentation screenshots are stored under `screenshots/`. Generate a fres
 - Insights are read/analysis projections; actionable patterns re-enter Work as Cases/Tasks.
 - External systems are orchestrated through explicit contracts; Orgo does not write their internal stores.
 - Orgo operational state commits locally before cross-system delivery; IK/Da’at/Kristal integration uses immutable snapshots/references and receipts, not distributed transactions or shared mutable databases.
-- Workflow state is not epistemic, civic, linguistic or platform state.
+- Kristal v6 actionability may inform Orgo routing, but only Orgo-owned workflows/actions and RBAC may mutate Orgo Work.
+- Workflow state is not Kristal knowledge/reference state, civic state, linguistic runtime state or platform state.
 - Orgo remains standalone-capable; hosting is an integration mode, not a required business dependency.
 - Host capability projections may influence presentation but never replace Orgo authorization.
 

@@ -567,11 +567,16 @@ test('integration success stores a receipt without changing Case lifecycle', asy
   const parent = await api('cases', 'POST', caseInput());
   const requested = await api('integration-operations', 'POST', {
     provider: 'kristal',
-    operation: 'validate',
+    operation: 'build',
+    request: { mapping_profile: 'orgo.work-snapshot/kristal-v6', requested_outputs: ['kristal-state'] },
     subject_type: 'case',
     subject_id: parent.data.case_id,
   });
   assert.equal(requested.status, 201, JSON.stringify(requested));
+  assert.equal(requested.data.request_metadata.mapping_profile, 'orgo.work-snapshot/kristal-v6');
+  assert.equal(requested.data.request_metadata.artifact_refs[0].artifact_type, 'orgo.case_snapshot');
+  assert.equal(requested.data.request_metadata.artifact_refs[0].owner.system, 'orgo');
+  assert.match(requested.data.request_metadata.artifact_refs[0].integrity.digest, /^[a-f0-9]{64}$/);
   const keys: string[] = [];
   worker.adapters.kristal = {
     async execute(req) {
@@ -600,7 +605,8 @@ test('retry and redrive retain the same integration identity', async () => {
   const parent = await api('cases', 'POST', caseInput());
   const requested = await api('integration-operations', 'POST', {
     provider: 'kristal',
-    operation: 'validate',
+    operation: 'build',
+    request: { mapping_profile: 'orgo.work-snapshot/kristal-v6', requested_outputs: ['kristal-state'] },
     subject_type: 'case',
     subject_id: parent.data.case_id,
   });
@@ -634,7 +640,8 @@ test('stale worker cannot acknowledge another worker lease', async () => {
   const parent = await api('cases', 'POST', caseInput());
   const requested = await api('integration-operations', 'POST', {
     provider: 'kristal',
-    operation: 'validate',
+    operation: 'build',
+    request: { mapping_profile: 'orgo.work-snapshot/kristal-v6', requested_outputs: ['kristal-state'] },
     subject_type: 'case',
     subject_id: parent.data.case_id,
   });
@@ -1012,11 +1019,11 @@ test('accepted external work waits for authenticated callback without approving 
         steps: [
           {
             kind: 'integration',
-            title: 'Validate',
+            title: 'Kristal build',
             request: {
               provider: 'kristal',
-              operation: 'validate',
-              request: {},
+              operation: 'build',
+              request: { mapping_profile: 'orgo.work-snapshot/kristal-v6', requested_outputs: ['kristal-state'] },
             },
           },
         ],

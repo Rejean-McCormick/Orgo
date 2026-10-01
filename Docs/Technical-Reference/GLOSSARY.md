@@ -130,3 +130,12 @@ An Orgo-owned operational record for a request to an external system, including 
 ## Domain event
 
 A business fact emitted after an accepted Orgo state transition, such as `TaskAssigned` or `CaseResolved`. Domain events are distinct from audit/security evidence and integration messages.
+
+## Kristal State
+Canonical Kristal v6 structured knowledge/state artifact. Orgo stores references/receipts, not a competing mutable copy.
+
+## Kristal valuation
+Typed v6 measure/state attached to an assertion. A valuation is not an Orgo workflow status or an execution threshold.
+
+## Kristal actionability
+V6 metadata describing whether a represented action is automatic, human-reviewed, human-decided, manual/prohibited or lacks information. It does not grant Orgo execution permission; Orgo RBAC/workflow admission still applies.

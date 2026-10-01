@@ -13,26 +13,22 @@ The canonical documentation entry point is [`docs/README.md`](docs/README.md).
 Recommended reading:
 
 1. [`docs/Technical-Reference/IMPLEMENTATION_STATUS.md`](docs/Technical-Reference/IMPLEMENTATION_STATUS.md) — implemented surface and dated validation evidence.
-2. [`docs/status/2026-09-17-acceptance-status.md`](docs/status/2026-09-17-acceptance-status.md) — latest automated production-acceptance status for the current development tree.
-3. [`docs/Technical-Reference/TARGET_ARCHITECTURE.md`](docs/Technical-Reference/TARGET_ARCHITECTURE.md) — architectural target and invariants.
-4. [`docs/Technical-Reference/ARCHITECTURE_TO_CODE.md`](docs/Technical-Reference/ARCHITECTURE_TO_CODE.md) — architecture-to-source ownership map.
-5. [`docs/Technical-Reference/API_IMPLEMENTED.md`](docs/Technical-Reference/API_IMPLEMENTED.md) — implemented HTTP route inventory.
-6. [`docs/Technical-Reference/LOCAL_VALIDATION.md`](docs/Technical-Reference/LOCAL_VALIDATION.md) — reproducible local validation procedure.
-7. [`docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md`](docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md) — Orgo and ecosystem ownership boundaries.
-8. [`docs/Technical-Reference/GLOSSARY.md`](docs/Technical-Reference/GLOSSARY.md) — shared terminology.
+2. [`docs/status/2026-10-01-kristal-v6-integration.md`](docs/status/2026-10-01-kristal-v6-integration.md) — Kristal v6 / IK v2 integration update.
+3. [`docs/status/2026-09-17-acceptance-status.md`](docs/status/2026-09-17-acceptance-status.md) — latest full production-acceptance campaign retained in the repository.
+4. [`docs/Technical-Reference/TARGET_ARCHITECTURE.md`](docs/Technical-Reference/TARGET_ARCHITECTURE.md) — architectural target and invariants.
+5. [`docs/Technical-Reference/ARCHITECTURE_TO_CODE.md`](docs/Technical-Reference/ARCHITECTURE_TO_CODE.md) — architecture-to-source ownership map.
+6. [`docs/Technical-Reference/API_IMPLEMENTED.md`](docs/Technical-Reference/API_IMPLEMENTED.md) — implemented HTTP route inventory.
+7. [`docs/Technical-Reference/LOCAL_VALIDATION.md`](docs/Technical-Reference/LOCAL_VALIDATION.md) — reproducible local validation procedure.
+8. [`docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md`](docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md) — Orgo and ecosystem ownership boundaries.
+9. [`docs/Technical-Reference/GLOSSARY.md`](docs/Technical-Reference/GLOSSARY.md) — shared terminology.
 
 Dated release/development evidence is kept under [`docs/status/`](docs/status/). The current development-tree acceptance record is [`docs/status/2026-09-17-acceptance-status.md`](docs/status/2026-09-17-acceptance-status.md); the immutable tagged RC baseline remains documented separately in the historical status records.
 
 ## Current validation status
 
-The current development tree has passed the complete local automated validation chain available in LevelUpDiag:
+The Kristal v6 migration has migration-specific validation recorded in [`VALIDATION_KRISTAL_V6.md`](VALIDATION_KRISTAL_V6.md): architecture checks pass, all modified TypeScript files pass syntax/transpile validation, scenario-injector tests pass 11/11, JSON/YAML parse, and no new broken documentation links were introduced.
 
-- `database` — PASS;
-- `deep` — PASS;
-- `browser` — PASS;
-- `acceptance` — PASS.
-
-The latest acceptance run validates backup/restore, an isolated production-like Docker deployment, service health, seed preparation, and the required Chromium browser journeys. Deployment-specific external-provider interoperability remains a separate acceptance boundary when those providers are enabled.
+The supplied SmartSnap does not contain installed npm dependencies or generated Prisma client artifacts, so the complete application typecheck/database/build/browser campaign was not rerun in this sandbox. The latest retained full automated application acceptance evidence remains the 2026-09-17 campaign documented under `docs/status/`.
 
 ## Core invariants
 
@@ -50,3 +46,9 @@ The latest acceptance run validates backup/restore, an isolated production-like 
 ## Implementation authority
 
 Executable source, `apps/api/prisma/schema.prisma`, the current Prisma migration baseline, active tests and generated route inventory are the implementation authority. Architecture documents describe intended ownership and constraints; they are not proof that a feature exists unless the implementation/status documents and source support it.
+
+## Kristal v6 integration
+
+Orgo's `kristal` provider now uses the ecosystem-native path **Orgo → Interaction Kernel → Da’at → Kristal Standard 6.0.0**. A knowledge build freezes the selected Case/Task into an immutable ArtifactRef inside the IntegrationOperation, then delivers it post-commit through `kristal.build.request/2.0.0`. Returned `kristal.artifact.ready/2.0.0` events enter Orgo as Signals.
+
+Kristal v6 `actionability` is preserved as input to Orgo routing; it never bypasses Orgo authorization or mutates Case/Task state directly.

@@ -39,9 +39,12 @@ export class OperationsService {
   async request(ctx: ExecutionContext, raw: unknown, key: string, tx: Tx) {
     requirePermission(ctx, 'integrations:write');
     const input = parse(operationInput, raw);
-    if (input.subject_type === 'task')
-      await this.work.getTask(ctx, input.subject_id, tx);
-    else await this.work.getCase(ctx, input.subject_id, tx);
+    const subject = input.subject_type === 'task'
+      ? await this.work.getTask(ctx, input.subject_id, tx)
+      : await this.work.getCase(ctx, input.subject_id, tx);
+    const requestMetadata = input.provider === 'kristal' && input.operation === 'build'
+      ? this.kristalBuildRequest(ctx, input.subject_type, subject, input.request)
+      : input.request;
     const operation = await tx.integrationOperation.create({
       data: {
         organization_id: ctx.organizationId,
@@ -51,7 +54,7 @@ export class OperationsService {
         subject_id: input.subject_id,
         idempotency_key: key,
         correlation_id: ctx.correlationId,
-        request_metadata: json(input.request),
+        request_metadata: json(requestMetadata),
       },
     });
     await enqueue(tx, ctx, 'integration', operation.id, {});
@@ -65,6 +68,36 @@ export class OperationsService {
     );
     return operation;
   }
+  private kristalBuildRequest(
+    ctx: ExecutionContext,
+    subjectType: 'task' | 'case',
+    subject: unknown,
+    request: Record<string, unknown>,
+  ) {
+    const snapshot = JSON.parse(JSON.stringify(subject)) as Record<string, unknown>;
+    const digest = hash(snapshot);
+    const revision = typeof snapshot.revision === 'number' ? String(snapshot.revision) : null;
+    const supplied = Array.isArray(request.artifact_refs) ? request.artifact_refs : [];
+    return {
+      ...request,
+      artifact_refs: [
+        {
+          owner: { system: 'orgo', organization: ctx.organizationId },
+          artifact_type: `orgo.${subjectType}_snapshot`,
+          artifact_id: `orgo:${subjectType}:${String(snapshot.id)}:${revision ? `r${revision}:` : ''}sha256:${digest}`,
+          ...(revision ? { version: revision } : {}),
+          integrity: { algorithm: 'sha256', digest },
+          content: snapshot,
+          provenance: {
+            source: 'orgo',
+            capture: 'owner-transaction-snapshot-for-post-commit-delivery',
+          },
+        },
+        ...supplied,
+      ],
+    };
+  }
+
   async callback(ctx: ExecutionContext, id: string, raw: unknown, tx: Tx) {
     requirePermission(ctx, 'integrations:callback');
     const input = parse(

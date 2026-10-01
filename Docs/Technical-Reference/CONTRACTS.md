@@ -314,9 +314,13 @@ provenance/audit reference
 The referenced artifact remains owned by its producer. In particular:
 
 ```text
-Orgo operational record != Kristal canonical artifact
-Kristal canonical artifact != Runtime Pack/materialized query store
+Orgo operational record != Kristal State artifact
+Kristal State artifact != Runtime Pack/materialized query store
 ```
 
 A snapshot/export used to request a knowledge build is immutable for that request and is delivered after the Orgo owner transaction commits. The integration contract does not require, and must not simulate, a distributed transaction between Orgo and the external artifact owner.
 
+
+## Kristal v6 actionability contract
+
+`actionability` is imported as knowledge/policy metadata. It is not an Orgo command. `automatic` may be mapped by an explicit Orgo workflow to deterministic actions; `human_review` / `human_decision` must remain human gates. All resulting mutations still pass normal Orgo authorization and owner services.

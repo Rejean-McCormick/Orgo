@@ -1,61 +1,79 @@
-# Orgo — Explicit integration bridge protocol
+# Orgo integration bridges
 
-> **Target Kristal v5 boundary:** the generic direct `Kristal validate` bridge documented here is the current compatibility path. New ecosystem integration should converge on Orgo post-commit delivery → Interaction Kernel → Da’at → Kristal, with Kristal outputs returning as opaque artifact references/receipts. This document does not claim that native IK/Da’at delivery is implemented in this Orgo snapshot.
+## Kristal v6 / Da’at
 
-The generic adapters in `apps/api/src/orgo/integrations` remain Orgo-owned compatibility bridges for providers whose native contract is not implemented here. **Konnaxion is now an explicit exception:** the main Orgo product implements the Interaction Kernel boundary `governance.decision.execute/1.0.0` and emits `accountability.impact.publish/1.0.0` through the Konnaxion adapter. Kristal, Architect and kOA remain on the generic bridge path unless their native profile is explicitly implemented.
+Orgo no longer treats the `kristal` provider as a direct Kristal HTTP validation bridge. The active knowledge path is:
 
-Configure one exact endpoint per provider: `KRISTAL_BRIDGE_URL`, `KONNAXION_BRIDGE_URL`, `ARCHITECT_BRIDGE_URL`, `KOA_BRIDGE_URL`, with the corresponding optional `_TOKEN`. Production requires HTTPS. Development permits HTTP on localhost/127.0.0.1 only. URLs come from deployment configuration, never request payloads; redirects are rejected.
+```text
+Orgo owner transaction
+  + immutable Case/Task snapshot in IntegrationOperation
+  + OutboxMessage
+        ↓ post-commit
+Interaction Kernel
+  kristal.build.request/2.0.0
+  or kristal.revision.request/2.0.0
+        ↓
+Da’at mapping / ACL
+        ↓
+Kristal Standard 6.0.0
+        ↓
+Interaction Kernel event
+  kristal.artifact.ready/2.0.0
+        ↓
+Orgo Signal
+```
 
-The worker POSTs JSON with a stable `Idempotency-Key`, `X-Correlation-ID` and optional bearer authorization:
+Configure `DAAT_IK_URL` and `DAAT_IK_TOKEN` for this provider. The endpoint is an Interaction Kernel endpoint exposed by the Da’at boundary, not a native Kristal API.
+
+Supported Orgo `kristal` operations:
+
+- `build` → `kristal.build.request/2.0.0`;
+- `revise` → `kristal.revision.request/2.0.0`.
+
+A `build` request supplies a mapping profile and requested outputs. Orgo automatically freezes the selected Case or Task as an inline `orgo.case_snapshot` / `orgo.task_snapshot` ArtifactRef in the `IntegrationOperation` before post-commit delivery. The snapshot digest and revision are part of the artifact identity.
+
+Example Orgo integration request:
 
 ```json
 {
-  "operation_id": "uuid",
-  "organization_id": "uuid",
-  "operation": "validate",
-  "idempotency_key": "organization-uuid:operation-uuid",
-  "correlation_id": "correlation",
-  "subject": { "type": "case", "id": "uuid" },
-  "input": {}
+  "provider": "kristal",
+  "operation": "build",
+  "subject_type": "case",
+  "subject_id": "CASE_UUID",
+  "request": {
+    "mapping_profile": "orgo.work-snapshot/kristal-v6",
+    "requested_outputs": ["kristal-state", "validation-report"]
+  }
 }
 ```
 
-Configured operation allowlists:
+The outbound IK payload pins `kristal_contract_set = 6.0.0`.
 
-| Adapter | Operations |
-| --- | --- |
-| Kristal | `validate` (compatibility operation; target v5 build/revision path is IK → Da’at) |
-| Konnaxion | Interaction Kernel `accountability.impact.publish/1.0.0` (generic `publish`/`distribute` only as legacy compatibility where explicitly configured) |
-| Architect | `generate` |
-| kOA | `execute` |
+## Returning Kristal artifacts
 
-A successful, completed response is:
+Orgo accepts `kristal.artifact.ready/2.0.0` from `daat` at the existing `POST /api/v3/ik/interactions` boundary. The event becomes a first-class Orgo `Signal` with the returned ArtifactRefs preserved in its payload.
 
-```json
-{
-  "status": "succeeded",
-  "external_reference": "provider-owned-reference",
-  "data": { "valid": false }
-}
+Configure `KRISTAL_ARTIFACT_LABEL` before subscribing Orgo to these events. `KRISTAL_ARTIFACT_WORKFLOW_CODE` is optional: when present, the Signal is queued to that active workflow; otherwise it is persisted for explicit routing/review.
+
+Kristal v6 `actionability` metadata is preserved in ArtifactRefs when supplied, but **Orgo does not execute it directly**. `automatic`, `human_review`, and `human_decision` are inputs to Orgo routing/policy; Cases/Tasks mutate only through Orgo-owned workflow/actions and authorization.
+
+## Other providers
+
+Konnaxion, SemantiK Architect and kOA generic bridge adapters remain explicit Orgo bridge protocols unless their native ecosystem boundary is separately implemented. Production endpoints require HTTPS; configured URLs are deployment configuration and never request-controlled.
+
+## Reliability
+
+Remote effects are post-commit and idempotent:
+
+```text
+owner mutation
++ IntegrationOperation
++ OutboxMessage
+→ commit
+→ worker
+→ provider/IK boundary
+→ receipt/event
+→ Orgo reconciliation
 ```
 
-Here `succeeded` means the operation returned a receipt. `valid: false` remains false; delivery success is never approval, publication or a Work lifecycle transition by implication. The bridge must durably deduplicate operation IDs and return the same completed result on retries.
-
-The bridge may alternatively return `{"status":"accepted","external_reference":"ref","data":{}}`. This acknowledges durable acceptance only. The operation remains RUNNING until a final authenticated callback to `POST /api/v3/integration-operations/:id/receipt` with `Idempotency-Key` and a tenant API token carrying `integrations:callback` plus the provider-specific permission (for example `kristal:callback`). The final callback shape is `{"status":"succeeded"|"failed","external_reference":"ref","data":{},"error":"optional failure code"}`. Contradictory terminal receipts are rejected.
-
-`DurableProcess` waits for these receipts with an explicit deadline. To require a business predicate, declare `expect` on the integration step. Paths are relative to receipt `data`, for example `{"expect":{"validated":true}}`. A successful transport without that required value blocks the process. A completed workflow's `ACTIONS_COMMITTED` and a completed process still never mutate Work status by implication. Unsupported compensation operations are rejected by the same adapter allowlist.
-
-The adapter has a 10-second deadline, a 256 KB response limit, a circuit opening after five failures for 30 seconds, and a per-process limit of four active requests per adapter. The worker normally handles one delivery at a time. HTTP 408/409/425/429 and 5xx retry; other failed responses are terminal. No response body, bearer token or configured URL is copied into an error log.
-
-Outbox delivery is at least once. Retries use the same external identity. No external network effect runs inside a Work transaction. IntegrationOperation holds request metadata, receipt, external reference and errors independently of Case/Task status.
-
-No bridge operation creates a distributed transaction across Orgo and a provider. For knowledge publication, Orgo sends a stable snapshot/reference after local commit and later reconciles the provider result. A returned Kristal artifact is referenced; it is not copied into the Orgo operational model as a competing source of truth.
-
-For notifications, `in_app` delivery is implemented; email uses configured `SMTP_URL` and `SMTP_FROM`. SMS and webhook delivery can use fixed `SMS_GATEWAY_URL` / `WEBHOOK_GATEWAY_URL` endpoints and corresponding `_TOKEN` variables. The endpoint is configured by the operator, never taken from a recipient address. POST payload: `{id, organization_id, recipient, subject, body, correlation_id, channel}` with stable organization/notification Idempotency-Key. A gateway must durably deduplicate and return `{"status":"delivered"}` only when its delivery contract is satisfied. A generic gateway is not a native SMS vendor adapter. Browser push is not implemented. SMTP uses a stable Message-ID but does not provide exactly-once guarantees.
-
-
-## Konnaxion Interaction Kernel boundary
-
-The main Orgo API owns `POST /api/v3/ik/interactions`. It authenticates through the normal tenant API-token boundary, validates `governance.decision.execute/1.0.0`, resolves the configured active workflow version and creates the Orgo-owned `Signal` through `IntakeService`. Existing Orgo idempotency, outbox and workflow processing remain authoritative; no parallel IK database is introduced.
-
-Outbound Konnaxion accountability delivery uses `KONNAXION_IK_URL` and `KONNAXION_IK_TOKEN`. End-to-end conformance is not claimed until replay, conflict, processing and redrive are exercised against Konnaxion.
+No integration creates a distributed transaction across Orgo and an external owner.

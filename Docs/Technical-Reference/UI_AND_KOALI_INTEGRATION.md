@@ -342,7 +342,7 @@ Orgo
 
 UI integration does not change ownership boundaries. Orgo may expose actions/workflows that invoke Kristal or another external system through explicit adapters, operations and receipts.
 
-Do not represent external epistemic/platform/civic state as Orgo Task/Case status merely because it is visible in the Orgo Control Panel.
+Do not represent external Kristal knowledge/reference state, platform state or civic state as Orgo Task/Case status merely because it is visible in the Orgo Control Panel.
 
 The UI should display external state as referenced/provenanced external state and route mutations through the owning system's contract.
 

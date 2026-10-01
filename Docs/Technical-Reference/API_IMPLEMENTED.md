@@ -126,6 +126,6 @@ Total: **114 routes**.
 
 ## Interaction Kernel
 
-- `POST /api/v3/ik/interactions` — authenticated machine boundary for `governance.decision.execute/1.0.0`. The authenticated organization is authoritative; the handler resolves the configured active workflow and creates an Orgo `Signal` through the existing intake/outbox path.
+- `POST /api/v3/ik/interactions` — authenticated machine boundary for `governance.decision.execute/1.0.0` and `kristal.artifact.ready/2.0.0`. Konnaxion decisions resolve the configured active workflow; Da’at artifact-ready events persist a Kristal artifact Signal and optionally queue the configured Kristal artifact workflow.
 
 This endpoint is implemented in the main Orgo product, not `Orgo_Worlds`. End-to-end Konnaxion↔Orgo qualification remains pending.

@@ -17,7 +17,7 @@ const profileRef = z.object({
   version: z.string().regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/),
 }).strict();
 const subjectRef = z.object({ type: z.string().min(1).max(120), id: z.string().min(1).max(500) }).strict();
-const artifactRef = z.object({
+export const artifactRefSchema = z.object({
   owner: participant,
   artifact_type: z.string().min(1).max(200),
   artifact_id: z.string().min(1).max(1000),
@@ -50,7 +50,7 @@ export const interactionEnvelope = z.object({
   }).strict().nullable().optional(),
   data_schema: z.string().max(2000).nullable().optional(),
   data: z.unknown().optional(),
-  artifact_refs: z.array(artifactRef).max(1000).default([]),
+  artifact_refs: z.array(artifactRefSchema).max(1000).default([]),
   governance: z.record(z.unknown()).nullable().optional(),
   response: z.record(z.unknown()).nullable().optional(),
   trace: z.record(z.unknown()).nullable().optional(),
@@ -61,6 +61,23 @@ export const interactionEnvelope = z.object({
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['target'], message: 'Durable command/query requires a concrete target' });
 });
 export type InteractionEnvelope = z.infer<typeof interactionEnvelope>;
+export type ArtifactRef = z.infer<typeof artifactRefSchema>;
+
+
+export const kristalArtifactReadyData = z.object({
+  build_ref: z.string().min(1).max(500),
+  stage: z.enum([
+    'kristal-state',
+    'working',
+    'reference',
+    'runtime-pack',
+    'validation-report',
+    'authority-recognition',
+  ]),
+}).strict();
+
+export const KRISTAL_STANDARD_VERSION = '6.0.0' as const;
+export const KRISTAL_CANONICALIZATION_PROFILE = 'kristal.v6:jcs-rfc8785' as const;
 
 export const decisionExecuteData = z.object({
   decision_revision: z.string().min(1).max(200),

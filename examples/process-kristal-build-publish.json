@@ -1,0 +1,38 @@
+{
+  "title": "Construction Kristal puis publication",
+  "subject_type": "case",
+  "subject_id": "REPLACE_WITH_CASE_UUID",
+  "steps": [
+    {
+      "kind": "integration",
+      "title": "Construire un état Kristal v6",
+      "request": {
+        "provider": "kristal",
+        "operation": "build",
+        "request": {
+          "mapping_profile": "orgo.work-snapshot/kristal-v6",
+          "requested_outputs": [
+            "kristal-state",
+            "validation-report"
+          ]
+        }
+      },
+      "timeout_seconds": 86400
+    },
+    {
+      "kind": "approval",
+      "title": "Autoriser la publication",
+      "permission": "workflows:approve"
+    },
+    {
+      "kind": "integration",
+      "title": "Publier",
+      "request": {
+        "provider": "konnaxion",
+        "operation": "publish",
+        "request": {}
+      },
+      "timeout_seconds": 86400
+    }
+  ]
+}
