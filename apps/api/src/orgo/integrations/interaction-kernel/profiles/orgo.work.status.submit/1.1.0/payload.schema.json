@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spec.koali.invalid/kor/profiles/payloads/work-status-submit/1.1.0.schema.json",
+  "title": "Submit human-reported progress or checkpoint information Payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "work_ref",
+    "checkpoint_ref",
+    "reported_at",
+    "report"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1.0"
+    },
+    "owner_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 500
+    },
+    "human_context": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "maxProperties": 30
+    },
+    "work_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "checkpoint_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "reported_at": {
+      "type": "string",
+      "format": "date-time",
+      "minLength": 1
+    },
+    "report": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    }
+  }
+}

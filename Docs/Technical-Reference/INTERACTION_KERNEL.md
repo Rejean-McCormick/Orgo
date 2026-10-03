@@ -14,6 +14,10 @@ Source: Da’at. Orgo validates the target and artifact event, persists exactly 
 
 The event may contain Kristal v6 `record_role` or `actionability` metadata inside artifact content. These are descriptive/policy inputs only. They never authorize an Orgo mutation by themselves.
 
+### `orgo.work.status.submit/1.1.0`
+
+Source: Kor. Orgo requires an existing Task subject, `data.work_ref == subject.id`, authenticated `work:read` + `work:comment` permissions, and the owner authority kind `kor-user-action`. The command appends a traceable internal Task comment containing the human checkpoint report and returns a final `succeeded` IK Receipt in the same transaction. It does not infer or change Task status.
+
 ## Outbound profiles
 
 - Konnaxion accountability output: `accountability.impact.publish/1.0.0`.

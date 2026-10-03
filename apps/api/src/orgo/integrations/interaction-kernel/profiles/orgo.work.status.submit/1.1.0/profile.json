@@ -1,0 +1,29 @@
+{
+  "id": "orgo.work.status.submit",
+  "version": "1.1.0",
+  "class": "command",
+  "description": "Submit human-reported progress or checkpoint information",
+  "source_systems": [
+    "kor"
+  ],
+  "target_systems": [
+    "orgo"
+  ],
+  "payload_schema": "work-status-submit-1.1.0.schema.json",
+  "authority": {
+    "required": true,
+    "accepted_kinds": [
+      "kor-user-action"
+    ]
+  },
+  "delivery": {
+    "durability": "durable",
+    "idempotency": "required",
+    "ordering": "subject"
+  },
+  "response": {
+    "acceptance_receipt": "required",
+    "final_receipt": "optional",
+    "outcome_events": []
+  }
+}

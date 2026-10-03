@@ -1,0 +1,556 @@
+{
+  "schema_version": "orgo.scenario.v1",
+  "scenario": {
+    "id": "konvergence-koali-universe-1.0.0",
+    "title": "Konvergence Koali Universe 1.0.0 — Orgo operational seed",
+    "description": "Import contrôlé des cas et tâches opérationnels du paquet Konvergence vers Orgo, en conservant la provenance sans prétendre à une compatibilité runtime native du contrat éditorial source.",
+    "synthetic": true,
+    "epistemic_status": "synthetic_demo_fixture",
+    "correlation_id": "scenario.konvergence-koali-universe-1.0.0"
+  },
+  "operations": [
+    {
+      "op": "create_case",
+      "ref": "case.case-dance-red-001",
+      "input": {
+        "title": "Résonance danse / texte manuscrit",
+        "description": "Examiner une corrélation apparente entre deux œuvres créées en parallèle sans la transformer en certitude.",
+        "label": "1.11",
+        "severity": "MODERATE",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "seed_source": "orgo/examples/cases.json",
+          "seed_contract": "koa-orgo-sim/v1",
+          "source_case_id": "CASE-DANCE-RED-001",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "red_mask_video",
+          "source_status": "open",
+          "media_ref": "https://www.youtube.com/watch?v=MllMQLphUxc"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-red-001.01",
+      "case_ref": "case.case-dance-red-001",
+      "input": {
+        "title": "Documenter les deux sources et la chronologie",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-RED-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-RED-001",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "red_mask_video",
+          "source_task_index": 0,
+          "konvergence_owner_ref": "actor_jeremie"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-red-001.02",
+      "case_ref": "case.case-dance-red-001",
+      "input": {
+        "title": "Tester correspondances, non-correspondances et contrôles",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-RED-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-RED-001",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "red_mask_video",
+          "source_task_index": 1,
+          "konvergence_owner_ref": "actor_simon"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-red-001.03",
+      "case_ref": "case.case-dance-red-001",
+      "input": {
+        "title": "Formuler l’hypothèse de résonance de Pi",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-RED-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-RED-001",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "red_mask_video",
+          "source_task_index": 2,
+          "konvergence_owner_ref": "actor_elias"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-red-001.04",
+      "case_ref": "case.case-dance-red-001",
+      "input": {
+        "title": "Formaliser le mécanisme abstrait de superposition",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-RED-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-RED-001",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "red_mask_video",
+          "source_task_index": 3,
+          "konvergence_owner_ref": "actor_gustave"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-red-001.05",
+      "case_ref": "case.case-dance-red-001",
+      "input": {
+        "title": "Vérifier la limite entre interprétation et affirmation",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-RED-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-RED-001",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "red_mask_video",
+          "source_task_index": 4,
+          "konvergence_owner_ref": "actor_aida"
+        }
+      }
+    },
+    {
+      "op": "create_case",
+      "ref": "case.case-dance-two-002",
+      "input": {
+        "title": "Deux vidéos d’incarnation Réjean / King Klown",
+        "description": "Produire deux performances distinctes puis conserver provenance, intention et réactions.",
+        "label": "1.11",
+        "severity": "MODERATE",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "seed_source": "orgo/examples/cases.json",
+          "seed_contract": "koa-orgo-sim/v1",
+          "source_case_id": "CASE-DANCE-TWO-002",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "two_dance_videos",
+          "source_status": "planned"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-two-002.01",
+      "case_ref": "case.case-dance-two-002",
+      "input": {
+        "title": "Concevoir les deux chorégraphies",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-TWO-002.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-TWO-002",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "two_dance_videos",
+          "source_task_index": 0,
+          "konvergence_owner_ref": "actor_jeremie"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-two-002.02",
+      "case_ref": "case.case-dance-two-002",
+      "input": {
+        "title": "Préparer publication et traçabilité",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-TWO-002.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-TWO-002",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "two_dance_videos",
+          "source_task_index": 1,
+          "konvergence_owner_ref": "actor_simon"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-two-002.03",
+      "case_ref": "case.case-dance-two-002",
+      "input": {
+        "title": "Cadre éthique et explicitation fictionnelle",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-TWO-002.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-TWO-002",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "two_dance_videos",
+          "source_task_index": 2,
+          "konvergence_owner_ref": "actor_aida"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-dance-two-002.04",
+      "case_ref": "case.case-dance-two-002",
+      "input": {
+        "title": "Analyser réception et apprentissage",
+        "description": "Tâche importée du seed Konvergence CASE-DANCE-TWO-002.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DANCE-TWO-002",
+          "origin_world": "amusement-kreative",
+          "origin_topic": "two_dance_videos",
+          "source_task_index": 3,
+          "konvergence_owner_ref": "actor_elias"
+        }
+      }
+    },
+    {
+      "op": "create_case",
+      "ref": "case.case-alert-local-001",
+      "input": {
+        "title": "Alerte publique contextuelle",
+        "description": "Tester un avis ciblé par contexte/géographie plutôt qu’une interruption générale.",
+        "label": "1.11",
+        "severity": "MODERATE",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "seed_source": "orgo/examples/cases.json",
+          "seed_contract": "koa-orgo-sim/v1",
+          "source_case_id": "CASE-ALERT-LOCAL-001",
+          "origin_world": "orgo-events",
+          "origin_topic": "context_alert",
+          "source_status": "simulation"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-alert-local-001.01",
+      "case_ref": "case.case-alert-local-001",
+      "input": {
+        "title": "Définir la population concernée",
+        "description": "Tâche importée du seed Konvergence CASE-ALERT-LOCAL-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-ALERT-LOCAL-001",
+          "origin_world": "orgo-events",
+          "origin_topic": "context_alert",
+          "source_task_index": 0,
+          "konvergence_owner_ref": "actor_aida"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-alert-local-001.02",
+      "case_ref": "case.case-alert-local-001",
+      "input": {
+        "title": "Configurer le routage local",
+        "description": "Tâche importée du seed Konvergence CASE-ALERT-LOCAL-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-ALERT-LOCAL-001",
+          "origin_world": "orgo-events",
+          "origin_topic": "context_alert",
+          "source_task_index": 1,
+          "konvergence_owner_ref": "actor_simon"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-alert-local-001.03",
+      "case_ref": "case.case-alert-local-001",
+      "input": {
+        "title": "Préparer message compréhensible",
+        "description": "Tâche importée du seed Konvergence CASE-ALERT-LOCAL-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-ALERT-LOCAL-001",
+          "origin_world": "orgo-events",
+          "origin_topic": "context_alert",
+          "source_task_index": 2,
+          "konvergence_owner_ref": "actor_jeremie"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-alert-local-001.04",
+      "case_ref": "case.case-alert-local-001",
+      "input": {
+        "title": "Évaluer compréhension et faux positifs",
+        "description": "Tâche importée du seed Konvergence CASE-ALERT-LOCAL-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-ALERT-LOCAL-001",
+          "origin_world": "orgo-events",
+          "origin_topic": "context_alert",
+          "source_task_index": 3,
+          "konvergence_owner_ref": "actor_elias"
+        }
+      }
+    },
+    {
+      "op": "create_case",
+      "ref": "case.case-kf-gov-001",
+      "input": {
+        "title": "Pacte de gouvernance Kristal Farms",
+        "description": "Définir vannes, consentement, droits de pause, réversibilité et responsabilités.",
+        "label": "1.11",
+        "severity": "MODERATE",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "seed_source": "orgo/examples/cases.json",
+          "seed_contract": "koa-orgo-sim/v1",
+          "source_case_id": "CASE-KF-GOV-001",
+          "origin_world": "kristal-farms",
+          "origin_topic": "kf_governance",
+          "source_status": "open"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-kf-gov-001.01",
+      "case_ref": "case.case-kf-gov-001",
+      "input": {
+        "title": "Rédiger garde-fous",
+        "description": "Tâche importée du seed Konvergence CASE-KF-GOV-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-KF-GOV-001",
+          "origin_world": "kristal-farms",
+          "origin_topic": "kf_governance",
+          "source_task_index": 0,
+          "konvergence_owner_ref": "actor_aida"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-kf-gov-001.02",
+      "case_ref": "case.case-kf-gov-001",
+      "input": {
+        "title": "Cartographier dépendances opérationnelles",
+        "description": "Tâche importée du seed Konvergence CASE-KF-GOV-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-KF-GOV-001",
+          "origin_world": "kristal-farms",
+          "origin_topic": "kf_governance",
+          "source_task_index": 1,
+          "konvergence_owner_ref": "actor_simon"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-kf-gov-001.03",
+      "case_ref": "case.case-kf-gov-001",
+      "input": {
+        "title": "Cartographier financement et risques de capture",
+        "description": "Tâche importée du seed Konvergence CASE-KF-GOV-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-KF-GOV-001",
+          "origin_world": "kristal-farms",
+          "origin_topic": "kf_governance",
+          "source_task_index": 2,
+          "konvergence_owner_ref": "actor_thomas_antoine"
+        }
+      }
+    },
+    {
+      "op": "create_case",
+      "ref": "case.case-desjardins-fund-001",
+      "input": {
+        "title": "Fonds commun kOA",
+        "description": "Simuler un mécanisme de financement coopératif transparent des projets communs.",
+        "label": "1.11",
+        "severity": "MODERATE",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "seed_source": "orgo/examples/cases.json",
+          "seed_contract": "koa-orgo-sim/v1",
+          "source_case_id": "CASE-DESJARDINS-FUND-001",
+          "origin_world": "desjardins",
+          "origin_topic": "common_fund",
+          "source_status": "open"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-desjardins-fund-001.01",
+      "case_ref": "case.case-desjardins-fund-001",
+      "input": {
+        "title": "Proposer mécanisme financier",
+        "description": "Tâche importée du seed Konvergence CASE-DESJARDINS-FUND-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DESJARDINS-FUND-001",
+          "origin_world": "desjardins",
+          "origin_topic": "common_fund",
+          "source_task_index": 0,
+          "konvergence_owner_ref": "actor_thomas_antoine"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-desjardins-fund-001.02",
+      "case_ref": "case.case-desjardins-fund-001",
+      "input": {
+        "title": "Définir limites et conflits",
+        "description": "Tâche importée du seed Konvergence CASE-DESJARDINS-FUND-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DESJARDINS-FUND-001",
+          "origin_world": "desjardins",
+          "origin_topic": "common_fund",
+          "source_task_index": 1,
+          "konvergence_owner_ref": "actor_aida"
+        }
+      }
+    },
+    {
+      "op": "create_task",
+      "ref": "task.case-desjardins-fund-001.03",
+      "case_ref": "case.case-desjardins-fund-001",
+      "input": {
+        "title": "Créer workflow de décision/exécution",
+        "description": "Tâche importée du seed Konvergence CASE-DESJARDINS-FUND-001.",
+        "type": "konvergence_seed",
+        "category": "request",
+        "label": "1.11",
+        "priority": "MEDIUM",
+        "visibility": "INTERNAL",
+        "metadata": {
+          "seed_pack": "konvergence-koali",
+          "seed_version": "1.0.0",
+          "source_case_id": "CASE-DESJARDINS-FUND-001",
+          "origin_world": "desjardins",
+          "origin_topic": "common_fund",
+          "source_task_index": 2,
+          "konvergence_owner_ref": "actor_simon"
+        }
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { Commands, type Tx } from '../../platform/database';
 import { DomainError, type ExecutionContext, parse } from '../../platform/contracts';
 import { IntakeService } from '../intake/intake.service';
 import { WorkflowService } from '../orchestration/workflow.service';
+import { WorkService } from '../work/public';
 import {
   decisionExecuteData,
   ikReceipt,
@@ -11,6 +12,7 @@ import {
   ikSemanticProjection,
   interactionEnvelope,
   kristalArtifactReadyData,
+  korWorkStatusSubmitData,
   KRISTAL_STANDARD_VERSION,
   type InteractionEnvelope,
 } from '../../integrations/interaction-kernel/contracts';
@@ -25,6 +27,7 @@ export class InteractionKernelService {
     @Inject(Commands) private readonly commands: Commands,
     @Inject(IntakeService) private readonly intake: IntakeService,
     @Inject(WorkflowService) private readonly workflow: WorkflowService,
+    @Inject(WorkService) private readonly work: WorkService,
   ) {}
 
   private validateTarget(ctx: ExecutionContext, envelope: InteractionEnvelope) {
@@ -54,6 +57,26 @@ export class InteractionKernelService {
     if (!envelope.artifact_refs.some((ref) => ref.owner.system === 'konnaxion' && ref.artifact_type === 'konnaxion.decision_record'))
       throw new DomainError('IK_INVALID_ENVELOPE', 'A Konnaxion decision artifact is required', 422);
     return parse(decisionExecuteData, envelope.data ?? {});
+  }
+
+  private validateKorWorkStatus(ctx: ExecutionContext, envelope: InteractionEnvelope) {
+    if (envelope.class !== 'command' || envelope.profile.id !== 'orgo.work.status.submit' || envelope.profile.version !== '1.1.0')
+      throw new DomainError('IK_UNKNOWN_PROFILE', 'orgo.work.status.submit/1.1.0 required', 422);
+    if (envelope.source.system !== 'kor')
+      throw new DomainError('IK_UNAUTHORIZED', 'Kor source required', 403);
+    this.validateTarget(ctx, envelope);
+    if (envelope.subject.type !== 'task')
+      throw new DomainError('IK_INVALID_ENVELOPE', 'subject.type must be task', 422);
+    if (!envelope.idempotency_key)
+      throw new DomainError('IK_INVALID_ENVELOPE', 'idempotency_key is required', 400);
+    if (ctx.idempotencyKey && ctx.idempotencyKey !== envelope.idempotency_key)
+      throw new DomainError('IK_IDEMPOTENCY_CONFLICT', 'Header idempotency key differs from envelope', 409);
+    if (envelope.authority?.kind !== 'kor-user-action')
+      throw new DomainError('IK_UNAUTHORIZED', 'kor-user-action authority is required', 403);
+    const data = parse(korWorkStatusSubmitData, envelope.data ?? {});
+    if (data.work_ref !== envelope.subject.id)
+      throw new DomainError('IK_INVALID_ENVELOPE', 'data.work_ref must equal subject.id', 422);
+    return data;
   }
 
   private validateKristalArtifact(ctx: ExecutionContext, envelope: InteractionEnvelope) {
@@ -182,6 +205,48 @@ export class InteractionKernelService {
     }
   }
 
+  private async receiveKorWorkStatus(original: ExecutionContext, envelope: InteractionEnvelope) {
+    const data = this.validateKorWorkStatus(original, envelope);
+    const ctx: ExecutionContext = {
+      ...original,
+      idempotencyKey: envelope.idempotency_key!,
+      correlationId: envelope.correlation_id || original.correlationId,
+      causationId: envelope.causation_id || original.causationId,
+      source: 'api',
+    };
+    const semantic = ikSemanticProjection(envelope);
+    try {
+      return await this.commands.run(ctx, 'ik.orgo.work.status.submit', semantic, async (tx: Tx) => {
+        const task = await this.work.getTask(ctx, envelope.subject.id, tx);
+        const comment = await this.work.comment(
+          ctx,
+          task.id,
+          `[Kor checkpoint ${data.checkpoint_ref} @ ${data.reported_at}]\n${data.report}`,
+          'internal_only',
+          tx,
+        );
+        return ikReceipt({
+          interactionId: envelope.id,
+          organizationId: ctx.organizationId,
+          correlationId: envelope.correlation_id,
+          status: 'succeeded',
+          externalReference: `orgo:task-comment:${comment.id}`,
+          data: {
+            task_id: task.id,
+            task_revision: task.revision,
+            comment_id: comment.id,
+            checkpoint_ref: data.checkpoint_ref,
+            request_fingerprint: ikRequestFingerprint(envelope),
+          },
+        });
+      });
+    } catch (error) {
+      if (error instanceof DomainError && error.code === 'IDEMPOTENCY_CONFLICT')
+        throw new DomainError('IK_IDEMPOTENCY_CONFLICT', error.message, 409, error.details);
+      throw error;
+    }
+  }
+
   private async receiveKristalArtifact(original: ExecutionContext, envelope: InteractionEnvelope) {
     const data = this.validateKristalArtifact(original, envelope);
     const route = this.kristalRoute();
@@ -252,9 +317,11 @@ export class InteractionKernelService {
       return this.receiveDecision(original, envelope);
     if (envelope.profile.id === 'kristal.artifact.ready' && envelope.profile.version === '2.0.0')
       return this.receiveKristalArtifact(original, envelope);
+    if (envelope.profile.id === 'orgo.work.status.submit' && envelope.profile.version === '1.1.0')
+      return this.receiveKorWorkStatus(original, envelope);
     throw new DomainError(
       'IK_UNKNOWN_PROFILE',
-      'Accepted profiles: governance.decision.execute/1.0.0, kristal.artifact.ready/2.0.0',
+      'Accepted profiles: governance.decision.execute/1.0.0, kristal.artifact.ready/2.0.0, orgo.work.status.submit/1.1.0',
       422,
     );
   }

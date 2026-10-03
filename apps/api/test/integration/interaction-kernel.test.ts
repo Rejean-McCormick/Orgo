@@ -76,6 +76,31 @@ function envelope(key: string, revision = '1') {
   };
 }
 
+function korWorkStatusEnvelope(key: string, taskId: string, report = 'Checkpoint submitted from Kor.') {
+  return {
+    specversion: 'ik/1.1',
+    id: randomUUID(),
+    class: 'command',
+    time: new Date().toISOString(),
+    profile: { id: 'orgo.work.status.submit', version: '1.1.0' },
+    source: { system: 'kor', instance: 'integration-test' },
+    target: { system: 'orgo', organization: tenant },
+    subject: { type: 'task', id: taskId },
+    correlation_id: `kor:task:${taskId}`,
+    idempotency_key: key,
+    authority: { kind: 'kor-user-action', context: { subject_ref: 'test-human' } },
+    data: {
+      schema_version: '1.1.0',
+      work_ref: taskId,
+      checkpoint_ref: 'konvergence-e2e',
+      reported_at: new Date().toISOString(),
+      report,
+    },
+    artifact_refs: [],
+    response: { acceptance_receipt: true, final_receipt: true },
+  };
+}
+
 function artifactReadyEnvelope(key: string) {
   return {
     specversion: 'ik/1.1',
@@ -202,6 +227,7 @@ before(async () => {
         'workflows:execute',
         'work:write',
         'work:read',
+        'work:comment',
       ],
     },
   });
@@ -280,4 +306,49 @@ test('Kristal artifact.ready/2.0.0 becomes one local Signal without transferring
     await db.signal.count({ where: { organization_id: tenant, type: 'kristal_artifact_ready' } }),
     1,
   );
+});
+
+
+test('Kor work status command records one task checkpoint with replay safety', async () => {
+  const create = await fetch(`${base}/api/v3/tasks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${bearer}`,
+      'Idempotency-Key': randomUUID(),
+    },
+    body: JSON.stringify({
+      title: 'Konvergence E2E task',
+      description: 'Task used to qualify Kor -> Orgo.',
+      type: 'konvergence_seed',
+      category: 'request',
+      label: '1.11',
+      visibility: 'INTERNAL',
+      metadata: { source_case_id: 'CASE-DANCE-RED-001', synthetic: true },
+    }),
+  });
+  const created = await create.json() as any;
+  assert.equal(create.status, 201, JSON.stringify(created));
+  const taskId = created.data.task_id as string;
+
+  const key = `kor:work-status:${taskId}:konvergence-e2e`;
+  const firstEnvelope = korWorkStatusEnvelope(key, taskId);
+  const first = await postIk(firstEnvelope, key);
+  assert.equal(first.status, 201, JSON.stringify(first));
+  assert.equal(first.data.status, 'succeeded');
+  assert.equal(first.data.data.task_id, taskId);
+
+  const comments = await db.taskComment.findMany({ where: { task_id: taskId } });
+  assert.equal(comments.length, 1);
+  assert.match(comments[0].body, /Checkpoint submitted from Kor/);
+
+  const replay = await postIk({ ...firstEnvelope, id: randomUUID(), time: new Date().toISOString() }, key);
+  assert.equal(replay.status, 201, JSON.stringify(replay));
+  assert.deepEqual(replay.data, first.data);
+  assert.equal(await db.taskComment.count({ where: { task_id: taskId } }), 1);
+
+  const conflict = await postIk(korWorkStatusEnvelope(key, taskId, 'Different semantic report.'), key);
+  assert.equal(conflict.status, 409, JSON.stringify(conflict));
+  assert.equal(conflict.error.code, 'IK_IDEMPOTENCY_CONFLICT');
+  assert.equal(await db.taskComment.count({ where: { task_id: taskId } }), 1);
 });

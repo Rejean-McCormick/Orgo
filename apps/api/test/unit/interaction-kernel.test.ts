@@ -84,3 +84,20 @@ test('Kristal artifact ready v2 accepts the v6 kristal-state stage', () => {
     stage: 'kristal-state',
   });
 });
+
+test('Kor work status payload accepts the 1.1.0 checkpoint contract', async () => {
+  const { korWorkStatusSubmitData } = await import('../../src/orgo/integrations/interaction-kernel/contracts');
+  assert.deepEqual(korWorkStatusSubmitData.parse({
+    schema_version: '1.1.0',
+    work_ref: '00000000-0000-4000-8000-000000000001',
+    checkpoint_ref: 'konvergence-e2e',
+    reported_at: '2026-10-03T12:00:00Z',
+    report: 'Checkpoint submitted from Kor.',
+  }), {
+    schema_version: '1.1.0',
+    work_ref: '00000000-0000-4000-8000-000000000001',
+    checkpoint_ref: 'konvergence-e2e',
+    reported_at: '2026-10-03T12:00:00Z',
+    report: 'Checkpoint submitted from Kor.',
+  });
+});

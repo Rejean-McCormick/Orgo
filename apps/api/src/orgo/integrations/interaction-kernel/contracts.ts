@@ -85,6 +85,17 @@ export const decisionExecuteData = z.object({
   execution_scope: z.record(z.unknown()).nullable().optional(),
 }).strict();
 
+export const korWorkStatusSubmitData = z.object({
+  schema_version: z.literal('1.1.0'),
+  owner_ref: z.string().max(500).nullable().optional(),
+  human_context: z.record(z.unknown()).nullable().optional(),
+  extensions: z.record(z.unknown()).refine((value) => Object.keys(value).length <= 30, 'extensions must have at most 30 properties').optional(),
+  work_ref: z.string().min(1).max(500),
+  checkpoint_ref: z.string().min(1).max(500),
+  reported_at: z.string().datetime({ offset: true }),
+  report: z.string().min(1).max(4000),
+}).strict();
+
 function assertIJsonString(value: string) {
   for (let i = 0; i < value.length; i++) {
     const code = value.charCodeAt(i);

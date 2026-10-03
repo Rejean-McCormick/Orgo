@@ -1,0 +1,231 @@
+SMART DUMPER INDEX
+==================
+generated_at: 2026-10-03T07:39:12.541144
+source_root: C:\mycode\Orgo\Orgo
+zip_file: Code_snapshot_Orgo.zip
+embedded_index: SMARTDUMP_INDEX.txt
+file_count: 219
+total_bytes: 1257348
+compression: ZIP_DEFLATED level 1
+
+FILES
+-----
+.dockerignore	112 bytes
+.env.example	2466 bytes
+.github/workflows/ci.yml	990 bytes
+.gitignore	595 bytes
+.smartignore	233 bytes
+AGENTS.md	5397 bytes
+apps/api/.prettierrc	54 bytes
+apps/api/Dockerfile	548 bytes
+apps/api/package.json	1114 bytes
+apps/api/prisma/migrations/00000000000000_initial/migration.sql	92791 bytes
+apps/api/prisma/migrations/migration_lock.toml	127 bytes
+apps/api/prisma/schema.prisma	66792 bytes
+apps/api/prisma/seed.ts	3590 bytes
+apps/api/README.md	206 bytes
+apps/api/src/app.module.ts	1741 bytes
+apps/api/src/bootstrap.ts	1351 bytes
+apps/api/src/main.ts	384 bytes
+apps/api/src/orgo/adapters/inbound/http/admin.controller.ts	11658 bytes
+apps/api/src/orgo/adapters/inbound/http/auth.controller.ts	2856 bytes
+apps/api/src/orgo/adapters/inbound/http/boundary.ts	4388 bytes
+apps/api/src/orgo/adapters/inbound/http/completion.controller.ts	15711 bytes
+apps/api/src/orgo/adapters/inbound/http/health.controller.ts	788 bytes
+apps/api/src/orgo/adapters/inbound/http/ingress.controller.ts	5212 bytes
+apps/api/src/orgo/adapters/inbound/http/interaction-kernel.controller.ts	570 bytes
+apps/api/src/orgo/adapters/inbound/http/operations.controller.ts	5697 bytes
+apps/api/src/orgo/adapters/inbound/http/process.controller.ts	5220 bytes
+apps/api/src/orgo/adapters/inbound/http/product-operations.controller.ts	11142 bytes
+apps/api/src/orgo/adapters/inbound/http/routing.controller.ts	1329 bytes
+apps/api/src/orgo/adapters/inbound/http/sso.controller.ts	5870 bytes
+apps/api/src/orgo/adapters/inbound/http/sync.controller.ts	2823 bytes
+apps/api/src/orgo/adapters/inbound/http/work.controller.ts	6079 bytes
+apps/api/src/orgo/integrations/architect/architect.adapter.ts	240 bytes
+apps/api/src/orgo/integrations/http-bridge.ts	3301 bytes
+apps/api/src/orgo/integrations/interaction-kernel/contracts.ts	6695 bytes
+apps/api/src/orgo/integrations/interaction-kernel/http-bridge.ts	3228 bytes
+apps/api/src/orgo/integrations/interaction-kernel/outbound.ts	3765 bytes
+apps/api/src/orgo/integrations/koa/koa.adapter.ts	209 bytes
+apps/api/src/orgo/integrations/konnaxion/konnaxion.adapter.ts	371 bytes
+apps/api/src/orgo/integrations/kristal/kristal.adapter.ts	1314 bytes
+apps/api/src/orgo/integrations/port.ts	611 bytes
+apps/api/src/orgo/modules/communications/channels/http-delivery.ts	2218 bytes
+apps/api/src/orgo/modules/communications/communications.service.ts	2563 bytes
+apps/api/src/orgo/modules/communications/templates.ts	581 bytes
+apps/api/src/orgo/modules/domains/domain-management.service.ts	11057 bytes
+apps/api/src/orgo/modules/domains/domains.service.ts	4310 bytes
+apps/api/src/orgo/modules/identity/identity-admin.service.ts	12673 bytes
+apps/api/src/orgo/modules/identity/identity.module.ts	361 bytes
+apps/api/src/orgo/modules/identity/identity.service.ts	7346 bytes
+apps/api/src/orgo/modules/identity/oidc.service.ts	8266 bytes
+apps/api/src/orgo/modules/insights/insights.service.ts	1874 bytes
+apps/api/src/orgo/modules/intake/intake.module.ts	364 bytes
+apps/api/src/orgo/modules/intake/intake.service.ts	6575 bytes
+apps/api/src/orgo/modules/integrations/operations.service.ts	5343 bytes
+apps/api/src/orgo/modules/interaction-kernel/interaction-kernel.module.ts	661 bytes
+apps/api/src/orgo/modules/interaction-kernel/interaction-kernel.service.ts	12513 bytes
+apps/api/src/orgo/modules/orchestration/actions.ts	4863 bytes
+apps/api/src/orgo/modules/orchestration/escalation.service.ts	1450 bytes
+apps/api/src/orgo/modules/orchestration/evaluator.ts	2175 bytes
+apps/api/src/orgo/modules/orchestration/orchestration.module.ts	887 bytes
+apps/api/src/orgo/modules/orchestration/process-manager.service.ts	16261 bytes
+apps/api/src/orgo/modules/orchestration/public.ts	187 bytes
+apps/api/src/orgo/modules/orchestration/routing.service.ts	2788 bytes
+apps/api/src/orgo/modules/orchestration/workflow.contract.ts	2111 bytes
+apps/api/src/orgo/modules/orchestration/workflow.service.ts	6364 bytes
+apps/api/src/orgo/modules/work/evidence.service.ts	7134 bytes
+apps/api/src/orgo/modules/work/public.ts	99 bytes
+apps/api/src/orgo/modules/work/work.contract.ts	1745 bytes
+apps/api/src/orgo/modules/work/work.module.ts	176 bytes
+apps/api/src/orgo/modules/work/work.service.ts	24120 bytes
+apps/api/src/orgo/platform/contracts.ts	4447 bytes
+apps/api/src/orgo/platform/database.ts	3779 bytes
+apps/api/src/orgo/platform/outbox/worker.service.ts	12175 bytes
+apps/api/src/orgo/platform/platform.module.ts	215 bytes
+apps/api/src/orgo/platform/telemetry.ts	1297 bytes
+apps/api/src/orgo/runtime.module.ts	1591 bytes
+apps/api/src/worker.ts	2465 bytes
+apps/api/test/integration/interaction-kernel.test.ts	9814 bytes
+apps/api/test/integration/runtime.test.ts	36291 bytes
+apps/api/test/unit/client.test.ts	1300 bytes
+apps/api/test/unit/contracts.test.ts	5133 bytes
+apps/api/test/unit/interaction-kernel.test.ts	3275 bytes
+apps/api/test/unit/oidc-url.test.ts	1091 bytes
+apps/api/test/unit/templates.test.ts	673 bytes
+apps/api/tsconfig.build.json	155 bytes
+apps/api/tsconfig.json	367 bytes
+apps/web/.env.example	0 bytes
+apps/web/.eslintrc.js	50 bytes
+apps/web/Dockerfile	783 bytes
+apps/web/next-env.d.ts	305 bytes
+apps/web/next.config.js	255 bytes
+apps/web/package.json	461 bytes
+apps/web/pages/[[...path]].tsx	693 bytes
+apps/web/pages/_app.tsx	177 bytes
+apps/web/pages/account.tsx	3316 bytes
+apps/web/postcss.config.js	34 bytes
+apps/web/README.md	289 bytes
+apps/web/src/orgo/api.ts	2705 bytes
+apps/web/src/orgo/Extensions.tsx	47761 bytes
+apps/web/src/orgo/hosted-entry.tsx	240 bytes
+apps/web/src/orgo/InteractionSurfaces.tsx	56610 bytes
+apps/web/src/orgo/offline.ts	2830 bytes
+apps/web/src/orgo/OrgoApp.tsx	46561 bytes
+apps/web/src/orgo/profiles.ts	5612 bytes
+apps/web/src/orgo/public-contract.ts	959 bytes
+apps/web/src/styles.css	29667 bytes
+apps/web/tsconfig.json	496 bytes
+charters/care.json	2455 bytes
+charters/care_hospital.json	1700 bytes
+charters/care_nursing_home.json	986 bytes
+charters/care_school.json	1285 bytes
+charters/care_social_services.json	852 bytes
+charters/general.json	4051 bytes
+charters/groups.json	971 bytes
+charters/groups_associations.json	617 bytes
+charters/groups_sports.json	796 bytes
+charters/incidents.json	1535 bytes
+charters/incidents_it_helpdesk.json	591 bytes
+charters/incidents_sst.json	594 bytes
+charters/operations.json	2409 bytes
+charters/operations_facilities.json	900 bytes
+charters/operations_manufacturing.json	840 bytes
+charters/operations_transport_logistics.json	1028 bytes
+charters/programs.json	1734 bytes
+charters/programs_government.json	1149 bytes
+charters/programs_humanitarian.json	1521 bytes
+concat_orgo.py	8319 bytes
+DISABLE_LOCAL_AUTOLOGIN.bat	485 bytes
+docker-compose.yml	4359 bytes
+docs/ai/INDEX.md	7343 bytes
+docs/README.md	5878 bytes
+docs/screenshots/2026-09-17/manifest.json	2565 bytes
+docs/screenshots/2026-09-17/README.md	1249 bytes
+docs/screenshots/README.md	844 bytes
+docs/status/2026-09-10-beta-status.md	4617 bytes
+docs/status/2026-09-10-rc1-status.md	6955 bytes
+docs/status/2026-09-11-common-identity-update.md	2411 bytes
+docs/status/2026-09-15-current-status.md	4242 bytes
+docs/status/2026-09-16-ecosystem-integration-alignment.md	1599 bytes
+docs/status/2026-09-17-acceptance-status.md	6208 bytes
+docs/status/2026-09-17-interaction-surfaces.md	3017 bytes
+docs/status/2026-10-01-kristal-v6-integration.md	1545 bytes
+docs/Technical-Reference/API_IMPLEMENTED.md	8547 bytes
+docs/Technical-Reference/Architecture upgrade(to do)/OPS-001_AI_Resilience_Strategy.md	6356 bytes
+docs/Technical-Reference/Architecture upgrade(to do)/REF-001_Configuration_Manifest.md	5200 bytes
+docs/Technical-Reference/Architecture upgrade(to do)/RFC-001_Nervous_System_Upgrade.md	7988 bytes
+docs/Technical-Reference/Architecture upgrade(to do)/SPEC-001_Input_SenTient_ACL.md	6937 bytes
+docs/Technical-Reference/Architecture upgrade(to do)/SPEC-002_Output_Architect_Outbox.md	8052 bytes
+docs/Technical-Reference/ARCHITECTURE_TO_CODE.md	4304 bytes
+docs/Technical-Reference/BOUNDARIES_AND_OWNERSHIP.md	7765 bytes
+docs/Technical-Reference/COMMON_IDENTITY.md	3761 bytes
+docs/Technical-Reference/COMPLETION_DECISIONS.md	9200 bytes
+docs/Technical-Reference/CONTRACTS.md	8395 bytes
+docs/Technical-Reference/eliteUserList_clean.csv	39039 bytes
+docs/Technical-Reference/GENERALinstructionsForAI.txt	4209 bytes
+docs/Technical-Reference/Glossary-Letters.txt	2905 bytes
+docs/Technical-Reference/GLOSSARY.md	6019 bytes
+docs/Technical-Reference/HowToStartAndEnter.txt	1132 bytes
+docs/Technical-Reference/IMPLEMENTATION_DECISIONS.md	7397 bytes
+docs/Technical-Reference/IMPLEMENTATION_STATUS.md	10602 bytes
+docs/Technical-Reference/INTEGRATION_BRIDGE.md	2909 bytes
+docs/Technical-Reference/INTERACTION_KERNEL.md	1763 bytes
+docs/Technical-Reference/LOCAL_VALIDATION.md	4505 bytes
+docs/Technical-Reference/ORGO_INTERACTION_MODEL.md	55691 bytes
+docs/Technical-Reference/SCENARIO_INJECTOR.md	2733 bytes
+docs/Technical-Reference/Semantic-Charters.md	7138 bytes
+docs/Technical-Reference/TARGET_ARCHITECTURE.md	19373 bytes
+docs/Technical-Reference/UI_AND_KOALI_INTEGRATION.md	12590 bytes
+docs/Technical-Reference/v3/1-Orgo v3 - Database Schema Reference.md	5612 bytes
+docs/Technical-Reference/v3/2-Orgo v3 - Architecture and Invariants.md	8752 bytes
+docs/Technical-Reference/v3/3-Orgo v3 - Task Case and Workflow Contract.md	6121 bytes
+docs/Technical-Reference/v3/4-Orgo v3 - Domain Modules.md	3091 bytes
+docs/Technical-Reference/v3/5-Orgo v3 - Labels Profiles and Cyclic Overview.md	1931 bytes
+docs/Technical-Reference/v3/6-Orgo v3 - Insights and Analytics.md	1969 bytes
+docs/Technical-Reference/v3/7-Orgo v3 - API Surface.md	3564 bytes
+docs/Technical-Reference/v3/8-Orgo v3 - Documentation Index.md	1759 bytes
+docs/Technical-Reference/WikiData-Orgo_Chart.md	6970 bytes
+ENGINEERING_PROFILE.md	3327 bytes
+ENGLISH_UI_UPDATE.txt	1071 bytes
+examples/intake-incidents.json	693 bytes
+examples/process-kristal-build-publish.json	886 bytes
+examples/process-validate-publish.json	639 bytes
+koali.integration.json	1402 bytes
+KRISTAL_V6_MIGRATION.md	1324 bytes
+LAUNCH_ORGO.bat	3082 bytes
+LAUNCH_ORGO_Autologin.bat	249 bytes
+LICENSE	688 bytes
+OIM_INTERFACES_OVERLAY.md	553 bytes
+OrgoScenarioInjector.pyw	21362 bytes
+OVERLAY_BACKUP_RESTORE_URL.md	781 bytes
+OVERLAY_COMPOSE_DYNAMIC_PORTS.md	420 bytes
+OVERLAY_COMPOSE_DYNAMIC_PORTS_MANIFEST.json	611 bytes
+package.json	1222 bytes
+README.md	4662 bytes
+scripts/check-architecture.mjs	2120 bytes
+scripts/email-ingress.py	6240 bytes
+scripts/operations/backup.sh	515 bytes
+scripts/operations/restore.sh	556 bytes
+scripts/test-pglite.mjs	1459 bytes
+scripts/validate-common-login.ps1	927 bytes
+scripts/validate-local.mjs	1813 bytes
+SENIOR_ARCHITECTURE_PATTERNS.md	1551 bytes
+SNAPSHOT_INDEX.txt	9023 bytes
+tools/docs-screenshots/capture.mjs	10885 bytes
+tools/docs-screenshots/package.json	208 bytes
+tools/docs-screenshots/README.md	1667 bytes
+tools/scenario-injector/AI_TEMPLATE.md	5169 bytes
+tools/scenario-injector/cli.mjs	3045 bytes
+tools/scenario-injector/examples/uckk-a014.scenario.json	5649 bytes
+tools/scenario-injector/lib.mjs	31987 bytes
+tools/scenario-injector/README.md	4063 bytes
+tools/scenario-injector/scenario.ps1	342 bytes
+tools/scenario-injector/tests/lib.test.mjs	11904 bytes
+validation/completion/STATUS.md	438 bytes
+validation/konnaxion-orgo-ik/prepare-local.ps1	9293 bytes
+validation/konnaxion-orgo-ik/README.md	2536 bytes
+validation/konnaxion-orgo-ik/run-e2e.ps1	8856 bytes
+validation/konnaxion-orgo-ik/workflow.json	1633 bytes
+validation/README.md	296 bytes
+VALIDATION_KRISTAL_V6.md	1767 bytes
