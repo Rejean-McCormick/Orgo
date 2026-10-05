@@ -18,13 +18,7 @@ env:
   NODE_VERSION: "22"
   PYTHON_VERSION: "3.12"
   NEXT_TELEMETRY_DISABLED: "1"
-
-  # Bootstrap ref: LevelUpDiag-Orgo is currently empty on GitHub.
-  # After its first source sync, this resolves to that repository's main branch.
-  # The exact resolved SHA is written to every evidence artifact.
-  LEVELUPDIAG_ORGO_REF: "main"
-
-  # Orgo Worlds is already published and is pinned immutably here.
+  LEVELUPDIAG_ORGO_REF: "8e31a884c25caa8429803d00103cb8fbb5c92d1d"
   ORGO_WORLDS_REF: "4b77594874792a3733f64c21621cfcb353458da9"
 
 jobs:
@@ -48,10 +42,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Compile diagnostic Python
-        run: python -m compileall -q LevelUpDiag-Orgo
+        working-directory: LevelUpDiag-Orgo
+        run: python -m compileall -q .
 
       - name: Run diagnostic self-tests
-        run: python -m unittest discover -s LevelUpDiag-Orgo/tests -v
+        working-directory: LevelUpDiag-Orgo
+        run: python -m unittest discover -s tests -v
 
       - name: Validate manifest loading
         working-directory: LevelUpDiag-Orgo

@@ -14,7 +14,7 @@ env:
   NODE_VERSION: "22"
   PYTHON_VERSION: "3.12"
   NEXT_TELEMETRY_DISABLED: "1"
-  LEVELUPDIAG_ORGO_REF: "main"
+  LEVELUPDIAG_ORGO_REF: "8e31a884c25caa8429803d00103cb8fbb5c92d1d"
   TEST_DATABASE_URL: postgresql://orgo_test:orgo_test@127.0.0.1:5432/orgo_test?connection_limit=5
   DATABASE_URL: postgresql://orgo_test:orgo_test@127.0.0.1:5432/orgo_test?connection_limit=5
 
@@ -72,7 +72,8 @@ jobs:
         run: npm ci
 
       - name: Test LevelUpDiag before trusting it
-        run: python -m unittest discover -s LevelUpDiag-Orgo/tests -v
+        working-directory: LevelUpDiag-Orgo
+        run: python -m unittest discover -s tests -v
 
       - name: Enable native disposable qualification
         run: |
