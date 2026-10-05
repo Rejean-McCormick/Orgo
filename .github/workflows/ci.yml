@@ -1,8 +1,29 @@
 name: Orgo contracts and runtime
-on: [push, pull_request, workflow_dispatch]
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orgo-native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  NEXT_TELEMETRY_DISABLED: "1"
+
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    name: Native Orgo verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
     services:
       postgres:
         image: postgres:16
@@ -10,22 +31,72 @@ jobs:
           POSTGRES_DB: orgo_test
           POSTGRES_USER: orgo
           POSTGRES_PASSWORD: test-only-password
-        ports: ['5432:5432']
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U orgo -d orgo_test"
-          --health-interval 5s --health-timeout 3s --health-retries 20
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
     env:
-      DATABASE_URL: postgresql://orgo:test-only-password@localhost:5432/orgo_test?connection_limit=5
-      NEXT_TELEMETRY_DISABLED: 1
+      DATABASE_URL: postgresql://orgo:test-only-password@127.0.0.1:5432/orgo_test?connection_limit=5
+      TEST_DATABASE_URL: postgresql://orgo:test-only-password@127.0.0.1:5432/orgo_test?connection_limit=5
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: {node-version: 22, cache: npm}
-      - run: npm ci
-      - run: npm run db:generate
-      - run: npm run db:migrate
-      - run: npm run check:architecture
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run test:integration
-      - run: npm run build
+      - name: Checkout Orgo
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Apply disposable PostgreSQL migrations
+        run: npm run db:migrate
+
+      - name: Architecture contract
+        run: npm run check:architecture
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Native PostgreSQL integration tests
+        run: npm run test:integration
+
+      - name: Production builds
+        run: npm run build
+
+      - name: Record native evidence
+        if: always()
+        run: |
+          mkdir -p ci-evidence
+          {
+            echo "Orgo=$(git rev-parse HEAD)"
+            echo "runner=${{ runner.os }}/${{ runner.arch }}"
+            node --version
+            npm --version
+          } | tee ci-evidence/native-components.txt
+
+      - name: Upload native evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: orgo-native-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: ci-evidence/native-components.txt

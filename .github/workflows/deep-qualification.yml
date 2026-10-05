@@ -1,0 +1,123 @@
+name: Orgo Deep Qualification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orgo-deep-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+  PYTHON_VERSION: "3.12"
+  NEXT_TELEMETRY_DISABLED: "1"
+  LEVELUPDIAG_ORGO_REF: "main"
+  TEST_DATABASE_URL: postgresql://orgo_test:orgo_test@127.0.0.1:5432/orgo_test?connection_limit=5
+  DATABASE_URL: postgresql://orgo_test:orgo_test@127.0.0.1:5432/orgo_test?connection_limit=5
+
+jobs:
+  deep:
+    name: LevelUpDiag deep
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: orgo_test
+          POSTGRES_USER: orgo_test
+          POSTGRES_PASSWORD: orgo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U orgo_test -d orgo_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    steps:
+      - name: Checkout Orgo selected commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: Orgo
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout LevelUpDiag-Orgo
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: Rejean-McCormick/LevelUpDiag-Orgo
+          ref: ${{ env.LEVELUPDIAG_ORGO_REF }}
+          path: LevelUpDiag-Orgo
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: Orgo/package-lock.json
+
+      - name: Install Orgo locked dependencies
+        working-directory: Orgo
+        run: npm ci
+
+      - name: Test LevelUpDiag before trusting it
+        run: python -m unittest discover -s LevelUpDiag-Orgo/tests -v
+
+      - name: Enable native disposable qualification
+        run: |
+          cat > LevelUpDiag-Orgo/levelupdiag.config.local.json <<'JSON'
+          {
+            "execution": {
+              "allow_target_mutation": true,
+              "allow_network": true
+            }
+          }
+          JSON
+
+      - name: Record exact component revisions
+        run: |
+          mkdir -p ci-evidence
+          {
+            echo "Orgo=$(git -C Orgo rev-parse HEAD)"
+            echo "LevelUpDiag-Orgo=$(git -C LevelUpDiag-Orgo rev-parse HEAD)"
+            echo "runner=${{ runner.os }}/${{ runner.arch }}"
+            python --version
+            node --version
+            npm --version
+          } | tee ci-evidence/components.txt
+
+      - name: Run LevelUpDiag deep campaign
+        run: >-
+          python LevelUpDiag-Orgo/levelupdiag.py
+          --target "$GITHUB_WORKSPACE/Orgo"
+          run deep
+
+      - name: Verify retained campaign summary
+        if: always()
+        run: |
+          if [ -f LevelUpDiag-Orgo/.levelupdiag/latest/summary.json ]; then
+            python LevelUpDiag-Orgo/levelupdiag.py verify-run               LevelUpDiag-Orgo/.levelupdiag/latest/summary.json
+          fi
+
+      - name: Upload deep qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: levelupdiag-deep-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: warn
+          include-hidden-files: true
+          path: |
+            LevelUpDiag-Orgo/.levelupdiag/
+            ci-evidence/components.txt

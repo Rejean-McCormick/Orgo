@@ -1,0 +1,183 @@
+name: Orgo LevelUpDiag qualification
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orgo-levelupdiag-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  PYTHON_VERSION: "3.12"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+  # Bootstrap ref: LevelUpDiag-Orgo is currently empty on GitHub.
+  # After its first source sync, this resolves to that repository's main branch.
+  # The exact resolved SHA is written to every evidence artifact.
+  LEVELUPDIAG_ORGO_REF: "main"
+
+  # Orgo Worlds is already published and is pinned immutably here.
+  ORGO_WORLDS_REF: "4b77594874792a3733f64c21621cfcb353458da9"
+
+jobs:
+  diag-self-test:
+    name: LevelUpDiag-Orgo self-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout LevelUpDiag-Orgo
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: Rejean-McCormick/LevelUpDiag-Orgo
+          ref: ${{ env.LEVELUPDIAG_ORGO_REF }}
+          path: LevelUpDiag-Orgo
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Compile diagnostic Python
+        run: python -m compileall -q LevelUpDiag-Orgo
+
+      - name: Run diagnostic self-tests
+        run: python -m unittest discover -s LevelUpDiag-Orgo/tests -v
+
+      - name: Validate manifest loading
+        working-directory: LevelUpDiag-Orgo
+        run: python levelupdiag.py list
+
+  worlds-boundary:
+    name: Orgo Worlds boundary gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout pinned Orgo Worlds
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: Rejean-McCormick/Orgo-Worlds
+          ref: ${{ env.ORGO_WORLDS_REF }}
+          path: Orgo_Worlds
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run standalone Worlds architecture check
+        working-directory: Orgo_Worlds
+        run: node scripts/check-worlds.mjs
+
+      - name: Record Worlds revision
+        run: |
+          mkdir -p ci-evidence
+          echo "Orgo_Worlds=$(git -C Orgo_Worlds rev-parse HEAD)" | tee ci-evidence/worlds-components.txt
+
+      - name: Upload Worlds evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: orgo-worlds-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: ci-evidence/worlds-components.txt
+
+  standard:
+    name: LevelUpDiag standard gate
+    needs:
+      - diag-self-test
+      - worlds-boundary
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Orgo event commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: Orgo
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout LevelUpDiag-Orgo
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: Rejean-McCormick/LevelUpDiag-Orgo
+          ref: ${{ env.LEVELUPDIAG_ORGO_REF }}
+          path: LevelUpDiag-Orgo
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: Orgo/package-lock.json
+
+      - name: Install Orgo locked dependencies
+        working-directory: Orgo
+        run: npm ci
+
+      - name: Enable CI-safe LevelUpDiag target execution
+        run: |
+          cat > LevelUpDiag-Orgo/levelupdiag.config.local.json <<'JSON'
+          {
+            "execution": {
+              "allow_target_mutation": true,
+              "allow_network": false
+            }
+          }
+          JSON
+
+      - name: Record exact component revisions
+        run: |
+          mkdir -p ci-evidence
+          {
+            echo "Orgo=$(git -C Orgo rev-parse HEAD)"
+            echo "LevelUpDiag-Orgo=$(git -C LevelUpDiag-Orgo rev-parse HEAD)"
+            echo "Orgo_Worlds=4b77594874792a3733f64c21621cfcb353458da9"
+            echo "runner=${{ runner.os }}/${{ runner.arch }}"
+            python --version
+            node --version
+            npm --version
+          } | tee ci-evidence/components.txt
+
+      - name: Run LevelUpDiag standard campaign
+        run: >-
+          python LevelUpDiag-Orgo/levelupdiag.py
+          --target "$GITHUB_WORKSPACE/Orgo"
+          run standard
+
+      - name: Verify retained campaign summary
+        if: always()
+        run: |
+          if [ -f LevelUpDiag-Orgo/.levelupdiag/latest/summary.json ]; then
+            python LevelUpDiag-Orgo/levelupdiag.py verify-run               LevelUpDiag-Orgo/.levelupdiag/latest/summary.json
+          fi
+
+      - name: Upload LevelUpDiag evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: levelupdiag-standard-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: warn
+          include-hidden-files: true
+          path: |
+            LevelUpDiag-Orgo/.levelupdiag/
+            ci-evidence/components.txt
