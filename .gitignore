@@ -45,3 +45,20 @@ validation-*.log
 # local helpers
 GitSink.bat
 /SmartSnap.pyw
+
+# General local/transient output
+*.log
+*.tmp
+*.temp
+*.bak
+*.bak_*
+*.bak-*
+*.backup
+*.backup-*
+*.backup_*
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+Desktop.ini
