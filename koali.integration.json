@@ -3,21 +3,44 @@
   "productId": "orgo",
   "owner": "Orgo",
   "variables": {
-    "webPort": { "type": "port", "env": "KOALI_ORGO_PORT", "default": 4302 },
-    "apiPort": { "type": "port", "env": "KOALI_ORGO_BACKEND_PORT", "default": 4303 },
-    "postgresPassword": { "env": "ORGO_POSTGRES_PASSWORD", "default": "orgo-koali-local-dev" }
+    "webPort": {
+      "type": "port",
+      "env": "KOALI_ORGO_PORT",
+      "default": 4302
+    },
+    "apiPort": {
+      "type": "port",
+      "env": "KOALI_ORGO_BACKEND_PORT",
+      "default": 4303
+    },
+    "dbPort": {
+      "type": "port",
+      "env": "KOALI_ORGO_DB_PORT",
+      "default": 55432
+    },
+    "worldsApiPort": {
+      "type": "port",
+      "env": "KOALI_ORGO_WORLDS_API_PORT",
+      "default": 4100
+    }
   },
-  "surface": { "embedBase": "http://127.0.0.1:${webPort}" },
+  "surface": {
+    "embedBase": "http://127.0.0.1:${webPort}"
+  },
   "processes": [
     {
-      "id": "api-stack",
+      "id": "local-stack",
       "cwd": ".",
-      "command": "docker",
-      "args": ["compose", "up", "--build", "--remove-orphans", "api"],
+      "command": "node",
+      "args": [
+        "scripts/koali-local-stack.mjs"
+      ],
       "env": {
-        "ORGO_API_HOST_PORT": "${apiPort}",
-        "POSTGRES_PASSWORD": "${postgresPassword}",
-        "ORGO_LOCAL_AUTO_LOGIN": "true"
+        "KOALI_ORGO_BACKEND_PORT": "${apiPort}",
+        "KOALI_ORGO_DB_PORT": "${dbPort}",
+        "ORGO_LOCAL_AUTO_LOGIN": "true",
+        "ORGO_ORGANIZATION": "orgo",
+        "ORGO_ADMIN_EMAIL": "admin@example.test"
       },
       "probeId": "api"
     },
@@ -25,17 +48,49 @@
       "id": "web",
       "cwd": "apps/web",
       "command": "npm",
-      "shell": { "win32": true, "default": false },
-      "args": ["exec", "--yes=false", "--", "next", "dev", "-H", "127.0.0.1", "-p", "${webPort}"],
+      "shell": {
+        "win32": true,
+        "default": false
+      },
+      "args": [
+        "exec",
+        "--yes=false",
+        "--",
+        "next",
+        "dev",
+        "-H",
+        "127.0.0.1",
+        "-p",
+        "${webPort}"
+      ],
       "env": {
         "PORT": "${webPort}",
-        "ORGO_API_URL": "http://127.0.0.1:${apiPort}"
+        "ORGO_API_URL": "http://127.0.0.1:${apiPort}",
+        "ORGO_WORLDS_API_URL": "http://127.0.0.1:${worldsApiPort}/api"
       },
       "probeId": "web"
     }
   ],
   "probes": [
-    { "id": "api", "url": "http://127.0.0.1:${apiPort}/health/ready", "required": true, "statuses": [200], "timeoutMs": 3000 },
-    { "id": "web", "url": "http://127.0.0.1:${webPort}/", "required": true, "statuses": [200, 307, 308], "timeoutMs": 2500 }
+    {
+      "id": "api",
+      "url": "http://127.0.0.1:${apiPort}/health/ready",
+      "required": true,
+      "statuses": [
+        200
+      ],
+      "timeoutMs": 3000
+    },
+    {
+      "id": "web",
+      "url": "http://127.0.0.1:${webPort}/",
+      "required": true,
+      "statuses": [
+        200,
+        307,
+        308
+      ],
+      "timeoutMs": 2500
+    }
   ]
 }

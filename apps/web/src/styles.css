@@ -129,6 +129,29 @@ label {
   flex: none;
   display: block;
 }
+.world-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+.world-label select {
+  font-size: 14px;
+  letter-spacing: 0;
+  margin-top: 4px;
+  background: #fff;
+  border-color: var(--brand-border);
+}
+.world-status {
+  color: var(--brand-muted);
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.world-status.is-error {
+  color: #9a3b33;
+}
 .profile-label {
   font-size: 12px;
   text-transform: uppercase;

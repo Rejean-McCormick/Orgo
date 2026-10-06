@@ -72,6 +72,10 @@ export class AuthGuard implements CanActivate {
       correlation: req.get('X-Correlation-ID'),
       idempotency: req.get('Idempotency-Key'),
     });
+    const worldKey = req.get('X-Orgo-World-Key')?.trim() || 'main';
+    if (!/^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/.test(worldKey))
+      throw new DomainError('INVALID_WORLD_CONTEXT', 'Invalid Orgo World key', 400);
+    req.orgoContext = { ...req.orgoContext, worldKey };
     host
       .switchToHttp()
       .getResponse<Response>()

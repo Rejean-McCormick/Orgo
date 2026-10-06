@@ -16,6 +16,7 @@ import {
 import { Actor, ApiError, can, OrgoClient, Row, rowId, rows, str } from "./api";
 import { profiles, routes, Section } from "./profiles";
 import { InteractionSurface, interactionSections } from "./InteractionSurfaces";
+import { WorldSelector } from "./WorldSelector";
 
 export interface OrgoAppProps {
   path: string[];
@@ -277,6 +278,7 @@ export function OrgoApp({
             orgo<small>Organize and Go</small>
           </div>
         </div>
+        <WorldSelector actor={actor} />
         <label className="profile-label">
           Workspace
           <select

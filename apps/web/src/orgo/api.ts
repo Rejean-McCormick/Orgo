@@ -22,6 +22,20 @@ export class ApiError extends Error {
     super(message);
   }
 }
+
+const WORLD_KEY = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
+export function activeWorldKey(organizationId?: string): string {
+  if (typeof window === "undefined") return "main";
+  const scoped = organizationId ? `orgo.active-world:${organizationId}` : "orgo.active-world";
+  const value = window.localStorage.getItem(scoped) ?? window.localStorage.getItem("orgo.active-world") ?? "main";
+  return WORLD_KEY.test(value) ? value : "main";
+}
+
+function worldHeader(): Record<string, string> {
+  const world = activeWorldKey();
+  return world ? { "X-Orgo-World-Key": world } : {};
+}
+
 export class OrgoClient {
   private pendingKeys = new Map<string, string>();
   constructor(
@@ -31,7 +45,7 @@ export class OrgoClient {
   async download(path: string): Promise<string> {
     const response = await fetch(`${this.baseUrl}/${path}`, {
       credentials: 'same-origin',
-      headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
+      headers: { ...worldHeader(), ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}) },
     });
     if (!response.ok)
       throw new Error(
@@ -56,6 +70,7 @@ export class OrgoClient {
       credentials: 'same-origin',
       headers: {
         "Content-Type": "application/json",
+        ...worldHeader(),
         ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
         ...(method !== "GET" ? { "Idempotency-Key": mutationKey! } : {}),
       },

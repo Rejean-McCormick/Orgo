@@ -20,6 +20,8 @@ export interface WorkGrant {
 export interface ExecutionContext {
   workGrants?: readonly WorkGrant[];
   organizationId: string;
+  /** Active Orgo World routing/provenance context. Operational ownership remains in main Orgo. */
+  worldKey?: string;
   actorUserId: string | null;
   apiTokenId?: string;
   actorType: 'user' | 'system';

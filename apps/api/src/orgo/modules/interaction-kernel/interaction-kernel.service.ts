@@ -35,7 +35,7 @@ export class InteractionKernelService {
       throw new DomainError('IK_TARGET_NOT_FOUND', 'Orgo target required', 422);
     if (envelope.target?.organization && envelope.target.organization !== ctx.organizationId)
       throw new DomainError('IK_TARGET_NOT_FOUND', 'Target organization does not match authenticated tenant', 404);
-    const expectedWorld = process.env.ORGO_IK_WORLD?.trim();
+    const expectedWorld = ctx.worldKey ?? process.env.ORGO_IK_WORLD?.trim();
     if (expectedWorld && envelope.target?.world && envelope.target.world !== expectedWorld)
       throw new DomainError('IK_TARGET_NOT_FOUND', 'Target World does not match configured Orgo routing', 404);
   }
