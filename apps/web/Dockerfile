@@ -7,7 +7,9 @@ COPY apps/web/package.json ./apps/web/package.json
 RUN npm ci --no-audit --no-fund
 COPY apps/web ./apps/web
 ARG ORGO_API_URL=http://api:4000
+ARG ORGO_WORLDS_API_URL=http://host.docker.internal:4100/api
 ENV ORGO_API_URL=$ORGO_API_URL
+ENV ORGO_WORLDS_API_URL=$ORGO_WORLDS_API_URL
 RUN npm run build -w web
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app

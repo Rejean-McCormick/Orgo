@@ -84,7 +84,13 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      args: {ORGO_API_URL: 'http://api:4000'}
+      args:
+        ORGO_API_URL: 'http://api:4000'
+        ORGO_WORLDS_API_URL: ${ORGO_WORLDS_API_URL:-http://host.docker.internal:4100/api}
+    environment:
+      ORGO_WORLDS_API_URL: ${ORGO_WORLDS_API_URL:-http://host.docker.internal:4100/api}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports: ["127.0.0.1:${ORGO_WEB_HOST_PORT:-3000}:3000"]
     depends_on:
       api: {condition: service_healthy}
