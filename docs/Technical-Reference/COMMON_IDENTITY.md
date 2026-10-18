@@ -112,3 +112,7 @@ kOA_Digital_Ecosystem/docs/2-Technical-Reference/40-integration/identity-oidc/
 Normative ecosystem decision: `docs/2-Technical-Reference/90-reference/adr/adr-0006-common-identity-oidc.md`.
 
 This document describes Orgo's implementation of that profile.
+
+## Tandem mode kOA
+
+Pour un tandem strict avec Konnaxion, voir [TANDEM_KONNAXION_ORGO_OIDC_V1.md](TANDEM_KONNAXION_ORGO_OIDC_V1.md). Le mode par défaut conserve le fonctionnement autonome et aucune personne fictive ne reçoit d'accès SSO.

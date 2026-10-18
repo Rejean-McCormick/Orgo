@@ -9,6 +9,7 @@ import {
   parse,
 } from '../../../platform/contracts';
 import { IdentityService } from '../../../modules/identity/identity.service';
+import { localLoginAllowed, localAutoLoginAllowedForTenant } from '../../../modules/identity/tandem-sso-policy';
 import {
   Ctx,
   ORGO_SESSION_COOKIE,
@@ -53,6 +54,8 @@ export class AuthController {
       raw,
     );
     await this.admin.throttle(`login:${req.ip ?? 'unknown'}`, 10, 60);
+    if (!localLoginAllowed(input.organization, input.email))
+      throw new DomainError('SSO_REQUIRED', 'Sign in with the shared identity provider for this organization', 403);
     const result = await this.identity.login(
       input.organization,
       input.email,
@@ -67,6 +70,8 @@ export class AuthController {
     if (!localAutoLoginAllowed())
       throw new DomainError('NOT_FOUND', 'Local auto-login is disabled', 404);
     const organization = process.env.ORGO_ORGANIZATION?.trim() || 'orgo';
+    if (!localAutoLoginAllowedForTenant(organization))
+      throw new DomainError('NOT_FOUND', 'Local auto-login is unavailable in tandem SSO mode', 404);
     const email = process.env.ORGO_ADMIN_EMAIL?.trim() || 'admin@example.test';
     const result = await this.identity.localSession(organization, email);
     res.cookie(ORGO_SESSION_COOKIE, result.token, sessionCookieOptions());

@@ -21,6 +21,7 @@ import {
   uuid,
 } from '../../../platform/contracts';
 import { OidcService } from '../../../modules/identity/oidc.service';
+import { validateTandemSso } from '../../../modules/identity/tandem-sso-policy';
 import { IdentityAdmin } from '../../../modules/identity/identity-admin.service';
 import {
   Ctx,
@@ -48,6 +49,7 @@ export class SsoController {
     @Inject(Database) private db: Database,
   ) {}
   @Public() @Get('auth/sso/config') config() {
+    const tandem = validateTandemSso();
     return {
       available: !!(
         process.env.OIDC_ISSUER &&
@@ -57,6 +59,8 @@ export class SsoController {
       display_name: process.env.OIDC_DISPLAY_NAME?.trim() || 'SSO',
       local_login_available: true,
       identity_key: 'issuer+subject',
+      tandem_sso_mode: tandem.mode,
+      tandem_organization: tandem.organization || null,
     };
   }
   @Public() @Post('auth/sso/start') async start(
@@ -135,16 +139,17 @@ export class SsoController {
         .strict(),
       raw,
     );
+    validateTandemSso();
     const issuer = process.env.OIDC_ISSUER;
     if (!issuer)
       throw new DomainError('SSO_UNAVAILABLE', 'Configure OIDC_ISSUER', 503);
     return this.commands.run(ctx, 'sso.link', input, async (tx) => {
-      if (
-        !(await tx.userAccount.findFirst({
-          where: { id: input.user_id, organization_id: ctx.organizationId },
-        }))
-      )
-        throw new DomainError('NOT_FOUND', 'User not found', 404);
+      const user = await tx.userAccount.findFirst({
+        where: { id: input.user_id, organization_id: ctx.organizationId },
+      });
+      if (!user) throw new DomainError('NOT_FOUND', 'User not found', 404);
+      if (user.status !== 'active' || user.auth_provider === 'external_only')
+        throw new DomainError('SSO_LINK_INELIGIBLE', 'Disabled or synthetic identities cannot receive interactive SSO links', 409);
       const existing = await tx.ssoIdentity.findUnique({
         where: {
           organization_id_issuer_subject: {

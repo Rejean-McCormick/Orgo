@@ -1,10 +1,12 @@
 import { requestTelemetry } from './orgo/platform/telemetry';
+import { validateTandemSso } from './orgo/modules/identity/tandem-sso-policy';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { json } from 'express';
 import { AppModule } from './app.module';
 import { Errors } from './orgo/adapters/inbound/http/boundary';
 export async function createApp() {
+  validateTandemSso();
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
     logger: ['error', 'warn'],

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Database } from '../../platform/database';
 import { DomainError } from '../../platform/contracts';
 import { IdentityService, tokenHash } from './identity.service';
+import { validateTandemSso } from './tandem-sso-policy';
 const fail = () =>
   new DomainError(
     'SSO_REJECTED',
@@ -69,6 +70,7 @@ export class OidcService {
     @Inject(IdentityService) private identity: IdentityService,
   ) {}
   private config() {
+    validateTandemSso();
     const issuer = process.env.OIDC_ISSUER,
       client = process.env.OIDC_CLIENT_ID,
       base = process.env.ORGO_PUBLIC_URL;

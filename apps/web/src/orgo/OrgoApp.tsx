@@ -549,6 +549,8 @@ function Login({
     display_name: string;
     local_login_available: boolean;
     identity_key: string;
+    tandem_sso_mode?: string;
+    tandem_organization?: string | null;
   } | null>(null);
   const started = useRef(false);
   useEffect(() => {
@@ -558,6 +560,8 @@ function Login({
         display_name: string;
         local_login_available: boolean;
         identity_key: string;
+        tandem_sso_mode?: string;
+        tandem_organization?: string | null;
       }>("auth/sso/config")
       .then(setSso)
       .catch(() => {});
@@ -630,6 +634,7 @@ function Login({
             required
             autoComplete="organization"
             placeholder="my-organization"
+            defaultValue={sso?.tandem_organization || ""}
           />
         </label>
         <label>
@@ -645,6 +650,10 @@ function Login({
             autoComplete="current-password"
           />
         </label>
+        {sso?.tandem_sso_mode === "enforce" && (
+          <p>Connexion SSO kOA requise pour l’organisation jumelée.
+             La connexion locale est réservée au compte administratif de secours.</p>
+        )}
         <ErrorMessage error={error} />
         <button className="primary" disabled={busy}>
           {busy ? "Signing in…" : "Sign in"}

@@ -73,3 +73,7 @@ Executable source, `apps/api/prisma/schema.prisma`, the current Prisma migration
 Orgo's `kristal` provider now uses the ecosystem-native path **Orgo → Interaction Kernel → Da’at → Kristal Standard 6.0.0**. A knowledge build freezes the selected Case/Task into an immutable ArtifactRef inside the IntegrationOperation, then delivers it post-commit through `kristal.build.request/2.0.0`. Returned `kristal.artifact.ready/2.0.0` events enter Orgo as Signals.
 
 Kristal v6 `actionability` is preserved as input to Orgo routing; it never bypasses Orgo authorization or mutates Case/Task state directly.
+
+### kOA Tandem — OIDC
+
+Configuration progressive, jamais activée implicitement : [docs/Technical-Reference/TANDEM_KONNAXION_ORGO_OIDC_V1.md](docs/Technical-Reference/TANDEM_KONNAXION_ORGO_OIDC_V1.md). Diagnostic lecture seule : `DIAG_TANDEM_SSO.cmd`.
