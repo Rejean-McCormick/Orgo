@@ -10,6 +10,7 @@ import {
 } from '../../../platform/contracts';
 import { IdentityService } from '../../../modules/identity/identity.service';
 import { localLoginAllowed, localAutoLoginAllowedForTenant } from '../../../modules/identity/tandem-sso-policy';
+import { localAutoLoginAllowed } from '../../../modules/identity/local-autologin-policy';
 import {
   Ctx,
   ORGO_SESSION_COOKIE,
@@ -18,17 +19,6 @@ import {
   sessionToken,
 } from './boundary';
 
-function localAutoLoginAllowed() {
-  if (process.env.ORGO_LOCAL_AUTO_LOGIN !== 'true') return false;
-  const publicUrl = process.env.ORGO_PUBLIC_URL?.trim();
-  if (!publicUrl) return true;
-  try {
-    const host = new URL(publicUrl).hostname;
-    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
-  } catch {
-    return false;
-  }
-}
 
 @Controller('auth')
 export class AuthController {
@@ -66,8 +56,11 @@ export class AuthController {
   }
   @Public()
   @Post('local-auto-login')
-  async localAutoLogin(@Res({ passthrough: true }) res: Response) {
-    if (!localAutoLoginAllowed())
+  async localAutoLogin(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (!localAutoLoginAllowed(process.env, req.socket.remoteAddress))
       throw new DomainError('NOT_FOUND', 'Local auto-login is disabled', 404);
     const organization = process.env.ORGO_ORGANIZATION?.trim() || 'orgo';
     if (!localAutoLoginAllowedForTenant(organization))

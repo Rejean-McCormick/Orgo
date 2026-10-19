@@ -1,0 +1,59 @@
+{
+  "rules": [
+    {
+      "id": "konnaxion-governed-decision-v1",
+      "enabled": true,
+      "match": {
+        "source": "API",
+        "type": "governance_decision",
+        "category": "request",
+        "labelPrefix": "1.11"
+      },
+      "actions": [
+        {
+          "type": "CREATE_CASE",
+          "input": {
+            "title": "$signal.title",
+            "description": "$signal.description",
+            "label": "$signal.label",
+            "severity": "$signal.severity",
+            "metadata": {
+              "source_system": "konnaxion",
+              "interaction": "$signal.payload"
+            }
+          }
+        },
+        {
+          "type": "CREATE_TASK",
+          "input": {
+            "title": "$signal.title",
+            "description": "Execute the governed Konnaxion decision.",
+            "type": "governance_execution",
+            "category": "request",
+            "label": "$signal.label",
+            "severity": "$signal.severity",
+            "case_id": "$case",
+            "metadata": {
+              "source_system": "konnaxion",
+              "interaction": "$signal.payload"
+            }
+          }
+        },
+        {
+          "type": "REQUEST_INTEGRATION",
+          "input": {
+            "provider": "konnaxion",
+            "operation": "publish_impact",
+            "subject_type": "case",
+            "subject_id": "$case",
+            "request": {
+              "checkpoint": "decision_accepted",
+              "epistemic_status": "operational_effect_recorded",
+              "interaction": "$signal.payload"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

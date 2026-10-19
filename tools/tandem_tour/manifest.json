@@ -1,0 +1,34 @@
+{
+  "schema_version": "orgo-tandem-tour-p1/1.0",
+  "snapshot": "Orgo_Code_snapshot.zip (2026-10-18 21:28:22 local metadata)",
+  "files": {
+    ".env.example": {
+      "before": "51729351b29acdb3d0790a5d6b0eb2e3c64331348862d23aa5e39ad59bbc58da",
+      "after": "409bc2dc5e05c71b91bacaf5161f8d2a2f2dd421050621b84b866b27a866a496"
+    },
+    "apps/api/src/orgo/adapters/inbound/http/auth.controller.ts": {
+      "before": "deee9e60182e32cec1687b2e791bed7ec5855f3fc56c46a5e07d56e9704f187d",
+      "after": "052416408fc977aa9e360d8bef3f994ee351376cec0806739933311a6093ec96"
+    },
+    "apps/api/src/orgo/modules/identity/local-autologin-policy.ts": {
+      "before": null,
+      "after": "d11a6775568bb7e6546e8413722abb8f7534f594d740ce47a71e760fdc761265"
+    },
+    "apps/api/src/orgo/modules/identity/oidc.service.ts": {
+      "before": "e55a29717e86ebcf8134d8014fc8098338e0c9aed90b1ca1b802ab190e09363c",
+      "after": "50d5f7b6b7c1f85cf662b3048db40f3e93ea9ba81968eff1a755981f07405900"
+    },
+    "apps/api/test/unit/tandem-local-autologin.test.ts": {
+      "before": null,
+      "after": "ebcbcbae097ca3691468f2984f940a8da7f5b3349613565e0ce4ccf07dc3ad72"
+    },
+    "docs/Technical-Reference/TANDEM_TOUR_ORGO_2026-10-18.md": {
+      "before": null,
+      "after": "77221963427f26323736f9740b5bfaf587251d142b5b96172300751dfff0d114"
+    },
+    "tools/tandem_tour/tests/verify-orgo-tour.mjs": {
+      "before": null,
+      "after": "c8155d2be23cd2f1a6c5e213a5518c074983280cb4dc59c4fbcfd324a9353220"
+    }
+  }
+}

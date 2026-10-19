@@ -257,7 +257,20 @@ export class OidcService {
       },
     });
     if (!link) throw fail();
+    // Re-check linked account eligibility at authentication time. Legacy links may
+    // predate the SSO linking guard; synthetic/external_only accounts never log in.
+    const human = await this.db.userAccount.findFirst({
+      where: {
+        id: link.user_id,
+        organization_id: attempt.organization_id,
+        status: 'active',
+        auth_provider: { not: 'external_only' },
+        organization: { status: 'active' },
+      },
+      select: { id: true },
+    });
+    if (!human) throw fail();
     // Explicit issuer/subject mapping only. An unverified email claim never enrolls or links accounts.
-    return this.identity.session(link.organization_id, link.user_id);
+    return this.identity.session(link.organization_id, human.id);
   }
 }
