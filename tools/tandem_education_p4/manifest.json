@@ -1,0 +1,39 @@
+{
+  "id": "orgo_tandem_education_p4",
+  "title": "ORGO / TANDEM EDUCATION / P4 AUTHENTICATED SESSION-BOUND READONLY",
+  "sentinel": "tools/tandem-education/admission-prerequisites.mjs",
+  "anchors": {
+    "tools/tandem-education/admission-prerequisites.mjs": "cd07625d88d21fc7b84f04bdc3398c5013560a298078ee95465ea83eea06accd",
+    "apps/api/src/orgo/modules/identity/identity.service.ts": "78c0d7902c810cfe2e79fcfc640dc7620122572359b2afc4f47e818760eac863"
+  },
+  "files": [
+    {
+      "path": "tools/tandem-education/p4-session-bound-preview.mjs",
+      "old": null,
+      "new": "09f943de2311934945ab7c8348d0f6f819e59225e41fbcfb4e297def9aa35152"
+    },
+    {
+      "path": "tools/tandem-education/p4-session-bound-preview.test.mjs",
+      "old": null,
+      "new": "f7baf7a14003e5e50b2d5d23074ad77afbfd2cdbf47716b4359dcb1a4b49ef34"
+    },
+    {
+      "path": "docs/Technical-Reference/TANDEM_EDUCATION_P4_SESSION_BOUND_PREVIEW.md",
+      "old": null,
+      "new": "ea4cefd0f39f1e5532d3e1d6271aefc78702eb35c237efe598bf3918273305d1"
+    }
+  ],
+  "copy": [
+    "tools/tandem-education",
+    "docs/Technical-Reference/TANDEM_EDUCATION_P4_SESSION_BOUND_PREVIEW.md"
+  ],
+  "tests": [
+    [
+      "node",
+      "--test",
+      "tools/tandem-education/p4-session-bound-preview.test.mjs",
+      "tools/tandem-education/admission-prerequisites.test.mjs",
+      "tools/tandem-education/review-plan.test.mjs"
+    ]
+  ]
+}

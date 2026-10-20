@@ -1,0 +1,64 @@
+{
+  "format": "akor.tandem-execution-intent/1.0",
+  "mode": "synthetic",
+  "authority": "orgo",
+  "scenario_ref": "fete-sorciere",
+  "workflow_ref": "fete-sorciere-v1",
+  "tenant_id": "11111111-1111-4111-8111-111111111111",
+  "world_id": "22222222-2222-4222-8222-222222222222",
+  "world_release_id": "33333333-3333-4333-8333-333333333333",
+  "source_sha256": "a48cbf749c4f065afcad256181e75b6130e3dcb23a62665b5ff25047a1a8ba60",
+  "preview_sha256": "c08396ba76fdbd734b5d015ddce8991e16f53a72937091bf02d65a5b40c1f0b4",
+  "tasks": [
+    {
+      "task_ref": "origami",
+      "role_code": "origamiste"
+    },
+    {
+      "task_ref": "invitation",
+      "role_code": "sorciere"
+    },
+    {
+      "task_ref": "bilingue",
+      "role_code": "traducteur"
+    },
+    {
+      "task_ref": "echange-indices",
+      "role_code": "messager"
+    },
+    {
+      "task_ref": "repartition",
+      "role_code": "sorciere"
+    },
+    {
+      "task_ref": "mandat",
+      "role_code": "metteur-en-scene"
+    },
+    {
+      "task_ref": "discours",
+      "role_code": "redacteur"
+    },
+    {
+      "task_ref": "lecture",
+      "role_code": "lecteur"
+    },
+    {
+      "task_ref": "scene",
+      "role_code": "regisseur"
+    },
+    {
+      "task_ref": "budget-final",
+      "role_code": "comptable"
+    },
+    {
+      "task_ref": "galerie",
+      "role_code": "photographe"
+    }
+  ],
+  "runtime_admitted": false,
+  "teacher_authorized": false,
+  "permissions_verified": false,
+  "world_release_verified": false,
+  "dispatch_allowed": false,
+  "may_publish_to_child": false
+}

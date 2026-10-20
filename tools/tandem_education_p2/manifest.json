@@ -1,0 +1,48 @@
+{
+  "id": "orgo_tandem_education_p2",
+  "title": "ORGO / TANDEM EDUCATION / P2 REVIEW ONLY",
+  "sentinel": "apps/api/prisma/schema.prisma",
+  "anchors": {
+    "apps/api/src/orgo/modules/orchestration/workflow.service.ts": "10974594e1abe3ff63d31f325f70a74f2fabb106a31b72e16c041dcd8d413b2e",
+    "apps/api/src/orgo/adapters/inbound/http/boundary.ts": "ddc07e481385737223175c60e74503f8453521600da9b6029d6498e9d35d56b8"
+  },
+  "files": [
+    {
+      "path": "tools/tandem-education/review-plan.mjs",
+      "old": null,
+      "new": "c058b31eaa1ef450d7defd57274545378be4b10f57d9a36a492b49fd9b0dfa30"
+    },
+    {
+      "path": "tools/tandem-education/review-plan.test.mjs",
+      "old": null,
+      "new": "db142a1e4704b089019b92c2f4db941e5a83f3ae921a7458fad3ae4b57ae2de1"
+    },
+    {
+      "path": "tools/tandem-education/fixtures/fete-sorciere.intent.synthetic.json",
+      "old": null,
+      "new": "6f64daa88f85ca06d0b4a7b3ccb2883ab77abc36fd06104f1364b6e5ea21d14d"
+    },
+    {
+      "path": "tools/tandem-education/fixtures/fete-sorciere.scope.synthetic.json",
+      "old": null,
+      "new": "320bfa38db3f79196cb747acf0feddb7211f521365bd4d94f477084b60e1a535"
+    },
+    {
+      "path": "docs/Technical-Reference/TANDEM_EDUCATION_P2_REVIEW_ONLY.md",
+      "old": null,
+      "new": "58091db66d9a7f39946de4937ea8507b999208fe547df21f49fad760a2653284"
+    }
+  ],
+  "test_copy": [
+    "tools/tandem-education",
+    "apps/api/src/orgo/modules/orchestration/workflow.service.ts",
+    "apps/api/src/orgo/adapters/inbound/http/boundary.ts"
+  ],
+  "tests": [
+    [
+      "node",
+      "--test",
+      "tools/tandem-education/review-plan.test.mjs"
+    ]
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "id": "orgo_tandem_education_p5",
+  "title": "ORGO / TANDEM EDUCATION / P5 VERIFIED WORLD PREFLIGHT",
+  "sentinel": "tools/tandem-education/p4-session-bound-preview.mjs",
+  "anchors": {
+    "tools/tandem-education/p4-session-bound-preview.mjs": "09f943de2311934945ab7c8348d0f6f819e59225e41fbcfb4e297def9aa35152",
+    "tools/tandem-education/admission-prerequisites.mjs": "cd07625d88d21fc7b84f04bdc3398c5013560a298078ee95465ea83eea06accd",
+    "apps/api/src/orgo/modules/identity/identity.service.ts": "78c0d7902c810cfe2e79fcfc640dc7620122572359b2afc4f47e818760eac863"
+  },
+  "files": [
+    {
+      "path": "tools/tandem-education/p5-verified-world.mjs",
+      "old": null,
+      "new": "0ed62e23aaeb2c4bb6bfeb3255d0fd1aa904f1db91a16e6e439e4c2898a03e2f"
+    },
+    {
+      "path": "tools/tandem-education/p5-signed-world-preview.mjs",
+      "old": null,
+      "new": "cec0fe722068b441c4832d02a23698c0d68a6cd2966510ab04ba9cfdcb19cffd"
+    },
+    {
+      "path": "tools/tandem-education/p5-signed-world-preview.test.mjs",
+      "old": null,
+      "new": "d933f71ab44a2afa7cc6e3fde6f7c6cb2f5967260cdba11f850b5e73b5921f78"
+    },
+    {
+      "path": "tools/tandem-education/p5-cross-repo-check.mjs",
+      "old": null,
+      "new": "c24c086db46b1b27554373d305171799441a7e3730adf68c2cfbb94c24a83477"
+    },
+    {
+      "path": "docs/Technical-Reference/TANDEM_EDUCATION_P5_SIGNED_WORLD_PREFLIGHT.md",
+      "old": null,
+      "new": "c2e79ec9870ba5012c8e9d7fa5dd6f78087f517d10be5ae0b3022c032e3e12fd"
+    },
+    {
+      "path": "CHECK_TANDEM_EDU_P5_CHAIN.cmd",
+      "old": null,
+      "new": "be24bc9e8c3b1cd31e24b557b68ca363f965a8ba7a8c85d2db6145e6c51a56e8"
+    }
+  ],
+  "copy": [
+    "tools/tandem-education",
+    "docs/Technical-Reference/TANDEM_EDUCATION_P5_SIGNED_WORLD_PREFLIGHT.md"
+  ],
+  "tests": [
+    [
+      "node",
+      "--check",
+      "tools/tandem-education/p5-verified-world.mjs"
+    ],
+    [
+      "node",
+      "--check",
+      "tools/tandem-education/p5-signed-world-preview.mjs"
+    ],
+    [
+      "node",
+      "--test",
+      "tools/tandem-education/p5-signed-world-preview.test.mjs",
+      "tools/tandem-education/p4-session-bound-preview.test.mjs",
+      "tools/tandem-education/admission-prerequisites.test.mjs",
+      "tools/tandem-education/review-plan.test.mjs"
+    ]
+  ]
+}

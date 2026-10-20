@@ -1,0 +1,37 @@
+{
+  "id": "orgo_tandem_education_p3",
+  "title": "ORGO / TANDEM EDUCATION / P3 AUTHORITY PREFLIGHT",
+  "sentinel": "tools/tandem-education/review-plan.mjs",
+  "anchors": {
+    "tools/tandem-education/review-plan.mjs": "c058b31eaa1ef450d7defd57274545378be4b10f57d9a36a492b49fd9b0dfa30"
+  },
+  "files": [
+    {
+      "path": "tools/tandem-education/admission-prerequisites.mjs",
+      "old": null,
+      "new": "cd07625d88d21fc7b84f04bdc3398c5013560a298078ee95465ea83eea06accd"
+    },
+    {
+      "path": "tools/tandem-education/admission-prerequisites.test.mjs",
+      "old": null,
+      "new": "2076befc8314083fa33258c35f734b7357242b37c7a7f77425129d9502213d94"
+    },
+    {
+      "path": "docs/Technical-Reference/TANDEM_EDUCATION_P3_AUTHORITY_PREREQUISITES.md",
+      "old": null,
+      "new": "ba4ee684d24f22766ed74390ccb1ffedf4c72ccaf0a6311c9566830ea0a7a2d0"
+    }
+  ],
+  "copy": [
+    "tools/tandem-education",
+    "docs/Technical-Reference/TANDEM_EDUCATION_P3_AUTHORITY_PREREQUISITES.md"
+  ],
+  "tests": [
+    [
+      "node",
+      "--test",
+      "tools/tandem-education/admission-prerequisites.test.mjs",
+      "tools/tandem-education/review-plan.test.mjs"
+    ]
+  ]
+}
