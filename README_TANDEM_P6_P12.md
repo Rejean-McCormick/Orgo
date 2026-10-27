@@ -1,0 +1,1 @@
+Tandem P6–P12 campagne unique : installer Worlds en premier, puis Orgo. PREVIEW, INSTALL, VERIFY et ROLLBACK sont autonomes. Répétition synthétique seulement : aucun runtime admis. Consulter les docs dans les payloads.

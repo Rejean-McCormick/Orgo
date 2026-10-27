@@ -1,0 +1,66 @@
+{
+  "id": "orgo_tandem_p6_p12_onepass",
+  "title": "ORGO / TANDEM EDUCATION / P6-P12 ONE-PASS SYNTHETIC GATE",
+  "sentinel": "tools/tandem-education/p5-signed-world-preview.mjs",
+  "anchors": {
+    "tools/tandem-education/p5-signed-world-preview.mjs": "cec0fe722068b441c4832d02a23698c0d68a6cd2966510ab04ba9cfdcb19cffd",
+    "tools/tandem-education/p5-verified-world.mjs": "0ed62e23aaeb2c4bb6bfeb3255d0fd1aa904f1db91a16e6e439e4c2898a03e2f",
+    "tools/tandem-education/review-plan.mjs": "c058b31eaa1ef450d7defd57274545378be4b10f57d9a36a492b49fd9b0dfa30"
+  },
+  "files": [
+    {
+      "path": "tools/tandem-education/p6-p12/synthetic-transaction.mjs",
+      "old": null,
+      "new": "3d1e43f944a07cb85d78d99080eb4fde7eeed66b35bb5b7cd5fb39c79909ae82"
+    },
+    {
+      "path": "tools/tandem-education/p6-p12/one-pass.mjs",
+      "old": null,
+      "new": "d979a59caf8204033b8e1295b4f9c9d75622873400780d114911cf6da8d74375"
+    },
+    {
+      "path": "tools/tandem-education/p6-p12/one-pass.test.mjs",
+      "old": null,
+      "new": "85c5c91abe347022df67cd6961604951fb7257cc57fbf7b0b74b272cd01aa414"
+    },
+    {
+      "path": "tools/tandem-education/p6-p12/README_ONE_PASS.md",
+      "old": null,
+      "new": "e26fa7c565dfbc0f9670dde0caf0a1f678d5e413a1cde34d77bf7ccd2be32112"
+    },
+    {
+      "path": "CHECK_TANDEM_P6_P12_ONE_PASS.cmd",
+      "old": null,
+      "new": "cd69738b1db0e81e18025d4471ac98c0c812632c4ce602ab64a2a9622fff2025"
+    }
+  ],
+  "copy": [
+    "tools/tandem-education"
+  ],
+  "tests": [
+    [
+      "node",
+      "--check",
+      "tools/tandem-education/p6-p12/one-pass.mjs"
+    ],
+    [
+      "node",
+      "--test",
+      "tools/tandem-education/p6-p12/one-pass.test.mjs",
+      "tools/tandem-education/p5-signed-world-preview.test.mjs",
+      "tools/tandem-education/p4-session-bound-preview.test.mjs",
+      "tools/tandem-education/admission-prerequisites.test.mjs",
+      "tools/tandem-education/review-plan.test.mjs"
+    ],
+    [
+      "node",
+      "tools/tandem-education/p6-p12/one-pass.mjs",
+      "--worlds",
+      "{WORLDS_ROOT}"
+    ]
+  ],
+  "worlds_anchor": {
+    "scripts/tandem-education/p6-p12-trusted-bridge.mjs": "48db0b304bb53876a9f93a7a787950c3f32a226453c360731b9d98aaed71b4fe",
+    "scripts/tandem-education/p5-signed-world-witness.mjs": "ce50d012243e767aa0ed12308c7213378eaa47433fb08fd9a8ad4a65073624b8"
+  }
+}
