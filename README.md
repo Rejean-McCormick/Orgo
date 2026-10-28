@@ -47,7 +47,7 @@ The native GitHub-hosted Orgo CI is active on the repository and exercises the a
 
 `LevelUpDiag-Orgo` is published as a separate repository with its own hosted self-test. Orgo also carries a cross-repository LevelUpDiag qualification workflow; its live badge above reflects the latest hosted run.
 
-The Kristal v6 migration also has migration-specific retained validation recorded in [`VALIDATION_KRISTAL_V6.md`](VALIDATION_KRISTAL_V6.md): architecture checks pass, modified TypeScript files pass syntax/transpile validation, scenario-injector tests pass 11/11, JSON/YAML parse, and no new broken documentation links were introduced.
+The Kristal v6 migration is described in [`docs/status/2026-10-01-kristal-v6-integration.md`](docs/status/2026-10-01-kristal-v6-integration.md). A previously cited `VALIDATION_KRISTAL_V6.md` report is **not present** in the distributed source/documentation snapshots, so its reported architecture, syntax, scenario-injector (11/11), and link-check outcomes are **historical/unverified here**, not independently inspectable retained evidence. Do not treat these numbers as current CI or full deployment qualification; see the dated 2026-09-17 acceptance record for its own scope and rerun the appropriate tests for the working tree.
 
 The latest retained full production-acceptance campaign remains the dated 2026-09-17 record under [`docs/status/`](docs/status/). Hosted CI and LevelUpDiag provide current continuous verification; the dated acceptance record remains the historical full acceptance evidence.
 

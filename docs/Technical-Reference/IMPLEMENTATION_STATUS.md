@@ -1,4 +1,4 @@
-> **Kristal v6 migration validation note (2026-10-01):** the new IK/Da’at/Kristal boundary passed architecture and TypeScript syntax/transpile checks in the supplied SmartSnap. Full npm/Prisma/database/browser acceptance was not rerun because dependencies/generated clients are absent; see `../../VALIDATION_KRISTAL_V6.md`.
+> **Kristal v6 migration validation note (2026-10-01):** the migration snapshot reported architecture and TypeScript syntax/transpile checks; full npm/Prisma/database/browser acceptance was not rerun in that report. The formerly cited `../../VALIDATION_KRISTAL_V6.md` is missing from the supplied code and documentation archives; the claimed checks cannot be independently verified from that report here. Refer to [`../status/2026-10-01-kristal-v6-integration.md`](../status/2026-10-01-kristal-v6-integration.md) for implemented scope, not a substitute test result.
 
 # Orgo — implementation status (2026-09-15)
 
