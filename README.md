@@ -77,3 +77,8 @@ Kristal v6 `actionability` is preserved as input to Orgo routing; it never bypas
 ### kOA Tandem — OIDC
 
 Configuration progressive, jamais activée implicitement : [docs/Technical-Reference/TANDEM_KONNAXION_ORGO_OIDC_V1.md](docs/Technical-Reference/TANDEM_KONNAXION_ORGO_OIDC_V1.md). Diagnostic lecture seule : `DIAG_TANDEM_SSO.cmd`.
+
+## Vérification des intégrations satellites (27 octobre 2026)
+
+Voir [le contrôle de compatibilité et les limites de qualification](docs/Integration-Verification-2026-10-27.md). Les versions et statuts externes doivent être vérifiés avant tout déploiement.
+

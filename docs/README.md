@@ -63,3 +63,7 @@ The repository now uses a single Prisma migration baseline under `apps/api/prism
 The 2026-09-15 validation evidence predates the repository-cleanup work that flattened migrations and removed obsolete historical material. Re-run `Technical-Reference/LOCAL_VALIDATION.md` after structural changes before treating the current working tree as validated.
 
 See `Technical-Reference/COMPLETION_DECISIONS.md` for durable processes, receipt predicates, Work scopes, identity and evidence semantics; `Technical-Reference/ARCHITECTURE_TO_CODE.md` for source ownership; and `Technical-Reference/LOCAL_VALIDATION.md` for the reproducible local acceptance procedure.
+
+## Vérification des dépôts satellites
+
+- [Contrats, versions et limites de qualification (27 octobre 2026)](Integration-Verification-2026-10-27.md)
