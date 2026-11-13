@@ -49,7 +49,12 @@
             "request": {
               "checkpoint": "decision_accepted",
               "epistemic_status": "operational_effect_recorded",
-              "interaction": "$signal.payload"
+              "external_reference": "$case",
+              "summary": {
+                "kind": "operational_effect",
+                "status": "recorded",
+                "case_id": "$case"
+              }
             }
           }
         }
