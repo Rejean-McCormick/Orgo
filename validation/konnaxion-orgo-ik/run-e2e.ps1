@@ -6,7 +6,9 @@ param(
     [int]$TimeoutSeconds = 120,
     [string]$WorldKey = $env:KX_E2E_WORLD_KEY,
     [switch]$ListWorlds,
-    [switch]$PublishWorkflowOnly
+    [switch]$ExportObservations,
+    [switch]$PublishWorkflowOnly,
+    [ValidateRange(0, 2147483647)] [int]$ResumeEmissionId = 0
 )
 
 Set-StrictMode -Version Latest
@@ -26,7 +28,7 @@ function Invoke-DjangoJson([string]$Code) {
     } finally { Pop-Location }
     $line = $output | Where-Object { $_ -like 'IK_E2E_JSON=*' } | Select-Object -Last 1
     if ($djangoExit -ne 0 -or -not $line) { throw "Django command did not emit IK_E2E_JSON. Output:`n$($output -join "`n")" }
-    return $line.Substring('IK_E2E_JSON='.Length) | ConvertFrom-Json
+    return $line.Substring('IK_E2E_JSON='.Length) | ConvertFrom-Json -DateKind String
 }
 
 function Invoke-Orgo {
@@ -44,10 +46,19 @@ function Invoke-Orgo {
     }
     if ($null -ne $Body) { $args.Body = ($Body | ConvertTo-Json -Depth 40 -Compress) }
     $response = Invoke-WebRequest @args
-    $json = if ($response.Content) { $response.Content | ConvertFrom-Json } else { $null }
+    $json = if ($response.Content) { $response.Content | ConvertFrom-Json -DateKind String } else { $null }
     return [pscustomobject]@{ StatusCode = [int]$response.StatusCode; Json = $json }
 }
 
+if ($PSVersionTable.PSVersion -lt [version]'7.5') {
+    throw 'PowerShell 7.5 or later is required to preserve IK timestamp strings during replay.'
+}
+if ($OrgoHostUrl -cnotmatch '\Ahttp://127\.0\.0\.1:[0-9]{1,5}\z') {
+    throw 'This local E2E kit requires a loopback Orgo API URL.'
+}
+if ($ResumeEmissionId -and ($PublishWorkflowOnly -or $ListWorlds)) {
+    throw 'ResumeEmissionId can only be used with the E2E test.'
+}
 if ($PublishWorkflowOnly) {
     if ($ListWorlds) { throw 'Choose either -PublishWorkflowOnly or -ListWorlds.' }
     if ($OrgoHostUrl -cnotmatch '\Ahttp://127\.0\.0\.1:[0-9]{1,5}\z') {
@@ -128,6 +139,29 @@ $machineToken = Get-EnvValue $kxEnv 'IK_ORGO_TOKEN'
 $organizationId = Get-EnvValue $kxEnv 'IK_ORGO_TARGET_ORGANIZATION'
 if (-not $machineToken -or -not $organizationId) { throw 'IK_ORGO_TOKEN / IK_ORGO_TARGET_ORGANIZATION are not configured. Run prepare-local.ps1 first.' }
 
+if ($ResumeEmissionId) {
+    $resumeCode = @"
+import json
+from django.db import connection
+from konnaxion.ethikos.models import InteractionEmission
+from konnaxion.worlds.services.tasks import world_release_scope
+
+db = connection.settings_dict
+if (db.get('HOST'), db.get('NAME')) != ('kx-e2e-postgres', 'konnaxion_e2e'):
+    raise SystemExit('Resuming requires the dedicated Konnaxion Docker E2E database.')
+with world_release_scope(world_id=$($scope.id), release_id=$($scope.release_id)):
+    e = InteractionEmission.objects.get(pk=$ResumeEmissionId)
+    envelope = e.envelope_json
+    execution = envelope.get('data', {}).get('execution_scope', {})
+    if execution.get('qualification') != 'ik-e2e' or e.profile_id != 'governance.decision.execute':
+        raise SystemExit('This emission was not created by the Konnaxion–Orgo E2E kit.')
+    if e.status not in ('accepted', 'succeeded', 'delivered'):
+        raise SystemExit('Resuming requires an already admitted emission.')
+    print('IK_E2E_JSON='+json.dumps({'decision_id':envelope['subject']['id'], 'emission_id':e.pk, 'idempotency_key':e.idempotency_key}))
+"@
+    $created = Invoke-DjangoJson $resumeCode
+    Write-Host "Resuming existing decision $($created.decision_id), emission $($created.emission_id)."
+} else {
 $stamp = (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmss')
 $title = "IK E2E $stamp"
 $createCode = @"
@@ -154,6 +188,8 @@ with world_release_scope(world_id=$($scope.id), release_id=$($scope.release_id))
 "@
 $created = Invoke-DjangoJson $createCode
 Write-Host "Decision $($created.decision_id), emission $($created.emission_id) queued." -ForegroundColor Cyan
+}
+
 
 $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
 $emission = $null
@@ -226,19 +262,31 @@ import json
 from konnaxion.ethikos.models import OrgoImpactPublication
 qs=OrgoImpactPublication.objects.filter(request_json__id='$($operation.id)')
 row=qs.first()
-print('IK_E2E_JSON='+json.dumps({'count':qs.count(),'id':row.pk if row else None,'external_reference':row.external_reference if row else None}, default=str))
+print('IK_E2E_JSON='+json.dumps({'count':qs.count(),'id':row.pk if row else None,'external_reference':row.external_reference if row else None, 'request':row.request_json if row else {}, 'received_at':row.published_at if row else None, 'receipt':(row.receipt_json or {}).get('issued_receipt') if row else None}, default=str))
 "@
 $impact = Invoke-DjangoJson $impactCode
 if ([int]$impact.count -ne 1) { throw "Expected exactly 1 Konnaxion impact publication for operation $($operation.id), found $($impact.count)." }
 Write-Host "Konnaxion impact publication $($impact.id) confirmed." -ForegroundColor Green
 
 # Transport replay: same semantic request, new transient id/time, same idempotency key.
-$replayEnvelope = $emission.envelope | ConvertTo-Json -Depth 40 | ConvertFrom-Json
+$replayEnvelope = $emission.envelope | ConvertTo-Json -Depth 40 | ConvertFrom-Json -DateKind String
 $replayEnvelope.id = [guid]::NewGuid().ToString()
 $replayEnvelope.time = (Get-Date).ToUniversalTime().ToString('o')
 $replay = Invoke-Orgo -Method Post -Path 'ik/interactions' -Token $machineToken -Key ([string]$created.idempotency_key) -Body $replayEnvelope
-if ($replay.StatusCode -notin @(200, 201)) { throw "Replay failed HTTP $($replay.StatusCode)." }
-if ([string]$replay.Json.data.signal_id -ne $signalId) { throw 'Replay did not return the original Orgo Signal.' }
+if ($replay.StatusCode -notin @(200, 201)) {
+    $code = ''
+    if ($null -ne $replay.Json) {
+        $errorProperty = $replay.Json.PSObject.Properties['error']
+        if ($null -ne $errorProperty -and $null -ne $errorProperty.Value) {
+            $codeProperty = $errorProperty.Value.PSObject.Properties['code']
+            if ($null -ne $codeProperty -and [string]$codeProperty.Value -cmatch '\A[A-Z][A-Z0-9_]{1,79}\z') {
+                $code = " / Orgo: $($codeProperty.Value)"
+            }
+        }
+    }
+    throw "Replay failed HTTP $($replay.StatusCode)$code."
+}
+if ([string]$replay.Json.data.data.signal_id -ne $signalId) { throw 'Replay did not return the original Orgo Signal.' }
 
 $search = Invoke-Orgo -Method Get -Path ("signals?search=" + [uri]::EscapeDataString("Governed decision $($created.decision_id)")) -Token $machineToken
 if ($search.StatusCode -ne 200 -or [int]$search.Json.data.total -ne 1) { throw 'Replay created or exposed an unexpected Signal count.' }
@@ -247,15 +295,48 @@ if ([int]$impactAfterReplay.count -ne 1) { throw 'Replay duplicated the Konnaxio
 Write-Host 'Replay idempotency confirmed: 1 Signal, 1 impact.' -ForegroundColor Green
 
 # Divergent semantic content under the same idempotency key must conflict.
-$conflictEnvelope = $emission.envelope | ConvertTo-Json -Depth 40 | ConvertFrom-Json
+$conflictEnvelope = $emission.envelope | ConvertTo-Json -Depth 40 | ConvertFrom-Json -DateKind String
 $conflictEnvelope.id = [guid]::NewGuid().ToString()
 $conflictEnvelope.time = (Get-Date).ToUniversalTime().ToString('o')
 $conflictEnvelope.data.decision_revision = '999'
 $conflict = Invoke-Orgo -Method Post -Path 'ik/interactions' -Token $machineToken -Key ([string]$created.idempotency_key) -Body $conflictEnvelope
 if ($conflict.StatusCode -ne 409 -or $conflict.Json.error.code -ne 'IK_IDEMPOTENCY_CONFLICT') {
-    throw "Expected IK_IDEMPOTENCY_CONFLICT/409, got HTTP $($conflict.StatusCode): $($conflict.Json | ConvertTo-Json -Depth 8 -Compress)"
+    throw "Expected IK_IDEMPOTENCY_CONFLICT/409, got HTTP $($conflict.StatusCode)"
 }
 Write-Host 'Divergent replay conflict confirmed.' -ForegroundColor Green
+if ($ExportObservations) {
+    $decisionReceipt = $emission.receipt
+    $impactReceipt = $impact.receipt
+    if (-not $impactReceipt) { throw 'No original impact receipt stored. Start a new test on the updated stack.' }
+    $correlation = [string]$emission.envelope.correlation_id
+    if (-not $correlation -or $correlation -cne [string]$signal.correlation_id -or
+        $correlation -cne [string]$operation.correlation_id -or
+        $correlation -cne [string]$impact.request.correlation_id -or
+        $correlation -cne [string]$decisionReceipt.correlation_id -or
+        $correlation -cne [string]$impactReceipt.correlation_id) {
+        throw 'The two hops do not carry the same native correlation. Rebuild the Orgo worker and run a new test.'
+    }
+    if ([string]$decisionReceipt.interaction_id -cne [string]$emission.envelope.id -or
+        [string]$impactReceipt.interaction_id -cne [string]$impact.request.id -or
+        [string]$impactReceipt.status -cne 'succeeded') {
+        throw 'The receiver receipts do not match the tested requests.'
+    }
+    $evidence = [ordered]@{
+        correlation_id = $correlation
+        decision_id = [string]$emission.envelope.id
+        decision_sent = [string]$emission.envelope.time
+        decision_received = $signal.received_at
+        decision_response = [string]$decisionReceipt.time
+        decision_status = [string]$decisionReceipt.status
+        impact_id = [string]$impact.request.id
+        impact_sent = $operation.started_at
+        impact_received = [string]$impact.received_at
+        impact_response = [string]$impactReceipt.time
+        impact_status = [string]$impactReceipt.status
+    }
+    Write-Output ('KOA_OBSERVATIONS=' + ($evidence | ConvertTo-Json -Compress))
+}
+
 
 Write-Host ''
 Write-Host 'KONNAXION <-> ORGO IK E2E PASS' -ForegroundColor Green

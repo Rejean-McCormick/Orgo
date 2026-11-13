@@ -122,7 +122,9 @@ export class OutboxWorker {
         throw new DeliveryError('INTAKE_ACTOR_UNAVAILABLE', false);
       await this.complete(message, (tx) =>
         this.intake.process(
-          { ...ctx, causationId: message.id },
+          // Identity resolution can normalize the header. The queued Signal
+          // already carries the trusted correlation from the accepted command.
+          { ...ctx, correlationId: message.correlation_id, causationId: message.id },
           message.aggregate_id,
           input.workflow_version_id,
           tx,
