@@ -101,7 +101,11 @@ export function OrgoApp({
     [offset, setOffset] = useState(0),
     [data, setData] = useState<Row[]>([]),
     [total, setTotal] = useState(0);
-  const [selected, setSelected] = useState<Row | null>(null),
+  const [selection, setSelection] = useState<{
+    section: Section;
+    id: string;
+    row: Row;
+  } | null>(null),
     [loading, setLoading] = useState(false),
     [version, refresh] = useState(0),
     [creating, setCreating] = useState(false);
@@ -117,6 +121,9 @@ export function OrgoApp({
       ? composition.home
       : allowed[0];
   const id = path[1];
+  const selected = selection?.section === section && selection?.id === id
+    ? selection?.row
+    : undefined;
   useEffect(() => {
     let cancelled = false;
     const restore = async () => {
@@ -165,7 +172,7 @@ export function OrgoApp({
     let cancelled = false;
     setLoading(true);
     setError("");
-    setSelected(null);
+    setSelection(null);
     const endpoint =
       section === "my-work"
         ? "tasks"
@@ -220,7 +227,7 @@ export function OrgoApp({
       client
         .request<Row>(`${endpoint}/${encodeURIComponent(id)}`)
         .then((value) => {
-          if (!cancelled) setSelected(value);
+          if (!cancelled) setSelection({ section, id, row: value });
         })
         .catch((e) => {
           if (!cancelled) setError(e.message);
@@ -516,6 +523,7 @@ export function OrgoApp({
               </section>
               {selected && (
                 <Detail
+                  key={`${section}/${id}`}
                   row={selected}
                   section={section}
                   client={client}
