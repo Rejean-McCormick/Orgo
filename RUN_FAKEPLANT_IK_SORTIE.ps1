@@ -11,7 +11,7 @@ $sourceJson = Join-Path $root 'workflow.json'
 $expectedHash = '8DB9A3BE1BE875CE9CF99845D0EFB6AB54E34A39E9248BDFA C0901527A1D527D'.Replace(' ','')
 $expectedOrg = '0c2d7244-a0c0-4a10-8f11-0389f275f133'
 $tokenKey = 'IK_ORGO_TOKEN'
-$apiBase = 'http://127.0.0.1:4000/api/v3'
+$apiBase = 'http://127.0.0.1:21111/api/v3'
 $containerId = ''
 $remoteJs = ''
 $remoteJson = ''
@@ -25,7 +25,7 @@ function Assert-KonnaxionEnv {
   if (-not (Test-Path -LiteralPath $kxEnv -PathType Leaf)) {throw 'backend/.env Konnaxion absent : aucune ecriture autorisee'}
   $content = [IO.File]::ReadAllText($kxEnv)
   foreach ($pair in @(
-      @('IK_ORGO_INTERACTIONS_URL','http://127.0.0.1:4000/api/v3/ik/interactions'),
+      @('IK_ORGO_INTERACTIONS_URL','http://127.0.0.1:21111/api/v3/ik/interactions'),
       @('IK_ORGO_TARGET_ORGANIZATION',$expectedOrg))) {
     $lines = @([regex]::Matches($content, '(?m)^\s*' + [regex]::Escape($pair[0]) + '\s*=([^\r\n]*)'))
     if ($lines.Count -ne 1) {throw "Configuration $($pair[0]) absente ou repetee"}

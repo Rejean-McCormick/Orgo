@@ -5,8 +5,8 @@ import { PGlite } from '@electric-sql/pglite';
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
 
 const root = path.resolve(import.meta.dirname, '..');
-const apiPort = Number(process.env.KOALI_ORGO_BACKEND_PORT || process.env.PORT || 4303);
-const dbPort = Number(process.env.KOALI_ORGO_DB_PORT || 55432);
+const apiPort = Number(process.env.KOALI_ORGO_BACKEND_PORT || process.env.PORT || 21115);
+const dbPort = Number(process.env.KOALI_ORGO_DB_PORT || 21116);
 if (!Number.isInteger(apiPort) || apiPort < 1 || apiPort > 65535) throw new Error('Invalid Orgo API port');
 if (!Number.isInteger(dbPort) || dbPort < 1 || dbPort > 65535) throw new Error('Invalid Orgo PGlite port');
 

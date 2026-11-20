@@ -6,8 +6,8 @@ param(
     [string]$OrgoAdminEmail = 'admin@example.test',
     [string]$WorkflowCode = 'konnaxion_decision_v1',
     [string]$DecisionLabel = '1.11',
-    [string]$OrgoHostUrl = 'http://127.0.0.1:4000',
-    [string]$OrgoUrlFromKonnaxion = 'http://host.docker.internal:4000/api/v3/ik/interactions',
+    [string]$OrgoHostUrl = 'http://127.0.0.1:21111',
+    [string]$OrgoUrlFromKonnaxion = 'http://host.docker.internal:21111/api/v3/ik/interactions',
     [string]$KonnaxionUrlFromOrgo = 'http://host.docker.internal:8000/api/integrations/ik/konnaxion/interactions/'
 )
 
@@ -189,7 +189,7 @@ Wait-Http 'http://127.0.0.1:8000/health/ready/' 120
 Write-Host 'Running cross-container connectivity preflight...' -ForegroundColor Cyan
 Push-Location $kxBackend
 try {
-    docker compose -f docker-compose.local.yml exec -T django python -c "import urllib.request; r=urllib.request.urlopen('http://host.docker.internal:4000/health/ready', timeout=5); print(r.status)" | Out-Host
+    docker compose -f docker-compose.local.yml exec -T django python -c "import urllib.request; r=urllib.request.urlopen('http://host.docker.internal:21111/health/ready', timeout=5); print(r.status)" | Out-Host
 } finally { Pop-Location }
 Push-Location $OrgoRoot
 try {

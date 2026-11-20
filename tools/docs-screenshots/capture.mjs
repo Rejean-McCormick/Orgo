@@ -30,7 +30,7 @@ function parseDotEnv(filePath) {
 const dotEnv = parseDotEnv(path.join(repoRoot, ".env"));
 const env = { ...dotEnv, ...process.env };
 
-const baseURL = (env.ORGO_DOCS_URL || "http://127.0.0.1:3000").replace(/\/+$/, "");
+const baseURL = (env.ORGO_DOCS_URL || "http://127.0.0.1:21110").replace(/\/+$/, "");
 const parsedBase = new URL(baseURL);
 const localHosts = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
 if (!localHosts.has(parsedBase.hostname) && env.ORGO_DOCS_ALLOW_REMOTE !== "1") {

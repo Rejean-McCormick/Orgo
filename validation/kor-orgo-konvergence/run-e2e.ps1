@@ -1,7 +1,7 @@
 param(
   [Parameter(Mandatory = $true)][string]$KorRoot,
   [Parameter(Mandatory = $true)][string]$KonvergenceRoot,
-  [string]$OrgoUrl = 'http://127.0.0.1:4000',
+  [string]$OrgoUrl = 'http://127.0.0.1:21111',
   [string]$Organization = 'orgo',
   [string]$Email = 'admin@example.test',
   [switch]$SkipSeed

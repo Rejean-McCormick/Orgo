@@ -84,7 +84,7 @@ try {
     try {
       $headers = @{Authorization="Bearer $publisherSecret"; 'X-Organization-ID'=$tenant; 'Idempotency-Key'=[guid]::NewGuid().ToString()}
       $body = [IO.File]::ReadAllText($newWorkflow)
-      $response = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:4000/api/v3/workflows/$code/versions" -Headers $headers -ContentType 'application/json' -Body $body -TimeoutSec 30
+      $response = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:21111/api/v3/workflows/$code/versions" -Headers $headers -ContentType 'application/json' -Body $body -TimeoutSec 30
       if ($response.ok -ne $true -or [int]$response.data.version -ne 2) {throw 'Recu publication V2 invalide.'}
       Write-Host '[OK] Workflow FakePlant version 2 publie via API Orgo.'
     } finally {

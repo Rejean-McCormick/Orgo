@@ -63,7 +63,7 @@ function Verify-Token {
     try {
         $headers = @{ Authorization = "Bearer $raw" }
         try {
-            $me = Invoke-RestMethod -Method Get -Uri 'http://127.0.0.1:4000/api/v3/auth/me' -Headers $headers -TimeoutSec 15
+            $me = Invoke-RestMethod -Method Get -Uri 'http://127.0.0.1:21111/api/v3/auth/me' -Headers $headers -TimeoutSec 15
         } catch { throw '[REFUS] API Orgo inaccessible ou jeton invalide/expire. Aucun scenario injecte.' }
         Require ($me.ok -eq $true) 'Reponse /auth/me invalide.'
         Require ($me.data.organizationId -ceq $expectedOrg) 'Identite API hors du tenant FakePlant.'
@@ -121,7 +121,7 @@ try {
     New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
     Write-Host '=== TEST API : ECRITURE DE 1 DOSSIER + 1 TACHE ==='
     Write-Host 'Aucun utilisateur ni workflow cree. Aucun achat ni connexion externe.'
-    $env:ORGO_SCENARIO_API_URL = 'http://127.0.0.1:4000/api/v3'
+    $env:ORGO_SCENARIO_API_URL = 'http://127.0.0.1:21111/api/v3'
     & node $injector inject $scenario --apply --report $report
     if ($LASTEXITCODE -ne 0) {
         throw '[ECHEC] Injection API partielle ou refusee. NE PAS RELANCER; controler le tenant et le rapport.'

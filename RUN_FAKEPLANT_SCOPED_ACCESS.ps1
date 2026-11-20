@@ -13,7 +13,7 @@ function Check-Api {
   try {$raw=[Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)} finally {[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)}
   try {
     $headers=@{'Authorization'="Bearer $raw";'X-Organization-ID'=$expected}
-    try {$resp=Invoke-RestMethod -Method Get -Uri 'http://127.0.0.1:4000/api/v3/auth/me' -Headers $headers -TimeoutSec 15}
+    try {$resp=Invoke-RestMethod -Method Get -Uri 'http://127.0.0.1:21111/api/v3/auth/me' -Headers $headers -TimeoutSec 15}
     catch {throw 'API Orgo inaccessible ou jeton refuse (HTTP / identite). Ne pas injecter.'}
     if ($resp.ok -ne $true -or $resp.data.organizationId -cne $expected) {throw 'Contexte API ne correspond pas au tenant FakePlant.'}
     $actual=@($resp.data.permissions | Sort-Object)

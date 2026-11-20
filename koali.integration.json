@@ -6,22 +6,22 @@
     "webPort": {
       "type": "port",
       "env": "KOALI_ORGO_PORT",
-      "default": 4302
+      "default": 21114
     },
     "apiPort": {
       "type": "port",
       "env": "KOALI_ORGO_BACKEND_PORT",
-      "default": 4303
+      "default": 21115
     },
     "dbPort": {
       "type": "port",
       "env": "KOALI_ORGO_DB_PORT",
-      "default": 55432
+      "default": 21116
     },
     "worldsApiPort": {
       "type": "port",
       "env": "KOALI_ORGO_WORLDS_API_PORT",
-      "default": 4100
+      "default": 21113
     }
   },
   "surface": {

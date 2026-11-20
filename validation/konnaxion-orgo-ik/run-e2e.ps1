@@ -2,7 +2,7 @@
 param(
     [string]$OrgoRoot = 'C:\mycode\Orgo\Orgo',
     [string]$KonnaxionRoot = 'C:\mycode\Konnaxion\Konnaxion',
-    [string]$OrgoHostUrl = 'http://127.0.0.1:4000',
+    [string]$OrgoHostUrl = 'http://127.0.0.1:21111',
     [int]$TimeoutSeconds = 120,
     [string]$WorldKey = $env:KX_E2E_WORLD_KEY,
     [switch]$ListWorlds,

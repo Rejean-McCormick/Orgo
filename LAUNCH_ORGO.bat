@@ -48,8 +48,8 @@ if errorlevel 1 (
   goto :fail
 )
 
-set "WEB_PORT=3000"
-for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "$p='3000'; Get-Content -LiteralPath '.env' | ForEach-Object { if ($_ -match '^\s*ORGO_WEB_HOST_PORT\s*=\s*([^#\s]+)') { $p=$matches[1].Trim() } }; Write-Output $p"`) do set "WEB_PORT=%%P"
+set "WEB_PORT=21110"
+for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "$p='21110'; Get-Content -LiteralPath '.env' | ForEach-Object { if ($_ -match '^\s*ORGO_WEB_HOST_PORT\s*=\s*([^#\s]+)') { $p=$matches[1].Trim() } }; Write-Output $p"`) do set "WEB_PORT=%%P"
 
 echo [1/4] Building and starting Orgo...
 docker compose up -d --build
