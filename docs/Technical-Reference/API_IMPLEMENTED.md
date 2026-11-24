@@ -1,8 +1,8 @@
 # Orgo — Implemented HTTP routes
 
-Generated from active controllers for the completion delivery, 2026-09-09. Route implementation is distinct from final runtime acceptance; see `LOCAL_VALIDATION.md`.
+Generated from active controllers for the completion delivery, 2026-09-09; reconciled against the 2026-11-23 source snapshot. Route implementation is distinct from final runtime acceptance; see `LOCAL_VALIDATION.md`.
 
-Health, login/recovery/reset and OIDC initiation/completion are explicitly public. Other routes require authentication. Product mutations generally require `Idempotency-Key`; password/login/SSO have their own security lifecycle. Tenant identity always comes from authentication. CSV and metrics routes return their declared content type; other routes use the Orgo JSON envelope.
+Health, login/recovery/reset and OIDC initiation/completion are explicitly public. `POST /api/v3/auth/local-auto-login` is also marked `@Public()` but is **disabled by default**: the handler rejects non-local/unauthorized contexts with 404 and applies tenant tandem-SSO restrictions. It is not a generally available login endpoint. Other routes require authentication. Product mutations generally require `Idempotency-Key`; password/login/SSO have their own security lifecycle. Tenant identity always comes from authentication. CSV and metrics routes return their declared content type; other routes use the Orgo JSON envelope.
 
 | Method | Route | Owner file |
 | --- | --- | --- |
@@ -24,6 +24,7 @@ Health, login/recovery/reset and OIDC initiation/completion are explicitly publi
 | POST | `/api/v3/education/groups` | `admin.controller.ts` |
 | POST | `/api/v3/education/tasks` | `admin.controller.ts` |
 | POST | `/api/v3/auth/login` | `auth.controller.ts` |
+| POST | `/api/v3/auth/local-auto-login` | `auth.controller.ts` |
 | GET | `/api/v3/auth/me` | `auth.controller.ts` |
 | POST | `/api/v3/auth/logout` | `auth.controller.ts` |
 | GET | `/api/v3/work/:type/:id/attachments` | `completion.controller.ts` |
@@ -66,6 +67,7 @@ Health, login/recovery/reset and OIDC initiation/completion are explicitly publi
 | GET | `/health/live` | `health.controller.ts` |
 | GET | `/health/ready` | `health.controller.ts` |
 | GET | `/health/dependencies` | `health.controller.ts` |
+| POST | `/api/v3/ik/interactions` | `interaction-kernel.controller.ts` |
 | POST | `/api/v3/ingress/email` | `ingress.controller.ts` |
 | GET | `/api/v3/ingress/email/:signalId` | `ingress.controller.ts` |
 | GET | `/api/v3/ingress/email/:signalId/attachments/:index` | `ingress.controller.ts` |
@@ -121,7 +123,7 @@ Health, login/recovery/reset and OIDC initiation/completion are explicitly publi
 | PATCH | `/api/v3/cases/:id` | `work.controller.ts` |
 | PATCH | `/api/v3/tasks/:id/case` | `work.controller.ts` |
 
-Total: **114 routes**.
+Total: **116 routes** (controller decorators observed in the 2026-11-23 snapshot).
 
 
 ## Interaction Kernel
