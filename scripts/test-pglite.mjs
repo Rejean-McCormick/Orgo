@@ -32,7 +32,7 @@ const child = spawn(
     env: {
       ...process.env,
       DATABASE_URL:
-        "postgresql://postgres:postgres@127.0.0.1:55432/postgres?connection_limit=1",
+        "postgresql://postgres:postgres@127.0.0.1:55432/postgres?connection_limit=1&pgbouncer=true",
       ORGO_TEST_ENGINE: "pglite",
     },
   },
