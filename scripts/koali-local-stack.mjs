@@ -6,9 +6,12 @@ import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
 
 const root = path.resolve(import.meta.dirname, '..');
 const apiPort = Number(process.env.KOALI_ORGO_BACKEND_PORT || process.env.PORT || 21115);
+const webPort = Number(process.env.KOALI_ORGO_PORT || 21114);
 const dbPort = Number(process.env.KOALI_ORGO_DB_PORT || 21116);
 if (!Number.isInteger(apiPort) || apiPort < 1 || apiPort > 65535) throw new Error('Invalid Orgo API port');
 if (!Number.isInteger(dbPort) || dbPort < 1 || dbPort > 65535) throw new Error('Invalid Orgo PGlite port');
+
+if (!Number.isInteger(webPort) || webPort < 1 || webPort > 65535) throw new Error('Invalid Orgo web port');
 
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const databaseUrl = `postgresql://postgres:postgres@127.0.0.1:${dbPort}/postgres?connection_limit=4`;
@@ -16,6 +19,8 @@ const env = {
   ...process.env,
   DATABASE_URL: databaseUrl,
   PORT: String(apiPort),
+  ORGO_BIND_HOST: '127.0.0.1',
+  ORGO_PUBLIC_URL: process.env.ORGO_PUBLIC_URL?.trim() || `http://127.0.0.1:${webPort}`,
   ORGO_LOCAL_AUTO_LOGIN: 'true',
   ORGO_ORGANIZATION: process.env.ORGO_ORGANIZATION || 'orgo',
   ORGO_ADMIN_EMAIL: process.env.ORGO_ADMIN_EMAIL || 'admin@example.test',

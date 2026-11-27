@@ -1,7 +1,7 @@
 import { createApp } from './bootstrap';
 async function main() {
   const app = await createApp();
-  await app.listen(Number(process.env.PORT ?? 21111), '0.0.0.0');
+  await app.listen(Number(process.env.PORT ?? 21111), process.env.ORGO_BIND_HOST ?? '0.0.0.0');
   console.log(
     JSON.stringify({
       event: 'orgo.api.ready',

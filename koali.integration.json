@@ -36,6 +36,7 @@
         "scripts/koali-local-stack.mjs"
       ],
       "env": {
+        "KOALI_ORGO_PORT": "${webPort}",
         "KOALI_ORGO_BACKEND_PORT": "${apiPort}",
         "KOALI_ORGO_DB_PORT": "${dbPort}",
         "ORGO_LOCAL_AUTO_LOGIN": "true",
